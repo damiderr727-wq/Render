@@ -1427,96 +1427,11 @@ extension GameController {
         scene.rootNode.addChildNode(n)
     }
 
-    /// Ein gerader Treppenlauf. Jede Stufe ist ein Vollkoerper vom Boden bis zur
-    /// Trittflaeche, dazu wird eine Rampe als begehbare Flaeche angemeldet.
-    /// dir = +1 laeuft nach +z aufwaerts, -1 nach -z.
-    func stairFlight(_ x: Float, _ zStart: Float, _ zEnd: Float, _ w: CGFloat,
-                     _ yStart: Float, _ yEnd: Float) {
-        let tread = texMat(Tex.plankWood, 1, 1)
-        let riser = texMat(Tex.wainscot, 2, 1)
-        let runnerM = texMat(Tex.runner, 1, 1)
-        let br = texMat(Tex.brass, 1, 1)
-        let n = 11
-        let dz = (zEnd - zStart) / Float(n)
-        let dy = (yEnd - yStart) / Float(n)
-        let fw = Float(w)
-        for i in 0..<n {
-            let y = yStart + dy * Float(i + 1)
-            let zc = zStart + dz * (Float(i) + 0.5)
-            prop(w, CGFloat(y - yStart + 0.4), CGFloat(abs(dz)), x, (yStart - 0.4 + y) / 2, zc, riser)
-            prop(w + 0.06, 0.075, CGFloat(abs(dz)) + 0.07, x, y - 0.037, zc, tread)
-            prop(w * 0.56, 0.014, CGFloat(abs(dz)) * 0.94, x, y + 0.008, zc, runnerM)
-            prop(0.045, 0.028, 0.045, x - fw * 0.29, y + 0.016, zc, br)
-            prop(0.045, 0.028, 0.045, x + fw * 0.29, y + 0.016, zc, br)
-        }
-        addFloorArea(x - fw/2, x + fw/2, min(zStart, zEnd), max(zStart, zEnd),
-                     zEnd > zStart ? yStart : yEnd, zEnd > zStart ? yEnd : yStart, alongZ: true)
-        // Schraege Kamerasperre: fuenf gestufte Kaesten laengs des Laufs. Der
-        // Spieler laeuft hindurch (er steht ja auf der Rampe), die Kamera nicht -
-        // sonst gleitet sie mitten durch die Stufen statt darueber zu bleiben.
-        let segs = 5
-        for k in 0..<segs {
-            let t0 = Float(k) / Float(segs), t1 = Float(k + 1) / Float(segs)
-            let za = zStart + (zEnd - zStart) * t0
-            let zb = zStart + (zEnd - zStart) * t1
-            let ya = yStart + (yEnd - yStart) * t0
-            let yb = yStart + (yEnd - yStart) * t1
-            solids.append(WallBox(x0: x - fw/2, x1: x + fw/2,
-                                  z0: min(za, zb), z1: max(za, zb),
-                                  y0: min(ya, yb) - 0.9, y1: max(ya, yb),
-                                  blocksCamera: true, blocksPlayer: false))
-        }
-        // Wange und Handlauf
-        let mid = (zStart + zEnd) / 2
-        let run = abs(zEnd - zStart)
-        let ang = Float(atan2(Double(yEnd - yStart), Double(zEnd - zStart)))
-        let len = CGFloat((run * run + (yEnd - yStart) * (yEnd - yStart)).squareRoot()) + 0.3
-        let rail = texMat(Tex.plankWood, 1, 1)
-        for sx in [-1, 1] {
-            propE(0.09, 0.50, len, x + (fw/2 + 0.045) * Float(sx), (yStart + yEnd)/2 + 0.02, mid,
-                  SCNVector3(-ang, 0, 0), rail)
-            propE(0.085, 0.085, len, x + (fw/2 + 0.10) * Float(sx), (yStart + yEnd)/2 + 0.98, mid,
-                  SCNVector3(-ang, 0, 0), rail)
-        }
-        for i in 0..<n where i % 2 == 0 {
-            let y = yStart + dy * Float(i + 1)
-            let zc = zStart + dz * (Float(i) + 0.5)
-            for sx in [-1, 1] {
-                prop(0.045, 0.96, 0.045, x + (fw/2 + 0.10) * Float(sx), y + 0.48, zc, rail)
-            }
-        }
-    }
-
-    /// Wendetreppe wie im Krankenhaus aus Silent Hill 2: erst in die eine
-    /// Richtung hoch, auf dem Podest um 180 Grad gewendet, dann gegenlaeufig
-    /// weiter. xA und xB sind die Mitten der beiden Laeufe.
-    func switchbackStairs(_ xA: Float, _ xB: Float, _ zLow: Float, _ zHigh: Float,
-                          _ w: CGFloat, _ yBottom: Float, _ yTop: Float) {
-        let yMid = (yBottom + yTop) / 2
-        stairFlight(xA, zLow, zHigh, w, yBottom, yMid)          // Lauf 1 nach -z hoch
-        stairFlight(xB, zHigh, zLow, w, yMid, yTop)             // Lauf 2 zurueck
-        // Podest verbindet beide Laeufe
-        let px0 = min(xA, xB) - Float(w)/2 - 0.1
-        let px1 = max(xA, xB) + Float(w)/2 + 0.1
-        let pz0 = min(zLow, zHigh) - 1.5, pz1 = min(zLow, zHigh)
-        let tread = texMat(Tex.plankWood, 1, 1)
-        prop(CGFloat(px1 - px0), 0.18, CGFloat(pz1 - pz0), (px0+px1)/2, yMid - 0.09, (pz0+pz1)/2, tread)
-        addFloorArea(px0, px1, pz0, pz1, yMid)
-        // Bruestung am Podest, damit man nicht hinunterfaellt
-        let rail = texMat(Tex.plankWood, 1, 1)
-        prop(CGFloat(px1 - px0), 1.0, 0.09, (px0+px1)/2, yMid + 0.5, pz0, rail)
-        solids.append(WallBox(x0: px0, x1: px1, z0: pz0 - 0.1, z1: pz0 + 0.1,
-                              y0: yMid, y1: yMid + 1.2))
-        // Auge zwischen den Laeufen offen lassen ist zu aufwendig - hier zu
-        for sx in [-1, 1] {
-            let ex = (xA + xB)/2
-            prop(CGFloat(abs(xB - xA)) - w, 0.16, CGFloat(abs(zHigh - zLow)),
-                 ex, yBottom + 0.08, (zLow + zHigh)/2, tread)
-            _ = sx; break
-        }
-        addFloorArea(min(xA,xB)+Float(w)/2, max(xA,xB)-Float(w)/2,
-                     min(zLow,zHigh), max(zLow,zHigh), yBottom)
-    }
+    // Die alten Treppenbauer stairFlight() und switchbackStairs() sind
+    // entfallen. Sie hatten feste 11 Stufen (damit liessen sich zwei
+    // verschieden hohe Geschosse nie deckungsgleich stapeln) und setzten
+    // Fuellkoerper mit blocksPlayer: true in den eigenen Lauf. Der Ersatz
+    // steht in Stairwell.swift.
 
     // ===================== Villa =====================
 
@@ -1563,7 +1478,11 @@ extension GameController {
         floorTile(8, 1.8, 7, -12.5, texMat(Tex.concrete, 3, 1))
         floorTile(12, 11.5, 17, -17.25, texMat(Tex.concrete, 5, 5))
 
-        ceiling(16, 14, 0, 7, 6)
+        // Hallendecke OHNE den Treppenschacht x[-8,-4] z[6,14] - dort geht der
+        // Raum ueber drei Geschosse bis unters Badehaus durch. Eine durchgehende
+        // Platte auf y = 6.0 lag bisher mitten im oberen Treppenlauf.
+        ceiling(12, 14, 2, 7, 6)              // x[-4,8]
+        ceiling(4, 6, -6, 3, 6)               // x[-8,-4], z[0,6]
         ceiling(16, 12, -16, 8, 4);   ceiling(12, 12, -18, -4, 3.2)
         ceiling(14, 12, 15, 8, 4);    ceiling(10, 12, 17, -4, 4)
         ceiling(6, 14, 0, -7, 3.0);   ceiling(7, 7, -6.5, -7.5, 2.7)
@@ -1634,12 +1553,15 @@ extension GameController {
         // bekommt eine eigene Wand und wird zur Treppenhalle.
         // Tuer vom Empfang direkt in den Treppenvorplatz (z 8.6..10.2)
         wallZ(0, 14, -2, wHall, gaps: [(10.0, 1.8)], h: 6)
-        // Die Wand aus deiner Skizze: nordlich Flur, suedlich Treppe.
-        // Nordabschluss: offen ueber x -6..-2, damit Lauf B oben ankommen kann
-        // und der Flur durchlaeuft.
-        wallX(-8, -2, 6.0, wHall, gaps: [(-4.0, 4.0)], h: 6)
-        // Trennwand Flur | Treppenhaus, Durchgang am Fuss von Lauf A
-        wallZ(6, 14, -4, wHall, gaps: [(12.5, 1.6)], h: 6)
+        // Nordabschluss des Treppenschachts. Zweiteilig, und das ist wichtig:
+        // opening() setzt ueber JEDE Luecke einen Sturz ab doorH = 2.35 m. Die
+        // Obergeschossplatte liegt auf 3.80 - mit einer durchgehenden Wand von
+        // 0 bis 6 lief man oben durch 3.65 m massiv aussehendes Mauerwerk.
+        // Unten also mit Sturz, oben als volle Oeffnung.
+        wallX(-8, -2, 6.0, wHall, gaps: [(-4.0, 4.0)], h: 3.8)
+        wall(2.0, SCNVector3(-7, 0, 6.0), 0, wHall, h: 2.2, base: 3.8)
+        // Die Ostwand des Schachts baut buildStairwell - sie muss ueber dem
+        // offenen Schacht hoeher werden als neben dem Bodenband.
 
         rug(7.5, 6.5, 3.0, 9.5, Tex.rugRed)
         receptionDesk(3.2, 2.6, 5.2)
@@ -1681,34 +1603,11 @@ extension GameController {
         addOmni(SCNVector3(4, 3.0, 6), 620, UIColor(red: 1.0, green: 0.88, blue: 0.72, alpha: 1), range: 12)
         addDust(3, 2.6, 7, 9, 5.0, 12, 14)
 
-        // ---------- Treppenhalle ----------
-        // ================= Treppenhaus =================
-        // Zwei getrennte gerade Laeufe mit einem echten Podest dazwischen -
-        // ein durchgehender Schacht, wie du ihn gezeichnet hast. Der Grund fuer
-        // alle bisherigen Treppenfehler war, dass die Deckenplatte der Galerie
-        // durchgehend war: die Laeufe stiessen von unten in die Decke.
-        // Aufteilung nach deiner Zeichnung: der Flur laeuft an der Ostseite
-        // durch (x -4..-2), das Treppenhaus liegt westlich davon (x -8..-4).
-        // Laufbreite 1.8 statt 2.4, damit beide Laeufe mit Abstand zu beiden
-        // Waenden passen - vorher stiess Lauf A direkt in die Westwand.
-        // Lauf A: unten im Sueden, steigt nach Norden auf halbe Hoehe
-        stairFlight(-6.8, 13.4, 10.4, 1.8, 0, 1.8)
-        // Podest / Zwischenebene - der kleine Mini-Flur, der beide Laeufe verbindet
-        do {
-            let tread = texMat(Tex.plankWood, 1, 1)
-            prop(3.6, 0.18, 1.2, -5.9, 1.71, 9.8, tread)
-            addFloorArea(-7.7, -4.1, 9.2, 10.4, 1.8)
-            // Bruestung an der Nordkante des Podests
-            prop(3.6, 1.00, 0.09, -5.9, 2.30, 9.2, tread)
-            solids.append(WallBox(x0: -7.7, x1: -4.1, z0: 9.1, z1: 9.3,
-                                  y0: 1.8, y1: 3.0))
-            // Unter dem Podest schliessen, sonst laeuft man mit 1.75 m dagegen
-            // blocksCamera: false - Fuellungen unter Treppen sind keine Waende
-            solids.append(WallBox(x0: -7.7, x1: -4.1, z0: 9.2, z1: 10.4,
-                                  y0: 0, y1: 1.8, blocksCamera: false))
-        }
-        // Lauf B: vom Podest weiter nach Norden bis ins Obergeschoss
-        stairFlight(-5.0, 9.2, 6.2, 1.8, 1.8, 3.8)
+        // ---------- Treppenhaus ----------
+        // Beide Geschosse stehen in Stairwell.swift. Der ganze Schacht -
+        // Waende, Decken, Bodenbaender, vier Laeufe, zwei Podeste - kommt aus
+        // einer Hand, weil die Masse voneinander abhaengen.
+        buildStairwell(wHall)
         rug(4.5, 4.0, -5.0, 3.0, Tex.rugGold)
         candelabra(-7.4, 0.96, 5.0, 3)
         picture(-7.78, 3.4, 9.0, 1.3, 1.7, false, 1)
@@ -2217,27 +2116,18 @@ extension GameController {
         let oakF = texMat(Tex.parquet, 2, 2)
         let linoF = texMat(Tex.woodFloor, 2, 2)
 
-        // Galerieboden mit ausgesparter Schachtoeffnung. Genau das hat gefehlt:
-        // vorher lag hier eine durchgehende Platte, in die die Treppe von unten
-        // hineinlief - daher "Treppe in der Decke" und keine erreichbare Etage.
-        // Oeffnung: x -6.2..-4.0, z 6.2..9.6 (ueber Lauf B).
-        floorTile(6.0, 5.7, -5.0, 3.35, oakF, y: F)      // noerdlich der Oeffnung
-        floorTile(6.0, 4.4, -5.0, 11.8, oakF, y: F)      // suedlich der Oeffnung
-        floorTile(1.8, 3.4, -7.1, 7.9, oakF, y: F)       // westlich daneben
-        floorTile(2.0, 3.4, -3.0, 7.9, oakF, y: F)       // oestlich daneben
+        // Galerie und Flur Ost. Der Treppenschacht x[-8,-4] z[6,14] bleibt
+        // ausgespart - sein Bodenband baut buildStairwell, weil die Kante
+        // genau am Austritt des oberen Laufs liegen muss.
+        floorTile(6.0, 5.5, -5.0, 3.25, oakF, y: F)      // Galerie  x[-8,-2] z[0.5,6]
+        floorTile(2.0, 8.0, -3.0, 10.0, oakF, y: F)      // Flur Ost x[-4,-2] z[6,14]
         floorTile(5.0, 2.0, -0.5, 0.5, oakF, y: F)
-        ceiling(6.0, 13.5, -5.0, 7.25, F + 2.2)
+        // (Die zweite Decke auf F + 2.2 = 6.0 ist entfallen - sie lag deckungs-
+        //  gleich auf der Hallendecke und erzeugte Z-Fighting.)
         // Bruestung zur Halle hin
         let balRail = texMat(Tex.plankWood, 2, 1)
         prop(0.10, 1.05, 11.5, -2.0, F + 0.52, 6.25, balRail)
         solids.append(WallBox(x0: -2.1, x1: -1.9, z0: 0.5, z1: 12.0, y0: F, y1: F + 1.2))
-        // Gelaender rund um die Schachtoeffnung
-        prop(0.10, 1.05, 3.4, -6.2, F + 0.52, 7.9, balRail)
-        solids.append(WallBox(x0: -6.3, x1: -6.1, z0: 6.2, z1: 9.6, y0: F, y1: F + 1.2))
-        prop(0.10, 1.05, 3.4, -4.0, F + 0.52, 7.9, balRail)
-        solids.append(WallBox(x0: -4.1, x1: -3.9, z0: 6.2, z1: 9.6, y0: F, y1: F + 1.2))
-        prop(2.2, 1.05, 0.10, -5.1, F + 0.52, 9.6, balRail)
-        solids.append(WallBox(x0: -6.2, x1: -4.0, z0: 9.5, z1: 9.7, y0: F, y1: F + 1.2))
         // Treppenhalle als Flur: Laeufer, Konsole mit Spiegel - und unten die
         // verschlossene Eisentuer zur Anstalt. Den Schluessel gibt es noch
         // nirgends; die Tuer ist ein Versprechen an den Keller-Ausbau.
@@ -2343,22 +2233,17 @@ extension GameController {
         let tileFine = texMat(Tex.tileGreen, 10, 8)      // die Mini-Fliesen
         let tileWall = texMat(Tex.tileGreen, 8, 4)
 
-        // Obere Wendeltreppe, z-versetzt, damit das OG-Gelaender frei bleibt
-        // Zweites Treppenhaus, gestapelt ueber dem ersten: Suedteil der Galerie.
-        switchbackStairs(-6.8, -5.0, 9.8, 12.8, 1.8, F, F2)
-        // blocksCamera: false - sonst draengt diese Fuellung die Kamera schon
-        // im Erdgeschoss weg, weil sie in deren Pruefhoehe hineinragt.
-        solids.append(WallBox(x0: -5.9, x1: -4.1, z0: 11.2, z1: 12.8,
-                              y0: F, y1: F2, blocksCamera: false))
+        // Die obere Treppe steht jetzt mit der unteren zusammen in
+        // Stairwell.swift - sie muessen deckungsgleich uebereinander liegen,
+        // sonst schiebt sich ein Podest in den Lauf darunter.
 
-        // Vorraum am Treppenkopf
-        // Vorraumboden ebenfalls mit Schachtoeffnung (x -6.1..-3.9, z 9.8..13.0)
-        floorTile(7.0, 6.8, -4.5, 6.4, linoF, y: F2)     // noerdlich, traegt die Ankunft
-        floorTile(1.9, 3.2, -7.05, 11.4, linoF, y: F2)   // westlich
-        floorTile(2.9, 3.2, -2.45, 11.4, linoF, y: F2)   // oestlich
-        ceiling(7, 10, -4.5, 8, F2 + 2.7)
-        wallZ(3, 13, -8, wArd, h: 2.7, base: F2)
-        wallX(-8, -1, 13, wArd, h: 2.7, base: F2)
+        // Vorraum am Treppenkopf. Der Schacht x[-8,-4] z[6,14] bleibt frei;
+        // sein Bodenband baut buildStairwell.
+        floorTile(4.0, 3.0, -6.0, 4.5, linoF, y: F2)     // x[-8,-4] z[3,6]
+        floorTile(3.0, 10.0, -2.5, 8.0, linoF, y: F2)    // x[-4,-1] z[3,13]
+        ceiling(7, 11, -4.5, 8.5, F2 + 2.7)
+        wallZ(3, 6, -8, wArd, h: 2.7, base: F2)          // noerdlich des Schachts
+        wallX(-4, -1, 13, wArd, h: 2.7, base: F2)        // nur wo Boden liegt
         wallX(-8, -1, 3, wArd, h: 2.7, base: F2)
         wallZ(3, 13, -1, wArd, gaps: [(9.5, 1.3)], h: 2.7, base: F2)
         addOmni(SCNVector3(-4.5, F2 + 2.2, 8), 300,
@@ -2702,8 +2587,10 @@ zone(-8, -2, 0, 6.0,     SCNVector3(0.0, 3.0, 5.6), SCNVector3(0, 1.15, 0), 68,
              follow: true)                                    // Flur Ost
         // Treppenhaus: Blick von Norden schraeg herab in den Schacht. EINE Zone
         // ueber alle Hoehen, damit die Kamera beim Steigen mitgeht.
+        // EINE Zone ueber alle drei Ebenen (0 / 3.8 / 6.6). Endete sie wie
+        // frueher bei 5.4, fiel die Kamera auf dem oberen Lauf aus der Zone.
         zone(-8, -4, 6.0, 14,    SCNVector3(0.0, 4.4, -4.2), SCNVector3(0, 1.2, 0), 72,
-             follow: true, yLo: -1, yHi: 5.4)                 // Treppenhaus
+             follow: true, yLo: -1, yHi: 7.4)                 // Treppenhaus
 zone(-31, -24, -2, 14,   SCNVector3(0.0, 2.6, 5.6), SCNVector3(0, 1.15, 0), 60,
              follow: true)                                    // Westflur Sued
 zone(-31, -24, -22, -2,  SCNVector3(0.0, 2.6, 5.6), SCNVector3(0, 1.15, 0), 62,
@@ -2750,8 +2637,13 @@ zone(-3, 3, -20, -0.2,   SCNVector3(0.0, 2.1, 5.4), SCNVector3(0, 1.15, 0), 64,
              follow: true, yaw: -Float.pi/2, yLo: 2.6, yHi: 5.4)   // Schwesternzimmer
         zone(3, 11, -20, -15,   SCNVector3(0.0, 2.1, 5.4), SCNVector3(0, 1.15, 0), 68,
              follow: true, yaw: Float.pi/2, yLo: 2.6, yHi: 5.4)    // Waschraum OG
-        zone(-8, -1, 3, 13,   SCNVector3(0.0, 2.2, 5.4), SCNVector3(0, 1.15, 0), 66,
-             follow: true, yLo: 5.4, yHi: 12)                    // Vorraum Glasgeschoss
+        // Zweigeteilt, damit sich der Vorraum nicht mit der Treppenhauszone
+        // ueberlappt - updateCamera nimmt die ERSTE passende Zone, die zweite
+        // greift dann nie.
+        zone(-8, -4, 3, 6.0,  SCNVector3(0.0, 2.2, 5.4), SCNVector3(0, 1.15, 0), 66,
+             follow: true, yLo: 5.4, yHi: 12)                    // Vorraum West
+        zone(-4, -1, 3, 13,   SCNVector3(0.0, 2.2, 5.4), SCNVector3(0, 1.15, 0), 66,
+             follow: true, yLo: 5.4, yHi: 12)                    // Vorraum Ost
         zone(-1, 9, 3, 13,    SCNVector3(0.0, 2.2, 5.4), SCNVector3(0, 1.15, 0), 68,
              follow: true, yaw: Float.pi/2, yLo: 5.4, yHi: 12)   // Waschsaal
         zone(-9, 9, -13, 3,   SCNVector3(0.0, 3.2, 5.8), SCNVector3(0, 1.2, 0), 74,

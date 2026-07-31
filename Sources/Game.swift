@@ -139,6 +139,13 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
     @Published var activeLights = 0
     @Published var activeNodes = 0
     private var cullTick = 0
+    /// Deckenflaechen fuer die Kamerabegrenzung: x0, x1, z0, z1, Hoehe.
+    var ceilRects: [(Float, Float, Float, Float, Float)] = []
+    /// Sparmodus fuers Eingrenzen von Abstuerzen. Schaltet die Gruppen einzeln
+    /// ab, damit man im Spiel sieht, welche das Problem macht.
+    @Published var noLights = false
+    @Published var noPlanes = false
+    @Published var noShadows = false
 
     // --- Spielzustand fuer die Oberflaeche ---
     @Published var prompt: String? = nil        // Text am Aktionsknopf
@@ -316,7 +323,12 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         scene.rootNode.addChildNode(n)
     }
 
+    /// Deckenflaechen. Die Kamera muss wissen, wo sie ist - sonst faehrt sie
+    /// in niedrigen Raeumen durch die Platte und man sieht von innen auf die
+    /// Deckenbretter statt in den Raum.
     func ceiling(_ w: CGFloat, _ d: CGFloat, _ cx: Float, _ cz: Float, _ h: Float = 4) {
+        ceilRects.append((cx - Float(w) / 2, cx + Float(w) / 2,
+                          cz - Float(d) / 2, cz + Float(d) / 2, h))
         let plane = SCNPlane(width: w, height: d)
         plane.firstMaterial = ceilMat
         let n = SCNNode(geometry: plane)
@@ -355,6 +367,16 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
     /// SceneKit zwingen, Shader neu zu uebersetzen - das ruckelt sichtbar.
     func updateCulling() {
         let cp = cameraNode.presentation.simdWorldPosition
+        // Sparmodus: harte Abschaltung ganzer Gruppen. Damit laesst sich im
+        // Spiel eingrenzen, WAS abstuerzt - raten hat zweimal nicht gereicht.
+        if noLights {
+            for l in cullLights where (l.node.light?.categoryBitMask ?? 0) != 0 {
+                l.node.light?.categoryBitMask = 0
+            }
+        }
+        if noPlanes {
+            for n in cullNodes where !n.node.isHidden { n.node.isHidden = true }
+        }
         let lr2 = lightRadius * lightRadius
         // Nur die naechsten maxLights brennen. Erst filtern, dann sortieren -
         // ueber alle 120 zu sortieren kostet jedes Mal unnoetig.
@@ -369,7 +391,7 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
             nah.sort { $0.1 < $1.1 }
             nah.removeSubrange(maxLights..<nah.count)
         }
-        let an = Set(nah.map { $0.0 })
+        let an = noLights ? Set<Int>() : Set(nah.map { $0.0 })
         for (i, l) in cullLights.enumerated() {
             let soll = an.contains(i)
             let ist = (l.node.light?.categoryBitMask ?? 0) != 0
@@ -377,7 +399,7 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         }
         let nr2 = nodeRadius * nodeRadius
         var sichtbar = 0
-        for n in cullNodes {
+        for n in cullNodes where !noPlanes {
             // Der Moebel-Editor kann Knoten aus der Szene nehmen. Die bleiben
             // in der Liste stehen - isHidden darauf waere wirkungslos, aber
             // die Entfernungsrechnung kostet trotzdem.
@@ -885,6 +907,17 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         node.simdTransform = m
     }
 
+    /// Niedrigste Decke ueber (x, z), die hoeher als y liegt. 99 = keine.
+    func ceilingAbove(_ x: Float, _ z: Float, _ y: Float) -> Float {
+        var best: Float = 99
+        for c in ceilRects where c.4 > y + 0.2 {
+            if x >= c.0 && x <= c.1 && z >= c.2 && z <= c.3 && c.4 < best {
+                best = c.4
+            }
+        }
+        return best
+    }
+
     func aimCamera(_ from: SCNVector3, _ to: SCNVector3) {
         aimNode(cameraNode, from, to)
     }
@@ -1029,6 +1062,13 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
                                  c.look.y,
                                  c.look.z + (pz - c.look.z) * c.track)
         }
+
+        // Unter der Decke bleiben. In der Flurzone sitzt die Kamera 2.1 m
+        // ueber dem Spieler, die Galerieplatte liegt aber schon auf 3.8 -
+        // zusammen mit dem Hochziehen bei Wandkontakt (rise) landete sie
+        // regelmaessig IN der Platte, und man sah von innen auf die Bretter.
+        let deckel = ceilingAbove(wantPos.x, wantPos.z, player.position.y) - 0.35
+        if wantPos.y > deckel { wantPos.y = deckel }
 
         if changed {
             smoothPos = wantPos; smoothAim = wantAim
@@ -1187,7 +1227,10 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         //     kommt genau dieses Licht zurueck - daher "ab einer Hoehe wird
         //     alles hell". Jetzt gleicht das Grundlicht es aus, weich.
         let camY = cameraNode.presentation.position.y
-        let heightFade = max(0, min(1, (camY - 5.0) / 3.0))
+        // Frueher als vorher (5.0 bis 8.0): schon ab 4 m sieht man beim
+        // Ueberfliegen mehrere Raeume auf einmal, und genau in dem Fenster
+        // zwischen "alles sichtbar" und "Schatten aus" ist es abgestuerzt.
+        let heightFade = max(0, min(1, (camY - 3.5) / 2.0))
         if abs(heightFade - shadowFade) > 0.002 {
             shadowFade = heightFade
             ambientNode?.light?.intensity =
@@ -1196,12 +1239,19 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
                 exposureBase + CGFloat((brightness - 1) * 0.55)
                              - CGFloat(0.30 * heightFade)
         }
-        let heavyView = heightFade > 0.85
+        let heavyView = heightFade > 0.5 || noShadows
         if heavyView != shadowsOff {
             shadowsOff = heavyView
             for n in shadowLights { n.light?.castsShadow = !heavyView }
             lanternNode.light?.castsShadow = !heavyView
         }
+        // In der Hoehe zusaetzlich Sichtweite und Lichtbudget zusammenziehen.
+        // Aus 12 m Hoehe liegt sonst das halbe Sanatorium im Bild: mit zFar 55
+        // sind das tausende Knoten in einem Bild, und der Speicher reisst.
+        let wantFar: CGFloat = heightFade > 0.5 ? 26 : 55
+        if cameraNode.camera?.zFar != wantFar { cameraNode.camera?.zFar = wantFar }
+        let wantMax = heightFade > 0.5 ? 6 : 14
+        if maxLights != wantMax { maxLights = wantMax }
         // Entfernungsabschaltung. Alle 8 Bilder reicht - die Kamera bewegt
         // sich hoechstens 6 m/s, das sind 20 cm zwischen zwei Pruefungen.
         cullTick += 1

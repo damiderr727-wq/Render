@@ -276,6 +276,19 @@ struct ContentView: View {
         .background(RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.6)))
     }
 
+    private func sparBtn(_ titel: String, _ an: Bool,
+                         _ act: @escaping () -> Void) -> some View {
+        Button(action: act) {
+            Text(titel)
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundColor(an ? Color(red: 1.0, green: 0.55, blue: 0.4)
+                                    : Color(white: 0.7))
+                .padding(.horizontal, 7).padding(.vertical, 4)
+                .background(RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.white.opacity(an ? 0.26 : 0.12)))
+        }
+    }
+
     private func editBtn(_ sym: String, _ act: @escaping () -> Void) -> some View {
         Button(action: act) {
             Image(systemName: sym)
@@ -299,6 +312,14 @@ struct ContentView: View {
                         .background(RoundedRectangle(cornerRadius: 4)
                             .fill(Color.white.opacity(0.14)))
                 }
+            }
+            // Sparmodus: Gruppen einzeln abschalten, um den Absturz einzugrenzen.
+            // Wenn es mit "Lichter aus" nicht mehr abstuerzt, liegt es an den
+            // Lichtern - das ist schneller als jede Vermutung.
+            HStack(spacing: 6) {
+                sparBtn("Lichter aus", game.noLights) { game.noLights.toggle() }
+                sparBtn("Flaechen aus", game.noPlanes) { game.noPlanes.toggle() }
+                sparBtn("Schatten aus", game.noShadows) { game.noShadows.toggle() }
             }
             HStack(spacing: 8) {
                 Image(systemName: "sun.max").font(.system(size: 12))

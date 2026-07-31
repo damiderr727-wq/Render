@@ -1501,11 +1501,13 @@ extension GameController {
         wallZ(0, 14, -8, wHall, gaps: [(3.5, 2.4)], h: 6)
         wallZ(0, 14, 8, wHall, gaps: [(8, 2.4)], h: 6)
 
-        wallZ(2, 14, -24, wDine, gaps: [(12, 2.4)], h: 4)                        // Speisezimmer
+        // (Ostwand des Speisezimmers entfaellt - die Westflurwand bei x=-24
+        //  steht schon da und hat dieselbe Tuerluecke. Drei Boxen an derselben
+        //  Stelle haben um dieselben Pixel gekaempft.)
         wallX(-24, -8, 2, wDine, gaps: [(-18, 2.4)], h: 4)
         wallX(-24, -8, 14, wDine, h: 4)
 
-        wallZ(-10, 2, -24, wKit, gaps: [(-1.5, 2.2)], h: 3.2, wainscot: false)   // Kueche
+        // (Ostwand der Kueche entfaellt - siehe oben, dieselbe Wand.)
         wallX(-24, -12, -10, wKit, h: 3.2, wainscot: false)
         wallZ(-10, 2, -12, wKit, h: 3.2, wainscot: false)
 
@@ -2129,7 +2131,10 @@ extension GameController {
         // genau am Austritt des oberen Laufs liegen muss.
         floorTile(6.0, 5.5, -5.0, 3.25, oakF, y: F)      // Galerie  x[-8,-2] z[0.5,6]
         floorTile(2.0, 8.0, -3.0, 10.0, oakF, y: F)      // Flur Ost x[-4,-2] z[6,14]
-        floorTile(5.0, 2.0, -0.5, 0.5, oakF, y: F)
+        // Verbindungsstueck Galerie <-> Stationsflur. Genau in die Luecke
+        // gelegt: vorher ragte es 1.0 m in die Galerie und 0.5 m in den Flur,
+        // beides auf y 3.80 - zwei Boeden auf gleicher Hoehe flimmern.
+        floorTile(5.0, 1.5, 0.5, 0.75, oakF, y: F)
         // (Die zweite Decke auf F + 2.2 = 6.0 ist entfallen - sie lag deckungs-
         //  gleich auf der Hallendecke und erzeugte Z-Fighting.)
         // Bruestung zur Halle hin
@@ -2252,7 +2257,7 @@ extension GameController {
         ceiling(7, 11, -4.5, 8.5, F2 + 2.7)
         wallZ(3, 6, -8, wArd, h: 2.7, base: F2)          // noerdlich des Schachts
         wallX(-4, -1, 13, wArd, h: 2.7, base: F2)        // nur wo Boden liegt
-        wallX(-8, -1, 3, wArd, h: 2.7, base: F2)
+        // (Nordwand entfaellt - weiter unten steht sie schon als x[-9,-1].)
         wallZ(3, 13, -1, wArd, gaps: [(9.5, 1.3)], h: 2.7, base: F2)
         addOmni(SCNVector3(-4.5, F2 + 2.2, 8), 300,
                 UIColor(red: 0.92, green: 0.88, blue: 0.80, alpha: 1), range: 7)
@@ -2455,7 +2460,8 @@ extension GameController {
         floorTile(4, 5, 9, -20.5, texMat(Tex.stoneFloor, 2, 2), y: 0)
         ceiling(4, 4.6, 9, -15.7, 2.4)
         ceiling(4, 5, 9, -20.5, 2.4)
-        wallZ(-23, -13.4, 7, wCell, h: 2.4, wainscot: false)
+        // (Westwand des Kellergangs entfaellt - die Direktionswand bei x=7
+        //  steht an derselben Stelle und ist hoeher.)
         wallX(7, 11, -23, wCell, h: 2.4, wainscot: false)
         wallX(7, 11, -18, wCell, gaps: [(9.0, 1.15)], h: 2.4, wainscot: false)
 

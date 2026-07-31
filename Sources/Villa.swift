@@ -496,12 +496,20 @@ extension GameController {
         pane.transparency = 0.55                 // milchig, man sieht die Backplate durch
         pane.isDoubleSided = true
 
+        // Bruestung GEKACHELT, nicht getaefelt. Eine Holzbruestung in einer
+        // feuchten Schwimmhalle mit Glasdach ergibt keinen Sinn - hier stand
+        // Tex.wainscot, dieselbe Taefelung wie in den Wohnraeumen.
+        // Darauf eine schmale Rostkante als Abdeckung.
+        let bruest = texMat(Tex.tileGreen, 8, 1.6)
+        let rost = texMat(Tex.rust, 3, 1)
         if alongX {
-            prop(len, 0.45, 0.16, mid, base + 0.225, fixed, texMat(Tex.wainscot, 2, 1))
+            prop(len, 0.45, 0.16, mid, base + 0.225, fixed, bruest)
+            prop(len + 0.04, 0.06, 0.20, mid, base + 0.48, fixed, rost)
             prop(len, h, 0.05, mid, base + 0.45 + Float(h) / 2, fixed, pane)
             prop(len + 0.2, 0.14, 0.14, mid, base + 0.45 + Float(h) + 0.07, fixed, iron)
         } else {
-            prop(0.16, 0.45, len, fixed, base + 0.225, mid, texMat(Tex.wainscot, 2, 1))
+            prop(0.16, 0.45, len, fixed, base + 0.225, mid, bruest)
+            prop(0.20, 0.06, len + 0.04, fixed, base + 0.48, mid, rost)
             prop(0.05, h, len, fixed, base + 0.45 + Float(h) / 2, mid, pane)
             prop(0.14, 0.14, len + 0.2, fixed, base + 0.45 + Float(h) + 0.07, mid, iron)
         }
@@ -2356,9 +2364,12 @@ extension GameController {
         addOmni(SCNVector3(0, F2 + 3.4, -5), 900,
                 UIColor(red: 0.88, green: 0.91, blue: 0.95, alpha: 1), range: 26)
         // Blendenband zwischen Glaswand und Dach
-        prop(18.4, 0.42, 0.22, 0, F2 + 3.26, -13, texMat(Tex.wainscot, 3, 1))
-        prop(0.22, 0.42, 16.3, -9, F2 + 3.26, -5, texMat(Tex.wainscot, 3, 1))
-        prop(0.22, 0.42, 16.3, 9, F2 + 3.26, -5, texMat(Tex.wainscot, 3, 1))
+        // Dachrand aus verrostetem Eisen. Ein Glasdach haengt nicht in einem
+        // Holzrahmen, schon gar nicht ueber einem Schwimmbecken.
+        let dachRand = texMat(Tex.rust, 4, 1)
+        prop(18.4, 0.42, 0.22, 0, F2 + 3.26, -13, dachRand)
+        prop(0.22, 0.42, 16.3, -9, F2 + 3.26, -5, dachRand)
+        prop(0.22, 0.42, 16.3, 9, F2 + 3.26, -5, dachRand)
         // Glasdach: drei leuchtende Bahnen zwischen Eisensparren
         // Milchglas statt Leuchtplatte: leicht durchscheinend, ruhig gluehend -
         // draussen liegt dichter Nebel, durch den nur diffuses Licht faellt.

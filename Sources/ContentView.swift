@@ -249,14 +249,28 @@ struct ContentView: View {
     }
 
     // --- Freie Kamera: umsehen ohne den Spieler zu bewegen ---
+    // Die Dreh- und Hebeknoepfe wiederholen, solange der Finger liegt. Vorher
+    // loeste jeder Tipp genau einmal aus - fuer eine Vierteldrehung brauchte
+    // man neun Tipps, und zum Hochfliegen musste man den Knopf umschalten,
+    // wegfliegen und wieder zurueckschalten.
     private var flyPanel: some View {
         HStack(spacing: 6) {
-            editBtn("arrow.turn.up.left") { game.turnCamera(-0.18, 0) }
-            editBtn("arrow.turn.up.right") { game.turnCamera(0.18, 0) }
-            editBtn("arrow.up.circle") { game.turnCamera(0, 0.14) }
-            editBtn("arrow.down.circle") { game.turnCamera(0, -0.14) }
-            editBtn("arrow.up.to.line") { game.fcLift = game.fcLift > 0 ? 0 : 1 }
-            editBtn("arrow.down.to.line") { game.fcLift = game.fcLift < 0 ? 0 : -1 }
+            HoldButton("arrow.turn.up.left") { game.turnCamera(-0.030, 0) }
+            HoldButton("arrow.turn.up.right") { game.turnCamera(0.030, 0) }
+            HoldButton("arrow.up.circle") { game.turnCamera(0, 0.024) }
+            HoldButton("arrow.down.circle") { game.turnCamera(0, -0.024) }
+            HoldButton("arrow.up.to.line", onPress: { game.fcLift = 1 },
+                       onRelease: { game.fcLift = 0 }) { }
+            HoldButton("arrow.down.to.line", onPress: { game.fcLift = -1 },
+                       onRelease: { game.fcLift = 0 }) { }
+            Button { game.fcFast.toggle() } label: {
+                Text(game.fcFast ? "schnell" : "langsam")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(game.fcFast ? Color(red: 1.0, green: 0.85, blue: 0.4)
+                                                 : Color(white: 0.75))
+                    .frame(width: 52, height: 32)
+                    .background(RoundedRectangle(cornerRadius: 5).fill(Color.white.opacity(0.14)))
+            }
         }
         .padding(6)
         .background(RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.6)))
@@ -361,6 +375,61 @@ struct ContentView: View {
             .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.62)))
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.14), lineWidth: 1))
             .padding(.bottom, 16)
+    }
+}
+
+// ===================== Halte-Knopf =====================
+// Loest wiederholt aus, solange der Finger liegt. Fuer die freie Kamera:
+// Drehen und Heben in Einzeltipps war praktisch unbenutzbar.
+//
+// DragGesture mit minimumDistance 0 statt Button, weil ein Button erst beim
+// Loslassen ausloest und kein "gedrueckt"-Ereignis liefert.
+struct HoldButton: View {
+    let symbol: String
+    var onPress: (() -> Void)? = nil
+    var onRelease: (() -> Void)? = nil
+    let repeatAction: () -> Void
+
+    @State private var timer: Timer?
+    @State private var down = false
+
+    init(_ symbol: String, onPress: (() -> Void)? = nil,
+         onRelease: (() -> Void)? = nil, _ repeatAction: @escaping () -> Void) {
+        self.symbol = symbol
+        self.onPress = onPress
+        self.onRelease = onRelease
+        self.repeatAction = repeatAction
+    }
+
+    var body: some View {
+        Image(systemName: symbol)
+            .font(.system(size: 13))
+            .foregroundColor(down ? Color(red: 1.0, green: 0.85, blue: 0.45)
+                                  : Color(white: 0.9))
+            .frame(width: 34, height: 32)
+            .background(RoundedRectangle(cornerRadius: 5)
+                .fill(Color.white.opacity(down ? 0.28 : 0.14)))
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in
+                        guard !down else { return }
+                        down = true
+                        onPress?()
+                        repeatAction()
+                        timer?.invalidate()
+                        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0,
+                                                     repeats: true) { _ in
+                            repeatAction()
+                        }
+                    }
+                    .onEnded { _ in
+                        down = false
+                        timer?.invalidate()
+                        timer = nil
+                        onRelease?()
+                    }
+            )
     }
 }
 

@@ -101,7 +101,13 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
     var fcYaw: Float = 0
     var fcPitch: Float = -0.25
     var fcLift: Float = 0
+    /// Schnellflug. Das Haus ist rund 90 m lang - mit 5 m/s dauert eine
+    /// Querung ueber zwanzig Sekunden.
+    @Published var fcFast = false
     private var shadowsOff = false
+    /// 0 = normale Hoehe, 1 = ganz oben. Zieht Grundlicht und Belichtung
+    /// gegenlaeufig zum Wegfall der Schatten.
+    private var shadowFade: Float = -1
     @Published var selectedFurniture: Int? = nil
     private let selMarker = SCNNode()
     let audio = AudioController()
@@ -111,6 +117,28 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
     /// Flackerlichter: Knoten, Grundhelligkeit und ein Phasenversatz.
     var flickerLights: [(node: SCNNode, base: CGFloat, seed: Float)] = []
     private var animTime: Float = 0
+
+    // --- Entfernungsabschaltung ---------------------------------------
+    // Die Szene enthaelt rund 120 Lichter und ueber 300 additive Flaechen
+    // (Lichtschaechte, Bodenflecken, Wandschein, Kontaktschatten). Ohne
+    // Abschaltung sind sie ALLE gleichzeitig aktiv, egal wo man steht - das
+    // ist die eigentliche Ruckelursache, nicht die Dreieckszahl. Gezaehlt mit
+    // tools/kosten_zaehlen.py.
+    //
+    // Massgeblich ist die KAMERA, nicht der Spieler: mit der freien Kamera
+    // schaut man von weit oben auf Raeume, in denen der Spieler nicht steht.
+    var cullLights: [(node: SCNNode, x: Float, y: Float, z: Float)] = []
+    var cullNodes: [(node: SCNNode, x: Float, y: Float, z: Float)] = []
+    /// So viele Lichter duerfen gleichzeitig brennen. SceneKit rechnet jedes
+    /// aktive Licht fuer jeden sichtbaren Knoten - die Zahl geht direkt in die
+    /// Bildrate ein.
+    var maxLights = 14
+    var lightRadius: Float = 18
+    var nodeRadius: Float = 22
+    /// Fuer die Anzeige im Debug-Panel - damit man misst statt raet.
+    @Published var activeLights = 0
+    @Published var activeNodes = 0
+    private var cullTick = 0
 
     // --- Spielzustand fuer die Oberflaeche ---
     @Published var prompt: String? = nil        // Text am Aktionsknopf
@@ -144,6 +172,8 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
     private var smoothPos = SCNVector3Zero
     private var smoothAim = SCNVector3Zero
     private var currentZone = -1
+    /// Nachgezogener Kameraabstand, siehe updateCamera().
+    private var smoothReach: Float = -1
     private var lastTime: TimeInterval = 0
     private var vx: Float = 0
     private var vz: Float = 0
@@ -308,7 +338,62 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         n.light?.attenuationEndDistance = range
         n.position = pos
         scene.rootNode.addChildNode(n)
+        cullLights.append((n, pos.x, pos.y, pos.z))
         return n
+    }
+
+    /// Meldet einen Knoten fuer die Entfernungsabschaltung an. Gedacht fuer
+    /// additive Zusatzflaechen (Lichtschacht, Bodenfleck, Wandschein,
+    /// Kontaktschatten) und Staubemitter - alles, was nur in der Naehe wirkt.
+    func registerCullable(_ n: SCNNode, _ x: Float, _ y: Float, _ z: Float) {
+        cullNodes.append((n, x, y, z))
+    }
+
+    /// Schaltet weit entfernte Lichter und Zusatzflaechen ab.
+    /// Lichter ueber categoryBitMask = 0: sie bleiben in der Szene, beleuchten
+    /// aber nichts mehr. Ein Licht zu entfernen und wieder anzuhaengen wuerde
+    /// SceneKit zwingen, Shader neu zu uebersetzen - das ruckelt sichtbar.
+    func updateCulling() {
+        let cp = cameraNode.presentation.simdWorldPosition
+        let lr2 = lightRadius * lightRadius
+        // Nur die naechsten maxLights brennen. Erst filtern, dann sortieren -
+        // ueber alle 120 zu sortieren kostet jedes Mal unnoetig.
+        var nah: [(Int, Float)] = []
+        nah.reserveCapacity(cullLights.count)
+        for (i, l) in cullLights.enumerated() {
+            let dx = l.x - cp.x, dy = l.y - cp.y, dz = l.z - cp.z
+            let d2 = dx * dx + dy * dy + dz * dz
+            if d2 < lr2 { nah.append((i, d2)) }
+        }
+        if nah.count > maxLights {
+            nah.sort { $0.1 < $1.1 }
+            nah.removeSubrange(maxLights..<nah.count)
+        }
+        var an = Set(nah.map { $0.0 })
+        for (i, l) in cullLights.enumerated() {
+            let soll = an.contains(i)
+            let ist = (l.node.light?.categoryBitMask ?? 0) != 0
+            if soll != ist { l.node.light?.categoryBitMask = soll ? -1 : 0 }
+        }
+        let nr2 = nodeRadius * nodeRadius
+        var sichtbar = 0
+        for n in cullNodes {
+            // Der Moebel-Editor kann Knoten aus der Szene nehmen. Die bleiben
+            // in der Liste stehen - isHidden darauf waere wirkungslos, aber
+            // die Entfernungsrechnung kostet trotzdem.
+            if n.node.parent == nil { continue }
+            let dx = n.x - cp.x, dy = n.y - cp.y, dz = n.z - cp.z
+            let nah = (dx * dx + dy * dy + dz * dz) < nr2
+            if n.node.isHidden == nah { n.node.isHidden = !nah }
+            if nah { sichtbar += 1 }
+        }
+        let la = an.count, na = sichtbar
+        if la != activeLights || na != activeNodes {
+            DispatchQueue.main.async { [weak self] in
+                self?.activeLights = la
+                self?.activeNodes = na
+            }
+        }
     }
 
     /// Feste Kamera: pos und look sind Weltkoordinaten.
@@ -351,6 +436,7 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         if shadow { shadowLights.append(n) }
         scene.rootNode.addChildNode(n)
         aimNode(n, pos, target)
+        cullLights.append((n, pos.x, pos.y, pos.z))
         return n
     }
 
@@ -381,6 +467,9 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         n.position = SCNVector3(cx, cy, cz)
         n.addParticleSystem(ps)
         scene.rootNode.addChildNode(n)
+        // Fuenfzehn Emitter mit je rund birthRate x 12 additiven Teilchen
+        // laufen sonst dauerhaft mit, auch am anderen Ende des Hauses.
+        registerCullable(n, cx, cy, cz)
     }
 
     func registerWater(_ m: SCNMaterial, _ sx: Float, _ sy: Float, _ rep: Float) {
@@ -449,9 +538,13 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
     func setBrightness(_ v: Float) {
         let b = max(0.4, min(2.2, v))
         brightness = b
-        ambientNode?.light?.intensity = ambientBase * CGFloat(b)
+        // Hoehenausgleich mitrechnen, sonst springt die Helligkeit, sobald man
+        // den Regler benutzt waehrend die freie Kamera oben steht.
+        let f = max(0, shadowFade)
+        ambientNode?.light?.intensity = ambientBase * CGFloat(b) * CGFloat(1 - 0.34 * f)
         keyNode?.light?.intensity = keyBase * CGFloat(b)
-        cameraNode.camera?.exposureOffset = exposureBase + CGFloat((b - 1) * 0.55)
+        cameraNode.camera?.exposureOffset =
+            exposureBase + CGFloat((b - 1) * 0.55) - CGFloat(0.30 * f)
     }
 
     /// Ist der Gegenstand gerade in Benutzung? Brecheisen ausgeruestet oder
@@ -605,11 +698,33 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         }
     }
 
+    /// Wie weit darf die Kamera hoechstens hinter dem Spieler stehen, gemessen
+    /// an der Raumtiefe in Blickrichtung? Gemessen mit tools/kamera_zonen.py:
+    /// mit dem festen Versatz von 5.6 m stand die Kamera in 22 von 32 Zonen
+    /// von weniger als der halben Raumflaeche aus noch im Raum. Sie wurde also
+    /// fast immer von hitsWall() herangezogen und klebte dem Spieler im Nacken -
+    /// im Spiel sieht das aus, als drehte sie sich beim Raumwechsel nie.
+    static let camFitFactor: Float = 0.40
+    static let camMinDist: Float = 2.2
+
     func zone(_ x0: Float, _ x1: Float, _ z0: Float, _ z1: Float,
               _ pos: SCNVector3, _ look: SCNVector3, _ fov: CGFloat = 70,
               follow: Bool = false, track: Float = 0.55, margin: Float = 1.6,
               yaw: Float = 0, yLo: Float = -1, yHi: Float = 2.6) {
-        camZones.append(CamZone(x0: x0, x1: x1, z0: z0, z1: z1, pos: pos, look: look,
+        var p = pos
+        if follow {
+            // Auf welcher Achse liegt der Versatz nach der yaw-Drehung?
+            let alongX = abs(sin(yaw)) > 0.707
+            let extent = alongX ? (x1 - x0) : (z1 - z0)
+            let want = (p.x * p.x + p.z * p.z).squareRoot()
+            let maxD = max(GameController.camMinDist,
+                           GameController.camFitFactor * extent)
+            if want > maxD && want > 0.01 {
+                let f = maxD / want
+                p = SCNVector3(p.x * f, p.y, p.z * f)
+            }
+        }
+        camZones.append(CamZone(x0: x0, x1: x1, z0: z0, z1: z1, pos: p, look: look,
                                 fov: fov, follow: follow, track: track, margin: margin,
                                 yLo: yLo, yHi: yHi, yaw: yaw))
     }
@@ -772,7 +887,7 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
     // Beim Zonenwechsel wird hart geschnitten, innerhalb weich nachgezogen.
     /// Freie Kamera bewegen. Der Joystick schiebt in Blickrichtung.
     func flyCamera(_ dt: Float, fwd: Float, side: Float, lift: Float) {
-        let sp: Float = 6.0
+        let sp: Float = fcFast ? 17.0 : 5.0
         let cy = cos(fcYaw), sy = sin(fcYaw)
         fcPos.x += (-sy * fwd + cy * side) * sp * dt
         fcPos.z += (-cy * fwd - sy * side) * sp * dt
@@ -851,11 +966,26 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
                 var d: Float = 0.5
                 while d <= full {
                     if hitsWall(px + dirX * d, pz + dirZ * d, camY - 0.85) {
-                        reach = max(0.35, d - 0.35)
+                        reach = max(0.8, d - 0.35)
                         break
                     }
                     d += 0.25
                 }
+                // Der gemessene Abstand springt: waehrend man Treppen steigt,
+                // wandert die Pruefhoehe mit dem Spieler durch Stufensperren und
+                // Wandkanten, und der Wert schaltet von Bild zu Bild zwischen
+                // "frei" und "blockiert". Ungefiltert uebernommen ergibt das das
+                // Schwimmen im Treppenhaus. Also nachziehen - schnell heran
+                // (sonst steckt die Kamera kurz in der Wand), langsam wieder
+                // hinaus (sonst zuckt sie bei jeder Kante).
+                if changed || smoothReach < 0 {
+                    smoothReach = reach
+                } else if reach < smoothReach {
+                    smoothReach += (reach - smoothReach) * 0.50
+                } else {
+                    smoothReach += (reach - smoothReach) * 0.07
+                }
+                reach = smoothReach
                 ox = dirX * reach
                 oz = dirZ * reach
                 // Steht die Wand naeher als der Sollabstand, weicht die Kamera
@@ -983,9 +1113,12 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         // Feuer und Kerzen zucken. Drei ueberlagerte Sinus geben ein
         // unregelmaessiges Muster, ohne dass man eine Periode heraushoert.
         for fl in flickerLights {
+            // Abgeschaltete Lichter brauchen kein Flackern - das sind bis zu
+            // 46 Zuweisungen je Bild, von denen die meisten nichts bewirken.
+            guard let l = fl.node.light, l.categoryBitMask != 0 else { continue }
             let t = animTime * 7.3 + fl.seed
             let n = sin(t) * 0.5 + sin(t * 2.37 + 1.1) * 0.32 + sin(t * 5.11 + 2.6) * 0.18
-            fl.node.light?.intensity = fl.base * CGFloat(0.80 + 0.20 * n)
+            l.intensity = fl.base * CGFloat(0.80 + 0.20 * n)
         }
 
         scanTick += 1
@@ -1030,14 +1163,38 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         // beim Spieler weiter unten: Joystick nach unten = rueckwaerts.
         if freeCam { flyCamera(dt, fwd: -Float(move.dy), side: Float(move.dx), lift: fcLift) }
         // Aus der Hoehe sieht man fast das ganze Haus. Dann kosten die
-        // Schattenwerfer je einen kompletten Zusatzdurchgang ueber alles -
-        // deshalb sind sie beim Ueberfliegen aus.
-        let heavyView = freeCam && cameraNode.position.y > 6.5
+        // Schattenwerfer je einen kompletten Zusatzdurchgang ueber alles.
+        //
+        // Zwei Aenderungen gegenueber vorher:
+        //  1. Der Uebergang laeuft jetzt weich ueber 3 m Hoehe statt hart bei
+        //     6.5 m. Ein hartes Umschalten von castsShadow zwingt SceneKit,
+        //     Schattenkarten und Renderpipeline neu aufzubauen - genau in dem
+        //     Moment, in dem ohnehin das halbe Haus im Bild ist. Das war der
+        //     Absturz beim Hochfliegen.
+        //  2. Das Grundlicht wird gegenlaeufig heruntergezogen. Die Schatten
+        //     haben Licht geschluckt (shadowColor alpha 0.32); fallen sie weg,
+        //     kommt genau dieses Licht zurueck - daher "ab einer Hoehe wird
+        //     alles hell". Jetzt gleicht das Grundlicht es aus, weich.
+        let camY = cameraNode.presentation.position.y
+        let heightFade = max(0, min(1, (camY - 5.0) / 3.0))
+        if abs(heightFade - shadowFade) > 0.002 {
+            shadowFade = heightFade
+            ambientNode?.light?.intensity =
+                ambientBase * CGFloat(brightness) * CGFloat(1 - 0.34 * heightFade)
+            cameraNode.camera?.exposureOffset =
+                exposureBase + CGFloat((brightness - 1) * 0.55)
+                             - CGFloat(0.30 * heightFade)
+        }
+        let heavyView = heightFade > 0.85
         if heavyView != shadowsOff {
             shadowsOff = heavyView
             for n in shadowLights { n.light?.castsShadow = !heavyView }
             lanternNode.light?.castsShadow = !heavyView
         }
+        // Entfernungsabschaltung. Alle 8 Bilder reicht - die Kamera bewegt
+        // sich hoechstens 6 m/s, das sind 20 cm zwischen zwei Pruefungen.
+        cullTick += 1
+        if cullTick % 8 == 0 { updateCulling() }
         if attackCooldown > 0 { attackCooldown -= dt }
         if dodgeCooldown > 0 { dodgeCooldown -= dt }
         if invulnT > 0 { invulnT -= dt }
@@ -1072,9 +1229,11 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         if debugOn {
             let cp = cameraNode.position
             let zn = currentZone >= 0 && currentZone < camZones.count ? currentZone : -1
-            let txt = String(format: "Spieler  x %.1f  y %.1f  z %.1f\nKamera   x %.1f  y %.1f  z %.1f\nZone %d   Etage %d   %@",
+            let txt = String(format: "Spieler  x %.1f  y %.1f  z %.1f\nKamera   x %.1f  y %.1f  z %.1f\nZone %d   Etage %d   %@\nLichter %d/%d   Flaechen %d/%d",
                              player.position.x, player.position.y, player.position.z,
-                             cp.x, cp.y, cp.z, zn, floorIdx, currentRoom)
+                             cp.x, cp.y, cp.z, zn, floorIdx, currentRoom,
+                             activeLights, cullLights.count,
+                             activeNodes, cullNodes.count)
             if txt != debugText {
                 DispatchQueue.main.async { [weak self] in self?.debugText = txt }
             }
@@ -1087,7 +1246,7 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         // statt als gekreuzte Scheiben aufzufallen - der Rest der "Kanten".
         if !shaftPlanes.isEmpty {
             let cp = cameraNode.simdWorldPosition
-            for (node, nrm) in shaftPlanes {
+            for (node, nrm) in shaftPlanes where !node.isHidden {
                 let v = cp - node.simdWorldPosition
                 let len = simd_length(v)
                 // Steht die Kamera GENAU auf dem Schacht, ist der Vektor null

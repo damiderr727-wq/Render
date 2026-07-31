@@ -114,6 +114,7 @@ extension GameController {
             shaftPlanes.append((n, k == 0 ? fwd : -right))
             n.renderingOrder = 20
             scene.rootNode.addChildNode(n)
+            registerCullable(n, mid.x, mid.y, mid.z)
         }
     }
 
@@ -127,6 +128,7 @@ extension GameController {
         n.position = SCNVector3(x, 0.02, z)
         n.renderingOrder = 18
         scene.rootNode.addChildNode(n)
+        registerCullable(n, x, 0.02, z)
     }
 
     /// Fleck an einer Wand, z.B. hinter einer Wandleuchte.
@@ -139,6 +141,7 @@ extension GameController {
         n.eulerAngles.y = atan2(dx, dz)
         n.renderingOrder = 19
         scene.rootNode.addChildNode(n)
+        registerCullable(n, x, y, z)
     }
 
     /// Fenster mit echter Tiefe. Der Unterschied zu vorher: die Scheibe sitzt
@@ -448,6 +451,7 @@ extension GameController {
         n.position = SCNVector3(x, y, z)
         n.renderingOrder = 5
         scene.rootNode.addChildNode(n)
+        registerCullable(n, x, y, z)
     }
 
     /// Glasfassade: Bruestung, Eisensprossen, dazwischen leuchtende Wolken-
@@ -2589,7 +2593,13 @@ zone(-8, -2, 0, 6.0,     SCNVector3(0.0, 3.0, 5.6), SCNVector3(0, 1.15, 0), 68,
         // ueber alle Hoehen, damit die Kamera beim Steigen mitgeht.
         // EINE Zone ueber alle drei Ebenen (0 / 3.8 / 6.6). Endete sie wie
         // frueher bei 5.4, fiel die Kamera auf dem oberen Lauf aus der Zone.
-        zone(-8, -4, 6.0, 14,    SCNVector3(0.0, 4.4, -4.2), SCNVector3(0, 1.2, 0), 72,
+        //
+        // Versatz auf 2.4 m verkuerzt: der Schacht ist innen nur 3.6 x 7.6 m.
+        // Mit 4.2 m stand die Kamera fast immer JENSEITS der Nord- oder
+        // Suedwand, wurde von hitsWall() herangezogen und sprang bei jedem
+        // Schritt - das war das Schwimmen auf der Treppe. Dafuer steiler von
+        // oben, das passt auch besser zu einem drei Geschosse hohen Schacht.
+        zone(-8, -4, 6.0, 14,    SCNVector3(0.0, 3.9, -2.4), SCNVector3(0, 1.0, 0), 74,
              follow: true, yLo: -1, yHi: 7.4)                 // Treppenhaus
 zone(-31, -24, -2, 14,   SCNVector3(0.0, 2.6, 5.6), SCNVector3(0, 1.15, 0), 60,
              follow: true)                                    // Westflur Sued
@@ -2641,14 +2651,16 @@ zone(-3, 3, -20, -0.2,   SCNVector3(0.0, 2.1, 5.4), SCNVector3(0, 1.15, 0), 64,
         // ueberlappt - updateCamera nimmt die ERSTE passende Zone, die zweite
         // greift dann nie.
         zone(-8, -4, 3, 6.0,  SCNVector3(0.0, 2.2, 5.4), SCNVector3(0, 1.15, 0), 66,
-             follow: true, yLo: 5.4, yHi: 12)                    // Vorraum West
+             follow: true, yaw: Float.pi/2, yLo: 5.4, yHi: 12)   // Vorraum West
         zone(-4, -1, 3, 13,   SCNVector3(0.0, 2.2, 5.4), SCNVector3(0, 1.15, 0), 66,
              follow: true, yLo: 5.4, yHi: 12)                    // Vorraum Ost
         zone(-1, 9, 3, 13,    SCNVector3(0.0, 2.2, 5.4), SCNVector3(0, 1.15, 0), 68,
              follow: true, yaw: Float.pi/2, yLo: 5.4, yHi: 12)   // Waschsaal
         zone(-9, 9, -13, 3,   SCNVector3(0.0, 3.2, 5.8), SCNVector3(0, 1.2, 0), 74,
              follow: true, yLo: 5.4, yHi: 12)                    // Schwimmhalle
+        // yaw: die Zelle ist 7.6 m breit und nur 3.2 m tief. Mit Blick nach
+        // Norden sah man eine Wand; jetzt laengs durch die Zellenreihe.
         zone(-3.8, 3.8, -23.2, -20, SCNVector3(0.0, 2.0, 4.2), SCNVector3(0, 1.1, 0), 66,
-             follow: true, yLo: 2.6, yHi: 5.4)                   // Isolierzellen
+             follow: true, yaw: Float.pi/2, yLo: 2.6, yHi: 5.4)   // Isolierzellen
     }
 }

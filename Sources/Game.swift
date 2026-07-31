@@ -132,9 +132,12 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
     /// So viele Lichter duerfen gleichzeitig brennen. SceneKit rechnet jedes
     /// aktive Licht fuer jeden sichtbaren Knoten - die Zahl geht direkt in die
     /// Bildrate ein.
-    var maxLights = 14
-    var lightRadius: Float = 18
-    var nodeRadius: Float = 22
+    // Aus der Messung im Spiel: bei 18/22 m waren 14 Lichter und 135 von 318
+    // Flaechen gleichzeitig aktiv. 135 additive Flaechen uebereinander sind
+    // auf einem iPad bei halber Renderaufloesung immer noch Fuellrate satt.
+    var maxLights = 10
+    var lightRadius: Float = 14
+    var nodeRadius: Float = 13
     /// Fuer die Anzeige im Debug-Panel - damit man misst statt raet.
     @Published var activeLights = 0
     @Published var activeNodes = 0
@@ -146,6 +149,12 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
     @Published var noLights = false
     @Published var noPlanes = false
     @Published var noShadows = false
+    /// CRT-Look: Zeilenmaske plus staerkere Farbsaeume und Korn.
+    @Published var crtOn = false
+    /// Wird von SceneKitView gesetzt. Fuer Antippen und Ziehen im Editor.
+    weak var scnView: SCNView?
+    /// Griffversatz beim Ziehen - sonst springt das Stueck unter den Finger.
+    var dragGrab: (Float, Float) = (0, 0)
 
     // --- Spielzustand fuer die Oberflaeche ---
     @Published var prompt: String? = nil        // Text am Aktionsknopf
@@ -918,6 +927,54 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         return best
     }
 
+    /// CRT-Bildroehre an oder aus. Die Zeilenmaske liegt als Bild ueber der
+    /// Szene (ContentView), hier werden nur die Kameraeffekte nachgezogen:
+    /// mehr Farbsaum an den Kanten, mehr Korn, weichere Saettigung.
+    func setCRT(_ on: Bool) {
+        crtOn = on
+        guard let cam = cameraNode.camera else { return }
+        cam.colorFringeStrength = on ? 0.55 : 0.12
+        cam.grainIntensity      = on ? 0.28 : 0.10
+        cam.grainScale          = on ? 1.4  : 2.0
+        cam.saturation          = on ? 0.80 : 0.88
+        cam.vignettingIntensity = on ? 0.85 : 0.48
+        cam.vignettingPower     = on ? 1.6  : 1.1
+        cam.bloomIntensity      = on ? 0.85 : 0.55
+    }
+
+    /// Weltpunkt unter einem Bildschirmpunkt auf der Hoehe y.
+    /// Grundlage fuers Ziehen im Editor: der Strahl durch den Finger wird mit
+    /// der waagerechten Ebene des Objekts geschnitten.
+    func groundPoint(_ p: CGPoint, y: Float) -> SCNVector3? {
+        guard let v = scnView else { return nil }
+        let near = v.unprojectPoint(SCNVector3(Float(p.x), Float(p.y), 0))
+        let far  = v.unprojectPoint(SCNVector3(Float(p.x), Float(p.y), 1))
+        let dy = far.y - near.y
+        if abs(dy) < 1e-5 { return nil }
+        let t = (y - near.y) / dy
+        if t < -0.2 || t > 1.2 { return nil }
+        return SCNVector3(near.x + (far.x - near.x) * t, y,
+                          near.z + (far.z - near.z) * t)
+    }
+
+    /// Welches Moebelstueck liegt unter dem Bildschirmpunkt? -1 = keines.
+    /// spawnPlacement benennt jede Gruppe "furn:<Art>" - darueber findet man
+    /// vom getroffenen Einzelteil zurueck zum ganzen Stueck.
+    func pickFurniture(_ p: CGPoint) -> Int {
+        guard let v = scnView else { return -1 }
+        let treffer = v.hitTest(p, options: [.searchMode: SCNHitTestSearchMode.all.rawValue])
+        for t in treffer {
+            var n: SCNNode? = t.node
+            while let cur = n {
+                if let name = cur.name, name.hasPrefix("furn:") {
+                    if let i = furnitureNodes.firstIndex(of: cur) { return i }
+                }
+                n = cur.parent
+            }
+        }
+        return -1
+    }
+
     func aimCamera(_ from: SCNVector3, _ to: SCNVector3) {
         aimNode(cameraNode, from, to)
     }
@@ -1250,7 +1307,7 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         // sind das tausende Knoten in einem Bild, und der Speicher reisst.
         let wantFar: CGFloat = heightFade > 0.5 ? 26 : 55
         if cameraNode.camera?.zFar != wantFar { cameraNode.camera?.zFar = wantFar }
-        let wantMax = heightFade > 0.5 ? 6 : 14
+        let wantMax = heightFade > 0.5 ? 5 : 10
         if maxLights != wantMax { maxLights = wantMax }
         // Entfernungsabschaltung. Alle 8 Bilder reicht - die Kamera bewegt
         // sich hoechstens 6 m/s, das sind 20 cm zwischen zwei Pruefungen.

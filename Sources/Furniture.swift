@@ -20,6 +20,11 @@ struct Placement {
     var a: CGFloat = 0
     var b: CGFloat = 0
     var opt: String = ""      // Zusatz: Stuhlrichtung "n"/"s"/"o"/"w", "laengs" usw.
+    /// Freie Hoehe UEBER der Etagenhoehe. 0 = steht auf dem Boden.
+    /// Damit lassen sich Dinge auf Tische, Simse und Konsolen stellen.
+    var dy: Float = 0
+    /// Groesse. 1 = wie gebaut.
+    var scale: Float = 1
 }
 
 /// Die bearbeitbare Liste. Vom Editor erzeugt und wieder eingelesen.
@@ -448,8 +453,72 @@ extension GameController {
         let g = furnitureNodes[i]
         let b = furnitureBase[i]
         g.pivot = SCNMatrix4MakeTranslation(b.0, 0, b.1)   // bleibt, wo gebaut wurde
-        g.position = SCNVector3(p.x, 0, p.z)               // wandert mit
+        g.position = SCNVector3(p.x, p.dy, p.z)            // wandert mit
         g.eulerAngles.y = p.rot * Float.pi / 180
+        g.scale = SCNVector3(p.scale, p.scale, p.scale)
+    }
+
+    // ============ Editor: anfassen statt durchblaettern ============
+
+    /// Antippen im Bild waehlt aus. Trifft man nichts, wird abgewaehlt.
+    func tapSelect(_ p: CGPoint) {
+        let i = pickFurniture(p)
+        if i >= 0 {
+            selectedFurniture = i
+            say("\(furnitureList[i].kind) gewaehlt")
+        } else {
+            selectedFurniture = nil
+        }
+    }
+
+    /// Ziehen: das Stueck folgt dem Finger auf seiner eigenen Standebene.
+    /// dragStart merkt sich den Griffversatz, damit es nicht unter den Finger
+    /// springt.
+    func dragBegin(_ p: CGPoint) {
+        guard let i = selectedFurniture, i < furnitureList.count else { return }
+        let f = furnitureList[i]
+        let y = floorBase(f.floor) + f.dy
+        if let w = groundPoint(p, y: y) {
+            dragGrab = (w.x - f.x, w.z - f.z)
+        } else {
+            dragGrab = (0, 0)
+        }
+    }
+
+    func dragMove(_ p: CGPoint) {
+        guard let i = selectedFurniture, i < furnitureList.count else { return }
+        let f = furnitureList[i]
+        let y = floorBase(f.floor) + f.dy
+        guard let w = groundPoint(p, y: y) else { return }
+        furnitureList[i].x = w.x - dragGrab.0
+        furnitureList[i].z = w.z - dragGrab.1
+        applyPlacement(i)
+    }
+
+    /// Hoehe ueber dem Boden aendern - fuer Dinge auf Tischen und Simsen.
+    func raiseFurniture(_ d: Float) {
+        guard let i = selectedFurniture, i < furnitureList.count else { return }
+        furnitureList[i].dy = max(-1.0, min(6.0, furnitureList[i].dy + d))
+        applyPlacement(i)
+    }
+
+    func scaleFurniture(_ f: Float) {
+        guard let i = selectedFurniture, i < furnitureList.count else { return }
+        furnitureList[i].scale = max(0.25, min(4.0, furnitureList[i].scale * f))
+        applyPlacement(i)
+    }
+
+    /// Kopie des gewaehlten Stuecks, leicht versetzt.
+    func duplicateFurniture() {
+        guard let i = selectedFurniture, i < furnitureList.count else { return }
+        var p = furnitureList[i]
+        p.x += 0.4
+        p.z += 0.4
+        furnitureList.append(p)
+        furnitureBase.append((p.x, p.z))
+        furnitureNodes.append(spawnPlacement(p))
+        selectedFurniture = furnitureList.count - 1
+        say("Kopie abgelegt.")
     }
 
     /// Kamera auf das gewaehlte Stueck richten. Beim Verschieben laeuft sie
@@ -554,6 +623,8 @@ extension GameController {
             if p.a > 0 { line += String(format: ", a: %.2f", Double(p.a)) }
             if p.b > 0 { line += String(format: ", b: %.2f", Double(p.b)) }
             if !p.opt.isEmpty { line += ", opt: \"\(p.opt)\"" }
+            if abs(p.dy) > 0.001 { line += String(format: ", dy: %.2f", p.dy) }
+            if abs(p.scale - 1) > 0.001 { line += String(format: ", scale: %.2f", p.scale) }
             out += line + "),\n"
         }
         return out + "]\n"
@@ -574,18 +645,23 @@ extension GameController {
         var rows: [[String]] = []
         for p in furnitureList {
             rows.append([p.kind, String(p.x), String(p.z), String(p.rot),
-                         String(p.floor), String(Double(p.a)), String(Double(p.b)), p.opt])
+                         String(p.floor), String(Double(p.a)), String(Double(p.b)),
+                         p.opt, String(p.dy), String(p.scale)])
         }
         let text = rows.map { $0.joined(separator: "|") }.joined(separator: "\n")
-        UserDefaults.standard.set(text, forKey: "furniture_v1")
+        UserDefaults.standard.set(text, forKey: "furniture_v2")
         say("Gesichert - bleibt auch nach dem Neustart.")
     }
 
     /// Gibt true zurueck, wenn ein gesicherter Stand geladen wurde.
+    /// Liest v2 (mit Hoehe und Groesse), faellt auf v1 zurueck. Ein alter
+    /// gesicherter Stand darf nicht verlorengehen, nur weil zwei Felder
+    /// dazugekommen sind.
     @discardableResult
     func loadFurniture() -> Bool {
-        guard let text = UserDefaults.standard.string(forKey: "furniture_v1"),
-              !text.isEmpty else { return false }
+        let text0 = UserDefaults.standard.string(forKey: "furniture_v2")
+            ?? UserDefaults.standard.string(forKey: "furniture_v1")
+        guard let text = text0, !text.isEmpty else { return false }
         var loaded: [Placement] = []
         for line in text.split(separator: "\n") {
             let c = line.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
@@ -595,7 +671,9 @@ extension GameController {
                                     rot: Float(c[3]) ?? 0, floor: Int(c[4]) ?? 0,
                                     a: CGFloat(Double(c[5]) ?? 0),
                                     b: CGFloat(Double(c[6]) ?? 0),
-                                    opt: c[7]))
+                                    opt: c[7],
+                                    dy: c.count > 8 ? (Float(c[8]) ?? 0) : 0,
+                                    scale: c.count > 9 ? (Float(c[9]) ?? 1) : 1))
         }
         guard !loaded.isEmpty else { return false }
         furnitureList = loaded
@@ -604,6 +682,7 @@ extension GameController {
 
     /// Zurueck auf den Stand, der im Code steht.
     func resetFurniture() {
+        UserDefaults.standard.removeObject(forKey: "furniture_v2")
         UserDefaults.standard.removeObject(forKey: "furniture_v1")
         say("Gesicherter Stand geloescht - beim Neustart gilt wieder der Code.")
     }

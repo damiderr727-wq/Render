@@ -310,6 +310,51 @@ def raumhoehen(platten):
     print()
 
 
+def pruef_fenster():
+    """Fensterteile mit negativem Versatz stecken in der Wand.
+
+    Zweimal passiert: erst die Scheibe (Erkenntnis 11 der Uebergabe), dann
+    Rahmen, Sprossen und Laibung. Sichtbar blieb ein weisses Rechteck.
+    Die Wand ist massiv, also muss ALLES vor ihrer Flaeche sitzen.
+    """
+    print("  FENSTERTEILE HINTER DER WANDFLAECHE")
+    pfad = os.path.join(SRC, 'Villa.swift')
+    src = strip_comments(open(pfad, encoding='utf-8').read())
+    i = src.find('func stormWindow')
+    if i < 0:
+        print("    stormWindow nicht gefunden")
+        print()
+        return 0
+    j = src.index('{', i)
+    d, k = 0, j
+    while k < len(src):
+        if src[k] == '{':
+            d += 1
+        elif src[k] == '}':
+            d -= 1
+            if d == 0:
+                break
+        k += 1
+    body = src[j:k]
+    n = 0
+    # box(a, u, d, pa, pu, pd, mat) - pd ist der Versatz in den Raum
+    for m in re.finditer(r'(?<![\w.])box\(', body):
+        teile, _ = args_von(body, m.end() - 1)
+        if len(teile) < 6:
+            continue
+        pd = zahl(teile[5], {'D': 0.32, 'dRev': 0.06})
+        if pd is None or pd >= -0.001:
+            continue
+        ln = src.count('\n', 0, i + j - j + m.start()) + 1
+        n += 1
+        print(f"    Villa.swift (stormWindow): Teil mit Versatz {pd:+.3f} - "
+              f"steckt in der Wand")
+    if n == 0:
+        print("    keine - alle Teile stehen vor der Wandflaeche")
+    print()
+    return n
+
+
 def main():
     waende, platten, unklar = einlesen()
     print("GEOMETRIEPRUEFUNG")
@@ -321,8 +366,10 @@ def main():
     a = pruef_waende(waende)
     b = pruef_platten(platten)
     c = pruef_freie_enden(waende)
+    f = pruef_fenster()
     raumhoehen(platten)
-    print(f"  {a} Wandueberschneidungen, {b} Plattenueberlappungen")
+    print(f"  {a} Wandueberschneidungen, {b} Plattenueberlappungen, "
+          f"{f} Fensterteile in der Wand")
     print(f"  ({c} freie Wandenden - nur Hinweis, siehe oben)")
 
 

@@ -8,12 +8,20 @@ let kRenderScale: CGFloat = 0.5
 
 struct ContentView: View {
     @StateObject private var game = GameController()
+    @State private var dragging = false
+    @State private var dragStarted = CGPoint.zero
 
     var body: some View {
         ZStack {
             SceneKitView(controller: game)
                 .ignoresSafeArea()
                 .background(Color.black)
+                // Im Editor: antippen waehlt aus, ziehen verschiebt. Ausserhalb
+                // des Editors ist die Geste aus, sonst kaeme sie dem Joystick
+                // und dem Aktionsknopf in die Quere.
+                .gesture(editGesture, including: game.editMode ? .all : .subviews)
+
+            if game.crtOn { CRTOverlay() }
 
             VStack(spacing: 0) {
                 header
@@ -44,6 +52,29 @@ struct ContentView: View {
         }
         .animation(.easeInOut(duration: 0.18), value: game.mapOpen)
         .animation(.easeInOut(duration: 0.18), value: game.prompt)
+    }
+
+    /// Eine Geste fuer beides: kurzer Tipp waehlt aus, Ziehen verschiebt.
+    /// DragGesture mit minimumDistance 0 liefert beim Loslassen sowohl den
+    /// Start- als auch den Endpunkt - daran laesst sich Tipp von Zug trennen.
+    private var editGesture: some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { g in
+                guard game.editMode, !game.wallMode else { return }
+                if !dragging {
+                    dragging = true
+                    dragStarted = g.startLocation
+                    game.dragBegin(g.startLocation)
+                }
+                let weit = abs(g.translation.width) + abs(g.translation.height)
+                if weit > 12 { game.dragMove(g.location) }
+            }
+            .onEnded { g in
+                dragging = false
+                guard game.editMode, !game.wallMode else { return }
+                let weit = abs(g.translation.width) + abs(g.translation.height)
+                if weit <= 12 { game.tapSelect(g.startLocation) }
+            }
     }
 
     // --- Kopfzeile: Titel, Raumname, Inventar, Karte ---
@@ -136,9 +167,11 @@ struct ContentView: View {
     // --- Moebel-Editor: verschieben, drehen, hinzufuegen, ausgeben ---
     private var editorPanel: some View {
         VStack(spacing: 6) {
-            Text(game.selectedFurniture.map {
-                    "\($0 + 1)/\(furnitureList.count)  \(furnitureList[$0].kind)"
-                 } ?? "nichts gewaehlt")
+            Text(game.selectedFurniture.map { i -> String in
+                    let p = furnitureList[i]
+                    return String(format: "%d/%d  %@   y %+.2f   x%.2f",
+                                  i + 1, furnitureList.count, p.kind, p.dy, p.scale)
+                 } ?? "antippen zum Waehlen, ziehen zum Verschieben")
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundColor(Color(red: 1.0, green: 0.88, blue: 0.5))
             HStack(spacing: 6) {
@@ -155,11 +188,21 @@ struct ContentView: View {
                 editBtn("rotate.right") { game.rotateFurniture(15) }
                 editBtn("trash") { game.deleteFurniture() }
             }
+            // Feinschliff mit den Pfeilen bleibt - grob wird jetzt gezogen.
             HStack(spacing: 6) {
                 editBtn("arrow.left") { game.nudgeFurniture(dx: -0.1, dz: 0) }
                 editBtn("arrow.right") { game.nudgeFurniture(dx: 0.1, dz: 0) }
                 editBtn("arrow.up") { game.nudgeFurniture(dx: 0, dz: -0.1) }
                 editBtn("arrow.down") { game.nudgeFurniture(dx: 0, dz: 0.1) }
+                Text("Hoehe").font(.system(size: 9)).foregroundColor(Color(white: 0.6))
+                editBtn("arrow.up.to.line") { game.raiseFurniture(0.05) }
+                editBtn("arrow.down.to.line") { game.raiseFurniture(-0.05) }
+                Text("Groesse").font(.system(size: 9)).foregroundColor(Color(white: 0.6))
+                editBtn("plus.magnifyingglass") { game.scaleFurniture(1.10) }
+                editBtn("minus.magnifyingglass") { game.scaleFurniture(1 / 1.10) }
+            }
+            HStack(spacing: 6) {
+                editBtn("plus.square.on.square") { game.duplicateFurniture() }
                 editBtn("square.and.arrow.down") { game.saveFurniture() }
                 editBtn("doc.on.clipboard") { game.copyFurnitureToClipboard() }
                 editBtn("arrow.uturn.backward") { game.resetFurniture() }
@@ -303,6 +346,15 @@ struct ContentView: View {
     private var debugPanel: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
+                Button { game.setCRT(!game.crtOn) } label: {
+                    Text(game.crtOn ? "CRT an" : "CRT aus")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(game.crtOn ? Color(red: 0.6, green: 1.0, blue: 0.8)
+                                                    : Color(white: 0.8))
+                        .padding(.horizontal, 7).padding(.vertical, 4)
+                        .background(RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.white.opacity(0.14)))
+                }
                 Button { game.setCartoon(!game.cartoon) } label: {
                     Text(game.cartoon ? "Cartoon" : "Realistisch")
                         .font(.system(size: 10, design: .monospaced))
@@ -396,6 +448,31 @@ struct ContentView: View {
             .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.62)))
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.14), lineWidth: 1))
             .padding(.bottom, 16)
+    }
+}
+
+// ===================== CRT-Bildroehre =====================
+// Zeilenmaske als gekacheltes Bild - EIN Vollbildviereck, kostet praktisch
+// nichts. Jede Zeile im Canvas zu zeichnen waere je Bild neue Arbeit.
+struct CRTOverlay: View {
+    static let maske: UIImage = {
+        let h = 3
+        let r = UIGraphicsImageRenderer(size: CGSize(width: 1, height: h))
+        return r.image { ctx in
+            let c = ctx.cgContext
+            c.setFillColor(UIColor(white: 1, alpha: 1).cgColor)
+            c.fill(CGRect(x: 0, y: 0, width: 1, height: h))
+            c.setFillColor(UIColor(white: 0.55, alpha: 1).cgColor)
+            c.fill(CGRect(x: 0, y: 0, width: 1, height: 1))
+        }
+    }()
+
+    var body: some View {
+        Image(uiImage: Self.maske)
+            .resizable(resizingMode: .tile)
+            .blendMode(.multiply)
+            .allowsHitTesting(false)
+            .ignoresSafeArea()
     }
 }
 
@@ -579,6 +656,8 @@ struct SceneKitView: UIViewRepresentable {
         v.contentScaleFactor = kRenderScale
         v.layer.magnificationFilter = .nearest
         v.layer.minificationFilter = .nearest
+        // Der Controller braucht die Ansicht fuer Antippen und Ziehen.
+        controller.scnView = v
         return v
     }
     func updateUIView(_ uiView: SCNView, context: Context) {

@@ -18,6 +18,7 @@ python3 tools/pruefsuite.py Sources     # zehn statische Fehlerklassen
 python3 tools/treppe_messen.py          # Treppenhaus begehbar?
 python3 tools/kamera_zonen.py           # klemmen Kamerazonen?
 python3 tools/kosten_zaehlen.py         # Lichter, Flaechen, Partikel
+python3 tools/geometrie_pruefen.py      # doppelte Waende, Fenster in der Wand
 ```
 
 Jedes Werkzeug ist gegen absichtlich eingebaute Fehler gegengeprueft. Wer ein

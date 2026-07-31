@@ -210,19 +210,34 @@ extension GameController {
         }
         box(w - 0.03, h - 0.03, 0.012, 0, 0, 0.065, gm)   // Glas vor der Scheibe
 
-        // Laibung: vier Platten vom Glas bis zur Wandflaeche
-        box(w + 0.16, 0.10, CGFloat(D), 0, fh/2 + 0.05, -D/2, rev)      // Sturz innen
-        box(w + 0.16, 0.10, CGFloat(D), 0, -fh/2 - 0.05, -D/2, rev)     // Bank
-        box(0.10, h + 0.20, CGFloat(D), -(fw/2 + 0.05), 0, -D/2, rev)   // Wangen
-        box(0.10, h + 0.20, CGFloat(D), fw/2 + 0.05, 0, -D/2, rev)
+        // ALLE folgenden Teile brauchen einen POSITIVEN Versatz. Sie standen
+        // bei -D/2 und -D+0.13, also 16 bis 19 cm IN der 30 cm dicken Wand -
+        // unsichtbar. Sichtbar waren nur Himmelsflaeche, Glas und Fensterbank,
+        // und genau deshalb sah das Fenster aus wie ein weisses Rechteck mit
+        // einem Brett darunter. (Erkenntnis 11 der Uebergabe wurde seinerzeit
+        // nur auf die Scheibe angewendet, nicht auf Rahmen und Laibung.)
+        //
+        // Die Wand ist massiv - man kann nicht in sie hineinschauen. Das
+        // Fenster wird deshalb als Aufbau VOR der Wandflaeche gestaffelt:
+        // Himmel 0.03, Glas 0.05, Sprossen 0.07, Rahmen 0.09, Laibung 0.06.
+        let dRev: Float = 0.06        // Laibungstiefe, jetzt nach vorn
+        box(w + 0.16, 0.10, CGFloat(dRev), 0, fh/2 + 0.05, dRev/2, rev)     // Sturz
+        box(w + 0.16, 0.10, CGFloat(dRev), 0, -fh/2 - 0.05, dRev/2, rev)    // Bank
+        box(0.10, h + 0.20, CGFloat(dRev), -(fw/2 + 0.05), 0, dRev/2, rev)  // Wangen
+        box(0.10, h + 0.20, CGFloat(dRev), fw/2 + 0.05, 0, dRev/2, rev)
 
-        // Sprossenkreuz und Rahmen, buendig in der Leibung
-        box(w, 0.055, 0.05, 0, 0, -D + 0.13, frame)
-        box(0.055, h, 0.05, 0, 0, -D + 0.13, frame)
-        box(w + 0.06, 0.075, 0.06, 0, fh/2, -D + 0.13, frame)
-        box(w + 0.06, 0.075, 0.06, 0, -fh/2, -D + 0.13, frame)
-        box(0.075, h + 0.15, 0.06, -(fw/2), 0, -D + 0.13, frame)
-        box(0.075, h + 0.15, 0.06, fw/2, 0, -D + 0.13, frame)
+        // Sprossenkreuz vor dem Glas
+        box(w, 0.045, 0.035, 0, 0, 0.075, frame)
+        box(0.045, h, 0.035, 0, 0, 0.075, frame)
+        // Zwei zusaetzliche Sprossen: ein einzelnes Kreuz sieht nach Fadenkreuz
+        // aus, sechs Scheiben nach Fenster.
+        box(w, 0.035, 0.030, 0, fh * 0.25, 0.075, frame)
+        box(w, 0.035, 0.030, 0, -fh * 0.25, 0.075, frame)
+        // Rahmen ringsum, steht am weitesten vor
+        box(w + 0.08, 0.075, 0.055, 0, fh/2, 0.09, frame)
+        box(w + 0.08, 0.075, 0.055, 0, -fh/2, 0.09, frame)
+        box(0.075, h + 0.15, 0.055, -(fw/2), 0, 0.09, frame)
+        box(0.075, h + 0.15, 0.055, fw/2, 0, 0.09, frame)
 
         // Fensterbank ragt in den Raum
         box(w + 0.34, 0.09, 0.30, 0, -(fh/2 + 0.12), 0.09, frame)

@@ -1287,7 +1287,13 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         // Frueher als vorher (5.0 bis 8.0): schon ab 4 m sieht man beim
         // Ueberfliegen mehrere Raeume auf einmal, und genau in dem Fenster
         // zwischen "alles sichtbar" und "Schatten aus" ist es abgestuerzt.
-        let heightFade = max(0, min(1, (camY - 3.5) / 2.0))
+        // NUR bei freier Kamera. Das war mein Fehler: ohne diese Bedingung
+        // griff der Hoehenmodus auch beim normalen Spielen, sobald man ins
+        // Obergeschoss oder ins Badehaus ging - dort steht die Kamera ja
+        // ebenfalls auf 7 bis 9 m. Schatten aus, Grundlicht runter, und trotzdem
+        // sah es heller aus, weil die Schatten fehlten. Genau der gemeldete
+        // Effekt "ab der zweiten Etage wird alles hell".
+        let heightFade = freeCam ? max(0, min(1, (camY - 3.5) / 2.0)) : 0
         if abs(heightFade - shadowFade) > 0.002 {
             shadowFade = heightFade
             ambientNode?.light?.intensity =

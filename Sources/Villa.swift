@@ -187,8 +187,11 @@ extension GameController {
         let gm = SCNMaterial()
         gm.lightingModel = .constant
         gm.diffuse.contents = Tex.glass
+        // Milchig und leicht rostig statt glasklar-additiv: die Scheibe soll
+        // trueb sein, nicht leuchten. Der Rostton kommt vom multiply.
+        gm.multiply.contents = UIColor(red: 0.86, green: 0.80, blue: 0.72, alpha: 1)
         gm.blendMode = .add
-        gm.transparency = 0.30
+        gm.transparency = 0.46
         gm.writesToDepthBuffer = false
         gm.isDoubleSided = true
         gm.diffuse.wrapS = .repeat
@@ -251,9 +254,10 @@ extension GameController {
         let ex = x + nx * throwDist, ez = z + nz * throwDist
         lightShaft(SCNVector3(sp.x, sp.y, sp.z), SCNVector3(ex, 0.04, ez), w * 0.92, 0.22, moon)
         floorPool(ex, ez, w * 0.55, w * 0.78, 0.20, moon)
-        // Streulicht in der Leibung selbst, damit die Kanten nicht schwarz absaufen
-        addOmni(P(0, 0, -D + 0.20), 130, moon, range: 2.4)
-        addOmni(P(0, -fh * 0.25, 0.6), 360, moon, range: 7)
+        // EIN Licht statt zwei. Das Leibungslicht war ein zweites Licht je
+        // Fenster fuer einen Effekt, den der Lichtschacht ohnehin liefert -
+        // bei acht Fenstern also acht ueberfluessige Lampen.
+        addOmni(P(0, -fh * 0.25, 0.6), 420, moon, range: 8)
     }
 
     /// Tuerblatt in einer Wandoeffnung. Gibt ein Door zurueck, das der Controller
@@ -480,9 +484,17 @@ extension GameController {
         let iron = texMat(Tex.iron, 2, 1)
         let len = CGFloat(a1 - a0)
         let mid = (a0 + a1) / 2
-        let pane = windowMat(0)
-        pane.emission.intensity = 0.95
-        pane.transparency = 0.92                 // milchig, kein greller Block
+        // Milchige, leicht rostige Scheibe - NICHT selbstleuchtend. Vorher war
+        // jede Fassade eine Leuchtplatte plus eigene Lampe; das ist genau die
+        // Last, die die Schwimmhalle umbringt. Das Licht kommt jetzt einmal
+        // fuer den ganzen Raum von aussen (siehe hallLight weiter unten).
+        let pane = SCNMaterial()
+        pane.lightingModel = .lambert
+        pane.diffuse.contents = Tex.glass
+        pane.diffuse.wrapS = .repeat; pane.diffuse.wrapT = .repeat
+        pane.multiply.contents = UIColor(red: 0.78, green: 0.80, blue: 0.78, alpha: 1)
+        pane.transparency = 0.55                 // milchig, man sieht die Backplate durch
+        pane.isDoubleSided = true
 
         if alongX {
             prop(len, 0.45, 0.16, mid, base + 0.225, fixed, texMat(Tex.wainscot, 2, 1))
@@ -500,10 +512,29 @@ extension GameController {
             else      { prop(0.09, h + 0.5, 0.09, fixed, base + Float(h + 0.5) / 2, p, iron) }
             p += 3.2
         }
-        // EINE ruhige Lampe je Fassade
-        let dayL = UIColor(red: 0.86, green: 0.89, blue: 0.93, alpha: 1)
-        let lp = alongX ? SCNVector3(mid, base + 1.9, fixed) : SCNVector3(fixed, base + 1.9, mid)
-        addOmni(lp, 240, dayL, range: 18)
+        // Backplate: eine grosse, weiche Himmelsflaeche ZWEI METER hinter der
+        // Fassade. Sie ersetzt das Leuchten der Scheibe - dadurch bekommt das
+        // Fenster Tiefe, und es kostet eine Flaeche statt einer Lampe.
+        let sky = SCNMaterial()
+        sky.lightingModel = .constant
+        sky.diffuse.contents = Tex.windows[0]
+        sky.diffuse.wrapS = .clamp; sky.diffuse.wrapT = .clamp
+        sky.multiply.contents = UIColor(red: 1.0, green: 0.99, blue: 0.96, alpha: 1)
+        sky.isDoubleSided = true
+        let bpH = h + 1.4
+        let bp = SCNPlane(width: len + 2.0, height: bpH)
+        bp.firstMaterial = sky
+        let bn = SCNNode(geometry: bp)
+        let aus: Float = fixed > 0 ? 2.0 : -2.0
+        if alongX {
+            bn.position = SCNVector3(mid, base + 0.45 + Float(h) / 2, fixed + aus)
+        } else {
+            bn.position = SCNVector3(fixed + aus, base + 0.45 + Float(h) / 2, mid)
+            bn.eulerAngles.y = Float.pi / 2
+        }
+        bn.renderingOrder = -5          // ganz hinten, vor allem anderen zeichnen
+        scene.rootNode.addChildNode(bn)
+        registerCullable(bn, bn.position.x, bn.position.y, bn.position.z)
 
         if alongX {
             solids.append(WallBox(x0: a0, x1: a1, z0: fixed - 0.1, z1: fixed + 0.1,
@@ -1429,7 +1460,11 @@ extension GameController {
         floorPool(x, z, 2.5, 2.5, 0.34, warm)
     }
 
-    func rug(_ w: CGFloat, _ d: CGFloat, _ x: Float, _ z: Float, _ img: UIImage) {
+    /// Teppich. y MUSS mitgegeben werden, sobald er nicht im Erdgeschoss
+    /// liegt - vorher stand die Hoehe fest auf 0.015, und der Laeufer des
+    /// Obergeschosses landete im Erdgeschoss auf dem Hallenteppich.
+    func rug(_ w: CGFloat, _ d: CGFloat, _ x: Float, _ z: Float, _ img: UIImage,
+             y: Float = 0) {
         let plane = SCNPlane(width: w, height: d)
         let m = SCNMaterial()
         m.lightingModel = .lambert
@@ -1442,7 +1477,7 @@ extension GameController {
         plane.firstMaterial?.isDoubleSided = true
         let n = SCNNode(geometry: plane)
         n.eulerAngles.x = -Float.pi / 2
-        n.position = SCNVector3(x, 0.015, z)
+        n.position = SCNVector3(x, y + 0.015, z)
         scene.rootNode.addChildNode(n)
     }
 
@@ -2159,7 +2194,7 @@ extension GameController {
         // Treppenhalle als Flur: Laeufer, Konsole mit Spiegel - und unten die
         // verschlossene Eisentuer zur Anstalt. Den Schluessel gibt es noch
         // nirgends; die Tuer ist ein Versprechen an den Keller-Ausbau.
-        rug(2.2, 7.6, -5.0, 4.4, Tex.runner)              // Laeufer nur im Flurteil
+        rug(2.2, 7.6, -5.0, 4.4, Tex.runner, y: F)        // Laeufer im OG
         tableAt(-5.0, 0.85, 1.5, 0.5, 0.85, wood, darkWood)
         mirrorAt(-5.0, 1.95, 0.42, 0.75, 0.95, 1)
         _ = doorLeaf(-5.5, 0, 1.3, 2.2, false, 1, "Zur Anstalt", lock: .asylumKey, style: 3)
@@ -2315,6 +2350,11 @@ extension GameController {
         glassRun(-13, 3, -9, alongX: false, F2, 2.6)
         glassRun(-13, 3, 9, alongX: false, F2, 2.6)
         glassRun(-9, 9, -13, alongX: true, F2, 2.6)
+        // EIN Licht fuer die ganze Halle statt eines je Fassade. Der helle
+        // Eindruck kommt jetzt von den Backplates hinter den Scheiben, nicht
+        // von drei Lampen und drei Leuchtplatten.
+        addOmni(SCNVector3(0, F2 + 3.4, -5), 900,
+                UIColor(red: 0.88, green: 0.91, blue: 0.95, alpha: 1), range: 26)
         // Blendenband zwischen Glaswand und Dach
         prop(18.4, 0.42, 0.22, 0, F2 + 3.26, -13, texMat(Tex.wainscot, 3, 1))
         prop(0.22, 0.42, 16.3, -9, F2 + 3.26, -5, texMat(Tex.wainscot, 3, 1))
@@ -2331,12 +2371,13 @@ extension GameController {
         for rx in stride(from: Float(-8), through: 8, by: 2.0) {
             prop(0.12, 0.16, 16.2, rx, F2 + 3.36, -5, texMat(Tex.iron, 2, 1))
         }
-        for sx in [Float(-5.5), 0, 5.5] {
-            lightShaft(SCNVector3(sx, F2 + 3.3, -5), SCNVector3(sx, F2 + 0.06, -5),
-                       1.7, 0.11, UIColor(red: 0.88, green: 0.90, blue: 0.92, alpha: 1))
-            addOmni(SCNVector3(sx, F2 + 2.6, -5), 230,
-                    UIColor(red: 0.94, green: 0.95, blue: 0.96, alpha: 1), range: 15)
-        }
+        // EIN Lichtschacht durchs Glasdach statt drei, und ohne eigene Lampen:
+        // die Hallenlampe oben deckt das ab. Drei Schaechte waren sechs grosse
+        // additive Flaechen quer durch den ganzen Raum, jede ueber die volle
+        // Raumhoehe - das ist genau die Fuellrate, an der die Schwimmhalle
+        // haengt.
+        lightShaft(SCNVector3(0, F2 + 3.3, -5), SCNVector3(0, F2 + 0.06, -5),
+                   5.2, 0.20, UIColor(red: 0.88, green: 0.91, blue: 0.96, alpha: 1))
         floorPool(0, -5, 7.0, 5.0, 0.16, UIColor(red: 0.90, green: 0.92, blue: 0.94, alpha: 1))
 
         // Das Becken: Superellipsen-Ringe wie bei der Wanne, nur begehbar gross

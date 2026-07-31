@@ -390,12 +390,15 @@ final class PlayerRig {
         let k = min(1, 12 * dt)
         // Der Zyklus laeuft jetzt nach zurueckgelegter STRECKE, nicht nach Zeit.
         // Vermessen an der Beinkette (Huefte 0.42 + Unterschenkel 0.465, Ausschlag
-        // 0.58 rad): 0.84 m Schrittlaenge, 1.68 m pro voller Phase -> Faktor 3.73.
+        // 0.58 rad): die Beinkette ist aber 0.90 m lang, nicht 0.78 - der
+        // Knoechel bis zur Sohle war vergessen. Schritt also 0.99 m statt
+        // 0.84 m, 1.97 m je voller Phase -> Faktor 3.18 statt 3.73. Mit 3.73
+        // drehte sich der Zyklus 18 % zu schnell, und die Fuesse rutschten.
         // Da die Amplitude mit amt skaliert, skaliert die Schrittlaenge mit -
         // deshalb durch amt teilen. Vorher lief der Zyklus mit fester Rate weiter
         // und die Fuesse rutschten ueber den Boden.
         if amt > 0.05 {
-            phase += dt * speed * 3.73 / amt
+            phase += dt * speed * 3.18 / amt
         }
         let s = sin(phase), c = cos(phase)
         var bob: Float = 0

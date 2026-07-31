@@ -455,24 +455,35 @@ struct ContentView: View {
 // Zeilenmaske als gekacheltes Bild - EIN Vollbildviereck, kostet praktisch
 // nichts. Jede Zeile im Canvas zu zeichnen waere je Bild neue Arbeit.
 struct CRTOverlay: View {
+    // 0.55 war viel zu hart - daher "nur schwarzweisse Streifen". Eine echte
+    // Bildroehre dunkelt zwischen den Zeilen um wenige Prozent ab, nicht um die
+    // Haelfte. Vier Zeilen statt drei, und die dunkle nur auf 0.88.
     static let maske: UIImage = {
-        let h = 3
+        let h = 4
         let r = UIGraphicsImageRenderer(size: CGSize(width: 1, height: h))
         return r.image { ctx in
             let c = ctx.cgContext
             c.setFillColor(UIColor(white: 1, alpha: 1).cgColor)
             c.fill(CGRect(x: 0, y: 0, width: 1, height: h))
-            c.setFillColor(UIColor(white: 0.55, alpha: 1).cgColor)
+            c.setFillColor(UIColor(white: 0.88, alpha: 1).cgColor)
             c.fill(CGRect(x: 0, y: 0, width: 1, height: 1))
         }
     }()
 
     var body: some View {
-        Image(uiImage: Self.maske)
-            .resizable(resizingMode: .tile)
-            .blendMode(.multiply)
-            .allowsHitTesting(false)
-            .ignoresSafeArea()
+        ZStack {
+            Image(uiImage: Self.maske)
+                .resizable(resizingMode: .tile)
+                .blendMode(.multiply)
+            // Weicher runder Rand - die Woelbung einer Bildroehre laesst sich
+            // ohne eigenen Metal-Shader nicht wirklich nachbilden, aber ein
+            // abgerundeter dunkler Rahmen bringt den Eindruck schon weit.
+            RadialGradient(colors: [.clear, .clear, Color.black.opacity(0.55)],
+                           center: .center, startRadius: 240, endRadius: 900)
+                .blendMode(.multiply)
+        }
+        .allowsHitTesting(false)
+        .ignoresSafeArea()
     }
 }
 

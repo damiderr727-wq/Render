@@ -14,7 +14,7 @@ In dieser Umgebung gibt es **kein swiftc**. Die Pruefwerkzeuge sind der einzige
 Ersatz, also nach jeder Aenderung laufen lassen:
 
 ```
-python3 tools/pruefsuite.py Sources     # neun statische Fehlerklassen
+python3 tools/pruefsuite.py Sources     # zehn statische Fehlerklassen
 python3 tools/treppe_messen.py          # Treppenhaus begehbar?
 python3 tools/kamera_zonen.py           # klemmen Kamerazonen?
 python3 tools/kosten_zaehlen.py         # Lichter, Flaechen, Partikel

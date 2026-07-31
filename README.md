@@ -31,11 +31,12 @@ python3 tools/pruefsuite.py Sources
 python3 tools/treppe_messen.py
 ```
 
-Die Pruefsuite deckt neun Fehlerklassen ab, jede aus einem tatsaechlich
+Die Pruefsuite deckt zehn Fehlerklassen ab, jede aus einem tatsaechlich
 passierten Fehler entstanden: Klammernbilanz, fehlende Texturen, doppelte
 Funktionsnamen (scope-bewusst), unbekannte Argumentlabels, Labelreihenfolge,
 Float/CGFloat-Verwechslungen, `self.` auf freie Funktionen,
-Kamerazonen-Ueberlappung und Editor-Arten ohne `case`-Zweig.
+Kamerazonen-Ueberlappung, Editor-Arten ohne `case`-Zweig und Literale, an
+denen der Swift-Typpruefer abbricht.
 
 Jede Pruefung ist gegen absichtlich eingebaute Fehler gegengeprueft - eine
 Suite, die nicht anschlagen kann, ist wertlos.

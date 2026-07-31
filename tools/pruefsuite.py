@@ -551,6 +551,61 @@ def check_views(files, rep):
     rep.done("SwiftUI-Panels", count)
 
 
+# ---------------------------------------------------------------- 11 Typpruefer
+
+CONV_RE = re.compile(r'\b(?:Float|CGFloat|Double|Int)\s*\(')
+
+
+def check_typecheck(files, rep):
+    """Sammlungsliterale ohne Typangabe, die den Swift-Typpruefer ueberfordern.
+
+    Aus einem echten Fehler entstanden: die Schlaefer-Liste in Game.swift stand
+    als verschachteltes Literal mit zehn Float(...)-Umwandlungen da. Ohne
+    Typangabe muss der Pruefer alle Zahlentypkombinationen durchprobieren und
+    bricht ab - "unable to type-check this expression in reasonable time".
+    Der Compiler meldet es, die uebrigen Pruefungen hier sehen es nicht: die
+    Klammern stimmen, die Labels stimmen, es ist syntaktisch tadellos.
+
+    Regel: Literal ohne ausgeschriebenen Typ und mit vielen Umwandlungen
+    darin. Die Schwelle ist an diesem Projekt geeicht - siehe Gegenprobe.
+    """
+    GRENZE = 6
+    # Zwei Stellen, an denen ein Literal ohne Typangabe steht:
+    #   let/var NAME = [...]      Zuweisung
+    #   for MUSTER in [...]       Schleife  <- genau hier stand der echte Fehler,
+    #                                          und meine erste Fassung sah nur
+    #                                          die Zuweisung.
+    muster = [
+        (re.compile(r'\b(?:let|var)\s+(\w+)\s*(:[^=\[]*)?=\s*\['), 'Zuweisung'),
+        (re.compile(r'\bfor\s+([\w(),\s]+?)\s+in\s*\['), 'Schleife'),
+    ]
+    for path, clean in files.items():
+        gemeldet = set()
+        for rx, art in muster:
+            for m in rx.finditer(clean):
+                name = m.group(1).strip()
+                if art == 'Zuweisung':
+                    typ = m.group(2)
+                    if typ and typ.strip(': ').strip():
+                        continue               # Typ steht da, alles gut
+                open_idx = clean.index('[', m.end() - 1)
+                close = matching_paren(clean, open_idx)
+                if close < 0:
+                    continue
+                conv = len(CONV_RE.findall(clean[open_idx:close]))
+                if conv < GRENZE:
+                    continue
+                ln = line_of(clean, m.start())
+                if ln in gemeldet:
+                    continue
+                gemeldet.add(ln)
+                rep.error(f"{os.path.basename(path)}:{ln}",
+                          f"{art} '{name}': Literal ohne Typangabe mit {conv} "
+                          f"Zahlenumwandlungen - daran bricht der Typpruefer ab. "
+                          f"Typ ausschreiben.")
+    rep.done("Typpruefer-Fallen", len(files))
+
+
 # ---------------------------------------------------------------- 10 Editor-Arten
 
 def check_kinds(files, rep):
@@ -611,6 +666,7 @@ def main():
     check_self_free(files, sigs, rep)
     check_zones(files, raw, sigs, rep)
     check_views(files, rep)
+    check_typecheck(files, rep)
     # Arten aus dem ROHtext: die Kind-Namen sind Stringliterale
     check_kinds(raw, rep)
 

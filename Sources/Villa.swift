@@ -1861,8 +1861,11 @@ extension GameController {
         // ---------- Keller ----------
         // Nasser Beton, Rost, viele Leitungen. Der unangenehmste Ort im Haus.
         // Rohrbuendel unter der Decke, quer durch den ganzen Raum
-        for (yy, rr) in [(Float(2.30), CGFloat(0.10)), (Float(2.30), CGFloat(0.07)),
-                         (Float(2.06), CGFloat(0.085))] {
+        // Typ ausgeschrieben: als blankes Literal mit sechs Umwandlungen muss
+        // der Typpruefer alle Zahlentypkombinationen durchgehen. Genau daran
+        // ist die Schlaefer-Liste in Game.swift abgebrochen.
+        let rohre: [(Float, CGFloat)] = [(2.30, 0.10), (2.30, 0.07), (2.06, 0.085)]
+        for (yy, rr) in rohre {
             pipeX(11.3, 22.7, yy, -13.0, rr, rustM)
         }
         pipeX(11.3, 22.7, 2.24, -16.2, 0.12, rustM)
@@ -1870,8 +1873,9 @@ extension GameController {
         pipeZ(-22.6, -11.8, 2.18, 13.4, 0.09, rustM)
         pipeZ(-22.6, -11.8, 2.34, 20.6, 0.075, rustM)
         // Fallstraenge an den Waenden
-        for (px, pz) in [(Float(11.5), Float(-14.5)), (Float(22.5), Float(-19.0)),
-                         (Float(11.5), Float(-21.0)), (Float(16.0), Float(-22.7))] {
+        let straenge: [(Float, Float)] = [(11.5, -14.5), (22.5, -19.0),
+                                          (11.5, -21.0), (16.0, -22.7)]
+        for (px, pz) in straenge {
             pipeY(0.15, 2.30, px, pz, 0.085, rustM)
             valve(px, 1.25, pz, ironM)
         }

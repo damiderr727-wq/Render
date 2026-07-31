@@ -369,7 +369,7 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
             nah.sort { $0.1 < $1.1 }
             nah.removeSubrange(maxLights..<nah.count)
         }
-        var an = Set(nah.map { $0.0 })
+        let an = Set(nah.map { $0.0 })
         for (i, l) in cullLights.enumerated() {
             let soll = an.contains(i)
             let ist = (l.node.light?.categoryBitMask ?? 0) != 0
@@ -748,10 +748,21 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         selMarker.isHidden = true
         scene.rootNode.addChildNode(selMarker)
         // Der Schlaefer: einer im Westflur, einer im Stationsflur oben.
-        for (bounds, y) in [((Float(-30.2), Float(-24.8), Float(-19.0), Float(11.0)), Float(0)),
-                            ((Float(-2.3), Float(2.3), Float(-19.0), Float(-1.2)), Float(3.8))] {
-            let sl = makeSleeper(bounds: bounds, baseY: y)
-            sl.root.position = SCNVector3((bounds.0 + bounds.1) / 2, y, (bounds.2 + bounds.3) / 2)
+        //
+        // Die Liste braucht eine ausgeschriebene Typangabe. Als verschachteltes
+        // Literal mit zehn Float(...)-Umwandlungen muss der Typpruefer alle
+        // Zahlenkombinationen durchprobieren und gibt auf ("unable to
+        // type-check this expression in reasonable time"). Mit Typangabe ist
+        // nichts mehr zu erschliessen.
+        let sleeperSpots: [(bounds: (Float, Float, Float, Float), baseY: Float)] = [
+            ((-30.2, -24.8, -19.0, 11.0), 0.0),      // Westflur
+            ((-2.3, 2.3, -19.0, -1.2), 3.8),         // Stationsflur oben
+        ]
+        for spot in sleeperSpots {
+            let b = spot.bounds
+            let y = spot.baseY
+            let sl = makeSleeper(bounds: b, baseY: y)
+            sl.root.position = SCNVector3((b.0 + b.1) / 2, y, (b.2 + b.3) / 2)
             scene.rootNode.addChildNode(sl.root)
             sleepers.append(sl)
         }

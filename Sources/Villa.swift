@@ -175,7 +175,11 @@ extension GameController {
         }
 
         // Himmel ganz hinten, eine der vier Varianten
-        let variant = Int(abs(x * 3.0 + z * 7.0)) % 4
+        // % 3 statt % 4: Variante 3 ist window_storm mit 8 % Helligkeit -
+        // jedes vierte Fenster war damit ein schwarzes Rechteck in der Wand.
+        // Die Sturmfassung gehoert in die spaetere Sturm-Phase, nicht in den
+        // Normalzustand.
+        let variant = Int(abs(x * 3.0 + z * 7.0)) % 3
         // Die Scheibe sass bei -D, also 32 cm HINTER dem Ankerpunkt - bei einer
         // 30 cm dicken Wand liegt sie damit komplett im Mauerwerk und war nie
         // zu sehen. Die Normale n zeigt in den Raum, ein POSITIVER Versatz

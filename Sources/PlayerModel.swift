@@ -189,6 +189,13 @@ private func ringPoint(_ y: Float, _ rx: Float, _ rz: Float, _ zOff: Float,
 }
 
 /// Ringnetz aus beliebigen Querschnitten - fuer Rumpf und Gliedmassen.
+/// capTop/capBot schliessen die Enden. Sie standen an Armen, Beinen und Hals
+/// auf false, weil dort eine Kugel (Schulter, Knie, Ellbogen) daruebersitzt -
+/// die deckt das offene Ende aber nicht zuverlaessig ab. Die Schulterkappe
+/// liegt zum Beispiel bei x 0.158, die Armroehre bei x 0.180 und ist breiter
+/// als die Kappe: rund 1.5 cm des offenen Rohrs standen frei. Von der Seite
+/// sieht man dann in den Koerper hinein - genau die gemeldeten "nicht
+/// ausgefuellten Stellen". Ein Deckel kostet n Dreiecke, das ist nichts.
 private func tubeMesh(_ rings: [(Float, Float, Float)], _ mat: SCNMaterial,
                       _ n: Int = 7, capTop: Bool = true, capBot: Bool = true) -> SCNNode {
     var tris: [(SCNVector3, SCNVector3, SCNVector3)] = []
@@ -502,7 +509,7 @@ func makePlayerRig() -> PlayerRig {
         let thigh = SCNNode(); thigh.position = SCNVector3(sx, -0.02, 0); r.hip.addChildNode(thigh)
         let thighMesh = tubeMesh([(-kThigh, 0.056, 0.060), (-kThigh*0.55, 0.068, 0.074),
                                   (-kThigh*0.18, 0.082, 0.088), (0.01, 0.090, 0.094)],
-                                 pants, 7, capTop: false)
+                                 pants, 7, capTop: true)
         thigh.addChildNode(thighMesh)
         let knee = SCNNode(); knee.position = SCNVector3(0, -kThigh, 0); thigh.addChildNode(knee)
         let kneeCap = SCNSphere(radius: 0.054); kneeCap.segmentCount = 7
@@ -512,7 +519,7 @@ func makePlayerRig() -> PlayerRig {
         // Wadenbauch: oben duenn, in der Mitte dicker, zum Knoechel schlank
         let shinMesh = tubeMesh([(-kShin, 0.040, 0.044), (-kShin*0.62, 0.052, 0.058),
                                  (-kShin*0.30, 0.061, 0.070), (0.0, 0.056, 0.060)],
-                                pants, 7, capTop: false)
+                                pants, 7, capTop: true)
         knee.addChildNode(shinMesh)
         chunk(knee, 0.128, 0.20, 0.140, 0, -0.250, 0, boot, 0.05)     // Hosenbein/Schaft
 
@@ -602,14 +609,14 @@ func makePlayerRig() -> PlayerRig {
         let sh = SCNNode(); sh.position = SCNVector3(sx, 0.385, 0); r.torso.addChildNode(sh)
         sh.addChildNode(tubeMesh([(-0.275, 0.041, 0.043), (-0.155, 0.050, 0.053),
                                   (-0.060, 0.058, 0.061), (0.0, 0.054, 0.057)],
-                                 shirt, 7, capTop: false))
+                                 shirt, 7, capTop: true))
         let el = SCNNode(); el.position = SCNVector3(0, -0.275, 0); sh.addChildNode(el)
         let elbowCap = SCNSphere(radius: 0.042); elbowCap.segmentCount = 7
         elbowCap.firstMaterial = shirt
         el.addChildNode(SCNNode(geometry: elbowCap))
         el.addChildNode(tubeMesh([(-0.245, 0.031, 0.033), (-0.130, 0.038, 0.041),
                                   (-0.045, 0.045, 0.047), (0.0, 0.042, 0.044)],
-                                 skinTex, 7, capTop: false))
+                                 skinTex, 7, capTop: true))
         chunk(el, 0.082, 0.125, 0.096, 0, -0.290, 0.008, belt, 0.03)
         // Brecheisen, standardmaessig verborgen - sichtbar beim Ausruesten
         if sx > 0 {
@@ -888,10 +895,10 @@ func makeSleeper(bounds: (Float, Float, Float, Float), baseY: Float) -> Sleeper 
 
     let aL = SCNNode(); aL.position = SCNVector3(-0.175, 1.36, 0)
     aL.addChildNode(tubeMesh([(-0.62, 0.026, 0.028), (-0.30, 0.032, 0.034),
-                              (0.0, 0.040, 0.043)], skin, 6, capTop: false))
+                              (0.0, 0.040, 0.043)], skin, 6, capTop: true))
     let aR = SCNNode(); aR.position = SCNVector3(0.175, 1.36, 0)
     aR.addChildNode(tubeMesh([(-0.62, 0.026, 0.028), (-0.30, 0.032, 0.034),
-                              (0.0, 0.040, 0.043)], skin, 6, capTop: false))
+                              (0.0, 0.040, 0.043)], skin, 6, capTop: true))
 
     let headPivot = SCNNode()
     headPivot.position = SCNVector3(0, 1.47, 0)

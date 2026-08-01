@@ -105,9 +105,6 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
     /// Querung ueber zwanzig Sekunden.
     @Published var fcFast = false
     private var shadowsOff = false
-    /// 0 = normale Hoehe, 1 = ganz oben. Zieht Grundlicht und Belichtung
-    /// gegenlaeufig zum Wegfall der Schatten.
-    private var shadowFade: Float = -1
     @Published var selectedFurniture: Int? = nil
     private let selMarker = SCNNode()
     let audio = AudioController()
@@ -297,26 +294,56 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         scene.rootNode.addChildNode(tn)
     }
 
-    // Wand entlang x bei festem z. gaps = [(Mitte, Breite)]
+    /// Fensterloch: die Wand wird um die Oeffnung herum in vier Stuecke gebaut -
+    /// links, rechts (ueber segments), Bruestung und Sturz (hier). Die Sperren
+    /// entstehen in wall() mit dem echten Hoehenbereich, die Bruestung sperrt
+    /// also den Spieler, das Loch darueber laesst Licht und Blick durch.
+    /// hole = (Mitte, Breite, Bruestungshoehe ueber base, Lochhoehe).
+    private func holePieces(_ hole: (Float, Float, Float, Float), _ rotY: Float,
+                            _ fixedAxis: Float, _ mat: SCNMaterial, _ h: CGFloat,
+                            _ wainscot: Bool, _ base: Float) {
+        let (c, w, sill, hh) = hole
+        let pos = abs(rotY) < 0.01 ? SCNVector3(c, 0, fixedAxis)
+                                   : SCNVector3(fixedAxis, 0, c)
+        if sill > 0.05 {
+            // Taefelung nur, wenn sie unter der Fensterkante bleibt
+            wall(CGFloat(w), pos, rotY, mat,
+                 wainscot: wainscot && sill >= 0.95, h: CGFloat(sill), base: base)
+        }
+        let lintel = Float(h) - sill - hh
+        if lintel > 0.05 {
+            wall(CGFloat(w), pos, rotY, mat, wainscot: false,
+                 h: CGFloat(lintel), base: base + sill + hh)
+        }
+    }
+
+    // Wand entlang x bei festem z. gaps = [(Mitte, Breite)],
+    // holes = [(Mitte, Breite, Bruestungshoehe, Lochhoehe)] - Fensterloecher.
     func wallX(_ x0: Float, _ x1: Float, _ z: Float, _ mat: SCNMaterial,
-               gaps: [(Float, Float)] = [], h: CGFloat = 4, wainscot: Bool = true,
+               gaps: [(Float, Float)] = [], holes: [(Float, Float, Float, Float)] = [],
+               h: CGFloat = 4, wainscot: Bool = true,
                base: Float = 0) {
-        for s in segments(x0, x1, gaps) where s.1 - s.0 > 0.05 {
+        let cuts = gaps + holes.map { ($0.0, $0.1) }
+        for s in segments(x0, x1, cuts) where s.1 - s.0 > 0.05 {
             wall(CGFloat(s.1 - s.0), SCNVector3((s.0 + s.1) / 2, 0, z), 0, mat,
                  wainscot: wainscot, h: h, base: base)
         }
         for g in gaps { opening(SCNVector3(g.0, base, z), g.1, 0, mat, h) }
+        for hl in holes { holePieces(hl, 0, z, mat, h, wainscot, base) }
     }
 
     // Wand entlang z bei festem x
     func wallZ(_ z0: Float, _ z1: Float, _ x: Float, _ mat: SCNMaterial,
-               gaps: [(Float, Float)] = [], h: CGFloat = 4, wainscot: Bool = true,
+               gaps: [(Float, Float)] = [], holes: [(Float, Float, Float, Float)] = [],
+               h: CGFloat = 4, wainscot: Bool = true,
                base: Float = 0) {
-        for s in segments(z0, z1, gaps) where s.1 - s.0 > 0.05 {
+        let cuts = gaps + holes.map { ($0.0, $0.1) }
+        for s in segments(z0, z1, cuts) where s.1 - s.0 > 0.05 {
             wall(CGFloat(s.1 - s.0), SCNVector3(x, 0, (s.0 + s.1) / 2), Float.pi / 2, mat,
                  wainscot: wainscot, h: h, base: base)
         }
         for g in gaps { opening(SCNVector3(x, base, g.0), g.1, Float.pi / 2, mat, h) }
+        for hl in holes { holePieces(hl, Float.pi / 2, x, mat, h, wainscot, base) }
     }
 
     /// Legt eine Bodenplatte und meldet sie zugleich als begehbare Flaeche an.
@@ -569,13 +596,11 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
     func setBrightness(_ v: Float) {
         let b = max(0.4, min(2.2, v))
         brightness = b
-        // Hoehenausgleich mitrechnen, sonst springt die Helligkeit, sobald man
-        // den Regler benutzt waehrend die freie Kamera oben steht.
-        let f = max(0, shadowFade)
-        ambientNode?.light?.intensity = ambientBase * CGFloat(b) * CGFloat(1 - 0.34 * f)
+        // Nur noch der Regler bestimmt die Helligkeit - kein Hoehenausgleich
+        // mehr, der frueher unbemerkt mitdrehte.
+        ambientNode?.light?.intensity = ambientBase * CGFloat(b)
         keyNode?.light?.intensity = keyBase * CGFloat(b)
-        cameraNode.camera?.exposureOffset =
-            exposureBase + CGFloat((b - 1) * 0.55) - CGFloat(0.30 * f)
+        cameraNode.camera?.exposureOffset = exposureBase + CGFloat((b - 1) * 0.55)
     }
 
     /// Ist der Gegenstand gerade in Benutzung? Brecheisen ausgeruestet oder
@@ -1284,36 +1309,25 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         //     kommt genau dieses Licht zurueck - daher "ab einer Hoehe wird
         //     alles hell". Jetzt gleicht das Grundlicht es aus, weich.
         let camY = cameraNode.presentation.position.y
-        // Frueher als vorher (5.0 bis 8.0): schon ab 4 m sieht man beim
-        // Ueberfliegen mehrere Raeume auf einmal, und genau in dem Fenster
-        // zwischen "alles sichtbar" und "Schatten aus" ist es abgestuerzt.
-        // NUR bei freier Kamera. Das war mein Fehler: ohne diese Bedingung
-        // griff der Hoehenmodus auch beim normalen Spielen, sobald man ins
-        // Obergeschoss oder ins Badehaus ging - dort steht die Kamera ja
-        // ebenfalls auf 7 bis 9 m. Schatten aus, Grundlicht runter, und trotzdem
-        // sah es heller aus, weil die Schatten fehlten. Genau der gemeldete
-        // Effekt "ab der zweiten Etage wird alles hell".
-        let heightFade = freeCam ? max(0, min(1, (camY - 3.5) / 2.0)) : 0
-        if abs(heightFade - shadowFade) > 0.002 {
-            shadowFade = heightFade
-            ambientNode?.light?.intensity =
-                ambientBase * CGFloat(brightness) * CGFloat(1 - 0.34 * heightFade)
-            cameraNode.camera?.exposureOffset =
-                exposureBase + CGFloat((brightness - 1) * 0.55)
-                             - CGFloat(0.30 * heightFade)
-        }
-        let heavyView = heightFade > 0.5 || noShadows
-        if heavyView != shadowsOff {
-            shadowsOff = heavyView
-            for n in shadowLights { n.light?.castsShadow = !heavyView }
-            lanternNode.light?.castsShadow = !heavyView
+        // Der alte Hoehenmodus hat ab 3.5 m Kamerahoehe Grundlicht, Belichtung
+        // und Schatten automatisch verstellt - gemeldet als "ab einer Hoehe
+        // wird alles rndm hell", zweimal. Automatik raus: an der Helligkeit
+        // dreht jetzt NICHTS mehr von selbst. Schatten schaltet nur noch der
+        // Sparmodus-Knopf. Was bleibt, ist der reine Speicherschutz beim
+        // Hochfliegen (Sichtweite und Lichtbudget) - der aendert das Bild
+        // nicht, er begrenzt nur, wie viel davon gleichzeitig lebt.
+        let hochflug = freeCam && camY > 5.5
+        if noShadows != shadowsOff {
+            shadowsOff = noShadows
+            for n in shadowLights { n.light?.castsShadow = !noShadows }
+            lanternNode.light?.castsShadow = !noShadows
         }
         // In der Hoehe zusaetzlich Sichtweite und Lichtbudget zusammenziehen.
         // Aus 12 m Hoehe liegt sonst das halbe Sanatorium im Bild: mit zFar 55
         // sind das tausende Knoten in einem Bild, und der Speicher reisst.
-        let wantFar: CGFloat = heightFade > 0.5 ? 26 : 55
+        let wantFar: CGFloat = hochflug ? 26 : 55
         if cameraNode.camera?.zFar != wantFar { cameraNode.camera?.zFar = wantFar }
-        let wantMax = heightFade > 0.5 ? 5 : 10
+        let wantMax = hochflug ? 5 : 10
         if maxLights != wantMax { maxLights = wantMax }
         // Entfernungsabschaltung. Alle 8 Bilder reicht - die Kamera bewegt
         // sich hoechstens 6 m/s, das sind 20 cm zwischen zwei Pruefungen.

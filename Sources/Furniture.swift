@@ -89,6 +89,7 @@ var furnitureList: [Placement] = [
 /// Ein Wandstueck als Daten. axis "x" = laeuft entlang X, "z" = entlang Z.
 /// a0/a1 sind Anfang und Ende auf dieser Achse, fixed die Querkoordinate.
 /// gapC/gapW beschreiben eine Tuerlucke (gapW = 0 heisst keine).
+/// winC/winW ein Fensterloch (Bruestung 0.9 m, Loch 1.3 m hoch).
 struct WallSpec {
     var axis: String
     var a0: Float
@@ -99,6 +100,8 @@ struct WallSpec {
     var gapC: Float = 0
     var gapW: Float = 0
     var tex: String = "hall"
+    var winC: Float = 0
+    var winW: Float = 0
 }
 
 /// Bearbeitbare Waende. Beginnt mit dem Treppenhaus - genau dem Bereich, der
@@ -135,13 +138,19 @@ extension GameController {
         default:      m = texMat(Tex.wpGreen, 6, 2.6)
         }
         let gaps: [(Float, Float)] = w.gapW > 0.01 ? [(w.gapC, w.gapW)] : []
+        // Fensterloch: Bruestung 0.9, Lochhoehe 1.3 - aber nie hoeher als
+        // die Wand selbst hergibt.
+        let wh = Float(w.h)
+        let holes: [(Float, Float, Float, Float)] =
+            w.winW > 0.01 && wh > 1.3
+                ? [(w.winC, w.winW, min(0.9, wh - 1.3), min(1.3, wh - 0.9))] : []
         let base = floorBase(w.floor)
         if w.axis == "x" {
             wallX(min(w.a0, w.a1), max(w.a0, w.a1), w.fixed, m,
-                  gaps: gaps, h: w.h, base: base)
+                  gaps: gaps, holes: holes, h: w.h, base: base)
         } else {
             wallZ(min(w.a0, w.a1), max(w.a0, w.a1), w.fixed, m,
-                  gaps: gaps, h: w.h, base: base)
+                  gaps: gaps, holes: holes, h: w.h, base: base)
         }
         let g = SCNNode()
         g.name = "wall"
@@ -216,6 +225,24 @@ extension GameController {
         rebuildWall(i)
     }
 
+    /// Fensterloch in die Mitte setzen oder wieder schliessen.
+    func wallWindow(_ width: Float) {
+        guard let i = selectedWall, i < wallList.count else { return }
+        if width <= 0 { wallList[i].winW = 0 }
+        else {
+            wallList[i].winC = (wallList[i].a0 + wallList[i].a1) / 2
+            wallList[i].winW = width
+        }
+        rebuildWall(i)
+    }
+
+    /// Fensterloch laengs verschieben.
+    func slideWindow(_ d: Float) {
+        guard let i = selectedWall, i < wallList.count, wallList[i].winW > 0 else { return }
+        wallList[i].winC += d
+        rebuildWall(i)
+    }
+
     func toggleWallAxis() {
         guard let i = selectedWall, i < wallList.count else { return }
         wallList[i].axis = wallList[i].axis == "x" ? "z" : "x"
@@ -252,7 +279,7 @@ extension GameController {
         let text = wallList.map {
             [$0.axis, String($0.a0), String($0.a1), String($0.fixed),
              String(Double($0.h)), String($0.floor), String($0.gapC),
-             String($0.gapW), $0.tex].joined(separator: "|")
+             String($0.gapW), $0.tex, String($0.winC), String($0.winW)].joined(separator: "|")
         }.joined(separator: "\n")
         UserDefaults.standard.set(text, forKey: "walls_v1")
         say("Waende gesichert.")
@@ -266,10 +293,13 @@ extension GameController {
         for line in text.split(separator: "\n") {
             let c = line.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
             guard c.count >= 9 else { continue }
+            // Alte Staende haben 9 Felder, seit den Fensterloechern sind es 11.
             out.append(WallSpec(axis: c[0], a0: Float(c[1]) ?? 0, a1: Float(c[2]) ?? 0,
                                 fixed: Float(c[3]) ?? 0, h: CGFloat(Double(c[4]) ?? 4),
                                 floor: Int(c[5]) ?? 0, gapC: Float(c[6]) ?? 0,
-                                gapW: Float(c[7]) ?? 0, tex: c[8]))
+                                gapW: Float(c[7]) ?? 0, tex: c[8],
+                                winC: c.count >= 11 ? (Float(c[9]) ?? 0) : 0,
+                                winW: c.count >= 11 ? (Float(c[10]) ?? 0) : 0))
         }
         guard !out.isEmpty else { return false }
         wallList = out
@@ -285,6 +315,7 @@ extension GameController {
             if w.floor != 0 { l += ", floor: \(w.floor)" }
             if w.gapW > 0.01 { l += String(format: ", gapC: %.2f, gapW: %.2f", w.gapC, w.gapW) }
             if w.tex != "hall" { l += ", tex: \"\(w.tex)\"" }
+            if w.winW > 0.01 { l += String(format: ", winC: %.2f, winW: %.2f", w.winC, w.winW) }
             out += l + "),\n"
         }
         return out + "]\n"

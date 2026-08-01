@@ -153,6 +153,7 @@ enum MapData {
         RoomInfo(name: "Vorraum",     short: "Vorraum",     x0: -8, x1: -1, z0: 3,   z1: 13, floor: 2),
         RoomInfo(name: "Waschsaal",   short: "Waschsaal",   x0: -1, x1: 9,  z0: 3,   z1: 13, floor: 2),
         RoomInfo(name: "Schwimmhalle", short: "Schwimmhalle", x0: -9, x1: 9, z0: -13, z1: 3, floor: 2),
+        RoomInfo(name: "Gewaechshaus", short: "Gewaechshaus", x0: 9, x1: 15, z0: -13, z1: 3, floor: 2),
         RoomInfo(name: "Galerie",         short: "Galerie",  x0: -8,  x1: -1.5, z0: 0,   z1: 12.5, floor: 1),
         RoomInfo(name: "Stationsflur",    short: "Flur",     x0: -3,  x1: 3,    z0: -20, z1: 0,    floor: 1),
         RoomInfo(name: "Zimmer 1",        short: "Z 1",      x0: -11, x1: -3,   z0: -6,  z1: -1,   floor: 1),

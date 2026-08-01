@@ -311,13 +311,12 @@ def raumhoehen(platten):
 
 
 def pruef_fenster():
-    """Fensterteile mit negativem Versatz stecken in der Wand.
-
-    Zweimal passiert: erst die Scheibe (Erkenntnis 11 der Uebergabe), dann
-    Rahmen, Sprossen und Laibung. Sichtbar blieb ein weisses Rechteck.
-    Die Wand ist massiv, also muss ALLES vor ihrer Flaeche sitzen.
+    """Fensterteile duerfen seit dem Loch-Umbau in der LAIBUNG sitzen
+    (Versatz bis -0.30, dem Anker-Abstand zur Aussenkante der Wand), aber
+    nicht weiter draussen - dort ragten frueher Scheibe, Rahmen und Laibung
+    unsichtbar ins Mauerwerk (Erkenntnis 11 der Uebergabe, zweimal passiert).
     """
-    print("  FENSTERTEILE HINTER DER WANDFLAECHE")
+    print("  FENSTERTEILE JENSEITS DER AUSSENKANTE (Versatz < -0.30)")
     pfad = os.path.join(SRC, 'Villa.swift')
     src = strip_comments(open(pfad, encoding='utf-8').read())
     i = src.find('func stormWindow')
@@ -337,22 +336,109 @@ def pruef_fenster():
         k += 1
     body = src[j:k]
     n = 0
-    # box(a, u, d, pa, pu, pd, mat) - pd ist der Versatz in den Raum
+    # box(a, u, d, pa, pu, pd, mat) - pd ist der Versatz in den Raum.
+    # -0.30 ist die Aussenkante: Anker 0.14 vor der Wandachse, Wanddicke 0.30,
+    # also Achse -0.15 und Aussenflaeche bei -0.29.
     for m in re.finditer(r'(?<![\w.])box\(', body):
         teile, _ = args_von(body, m.end() - 1)
         if len(teile) < 6:
             continue
-        pd = zahl(teile[5], {'D': 0.32, 'dRev': 0.06})
-        if pd is None or pd >= -0.001:
+        pd = zahl(teile[5], {'D': 0.32, 'dRev': 0.06, 'dMid': -0.07})
+        if pd is None or pd >= -0.30:
             continue
-        ln = src.count('\n', 0, i + j - j + m.start()) + 1
         n += 1
         print(f"    Villa.swift (stormWindow): Teil mit Versatz {pd:+.3f} - "
-              f"steckt in der Wand")
+              f"ragt hinter die Aussenkante der Wand")
     if n == 0:
-        print("    keine - alle Teile stehen vor der Wandflaeche")
+        print("    keine - alle Teile liegen zwischen Aussenkante und Raum")
     print()
     return n
+
+
+def pruef_fensterloecher(waende):
+    """Jedes stormWindow braucht seit dem Umbau ein LOCH in seiner Wand.
+
+    Ohne Loch schaut das Fenster auf massives Mauerwerk: Glas und Backplate
+    sind unsichtbar, uebrig bleibt ein Rahmen um eine Wandflaeche. Geprueft
+    werden alle Aufrufe mit auswertbaren Argumenten; Aufrufe in Schleifen
+    (Variablen) werden gezaehlt und gemeldet, denn sie fehlen in der Pruefung.
+    """
+    print("  STORMWINDOW OHNE PASSENDES WANDLOCH")
+    # Loecher einsammeln: holes: [(Mitte, Breite, Bruestung, Hoehe)]
+    loecher = []          # (achse 'x'/'z', fix, mitte, breite, base+sill, base+sill+hh)
+    unklar = 0
+    n_offen = 0
+    for datei in DATEIEN:
+        pfad = os.path.join(SRC, datei)
+        if not os.path.exists(pfad):
+            continue
+        src = strip_comments(open(pfad, encoding='utf-8').read())
+        konst = konstanten(src)
+        for m in re.finditer(r'(?<![\w.])(wallX|wallZ)\s*\(', src):
+            teile, _ = args_von(src, m.end() - 1)
+            benannt = {}
+            for t in teile:
+                if ':' in t.split('(')[0]:
+                    a, b = t.split(':', 1)
+                    benannt[a.strip()] = b
+            if 'holes' not in benannt:
+                continue
+            pos = [t for t in teile if ':' not in t.split('(')[0]]
+            v = [zahl(t, konst) for t in pos[:3]]
+            base = zahl(benannt.get('base', '0'), konst)
+            if any(x is None for x in v) or base is None:
+                unklar += 1
+                continue
+            fix = v[2]
+            achse = 'x' if m.group(1) == 'wallX' else 'z'
+            for hm in re.finditer(r'\(([^()]+)\)', benannt['holes']):
+                hv = [zahl(t, konst) for t in hm.group(1).split(',')]
+                if len(hv) != 4 or any(x is None for x in hv):
+                    unklar += 1
+                    continue
+                loecher.append((achse, fix, hv[0], hv[1],
+                                base + hv[2], base + hv[2] + hv[3]))
+        # stormWindow-Aufrufe pruefen (Definition ueberspringen)
+        fenster = []
+        for m in re.finditer(r'(?<![\w.])stormWindow\s*\(', src):
+            if src.rfind('func', max(0, m.start() - 6), m.start()) >= 0:
+                continue
+            teile, _ = args_von(src, m.end() - 1)
+            ln = src.count('\n', 0, m.start()) + 1
+            v = [zahl(t, konst) for t in teile[:7]]
+            if any(x is None for x in v):
+                unklar += 1
+                continue
+            fenster.append((ln, v))
+        for ln, v in fenster:
+            wx, wy, wz, ww, wh, nx, nz = v
+            # Wandachse liegt 0.14 hinter dem Anker, entlang der Normalen
+            if abs(nx) > 0.5:
+                achse, fix, mitte = 'z', wx - 0.14 * nx, wz
+            else:
+                achse, fix, mitte = 'x', wz - 0.14 * nz, wx
+            lo, hi = wy - wh / 2, wy + wh / 2
+            ok = False
+            for (la, lf, lc, lw, ly0, ly1) in loecher:
+                if la != achse or abs(lf - fix) > 0.25:
+                    continue
+                if abs(lc - mitte) > 0.30 or lw < ww - 0.02:
+                    continue
+                if ly0 > lo + 0.06 or ly1 < hi - 0.06:
+                    continue
+                ok = True
+                break
+            if not ok:
+                n_offen += 1
+                print(f"    {datei}:{ln}  Fenster bei ({wx:+.2f},{wz:+.2f}) "
+                      f"hat kein passendes Loch in der Wand")
+    if unklar:
+        print(f"    ({unklar} Aufrufe mit Variablen nicht pruefbar - "
+              f"Schleifenfenster fehlen in dieser Pruefung)")
+    if n_offen == 0:
+        print("    alle auswertbaren Fenster sitzen in einem Loch")
+    print()
+    return n_offen
 
 
 def main():
@@ -367,9 +453,10 @@ def main():
     b = pruef_platten(platten)
     c = pruef_freie_enden(waende)
     f = pruef_fenster()
+    g = pruef_fensterloecher(waende)
     raumhoehen(platten)
     print(f"  {a} Wandueberschneidungen, {b} Plattenueberlappungen, "
-          f"{f} Fensterteile in der Wand")
+          f"{f} Fensterteile hinter der Aussenkante, {g} Fenster ohne Loch")
     print(f"  ({c} freie Wandenden - nur Hinweis, siehe oben)")
 
 

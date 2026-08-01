@@ -119,16 +119,18 @@ extension GameController {
     }
 
     /// Lichtfleck auf dem Boden unter einer Lampe.
+    /// y ist die Bodenhoehe - vorher stand hier fest 0.02, und jedes Fenster
+    /// im Ober- oder Glasgeschoss malte seinen Lichtfleck ins Erdgeschoss.
     func floorPool(_ x: Float, _ z: Float, _ rx: CGFloat, _ rz: CGFloat,
-                   _ opacity: CGFloat, _ tint: UIColor) {
+                   _ opacity: CGFloat, _ tint: UIColor, y: Float = 0.02) {
         let pl = SCNPlane(width: rx * 2, height: rz * 2)
         pl.firstMaterial = addMat(Tex.pool, tint, opacity)
         let n = SCNNode(geometry: pl)
         n.eulerAngles.x = -Float.pi / 2
-        n.position = SCNVector3(x, 0.02, z)
+        n.position = SCNVector3(x, y, z)
         n.renderingOrder = 18
         scene.rootNode.addChildNode(n)
-        registerCullable(n, x, 0.02, z)
+        registerCullable(n, x, y, z)
     }
 
     /// Fleck an einer Wand, z.B. hinter einer Wandleuchte.
@@ -153,14 +155,21 @@ extension GameController {
     ///   Himmelsflaeche - Glas (additiv, eigene Schlieren) - Sprossen - Laibung - Sims
     ///
     /// nx/nz zeigen ins Zimmer.
+    /// Seit dem Umbau auf echte Fensterloecher: die Wand hat an dieser Stelle
+    /// eine Oeffnung (holes: in wallX/wallZ), das Fenster sitzt IM Loch.
+    /// Aufbau von aussen nach innen: Nebel-Backplate 2 m draussen - Glas in
+    /// der Laibung - Sprossen - Rahmen - Fensterbank. base = Bodenhoehe des
+    /// Raums, fuer Lichtschacht und Lichtfleck (vorher fielen beide auf y=0,
+    /// auch im Ober- und Glasgeschoss).
     func stormWindow(_ x: Float, _ y: Float, _ z: Float, _ w: CGFloat, _ h: CGFloat,
-                    _ nx: Float, _ nz: Float, _ throwDist: Float) {
+                    _ nx: Float, _ nz: Float, _ throwDist: Float, base: Float = 0) {
         let frame = texMat(Tex.wainscot, 1, 1)
         let rev   = texMat(Tex.plaster, 1, 1)
         let alongZ = abs(nx) > 0.5
-        let D: Float = 0.32                       // Leibungstiefe
         let fw = Float(w), fh = Float(h)
-        // Achsen: a laeuft entlang der Wand, n zeigt in den Raum
+        // Achsen: a laeuft entlang der Wand, n zeigt in den Raum.
+        // Der Anker sitzt 0.14 vor der Wandachse - negativer Versatz geht
+        // durch das Loch nach draussen.
         func P(_ along: Float, _ up: Float, _ inward: Float) -> SCNVector3 {
             alongZ ? SCNVector3(x + nx * inward, y + up, z + along)
                    : SCNVector3(x + along, y + up, z + nz * inward)
@@ -174,93 +183,73 @@ extension GameController {
             prop(s3.0, s3.1, s3.2, p3.x, p3.y, p3.z, m)
         }
 
-        // Himmel ganz hinten, eine der vier Varianten
-        // % 3 statt % 4: Variante 3 ist window_storm mit 8 % Helligkeit -
-        // jedes vierte Fenster war damit ein schwarzes Rechteck in der Wand.
-        // Die Sturmfassung gehoert in die spaetere Sturm-Phase, nicht in den
-        // Normalzustand.
-        let variant = Int(abs(x * 3.0 + z * 7.0)) % 3
-        // Die Scheibe sass bei -D, also 32 cm HINTER dem Ankerpunkt - bei einer
-        // 30 cm dicken Wand liegt sie damit komplett im Mauerwerk und war nie
-        // zu sehen. Die Normale n zeigt in den Raum, ein POSITIVER Versatz
-        // schiebt also in jeder Wandrichtung nach innen.
-        box(w, h, 0.05, 0, 0, 0.03, windowMat(variant))
+        // Draussen: eine grosse weiche Nebelflaeche, 2 m hinter der Wand.
+        // Deutlich groesser als das Loch, damit man auch schraeg nie daran
+        // vorbeischaut. NICHT im Culling - eine entladene Backplate ist ein
+        // schwarzes Loch in der Wand.
+        let sky = SCNMaterial()
+        sky.lightingModel = .constant
+        sky.diffuse.contents = Tex.windows[Int(abs(x * 3.0 + z * 7.0)) % 3]
+        sky.diffuse.wrapS = .clamp; sky.diffuse.wrapT = .clamp
+        // Gedaempft: volle Helligkeit las sich als totes weisses Panel.
+        sky.multiply.contents = UIColor(red: 0.60, green: 0.64, blue: 0.70, alpha: 1)
+        sky.isDoubleSided = true
+        let bp = SCNPlane(width: w + 2.6, height: h + 2.0)
+        bp.firstMaterial = sky
+        let bn = SCNNode(geometry: bp)
+        let bpos = P(0, 0.2, -2.0)
+        bn.position = bpos
+        if alongZ { bn.eulerAngles.y = Float.pi / 2 }
+        bn.renderingOrder = -5
+        scene.rootNode.addChildNode(bn)
 
-        // Glas davor: additiv, sehr durchsichtig. Der Abstand zum Himmel gibt
-        // beim Vorbeilaufen einen leichten Versatz - daran erkennt man Glas.
+        // Laibung: vier Bretter kleiden das Loch aus (Wanddicke 0.30 plus
+        // etwas Vorstand). Ohne sie schaut man auf die rohen Schnittkanten
+        // der Wandstuecke.
+        let dRev: CGFloat = 0.42
+        let dMid: Float = -0.07                     // Mitte der Laibungstiefe
+        box(w + 0.14, 0.09, dRev, 0, fh/2 + 0.045, dMid, rev)      // Sturz
+        box(w + 0.14, 0.09, dRev, 0, -fh/2 - 0.045, dMid, rev)     // Sohle
+        box(0.09, h + 0.18, dRev, -(fw/2 + 0.045), 0, dMid, rev)   // Wangen
+        box(0.09, h + 0.18, dRev, fw/2 + 0.045, 0, dMid, rev)
+
+        // Glas sitzt in der Laibung, leicht nach aussen versetzt. Milchig,
+        // matt, wird vom Raumlicht angestrahlt statt selbst zu leuchten -
+        // die Helligkeit dahinter kommt von der Backplate.
         let gm = SCNMaterial()
-        gm.lightingModel = .constant
+        gm.lightingModel = .lambert
         gm.diffuse.contents = Tex.glass
-        // Milchig und leicht rostig statt glasklar-additiv: die Scheibe soll
-        // trueb sein, nicht leuchten. Der Rostton kommt vom multiply.
-        gm.multiply.contents = UIColor(red: 0.86, green: 0.80, blue: 0.72, alpha: 1)
-        gm.blendMode = .add
-        gm.transparency = 0.46
-        gm.writesToDepthBuffer = false
+        gm.multiply.contents = UIColor(red: 0.82, green: 0.78, blue: 0.72, alpha: 1)
+        gm.transparency = 0.52
         gm.isDoubleSided = true
+        gm.writesToDepthBuffer = false
         gm.diffuse.wrapS = .repeat
         gm.diffuse.wrapT = .repeat
         registerWater(gm, 0, -0.07, 1.3)              // Regenschlieren wandern
-        // Streulicht an der Laibung: zwei blasse Kanten, als fange die Wand
-        // das Fensterlicht auf. Billig, aber es verankert das Fenster im Raum.
-        let glowM = SCNMaterial()
-        glowM.lightingModel = .constant
-        glowM.diffuse.contents = UIColor(red: 0.55, green: 0.57, blue: 0.61, alpha: 1)
-        glowM.emission.contents = UIColor(red: 0.26, green: 0.27, blue: 0.30, alpha: 1)
-        for sg3: Float in [-1, 1] {
-            // S nimmt CGFloat, fh ist Float - deshalb hier umrechnen statt
-            // blind zu casten: die Streifen sollen 34 cm kuerzer sein als das
-            // Fenster hoch ist, damit sie oben und unten nicht ueberstehen.
-            let sSz = S(0.04, h - 0.34, 0.10)
-            let sPp = P(sg3 * (Float(w) / 2 - 0.03), 0, -D * 0.55)
-            prop(sSz.0, sSz.1, sSz.2, sPp.x, sPp.y, sPp.z, glowM)
-        }
-        box(w - 0.03, h - 0.03, 0.012, 0, 0, 0.065, gm)   // Glas vor der Scheibe
+        box(w - 0.02, h - 0.02, 0.014, 0, 0, -0.10, gm)
 
-        // ALLE folgenden Teile brauchen einen POSITIVEN Versatz. Sie standen
-        // bei -D/2 und -D+0.13, also 16 bis 19 cm IN der 30 cm dicken Wand -
-        // unsichtbar. Sichtbar waren nur Himmelsflaeche, Glas und Fensterbank,
-        // und genau deshalb sah das Fenster aus wie ein weisses Rechteck mit
-        // einem Brett darunter. (Erkenntnis 11 der Uebergabe wurde seinerzeit
-        // nur auf die Scheibe angewendet, nicht auf Rahmen und Laibung.)
-        //
-        // Die Wand ist massiv - man kann nicht in sie hineinschauen. Das
-        // Fenster wird deshalb als Aufbau VOR der Wandflaeche gestaffelt:
-        // Himmel 0.03, Glas 0.05, Sprossen 0.07, Rahmen 0.09, Laibung 0.06.
-        let dRev: Float = 0.06        // Laibungstiefe, jetzt nach vorn
-        box(w + 0.16, 0.10, CGFloat(dRev), 0, fh/2 + 0.05, dRev/2, rev)     // Sturz
-        box(w + 0.16, 0.10, CGFloat(dRev), 0, -fh/2 - 0.05, dRev/2, rev)    // Bank
-        box(0.10, h + 0.20, CGFloat(dRev), -(fw/2 + 0.05), 0, dRev/2, rev)  // Wangen
-        box(0.10, h + 0.20, CGFloat(dRev), fw/2 + 0.05, 0, dRev/2, rev)
-
-        // Sprossenkreuz vor dem Glas
-        box(w, 0.045, 0.035, 0, 0, 0.075, frame)
-        box(0.045, h, 0.035, 0, 0, 0.075, frame)
-        // Zwei zusaetzliche Sprossen: ein einzelnes Kreuz sieht nach Fadenkreuz
-        // aus, sechs Scheiben nach Fenster.
-        box(w, 0.035, 0.030, 0, fh * 0.25, 0.075, frame)
-        box(w, 0.035, 0.030, 0, -fh * 0.25, 0.075, frame)
-        // Rahmen ringsum, steht am weitesten vor
-        box(w + 0.08, 0.075, 0.055, 0, fh/2, 0.09, frame)
-        box(w + 0.08, 0.075, 0.055, 0, -fh/2, 0.09, frame)
-        box(0.075, h + 0.15, 0.055, -(fw/2), 0, 0.09, frame)
-        box(0.075, h + 0.15, 0.055, fw/2, 0, 0.09, frame)
+        // Sprossenkreuz raumseitig vor dem Glas
+        box(w, 0.045, 0.035, 0, 0, 0.02, frame)
+        box(0.045, h, 0.035, 0, 0, 0.02, frame)
+        box(w, 0.035, 0.030, 0, fh * 0.25, 0.02, frame)
+        box(w, 0.035, 0.030, 0, -fh * 0.25, 0.02, frame)
+        // Rahmen ringsum, steht am weitesten in den Raum
+        box(w + 0.08, 0.075, 0.055, 0, fh/2, 0.06, frame)
+        box(w + 0.08, 0.075, 0.055, 0, -fh/2, 0.06, frame)
+        box(0.075, h + 0.15, 0.055, -(fw/2), 0, 0.06, frame)
+        box(0.075, h + 0.15, 0.055, fw/2, 0, 0.06, frame)
 
         // Fensterbank ragt in den Raum
-        box(w + 0.34, 0.09, 0.30, 0, -(fh/2 + 0.12), 0.09, frame)
+        box(w + 0.34, 0.09, 0.30, 0, -(fh/2 + 0.12), 0.10, frame)
 
-        // Licht: der Strahl beginnt an der Scheibe INNERHALB der Leibung und
-        // blendet oben ein. Vorher setzte er an der Wandflaeche hart an.
-        // Tageslicht durch Wolken: fast weiss, leicht kuehl. Die Fenster sind
-        // jetzt die Hauptlichtquellen der Aussenraeume.
+        // Licht: Strahl vom Glas schraeg auf den Boden, dazu der Lichtfleck
+        // und EIN mildes Licht - beide jetzt auf Raumbodenhoehe.
         let moon = UIColor(red: 0.84, green: 0.86, blue: 0.90, alpha: 1)
-        let sp = P(0, 0, -D + 0.14)
+        let sp = P(0, 0, -0.10)
         let ex = x + nx * throwDist, ez = z + nz * throwDist
-        lightShaft(SCNVector3(sp.x, sp.y, sp.z), SCNVector3(ex, 0.04, ez), w * 0.92, 0.22, moon)
-        floorPool(ex, ez, w * 0.55, w * 0.78, 0.20, moon)
-        // EIN Licht statt zwei. Das Leibungslicht war ein zweites Licht je
-        // Fenster fuer einen Effekt, den der Lichtschacht ohnehin liefert -
-        // bei acht Fenstern also acht ueberfluessige Lampen.
+        lightShaft(SCNVector3(sp.x, sp.y, sp.z), SCNVector3(ex, base + 0.04, ez),
+                   w * 0.92, 0.22, moon)
+        floorPool(ex, ez, w * 0.55, w * 0.78, 0.20, moon, y: base + 0.02)
         addOmni(P(0, -fh * 0.25, 0.6), 420, moon, range: 8)
     }
 
@@ -480,7 +469,7 @@ extension GameController {
     /// Glasfassade: Bruestung, Eisensprossen, dazwischen leuchtende Wolken-
     /// scheiben. Jede Bucht bekommt eine eigene Variante, damit nichts kachelt.
     func glassRun(_ a0: Float, _ a1: Float, _ fixed: Float, alongX: Bool,
-                  _ base: Float, _ h: CGFloat) {
+                  _ base: Float, _ h: CGFloat, backplate: Bool = true) {
         // EINE durchgehende Leuchtplatte statt einer Scheibe je Bucht.
         // Vorher entstanden hier pro Fassade ueber dreissig Einzelkoerper mit
         // eigenem Material - mal drei Fassaden in einem Raum. Genau daran ist
@@ -524,29 +513,35 @@ extension GameController {
             else      { prop(0.09, h + 0.5, 0.09, fixed, base + Float(h + 0.5) / 2, p, iron) }
             p += 3.2
         }
-        // Backplate: eine grosse, weiche Himmelsflaeche ZWEI METER hinter der
+        // Backplate: eine grosse, weiche Nebelflaeche ZWEI METER hinter der
         // Fassade. Sie ersetzt das Leuchten der Scheibe - dadurch bekommt das
         // Fenster Tiefe, und es kostet eine Flaeche statt einer Lampe.
-        let sky = SCNMaterial()
-        sky.lightingModel = .constant
-        sky.diffuse.contents = Tex.windows[0]
-        sky.diffuse.wrapS = .clamp; sky.diffuse.wrapT = .clamp
-        sky.multiply.contents = UIColor(red: 1.0, green: 0.99, blue: 0.96, alpha: 1)
-        sky.isDoubleSided = true
-        let bpH = h + 1.4
-        let bp = SCNPlane(width: len + 2.0, height: bpH)
-        bp.firstMaterial = sky
-        let bn = SCNNode(geometry: bp)
-        let aus: Float = fixed > 0 ? 2.0 : -2.0
-        if alongX {
-            bn.position = SCNVector3(mid, base + 0.45 + Float(h) / 2, fixed + aus)
-        } else {
-            bn.position = SCNVector3(fixed + aus, base + 0.45 + Float(h) / 2, mid)
-            bn.eulerAngles.y = Float.pi / 2
+        // NICHT im Culling: die Platte stand in registerCullable und entlud
+        // sich nach drei Schritten - dann war die Fassade ein schwarzes Loch,
+        // und das Umschalten der Riesenflaeche hat sichtbar geruckelt.
+        // Gedaempft (0.58 statt 1.0): volle Helligkeit war das gemeldete
+        // "komplett kacke weiss" - jetzt liest sie sich als Nebel.
+        if backplate {
+            let sky = SCNMaterial()
+            sky.lightingModel = .constant
+            sky.diffuse.contents = Tex.windows[0]
+            sky.diffuse.wrapS = .clamp; sky.diffuse.wrapT = .clamp
+            sky.multiply.contents = UIColor(red: 0.55, green: 0.60, blue: 0.66, alpha: 1)
+            sky.isDoubleSided = true
+            let bpH = h + 1.4
+            let bp = SCNPlane(width: len + 2.0, height: bpH)
+            bp.firstMaterial = sky
+            let bn = SCNNode(geometry: bp)
+            let aus: Float = fixed > 0 ? 2.0 : -2.0
+            if alongX {
+                bn.position = SCNVector3(mid, base + 0.45 + Float(h) / 2, fixed + aus)
+            } else {
+                bn.position = SCNVector3(fixed + aus, base + 0.45 + Float(h) / 2, mid)
+                bn.eulerAngles.y = Float.pi / 2
+            }
+            bn.renderingOrder = -5      // ganz hinten, vor allem anderen zeichnen
+            scene.rootNode.addChildNode(bn)
         }
-        bn.renderingOrder = -5          // ganz hinten, vor allem anderen zeichnen
-        scene.rootNode.addChildNode(bn)
-        registerCullable(bn, bn.position.x, bn.position.y, bn.position.z)
 
         if alongX {
             solids.append(WallBox(x0: a0, x1: a1, z0: fixed - 0.1, z1: fixed + 0.1,
@@ -558,22 +553,35 @@ extension GameController {
     }
 
     /// Topfpalme. leaning kippt den ganzen Topf - fuer die umgestuerzten.
-    func palmAt(_ x: Float, _ z: Float, _ base: Float, leaning: Bool = false) {
+    /// potted: false laesst Topf und Erdscheibe weg - fuer Palmen, die direkt
+    /// im Beet stehen (Gewaechshaus).
+    func palmAt(_ x: Float, _ z: Float, _ base: Float, leaning: Bool = false,
+                potted: Bool = true) {
         let holder = SCNNode()
         holder.position = SCNVector3(x, base, z)
         if leaning { holder.eulerAngles.z = 0.9; holder.position.y = base + 0.12 }
         scene.rootNode.addChildNode(holder)
-        let pot = SCNCylinder(radius: 0.30, height: 0.42)
-        pot.radialSegmentCount = 9
-        pot.firstMaterial = texMat(Tex.brick, 2, 1)
-        let pn = SCNNode(geometry: pot); pn.position = SCNVector3(0, 0.21, 0)
-        holder.addChildNode(pn)
-        let soil = SCNCylinder(radius: 0.26, height: 0.05)
-        soil.radialSegmentCount = 9
-        soil.firstMaterial = col(0.16, 0.12, 0.08)
-        let sn2 = SCNNode(geometry: soil); sn2.position = SCNVector3(0, 0.43, 0)
-        holder.addChildNode(sn2)
+        if potted {
+            let pot = SCNCylinder(radius: 0.30, height: 0.42)
+            pot.radialSegmentCount = 9
+            pot.firstMaterial = texMat(Tex.brick, 2, 1)
+            let pn = SCNNode(geometry: pot); pn.position = SCNVector3(0, 0.21, 0)
+            holder.addChildNode(pn)
+            let soil = SCNCylinder(radius: 0.26, height: 0.05)
+            soil.radialSegmentCount = 9
+            soil.firstMaterial = col(0.16, 0.12, 0.08)
+            let sn2 = SCNNode(geometry: soil); sn2.position = SCNVector3(0, 0.43, 0)
+            holder.addChildNode(sn2)
+        }
         let trunkM = col(0.35, 0.27, 0.16)
+        if !potted {
+            // Ohne Topf beginnt der Stamm sonst 44 cm ueber dem Beet
+            let tg0 = SCNCylinder(radius: 0.05, height: 0.55)
+            tg0.radialSegmentCount = 6; tg0.firstMaterial = trunkM
+            let tn0 = SCNNode(geometry: tg0)
+            tn0.position = SCNVector3(0, 0.27, 0)
+            holder.addChildNode(tn0)
+        }
         for (ty, tilt) in [(Float(0.75), Float(0.06)), (1.25, 0.14)] {
             let tg = SCNCylinder(radius: 0.045, height: 0.62)
             tg.radialSegmentCount = 6; tg.firstMaterial = trunkM
@@ -582,19 +590,36 @@ extension GameController {
             tn.eulerAngles.z = tilt
             holder.addChildNode(tn)
         }
-        // Blattkranz aus langen Dreiecken, beidseitig
+        // Blattkranz: jeder Wedel ist ein GEKNICKTES Blatt aus drei Dreiecken -
+        // vom Stamm aus erst aufwaerts, dann ueber den Scheitel abwaerts.
+        // Die alte Fassung war ein flacher Stern aus acht Spitzen, auf den
+        // Screenshots ein gruener Seestern. Alles bleibt EIN Netzknoten.
         let leafM = SCNMaterial(); leafM.lightingModel = .lambert
-        leafM.diffuse.contents = UIColor(red: 0.18, green: 0.34, blue: 0.16, alpha: 1)
+        // Leicht variierter Gruenton, damit nicht jede Palme dieselbe ist
+        let gVar = (sin(x * 12.9 + z * 7.7) + 1) * 0.5
+        leafM.diffuse.contents = UIColor(red: 0.14 + 0.05 * CGFloat(gVar),
+                                         green: 0.30 + 0.08 * CGFloat(gVar),
+                                         blue: 0.13, alpha: 1)
         leafM.isDoubleSided = true
         var lt: [(SCNVector3, SCNVector3, SCNVector3)] = []
-        for k in 0..<8 {
-            let a2 = Float(k) / 8 * 2 * Float.pi
+        let crownY: Float = 1.58
+        for k in 0..<7 {
+            let a2 = (Float(k) + 0.5 * Float(k % 2)) / 7 * 2 * Float.pi
             let dx = sin(a2), dz = cos(a2)
-            let droop: Float = 0.28 + Float(k % 3) * 0.10
-            let tip = SCNVector3(dx * 1.05, 1.62 - droop, dz * 1.05)
-            let b1 = SCNVector3(dx * 0.06 - dz * 0.09, 1.60, dz * 0.06 + dx * 0.09)
-            let b2 = SCNVector3(dx * 0.06 + dz * 0.09, 1.60, dz * 0.06 - dx * 0.09)
-            lt.append((b1, tip, b2))
+            // Scheitel: aussen und etwas ueber dem Ansatz, Spitze weiter
+            // aussen und deutlich darunter - der Bogen einer Palmwedel.
+            let lift: Float = 0.30 + Float(k % 3) * 0.06
+            let drop: Float = 0.55 + Float(k % 2) * 0.18
+            let midR: Float = 0.62, tipR: Float = 1.15
+            let bW: Float = 0.075, mW: Float = 0.11
+            let b1 = SCNVector3(dx * 0.05 - dz * bW, crownY, dz * 0.05 + dx * bW)
+            let b2 = SCNVector3(dx * 0.05 + dz * bW, crownY, dz * 0.05 - dx * bW)
+            let m1 = SCNVector3(dx * midR - dz * mW, crownY + lift, dz * midR + dx * mW)
+            let m2 = SCNVector3(dx * midR + dz * mW, crownY + lift, dz * midR - dx * mW)
+            let tip = SCNVector3(dx * tipR, crownY + lift - drop, dz * tipR)
+            lt.append((b1, m1, b2))          // Ansatz -> Scheitel
+            lt.append((b2, m1, m2))
+            lt.append((m1, tip, m2))         // Scheitel -> haengende Spitze
         }
         let leaves = flatDoubleMesh(lt, leafM)
         holder.addChildNode(leaves)
@@ -1542,7 +1567,12 @@ extension GameController {
         floorTile(7, 36, -27.5, -4, texMat(Tex.parquet, 2, 10))       // Westflur
         floorTile(16, 16, -39, -14, texMat(Tex.parquet, 4, 4))        // Salon
         floorTile(8, 1.8, 7, -12.5, texMat(Tex.concrete, 3, 1))
-        floorTile(12, 11.5, 17, -17.25, texMat(Tex.concrete, 5, 5))
+        // Quellkammer-Boden in DREI Streifen: an der Westwand bleibt ein Loch
+        // x[11,12.9] z[-19.2,-13.4] offen - dort steigt die Treppe in den
+        // Tiefkeller ab. Eine durchgehende Platte laege mitten im Lauf.
+        floorTile(10.1, 11.5, 17.95, -17.25, texMat(Tex.concrete, 5, 5))
+        floorTile(1.9, 1.9, 11.95, -12.45, texMat(Tex.concrete, 1, 1))
+        floorTile(1.9, 3.8, 11.95, -21.1, texMat(Tex.concrete, 1, 2))
 
         // Hallendecke OHNE den Treppenschacht x[-8,-4] z[6,14] - dort geht der
         // Raum ueber drei Geschosse bis unters Badehaus durch. Eine durchgehende
@@ -1558,7 +1588,10 @@ extension GameController {
 
         // ---------- Waende ----------
         // Hoehe pro Raum: kleine Raeume niedriger, sonst wirken sie wie Hallen
-        wallX(-8, 8, 14, wHall, h: 6)                                            // Haupthalle
+        // Haupthalle. Die Nordwand bekommt zwei ECHTE Fensterloecher - die
+        // Eingangsfenster sitzen seit dem Umbau im Loch, nicht vor der Wand.
+        wallX(-8, 8, 14, wHall,
+              holes: [(0.2, 1.70, 1.50, 3.30), (6.2, 1.70, 1.50, 3.30)], h: 6)
         wallX(-8, 8, 0, wHall, gaps: [(0, 2.4), (-5.5, 1.3)], h: 6)
         wallZ(0, 14, -8, wHall, gaps: [(3.5, 2.4)], h: 6)
         wallZ(0, 14, 8, wHall, gaps: [(8, 2.4)], h: 6)
@@ -1579,9 +1612,12 @@ extension GameController {
 
         wallZ(-10, 2, 12, wGal, h: 4)                                            // Galerie
         wallX(12, 22, -10, wGal, h: 4)
-        wallZ(-10, 2, 22, wGal, h: 4)
+        wallZ(-10, 2, 22, wGal,
+              holes: [(-1.2, 1.25, 1.40, 2.10), (-4.6, 1.25, 1.40, 2.10),
+                      (-8.0, 1.25, 1.40, 2.10)], h: 4)
 
-        wallZ(-14, 0, -3, wCorr, gaps: [(-7.5, 2.2)], h: 3.0)                    // Nordflur
+        wallZ(-14, 0, -3, wCorr, gaps: [(-7.5, 2.2)],
+              holes: [(-1.8, 1.05, 1.15, 1.70)], h: 3.0)                         // Nordflur
         wallZ(-14, 0, 3, wCorr, gaps: [(-7.5, 2.2), (-12.5, 1.8)], h: 3.0)
 
         wallZ(-11, -4, -10, wBath, h: 2.7, wainscot: false)                      // Bad
@@ -1598,13 +1634,18 @@ extension GameController {
         wallX(-7, 7, -24, wStudy, h: 3.6)
 
         // Westfluegel: langer Flur mit Fensterreihe, dahinter der Salon
-        wallZ(-22, 14, -31, wCorr, gaps: [(-14, 2.4)], h: 3.4)                   // aussen + Salontuer
+        wallZ(-22, 14, -31, wCorr, gaps: [(-14, 2.4)],
+              holes: [(12, 1.55, 0.65, 2.40), (9, 1.55, 0.65, 2.40),
+                      (6, 1.55, 0.65, 2.40), (3, 1.55, 0.65, 2.40),
+                      (0, 1.55, 0.65, 2.40), (-3, 1.55, 0.65, 2.40)],
+              h: 3.4)                                                            // aussen + Salontuer + Fensterreihe
         wallZ(-22, 14, -24, wCorr, gaps: [(12, 2.4), (-1.5, 2.2)], h: 3.4)       // innen
         wallX(-31, -24, 14, wCorr, h: 3.4)
         wallX(-31, -24, -22, wCorr, h: 3.4)
 
         wallZ(-22, -6, -47, wSalon, h: 4.2)                                      // Salon
-        wallX(-47, -31, -22, wSalon, h: 4.2)
+        wallX(-47, -31, -22, wSalon,
+              holes: [(-39.0, 1.50, 1.15, 2.30)], h: 4.2)
         wallX(-47, -31, -6, wSalon, h: 4.2)
 
         // Gang zum Keller und der Keller selbst - roher Beton, niedrig
@@ -1614,6 +1655,67 @@ extension GameController {
         wallZ(-23, -11.5, 23, wCell, h: 2.6, wainscot: false)
         wallX(11, 23, -23, wCell, h: 2.6, wainscot: false)
         wallX(11, 23, -11.5, wCell, h: 2.6, wainscot: false)
+
+        // ============ Tiefkeller: die eigentliche Quellkammer ============
+        // Eine ECHTE Ebene unter dem Haus (y = -2.8), erreichbar ueber die
+        // Treppe im Bodenloch der Kammer daruber. Der Lauf nutzt denselben
+        // Bauer wie das Treppenhaus - kein zweiter konkurrierender Code.
+        do {
+            let stoneK = texMat(Tex.stoneFloor, 4, 4)
+            let brickK = texMat(Tex.brick, 4, 2)
+            let ironK = texMat(Tex.iron, 2, 2)
+            // Raum: Boden, dunkle Deckenuntersicht, eigene Waende unter den
+            // Bestandswaenden (gleiche Achsen, aber Hoehenbereich -2.8..0)
+            floorTile(12, 11.5, 17, -17.25, stoneK, y: -2.8)
+            ceilRects.append((11, 23, -23, -11.5, -0.12))
+            prop(12, 0.06, 11.5, 17, -0.14, -17.25, texMat(Tex.plankWood, 5, 5))
+            wallZ(-23, -11.5, 11, brickK, h: 2.8, wainscot: false, base: -2.8)
+            wallZ(-23, -11.5, 23, brickK, h: 2.8, wainscot: false, base: -2.8)
+            wallX(11, 23, -23, brickK, h: 2.8, wainscot: false, base: -2.8)
+            wallX(11, 23, -11.5, brickK, h: 2.8, wainscot: false, base: -2.8)
+            // Abstieg: 16 Stufen a 17.5 cm, Lauf an der Westwand entlang
+            stairRun(11.95, -13.4, -19.0, 1.5, 0.0, -2.8, steps: 16)
+            stairUnderFill(11.95, -13.4, -19.0, 1.5, 0.0, -2.8, floorY: -2.8)
+            // Gelaender um das Bodenloch im Erdgeschoss, damit oben niemand
+            // hineintritt: Ostkante und Suedkante
+            for gz in stride(from: Float(-18.9), through: -13.7, by: 1.3) {
+                prop(0.07, 0.95, 0.07, 12.86, 0.48, gz, ironK)
+            }
+            prop(0.06, 0.06, 5.8, 12.86, 0.98, -16.3, ironK)
+            solids.append(WallBox(x0: 12.80, x1: 12.94, z0: -19.2, z1: -13.4,
+                                  y0: 0, y1: 1.05, blocksCamera: false))
+            for gx in [Float(11.3), 12.2] {
+                prop(0.07, 0.95, 0.07, gx, 0.48, -19.26, ironK)
+            }
+            prop(1.9, 0.06, 0.06, 11.95, 0.98, -19.26, ironK)
+            solids.append(WallBox(x0: 11.0, x1: 12.9, z0: -19.33, z1: -19.19,
+                                  y0: 0, y1: 1.05, blocksCamera: false))
+            // Vier Ziegelpfeiler tragen das Gewoelbe
+            for (px3, pz3) in [(Float(15.0), Float(-14.5)), (20.0, -14.5),
+                               (15.0, -20.5), (20.0, -20.5)] {
+                prop(0.55, 2.8, 0.55, px3, -1.4, pz3, brickK, solid: true)
+            }
+            // KEIN zweites Quellbecken - das gefasste steht oben in der
+            // Kammer (Quellbecken bei x 17, z -19.5). Hier unten steht nur
+            // Sickerwasser: die Osthaelfte des Gewoelbes ist ueberflutet.
+            waterSurface(20.2, -2.77, -18.0, 5.2, 8.6,
+                         tint: UIColor(red: 0.09, green: 0.14, blue: 0.13, alpha: 1),
+                         murk: 0.94, rep: 2.2, flow: 0.006)
+            // Geruempel: Kisten, ein Kohlerest, eine vergessene Trage
+            prop(0.8, 0.8, 0.8, 21.8, -2.4, -12.6, texMat(Tex.plankWood, 1, 1), solid: true)
+            prop(0.7, 0.5, 0.7, 21.0, -2.55, -12.9, texMat(Tex.plankWood, 1, 1), solid: true)
+            prop(1.9, 0.10, 0.6, 14.2, -2.65, -21.9, texMat(Tex.plankWood, 2, 1))
+            prop(0.08, 0.30, 0.08, 13.4, -2.65, -21.9, ironK)
+            prop(0.08, 0.30, 0.08, 15.0, -2.65, -21.9, ironK)
+            // Licht: eine flackernde Lampe am Abstieg, ein kaltes Gruen ueber
+            // der Quelle - mehr braucht die Dunkelheit hier nicht.
+            let kellerLicht = addOmni(SCNVector3(12.5, -0.9, -16.5), 300,
+                                      UIColor(red: 0.95, green: 0.82, blue: 0.60, alpha: 1), range: 7)
+            registerFlicker(kellerLicht, 300)
+            addOmni(SCNVector3(19.5, -1.6, -18.5), 260,
+                    UIColor(red: 0.42, green: 0.70, blue: 0.62, alpha: 1), range: 8)
+            addDust(17, -1.5, -17.5, 8, 2.2, 8, 12)
+        }
 
         // ---------- Empfangshalle ----------
         // Der Eingang eines Sanatoriums ist ein Empfang, kein Wohnzimmer. Der
@@ -2013,10 +2115,9 @@ extension GameController {
         rug(2.4, 34, -27.5, -4, Tex.runner)
         for k in 0..<6 {
             let wz = 12.0 - Float(k) * 3.0
-            // Wand steht bei x=-31 und ist 0.30 dick, Innenkante also -30.85.
-            // Die Scheibe sass 1 cm davor und verschwand hinter Rahmen und
-            // Gardine. Jetzt 7 cm im Raum und breiter als die Gardinenluecke.
-            stormWindow(-30.78, 1.85, wz, 1.55, 2.40, 1, 0, 5.0)
+            // Anker 0.14 vor der Wandachse -31, wie bei allen Fenstern seit
+            // dem Loch-Umbau - das Fenster sitzt in der Oeffnung.
+            stormWindow(-30.86, 1.85, wz, 1.55, 2.40, 1, 0, 5.0)
             sheerCurtain(-30.50, wz, 2.60, 2.70, true, 0.30, 1)
             radiatorAt(-30.55, wz, 1.40, true)
             if k % 2 == 1 { benchAt(-24.55, wz - 1.5, 1.70, true, corrWood) }
@@ -2234,7 +2335,8 @@ extension GameController {
             ceiling(CGFloat(rx1 - rx0), CGFloat(rz1 - rz0), (rx0 + rx1)/2, (rz0 + rz1)/2, F + 2.6)
             wallX(rx0, rx1, rz0, wZim, h: 2.6, base: F)
             wallX(rx0, rx1, rz1, wZim, h: 2.6, base: F)
-            wallZ(rz0, rz1, rx0 < 0 ? rx0 : rx1, wZim, h: 2.6, base: F)
+            wallZ(rz0, rz1, rx0 < 0 ? rx0 : rx1, wZim,
+                  holes: [((rz0 + rz1) / 2, 1.15, 0.725, 1.55)], h: 2.6, base: F)
             // Einrichtung: Bett, Nachttisch, Stuhl, Fenster
             let bx = rx0 < 0 ? rx0 + 1.4 : rx1 - 1.4
             let bz = (rz0 + rz1) / 2
@@ -2246,7 +2348,7 @@ extension GameController {
             cabinetAt(bx + (rx0 < 0 ? 1.3 : -1.3), bz - 0.9, 0.55, 0.45, darkWood, texMat(Tex.brass, 1, 1))
             chairAt(bx + (rx0 < 0 ? 1.5 : -1.5), bz + 1.0, rx0 < 0 ? "w" : "e", wood)
             let wxx: Float = rx0 < 0 ? rx0 + 0.14 : rx1 - 0.14
-            stormWindow(wxx, F + 1.5, bz, 1.15, 1.55, rx0 < 0 ? 1 : -1, 0, 3.4)
+            stormWindow(wxx, F + 1.5, bz, 1.15, 1.55, rx0 < 0 ? 1 : -1, 0, 3.4, base: F)
             sconce(rx0 < 0 ? rx1 - 0.22 : rx0 + 0.22, F + 1.9, bz + 1.4, rx0 < 0 ? -1 : 1, 0)
             addOmni(SCNVector3((rx0+rx1)/2, F + 2.0, bz), 300,
                     UIColor(red: 0.94, green: 0.90, blue: 0.82, alpha: 1), range: 7)
@@ -2356,11 +2458,23 @@ extension GameController {
                 UIColor(red: 0.86, green: 0.90, blue: 0.90, alpha: 1), range: 8)
         contactShadow(4.0, 10.0, 6.4, 0.8, y: F2 + 0.012)
 
-        // Schwimmhalle: Glas auf drei Seiten, Glasdach, Pflanzen, das Becken
-        floorTile(18, 16, 0, -5, texMat(Tex.tileGreen, 9, 8), y: F2)
+        // Schwimmhalle: Glas auf drei Seiten, Glasdach, das Becken.
+        // Der Boden ist VIER Randstreifen um ein Loch - vorher lag EINE
+        // durchgehende Platte ueber dem ganzen Raum, und das fertig gebaute
+        // Becken samt Wasser verschwand komplett darunter. Deshalb "existiert
+        // nicht mal ein Pool".
+        let poolTile = texMat(Tex.tileGreen, 9, 8)
+        floorTile(18, 4.6, 0, -10.7, poolTile, y: F2)      // Nordstreifen
+        floorTile(18, 4.6, 0, 0.7, poolTile, y: F2)        // Suedstreifen
+        floorTile(3.8, 6.8, -7.1, -5, poolTile, y: F2)     // Weststreifen
+        floorTile(3.8, 6.8, 7.1, -5, poolTile, y: F2)      // Oststreifen
         wallX(-9, -1, 3, wArd, h: 2.7, base: F2)          // Rest der Suedwand
         glassRun(-13, 3, -9, alongX: false, F2, 2.6)
-        glassRun(-13, 3, 9, alongX: false, F2, 2.6)
+        // Ostfassade zweigeteilt: dazwischen die Tuer ins Gewaechshaus.
+        // OHNE Backplates - dahinter liegt jetzt das Gewaechshaus, keine
+        // Nebelflaeche. Man sieht durchs Milchglas echtes Blattwerk.
+        glassRun(-13, -5.8, 9, alongX: false, F2, 2.6, backplate: false)
+        glassRun(-4.2, 3, 9, alongX: false, F2, 2.6, backplate: false)
         glassRun(-9, 9, -13, alongX: true, F2, 2.6)
         // EIN Licht fuer die ganze Halle statt eines je Fassade. Der helle
         // Eindruck kommt jetzt von den Backplates hinter den Scheiben, nicht
@@ -2395,63 +2509,134 @@ extension GameController {
                    5.2, 0.20, UIColor(red: 0.88, green: 0.91, blue: 0.96, alpha: 1))
         floorPool(0, -5, 7.0, 5.0, 0.16, UIColor(red: 0.90, green: 0.92, blue: 0.94, alpha: 1))
 
-        // Das Becken: Superellipsen-Ringe wie bei der Wanne, nur begehbar gross
+        // Das Becken: rechteckig, wie im Kurhaus. Es fuellt exakt das Loch
+        // zwischen den vier Bodenstreifen (x[-5.2,5.2], z[-8.4,-1.6]).
+        // Die alte Superellipse ist raus - eine runde Wanne laesst sich nicht
+        // buendig in einen rechteckigen Bodenausschnitt setzen, und genau an
+        // den Ecken haette man ins Nichts geschaut.
         do {
             let bx: Float = 0, bz: Float = -5
-            let bn = 14
-            func bpt(_ i: Int, _ ax: Float, _ az: Float, _ y: Float) -> SCNVector3 {
-                let a2 = Float(i) / Float(bn) * 2 * Float.pi
-                let c = cos(a2), sn = sin(a2)
-                let e: Float = 0.75
-                return SCNVector3(bx + ax * (c < 0 ? -1 : 1) * pow(abs(c), e), y,
-                                  bz + az * (sn < 0 ? -1 : 1) * pow(abs(sn), e))
+            let beckenT = texMat(Tex.tileGreen, 8, 2)
+            let tiefe: Float = 1.35
+            // Vier Innenwaende, Oberkante buendig mit dem Boden
+            prop(10.4, CGFloat(tiefe), 0.16, bx, F2 - tiefe / 2, -8.32, beckenT)
+            prop(10.4, CGFloat(tiefe), 0.16, bx, F2 - tiefe / 2, -1.68, beckenT)
+            prop(0.16, CGFloat(tiefe), 6.8, -5.12, F2 - tiefe / 2, bz, beckenT)
+            prop(0.16, CGFloat(tiefe), 6.8, 5.12, F2 - tiefe / 2, bz, beckenT)
+            // Beckenboden mit Bahnenlinien
+            prop(10.4, 0.10, 6.8, bx, F2 - tiefe - 0.05, bz, texMat(Tex.tileGreen, 10, 6))
+            for lx in [Float(-2.6), 0, 2.6] {
+                prop(0.14, 0.012, 6.4, bx + lx, F2 - tiefe + 0.006, bz, col(0.10, 0.16, 0.14))
             }
-            let BR: [(Float, Float, Float)] = [
-                (F2 + 0.005, 5.30, 3.30), (F2 + 0.05, 5.10, 3.10),
-                (F2 + 0.05, 4.85, 2.85), (F2 - 0.32, 4.78, 2.78), (F2 - 0.92, 4.62, 2.62)]
-            var bt: [(SCNVector3, SCNVector3, SCNVector3)] = []
-            for k2 in 0..<(BR.count - 1) {
-                for i in 0..<bn {
-                    let j = (i + 1) % bn
-                    bt.append((bpt(i, BR[k2].1, BR[k2].2, BR[k2].0),
-                               bpt(j, BR[k2+1].1, BR[k2+1].2, BR[k2+1].0),
-                               bpt(i, BR[k2+1].1, BR[k2+1].2, BR[k2+1].0)))
-                    bt.append((bpt(i, BR[k2].1, BR[k2].2, BR[k2].0),
-                               bpt(j, BR[k2].1, BR[k2].2, BR[k2].0),
-                               bpt(j, BR[k2+1].1, BR[k2+1].2, BR[k2+1].0)))
-                }
-            }
-            let bc = SCNVector3(bx, F2 - 0.94, bz)
-            for i in 0..<bn {
-                let j = (i + 1) % bn
-                bt.append((bc, bpt(i, BR[4].1, BR[4].2, BR[4].0), bpt(j, BR[4].1, BR[4].2, BR[4].0)))
-            }
-            triMesh(bt, texMat(Tex.tileGreen, 6, 3))
-            waterSurface(bx, F2 - 0.34, bz, 9.2, 5.2,
+            // Beckenrand: schmale erhabene Kante rundum, dahinter Ueberlaufrinne
+            let rand = texMat(Tex.tileGreen, 6, 1)
+            prop(11.0, 0.06, 0.30, bx, F2 + 0.03, -8.45, rand)
+            prop(11.0, 0.06, 0.30, bx, F2 + 0.03, -1.55, rand)
+            prop(0.30, 0.06, 6.6, -5.35, F2 + 0.03, bz, rand)
+            prop(0.30, 0.06, 6.6, 5.35, F2 + 0.03, bz, rand)
+            // Truebes Wasser, 30 cm unter der Kante
+            waterSurface(bx, F2 - 0.30, bz, 10.2, 6.6,
                          tint: UIColor(red: 0.30, green: 0.55, blue: 0.50, alpha: 1),
                          murk: 0.84, rep: 2.4, flow: 0.014)
             addOmni(SCNVector3(bx, F2 - 0.5, bz), 260,
                     UIColor(red: 0.45, green: 0.80, blue: 0.72, alpha: 1), range: 7)
+            // Algenflecken auf dem Wasser
             for _ in 0..<5 {
                 prop(CGFloat.random(in: 0.10...0.2), 0.012, CGFloat.random(in: 0.08...0.16),
-                     bx + Float.random(in: -4...4), F2 - 0.328, bz + Float.random(in: -2.2...2.2),
+                     bx + Float.random(in: -4...4), F2 - 0.288, bz + Float.random(in: -2.2...2.2),
                      col(0.16, 0.30, 0.12))
             }
-            blocker(bx - 5.2, bx + 5.2, bz - 3.2, bz + 3.2, base: F2, height: 1.2)
-            // Einstiegsleiter
-            cyl(0.022, 0.9, 3.0, F2 + 0.4, bz + 3.05, texMat(Tex.brass, 1, 1))
-            cyl(0.022, 0.9, 3.4, F2 + 0.4, bz + 3.05, texMat(Tex.brass, 1, 1))
+            blocker(bx - 5.2, bx + 5.2, -8.4, -1.6, base: F2, height: 1.2)
+            // Einstiegsleiter an der Suedkante
+            cyl(0.022, 0.9, 3.0, F2 + 0.4, -1.62, texMat(Tex.brass, 1, 1))
+            cyl(0.022, 0.9, 3.4, F2 + 0.4, -1.62, texMat(Tex.brass, 1, 1))
             for r2 in 0..<3 {
-                prop(0.42, 0.035, 0.035, 3.2, F2 + 0.18 + Float(r2) * 0.26, bz + 3.05, texMat(Tex.brass, 1, 1))
+                prop(0.42, 0.035, 0.035, 3.2, F2 + 0.18 + Float(r2) * 0.26, -1.62, texMat(Tex.brass, 1, 1))
             }
+            // Startblock am Nordende - ein stummer Zeuge des Kurbetriebs
+            prop(0.7, 0.45, 0.7, -2.6, F2 + 0.225, -9.1, texMat(Tex.concrete, 1, 1), solid: true)
         }
-        // Pflanzen: Palmen an den Glaswaenden, zwei umgestuerzt
-        for (px2, pz2) in [(Float(-7.6), Float(-11.4)), (7.6, -11.4), (-7.6, 1.4),
-                           (7.6, 1.4), (-7.4, -5.0), (7.4, -5.0)] {
-            palmAt(px2, pz2, F2)
+        // Zwei Palmen flankieren die Gewaechshaustuer - der Rest der Pflanzen
+        // steht jetzt drueben im Gewaechshaus statt zufaellig im Raum verstreut.
+        palmAt(8.3, -7.0, F2)
+        palmAt(8.3, -3.0, F2)
+
+        // ============ Gewaechshaus ============
+        // Anbau an der Ostfassade der Schwimmhalle, gleicher z-Bereich wie die
+        // Halle - dadurch schaut man durch deren Ostglas immer auf Blattwerk,
+        // nie ins Leere. Pflanzen in Ziegelbeeten statt zufaellig verstreut.
+        do {
+            let ironG = texMat(Tex.iron, 2, 1)
+            let brickG = texMat(Tex.brick, 3, 1)
+            floorTile(6, 16, 12, -5, texMat(Tex.stoneFloor, 3, 8), y: F2)
+            ceilRects.append((9, 15, -13, 3, F2 + 2.9))
+            // Glaswaende nach Osten, Norden, Sueden - ohne eigene Backplates,
+            // die drei Nebelflaechen stehen unten von Hand, damit keine davon
+            // in Waschsaal oder Schwimmhalle hineinragt.
+            glassRun(-13, 3, 15, alongX: false, F2, 2.4, backplate: false)
+            glassRun(9, 15, 3, alongX: true, F2, 2.4, backplate: false)
+            glassRun(9, 15, -13, alongX: true, F2, 2.4, backplate: false)
+            let fogM = SCNMaterial()
+            fogM.lightingModel = .constant
+            fogM.diffuse.contents = Tex.windows[0]
+            fogM.diffuse.wrapS = .clamp; fogM.diffuse.wrapT = .clamp
+            fogM.multiply.contents = UIColor(red: 0.55, green: 0.60, blue: 0.66, alpha: 1)
+            fogM.isDoubleSided = true
+            for (fx, fz, frot, fw2) in [(Float(17.0), Float(-5.0), Float.pi / 2, CGFloat(18.0)),
+                                        (12.5, -15.3, 0, 9.0),
+                                        (12.75, 4.8, 0, 8.5)] {
+                let fp = SCNPlane(width: fw2, height: 5.0)
+                fp.firstMaterial = fogM
+                let fn = SCNNode(geometry: fp)
+                fn.position = SCNVector3(fx, F2 + 1.5, fz)
+                fn.eulerAngles.y = frot
+                fn.renderingOrder = -5
+                scene.rootNode.addChildNode(fn)
+            }
+            // Glasdach mit Eisensparren, wie die Halle nebenan
+            let roofG = windowMat(0)
+            roofG.emission.intensity = 0.50
+            roofG.transparency = 0.84
+            prop(6.2, 0.06, 16.2, 12, F2 + 2.95, -5, roofG)
+            for rx2 in [Float(10.0), 12.0, 14.0] {
+                prop(0.12, 0.14, 16.2, rx2, F2 + 2.88, -5, ironG)
+            }
+            prop(6.4, 0.30, 0.20, 12, F2 + 2.76, -13, texMat(Tex.rust, 3, 1))
+            prop(6.4, 0.30, 0.20, 12, F2 + 2.76, 3, texMat(Tex.rust, 3, 1))
+            prop(0.20, 0.30, 16.3, 15, F2 + 2.76, -5, texMat(Tex.rust, 3, 1))
+            // Vier Ziegelbeete in zwei Reihen, Mittelgang zur Tuer bei z=-5
+            let soil = col(0.16, 0.12, 0.08)
+            for (bx3, bz3) in [(Float(10.85), Float(-9.6)), (13.65, -9.6),
+                               (10.85, -0.4), (13.65, -0.4)] {
+                prop(1.25, 0.34, 4.6, bx3, F2 + 0.17, bz3, brickG, solid: true)
+                prop(1.05, 0.06, 4.4, bx3, F2 + 0.345, bz3, soil)
+                // Drei Palmen je Beet, direkt in der Erde
+                for pk in 0..<3 {
+                    palmAt(bx3, bz3 - 1.5 + Float(pk) * 1.5, F2 + 0.14, potted: false)
+                }
+            }
+            // Eine umgestuerzte am Gang, Scherben-Stimmung
+            palmAt(12.3, -6.4, F2, leaning: true)
+            // Arbeitstisch mit leeren Toepfen am Ostglas
+            prop(0.6, 0.75, 2.0, 14.4, F2 + 0.375, -5.0, texMat(Tex.plankWood, 2, 1), solid: true)
+            for tk in 0..<3 {
+                let tp = SCNCylinder(radius: 0.11, height: 0.16)
+                tp.radialSegmentCount = 8
+                tp.firstMaterial = brickG
+                let tn2 = SCNNode(geometry: tp)
+                tn2.position = SCNVector3(14.4, F2 + 0.83, -5.7 + Float(tk) * 0.7)
+                scene.rootNode.addChildNode(tn2)
+            }
+            // Licht: ein Raumlicht plus ein Schacht durchs Glasdach
+            addOmni(SCNVector3(12, F2 + 2.3, -5), 420,
+                    UIColor(red: 0.80, green: 0.88, blue: 0.78, alpha: 1), range: 12)
+            lightShaft(SCNVector3(12, F2 + 2.85, -8), SCNVector3(12, F2 + 0.06, -8),
+                       3.4, 0.18, UIColor(red: 0.84, green: 0.90, blue: 0.84, alpha: 1))
+            floorPool(12, -8, 2.2, 2.2, 0.14,
+                      UIColor(red: 0.82, green: 0.90, blue: 0.82, alpha: 1), y: F2 + 0.02)
+            addDust(12, F2 + 1.4, -5, 5, 2.4, 14, 10)
         }
-        palmAt(5.6, -9.6, F2, leaning: true)
-        palmAt(-4.4, 0.9, F2, leaning: true)
+        _ = doorLeaf(9, -5, 1.5, 2.2, true, 1, "Gewaechshaus", open: true, style: 2, base: F2)
 
         _ = doorLeaf(-1, 9.5, 1.3, 2.15, true, 1, "Waschsaal", lock: .bathKey, style: 1, swing: 1, base: F2)
         _ = doorLeaf(4.0, 3, 1.5, 2.2, false, 1, "Schwimmhalle", open: true, style: 2, base: F2)
@@ -2465,8 +2650,10 @@ extension GameController {
         wallZ(-23.2, -20, -1.2, wArd, gaps: [(-21.6, 0.95)], h: 2.6, base: F)
         wallZ(-23.2, -20, 1.2, wArd, gaps: [(-21.6, 0.95)], h: 2.6, base: F)
         wallX(-3.8, 3.8, -23.2, wArd, h: 2.6, base: F)
-        wallX(-3.8, -1.2, -20.2, wArd, h: 2.6, base: F)
-        wallX(1.2, 3.8, -20.2, wArd, h: 2.6, base: F)
+        // (Die Nordwaende der Zellen bei z=-20.2 sind raus: 20 cm davor
+        //  stehen bereits Stationswand und Flurwand bei z=-20 ueber die volle
+        //  Breite - zwei parallele Waende, deren Koerper sich ueberschnitten
+        //  und durcheinander flackerten. Die z=-20-Waende uebernehmen.)
         wallZ(-23.2, -20.2, -3.8, wArd, h: 2.6, base: F)
         wallZ(-23.2, -20.2, 3.8, wArd, h: 2.6, base: F)
         let cellTile = texMat(Tex.tileGreen, 3, 3)
@@ -2694,6 +2881,11 @@ zone(-47, -31, -22, -6,  SCNVector3(0.0, 3.1, 5.6), SCNVector3(0, 1.15, 0), 68,
              follow: true, yaw: -Float.pi/2)                                   // Salon
 zone(11, 23, -23, -11.5, SCNVector3(0.0, 2.0, 5.2), SCNVector3(0, 1.05, 0), 72,
              follow: true)                                   // Keller
+        // Tiefkeller: gleicher Grundriss, aber Hoehenbereich unter dem Boden.
+        // yHi -1.05 statt -0.5, damit er sich nicht mit der Kellerzone
+        // darueber (yLo -1) ueberlappt.
+        zone(11, 23, -23, -11.5, SCNVector3(0.0, 2.3, 4.8), SCNVector3(0, 1.1, 0), 70,
+             follow: true, yLo: -3.4, yHi: -1.05)            // Tiefkeller
         zone(7, 11, -18, -13.4, SCNVector3(0.0, 1.9, 4.6), SCNVector3(0, 1.1, 0), 64,
              follow: true)                                   // Heizungsraum
         zone(7, 11, -23, -18,   SCNVector3(0.0, 1.9, 4.6), SCNVector3(0, 1.1, 0), 64,
@@ -2739,6 +2931,10 @@ zone(-3, 3, -20, -0.2,   SCNVector3(0.0, 2.1, 5.4), SCNVector3(0, 1.15, 0), 64,
              follow: true, yaw: Float.pi/2, yLo: 5.4, yHi: 12)   // Waschsaal
         zone(-9, 9, -13, 3,   SCNVector3(0.0, 3.2, 5.8), SCNVector3(0, 1.2, 0), 74,
              follow: true, yLo: 5.4, yHi: 12)                    // Schwimmhalle
+        // Blick laengs durch die Beetreihen (Raum 6 x 16 m) - quer stuende
+        // die Kamera staendig im Glas.
+        zone(9, 15, -13, 3,   SCNVector3(0.0, 2.4, 5.2), SCNVector3(0, 1.15, 0), 70,
+             follow: true, yLo: 5.4, yHi: 12)                    // Gewaechshaus
         // yaw: die Zelle ist 7.6 m breit und nur 3.2 m tief. Mit Blick nach
         // Norden sah man eine Wand; jetzt laengs durch die Zellenreihe.
         zone(-3.8, 3.8, -23.2, -20, SCNVector3(0.0, 2.0, 4.2), SCNVector3(0, 1.1, 0), 66,

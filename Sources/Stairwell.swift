@@ -149,7 +149,7 @@ extension GameController {
     /// Kopffreiheit hineinlaeuft. Die Oberkante bleibt 30 cm UNTER der Rampe -
     /// siehe die Erklaerung im Dateikopf.
     func stairUnderFill(_ x: Float, _ zFrom: Float, _ zTo: Float, _ w: CGFloat,
-                        _ yFrom: Float, _ yTo: Float) {
+                        _ yFrom: Float, _ yTo: Float, floorY: Float = 0) {
         let fw = Float(w)
         let segs = 8
         for k in 0..<segs {
@@ -157,10 +157,10 @@ extension GameController {
             let za = zFrom + (zTo - zFrom) * t0, zb = zFrom + (zTo - zFrom) * t1
             let ya = yFrom + (yTo - yFrom) * t0, yb = yFrom + (yTo - yFrom) * t1
             let top = min(ya, yb) - 0.30
-            if top < 0.25 { continue }
+            if top < floorY + 0.25 { continue }
             solids.append(WallBox(x0: x - fw / 2 - 0.04, x1: x + fw / 2 + 0.04,
                                   z0: min(za, zb), z1: max(za, zb),
-                                  y0: 0, y1: top, blocksCamera: false))
+                                  y0: floorY, y1: top, blocksCamera: false))
         }
     }
 

@@ -286,6 +286,13 @@ struct ContentView: View {
                     game.say("Waende als Swift-Code kopiert.")
                 }
             }
+            HStack(spacing: 6) {
+                Text("Fenster").font(.system(size: 9)).foregroundColor(Color(white: 0.6))
+                editBtn("square.split.diagonal.2x2") { game.wallWindow(1.3) }
+                editBtn("square.fill") { game.wallWindow(0) }
+                editBtn("arrow.left.square") { game.slideWindow(-0.4) }
+                editBtn("arrow.right.square") { game.slideWindow(0.4) }
+            }
         }
         .padding(8)
         .background(RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.72)))

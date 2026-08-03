@@ -561,21 +561,46 @@ func makePlayerRig() -> PlayerRig {
         }
         knee.addChildNode(flatMesh(shoeTris, boot))
 
-        // Sohle als flacher dunkler Rand rundherum, Absatz hinten
+        // Sohle: geschlossener Umriss aus den Ringbreiten, 1.8 cm dick.
+        //
+        // Die alte Fassung nahm die Ringpunkte des Schuhs und liess nur die
+        // durch, deren Hoehe unter einer Schwelle lag. Diese Schwelle traf bei
+        // den FLACHEN vorderen Ringen mehr Punkte als bei den hohen hinteren -
+        // dadurch wurden Ringe mit verschieden vielen Punkten miteinander
+        // verbunden, und vorn am Schuh standen lange schwarze Zacken heraus.
+        // Sie liefen bis 15 cm ueber die Schuhspitze hinaus.
+        //
+        // Jetzt ohne jede Bedingung: der Umriss ergibt sich direkt aus
+        // (z, Halbbreite) der Querschnitte. Das kann keine Spitzen erzeugen.
         var soleTris: [(SCNVector3, SCNVector3, SCNVector3)] = []
+        let sTop = footY + 0.010, sBot = footY - 0.018
         for si in 0..<(shoe.count - 1) {
-            for i in 0..<sn2 {
-                let j = (i + 1) % sn2
-                let a0 = shoePt(si, i, 0.006), a1 = shoePt(si, j, 0.006)
-                let b0 = shoePt(si + 1, i, 0.006), b1 = shoePt(si + 1, j, 0.006)
-                let f0 = SCNVector3(a0.x, footY - 0.014, a0.z), f1 = SCNVector3(a1.x, footY - 0.014, a1.z)
-                let g0 = SCNVector3(b0.x, footY - 0.014, b0.z), g1 = SCNVector3(b1.x, footY - 0.014, b1.z)
-                if a0.y < footY + 0.026 {
-                    soleTris.append((f0, g1, g0)); soleTris.append((f0, f1, g1))
-                }
-                _ = (a0, a1, b0, b1)
+            let z0 = shoe[si].0, z1 = shoe[si + 1].0
+            let w0 = shoe[si].1 + 0.005, w1 = shoe[si + 1].1 + 0.005
+            // Laufflaeche
+            soleTris.append((SCNVector3(-w0, sBot, z0), SCNVector3(w1, sBot, z1),
+                             SCNVector3(w0, sBot, z0)))
+            soleTris.append((SCNVector3(-w0, sBot, z0), SCNVector3(-w1, sBot, z1),
+                             SCNVector3(w1, sBot, z1)))
+            // Rand links und rechts
+            for s2 in [Float(-1), 1] {
+                let a = SCNVector3(s2 * w0, sBot, z0), b = SCNVector3(s2 * w1, sBot, z1)
+                let c = SCNVector3(s2 * w0, sTop, z0), d = SCNVector3(s2 * w1, sTop, z1)
+                if s2 < 0 { soleTris.append((a, b, d)); soleTris.append((a, d, c)) }
+                else      { soleTris.append((a, d, b)); soleTris.append((a, c, d)) }
             }
         }
+        // Fersen- und Zehenabschluss
+        let hw = shoe[0].1 + 0.005, tw = shoe[shoe.count - 1].1 + 0.005
+        let hz = shoe[0].0, tz = shoe[shoe.count - 1].0
+        soleTris.append((SCNVector3(-hw, sBot, hz), SCNVector3(hw, sBot, hz),
+                         SCNVector3(hw, sTop, hz)))
+        soleTris.append((SCNVector3(-hw, sBot, hz), SCNVector3(hw, sTop, hz),
+                         SCNVector3(-hw, sTop, hz)))
+        soleTris.append((SCNVector3(-tw, sBot, tz), SCNVector3(tw, sTop, tz),
+                         SCNVector3(tw, sBot, tz)))
+        soleTris.append((SCNVector3(-tw, sBot, tz), SCNVector3(-tw, sTop, tz),
+                         SCNVector3(tw, sTop, tz)))
         knee.addChildNode(flatMesh(soleTris, dark))
         chunk(knee, 0.118, 0.030, 0.088, 0, footY - 0.006, -0.052, dark, 0.010)  // Absatz
         if side < 0 { r.thighL = thigh; r.kneeL = knee } else { r.thighR = thigh; r.kneeR = knee }
@@ -595,11 +620,17 @@ func makePlayerRig() -> PlayerRig {
     // Schulterpartie als flache Kappe, die auf dem Rumpf aufliegt statt als
     // Kugel danebenzustehen. Die 14-cm-Baelle davor waren der Grund, warum die
     // Figur wie eine Marionette aussah.
+    // Die Kappe sass bei x 0.158 und war mit Radius 0.052 x Skalierung 1.18
+    // bis 0.219 breit; der Armansatz steht bei 0.180 und ist oben 0.054 dick,
+    // reicht also bis 0.234. Zwischen Kappenrand und Armrundung blieb im
+    // Profil eine sichtbare Kante - das war die Schulterluecke. Kappe jetzt
+    // etwas weiter aussen, groesser und tiefer, so dass sie den Armansatz
+    // ueberlappt statt ihn zu streifen.
     for sg in [-1, 1] {
-        let cap = SCNSphere(radius: 0.052); cap.segmentCount = 7; cap.firstMaterial = pad
+        let cap = SCNSphere(radius: 0.062); cap.segmentCount = 8; cap.firstMaterial = pad
         let cn = SCNNode(geometry: cap)
-        cn.position = SCNVector3(Float(sg) * 0.158, 0.392, 0)
-        cn.scale = SCNVector3(1.18, 0.52, 1.10)
+        cn.position = SCNVector3(Float(sg) * 0.166, 0.384, 0)
+        cn.scale = SCNVector3(1.22, 0.62, 1.14)
         r.torso.addChildNode(cn)
     }
 
@@ -701,15 +732,21 @@ func makePlayerRig() -> PlayerRig {
     if !cartoonStyle {
         // Muetze als gedrueckte Kugel: schmiegt sich an den Schaedel, statt als
         // Zylinder darueber zu schweben. Kleiner Schirm vorn, Knopf oben.
-        let capS = SCNSphere(radius: 0.128); capS.segmentCount = 10
+        //
+        // Radius 0.128 hiess 25.6 cm Durchmesser auf einem 16 cm breiten
+        // Schaedel - die Muetze stand 5 cm je Seite ueber und las sich als
+        // Pilzhut. Jetzt 0.098 (19.6 cm, also gut 2 cm Ueberstand wie bei
+        // einer echten Schiebermuetze), dafuer etwas hoeher und tiefer
+        // sitzend. Die Schraeglage bleibt - sie gibt der Figur Haltung.
+        let capS = SCNSphere(radius: 0.098); capS.segmentCount = 10
         capS.firstMaterial = beret
         let capN = SCNNode(geometry: capS)
-        capN.position = SCNVector3(0.008, 0.078, -0.006)
-        capN.scale = SCNVector3(1.0, 0.44, 1.05)
-        capN.eulerAngles = SCNVector3(0.06, 0.2, 0.10)
+        capN.position = SCNVector3(0.006, 0.068, -0.004)
+        capN.scale = SCNVector3(1.06, 0.62, 1.12)
+        capN.eulerAngles = SCNVector3(0.06, 0.2, 0.08)
         head.addChildNode(capN)
-        chunk(head, 0.085, 0.014, 0.052, 0.004, 0.086, 0.088, beret, 0.006, SCNVector3(-0.28, 0, 0))
-        chunk(head, 0.026, 0.020, 0.026, 0.046, 0.136, -0.004, beret, 0.008)
+        chunk(head, 0.078, 0.013, 0.048, 0.004, 0.070, 0.082, beret, 0.006, SCNVector3(-0.28, 0, 0))
+        chunk(head, 0.022, 0.017, 0.022, 0.030, 0.120, -0.004, beret, 0.008)
         // Koteletten - das restliche sichtbare Haar unter der Muetze
         chunk(head, 0.014, 0.050, 0.030, -0.082, -0.004, 0.014, hairM, 0.006)
         chunk(head, 0.014, 0.050, 0.030, 0.082, -0.004, 0.014, hairM, 0.006)

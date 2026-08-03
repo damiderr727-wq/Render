@@ -441,6 +441,92 @@ def pruef_fensterloecher(waende):
     return n_offen
 
 
+def pruef_treppendeckel(platten):
+    """Grosse Platten, die ueber einem Treppenlauf liegen.
+
+    ZWEIMAL passiert, beide Male derselbe Griff: ein Loch im Boden gelassen,
+    die Platte darueber vergessen.
+      - Schwimmhalle: eine durchgehende Bodenplatte lag ueber dem fertig
+        gebauten Becken. "Beim Poolraum existiert nicht mal ein Pool."
+      - Tiefkeller: die Deckenuntersicht lag ueber dem Treppenloch.
+        "Bei der Treppe versperrt eine Holzplatte alles nach unten."
+
+    Geprueft wird der Kopfraum ueber jedem stairRun: von 30 cm ueber der
+    tiefsten Stufe bis 2 m ueber der hoechsten. Nur GROSSE Platten (ueber
+    6 m2) - die Trittstufen und Podeste sind selbst prop-Platten und gehoeren
+    natuerlich dorthin.
+    """
+    print("  PLATTEN UEBER EINEM TREPPENLAUF")
+    laeufe = []
+    unklar = 0
+    # Flache prop()-Koerper zaehlen hier als Platte - die Deckenuntersicht des
+    # Tiefkellers war genau so eine und stand in keiner der beiden Listen, die
+    # einlesen() fuehrt. Sie kommen NUR in diese Pruefung, nicht in die
+    # Z-Fighting-Pruefung: dort waere jede Tischplatte ein Fehlalarm.
+    alle = list(platten)
+    for datei in DATEIEN:
+        pfad = os.path.join(SRC, datei)
+        if not os.path.exists(pfad):
+            continue
+        src = strip_comments(open(pfad, encoding='utf-8').read())
+        konst = konstanten(src)
+        for m in re.finditer(r'(?<![\w.])prop\s*\(', src):
+            teile, _ = args_von(src, m.end() - 1)
+            pos = [t for t in teile if ':' not in t.split('(')[0]]
+            v = [zahl(t, konst) for t in pos[:6]]
+            if len(v) < 6 or any(x is None for x in v):
+                continue
+            w, h, d, px, py, pz = v
+            if h > 0.25:            # nur flache Koerper sind Platten
+                continue
+            alle.append(dict(datei=datei, zeile=src.count('\n', 0, m.start()) + 1,
+                             art='Platte', x0=px - w / 2, x1=px + w / 2,
+                             z0=pz - d / 2, z1=pz + d / 2, y=py))
+    for datei in DATEIEN:
+        pfad = os.path.join(SRC, datei)
+        if not os.path.exists(pfad):
+            continue
+        src = strip_comments(open(pfad, encoding='utf-8').read())
+        konst = konstanten(src)
+        for m in re.finditer(r'(?<![\w.])stairRun\s*\(', src):
+            if src.rfind('func', max(0, m.start() - 6), m.start()) >= 0:
+                continue
+            teile, _ = args_von(src, m.end() - 1)
+            ln = src.count('\n', 0, m.start()) + 1
+            v = [zahl(t, konst) for t in teile[:6]]
+            if any(x is None for x in v):
+                unklar += 1
+                continue
+            x, zf, zt, w, yf, yt = v
+            laeufe.append(dict(datei=datei, zeile=ln,
+                               x0=x - w / 2, x1=x + w / 2,
+                               z0=min(zf, zt), z1=max(zf, zt),
+                               ylo=min(yf, yt), yhi=max(yf, yt)))
+    n = 0
+    for L in laeufe:
+        for p in alle:
+            flaeche = (p['x1'] - p['x0']) * (p['z1'] - p['z0'])
+            if flaeche < 6.0:
+                continue
+            dx = ov(L['x0'], L['x1'], p['x0'], p['x1'])
+            dz = ov(L['z0'], L['z1'], p['z0'], p['z1'])
+            if dx <= MIN_UEBERLAPP or dz <= MIN_UEBERLAPP:
+                continue
+            if not (L['ylo'] + 0.30 <= p['y'] <= L['yhi'] + 2.0):
+                continue
+            n += 1
+            print(f"    {p['art']} {p['datei']}:{p['zeile']} auf y {p['y']:.2f} "
+                  f"liegt ueber der Treppe {L['datei']}:{L['zeile']} "
+                  f"(y {L['ylo']:.2f}..{L['yhi']:.2f}), "
+                  f"Ueberdeckung {dx:.1f} x {dz:.1f} m")
+    print(f"    ({len(laeufe)} Laeufe geprueft"
+          + (f", {unklar} nicht auswertbar" if unklar else "") + ")")
+    if n == 0:
+        print("    keine - alle Laeufe haben freien Kopfraum")
+    print()
+    return n
+
+
 def main():
     waende, platten, unklar = einlesen()
     print("GEOMETRIEPRUEFUNG")
@@ -454,9 +540,11 @@ def main():
     c = pruef_freie_enden(waende)
     f = pruef_fenster()
     g = pruef_fensterloecher(waende)
+    t = pruef_treppendeckel(platten)
     raumhoehen(platten)
     print(f"  {a} Wandueberschneidungen, {b} Plattenueberlappungen, "
-          f"{f} Fensterteile hinter der Aussenkante, {g} Fenster ohne Loch")
+          f"{f} Fensterteile hinter der Aussenkante, {g} Fenster ohne Loch, "
+          f"{t} Platten ueber Treppen")
     print(f"  ({c} freie Wandenden - nur Hinweis, siehe oben)")
 
 

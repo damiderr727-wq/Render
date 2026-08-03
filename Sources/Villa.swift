@@ -1708,7 +1708,17 @@ extension GameController {
             // Bestandswaenden (gleiche Achsen, aber Hoehenbereich -2.8..0)
             floorTile(12, 11.5, 17, -17.25, stoneK, y: -2.8)
             ceilRects.append((11, 23, -23, -11.5, -0.12))
-            prop(12, 0.06, 11.5, 17, -0.14, -17.25, texMat(Tex.plankWood, 5, 5))
+            // Die Deckenuntersicht in DREI Streifen, mit demselben Loch wie
+            // der Boden darueber (x[11,12.9] z[-19.2,-13.4]). Als eine
+            // durchgehende Platte lag sie quer ueber dem Treppenloch und hat
+            // den Abstieg zugebaut - genau der gemeldete Fehler "bei der
+            // Treppe versperrt eine Holzplatte alles nach unten". Derselbe
+            // Fehler wie beim Schwimmbecken: Loch im Boden gelassen, Platte
+            // darueber vergessen.
+            let unterM = texMat(Tex.plankWood, 5, 5)
+            prop(10.1, 0.06, 11.5, 17.95, -0.14, -17.25, unterM)   // oestlich des Lochs
+            prop(1.9, 0.06, 1.9, 11.95, -0.14, -12.45, unterM)     // noerdlich
+            prop(1.9, 0.06, 3.8, 11.95, -0.14, -21.1, unterM)      // suedlich
             wallZ(-23, -11.5, 11, brickK, h: 2.8, wainscot: false, base: -2.8)
             wallZ(-23, -11.5, 23, brickK, h: 2.8, wainscot: false, base: -2.8)
             wallX(11, 23, -23, brickK, h: 2.8, wainscot: false, base: -2.8)

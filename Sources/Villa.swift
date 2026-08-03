@@ -35,6 +35,7 @@ extension GameController {
         g.firstMaterial = mat
         let n = SCNNode(geometry: g); n.position = SCNVector3(x, y, z)
         scene.rootNode.addChildNode(n)
+        registerDetail(n, x, y, z)
         if solid {
             let fw = Float(w), fd = Float(d), fh = Float(h)
             // Echter Hoehenbereich aus der Geometrie: ein Regal im Dachgeschoss
@@ -48,10 +49,12 @@ extension GameController {
     func cyl(_ r: CGFloat, _ h: CGFloat, _ x: Float, _ y: Float, _ z: Float, _ mat: SCNMaterial) {
         let g = SCNCylinder(radius: r, height: h); g.firstMaterial = mat
         let n = SCNNode(geometry: g); n.position = SCNVector3(x, y, z); scene.rootNode.addChildNode(n)
+        registerDetail(n, x, y, z)
     }
     func sph(_ r: CGFloat, _ x: Float, _ y: Float, _ z: Float, _ mat: SCNMaterial) {
         let g = SCNSphere(radius: r); g.firstMaterial = mat
         let n = SCNNode(geometry: g); n.position = SCNVector3(x, y, z); scene.rootNode.addChildNode(n)
+        registerDetail(n, x, y, z)
     }
     /// Moebelsperre.
     /// base/height: OHNE Hoehenbereich sperrte ein Moebel im Dachgeschoss auch
@@ -187,19 +190,25 @@ extension GameController {
         // Deutlich groesser als das Loch, damit man auch schraeg nie daran
         // vorbeischaut. NICHT im Culling - eine entladene Backplate ist ein
         // schwarzes Loch in der Wand.
+        // Tex.fogPane statt Tex.windows: die Fensterbilder tragen einen
+        // AUFGEMALTEN Rahmen mit Sprossen. Seit die Fenster echte Loecher
+        // sind, stand hinter dem gebauten Rahmen ein zweiter gemalter -
+        // das war die "alte Fenster Textur, die nicht funktioniert".
+        // isDoubleSided: false, damit die Platte von draussen nicht als
+        // freischwebendes Rechteck in der Landschaft haengt.
         let sky = SCNMaterial()
         sky.lightingModel = .constant
-        sky.diffuse.contents = Tex.windows[Int(abs(x * 3.0 + z * 7.0)) % 3]
+        sky.diffuse.contents = Tex.fogPane
         sky.diffuse.wrapS = .clamp; sky.diffuse.wrapT = .clamp
-        // Gedaempft: volle Helligkeit las sich als totes weisses Panel.
-        sky.multiply.contents = UIColor(red: 0.60, green: 0.64, blue: 0.70, alpha: 1)
-        sky.isDoubleSided = true
+        sky.isDoubleSided = false
         let bp = SCNPlane(width: w + 2.6, height: h + 2.0)
         bp.firstMaterial = sky
         let bn = SCNNode(geometry: bp)
-        let bpos = P(0, 0.2, -2.0)
-        bn.position = bpos
-        if alongZ { bn.eulerAngles.y = Float.pi / 2 }
+        bn.position = P(0, 0.2, -2.0)
+        // Die Flaeche muss IN DEN RAUM schauen: SCNPlane blickt nach +z,
+        // also 180 Grad drehen, wenn die Normale nach -z zeigt.
+        if alongZ { bn.eulerAngles.y = nx > 0 ? -Float.pi / 2 : Float.pi / 2 }
+        else if nz < 0 { bn.eulerAngles.y = Float.pi }
         bn.renderingOrder = -5
         scene.rootNode.addChildNode(bn)
 
@@ -524,9 +533,8 @@ extension GameController {
         if backplate {
             let sky = SCNMaterial()
             sky.lightingModel = .constant
-            sky.diffuse.contents = Tex.windows[0]
+            sky.diffuse.contents = Tex.fogPane
             sky.diffuse.wrapS = .clamp; sky.diffuse.wrapT = .clamp
-            sky.multiply.contents = UIColor(red: 0.55, green: 0.60, blue: 0.66, alpha: 1)
             sky.isDoubleSided = true
             let bpH = h + 1.4
             let bp = SCNPlane(width: len + 2.0, height: bpH)
@@ -594,14 +602,25 @@ extension GameController {
         // vom Stamm aus erst aufwaerts, dann ueber den Scheitel abwaerts.
         // Die alte Fassung war ein flacher Stern aus acht Spitzen, auf den
         // Screenshots ein gruener Seestern. Alles bleibt EIN Netzknoten.
+        // Echte Wedeltextur mit Fiedern und Mittelrippe statt einer flachen
+        // Farbe - die alten Blaetter waren einfarbige Dreiecke.
         let leafM = SCNMaterial(); leafM.lightingModel = .lambert
-        // Leicht variierter Gruenton, damit nicht jede Palme dieselbe ist
+        leafM.diffuse.contents = Tex.palmLeaf
+        leafM.diffuse.wrapS = .clamp; leafM.diffuse.wrapT = .clamp
+        // Leicht variierter Ton, damit nicht jede Palme dieselbe ist
         let gVar = (sin(x * 12.9 + z * 7.7) + 1) * 0.5
-        leafM.diffuse.contents = UIColor(red: 0.14 + 0.05 * CGFloat(gVar),
-                                         green: 0.30 + 0.08 * CGFloat(gVar),
-                                         blue: 0.13, alpha: 1)
+        leafM.multiply.contents = UIColor(red: 0.82 + 0.30 * CGFloat(gVar),
+                                          green: 0.90 + 0.18 * CGFloat(gVar),
+                                          blue: 0.80, alpha: 1)
         leafM.isDoubleSided = true
         var lt: [(SCNVector3, SCNVector3, SCNVector3)] = []
+        var lu: [(CGPoint, CGPoint, CGPoint)] = []
+        // u laeuft quer ueber die Blattbreite (Mittelrippe bei 0.5),
+        // v vom Ansatz zur Spitze. Die Aufteilung in zwei Dreiecke je Quad
+        // ist so gewaehlt, dass die Rippe laengs durchlaeuft statt schraeg.
+        let uB1 = CGPoint(x: 0, y: 0),    uB2 = CGPoint(x: 1, y: 0)
+        let uM1 = CGPoint(x: 0, y: 0.55), uM2 = CGPoint(x: 1, y: 0.55)
+        let uTip = CGPoint(x: 0.5, y: 1)
         let crownY: Float = 1.58
         for k in 0..<7 {
             let a2 = (Float(k) + 0.5 * Float(k % 2)) / 7 * 2 * Float.pi
@@ -617,26 +636,42 @@ extension GameController {
             let m1 = SCNVector3(dx * midR - dz * mW, crownY + lift, dz * midR + dx * mW)
             let m2 = SCNVector3(dx * midR + dz * mW, crownY + lift, dz * midR - dx * mW)
             let tip = SCNVector3(dx * tipR, crownY + lift - drop, dz * tipR)
-            lt.append((b1, m1, b2))          // Ansatz -> Scheitel
-            lt.append((b2, m1, m2))
-            lt.append((m1, tip, m2))         // Scheitel -> haengende Spitze
+            lt.append((b1, m1, m2));  lu.append((uB1, uM1, uM2))   // Ansatz -> Scheitel
+            lt.append((b1, m2, b2));  lu.append((uB1, uM2, uB2))
+            lt.append((m1, tip, m2)); lu.append((uM1, uTip, uM2))  // -> haengende Spitze
         }
-        let leaves = flatDoubleMesh(lt, leafM)
+        let leaves = flatDoubleMesh(lt, leafM, uv: lu)
         holder.addChildNode(leaves)
         contactShadow(x, z, 0.9, 0.9, y: base + 0.012)
         if !leaning { blocker(x - 0.34, x + 0.34, z - 0.34, z + 0.34, base: base) }
     }
 
     /// Beidseitiges Dreiecksnetz fuer Blattwerk.
+    /// `uv` ist optional, aber ohne sie hat eine Textur auf dem Netz keine
+    /// Wirkung - SCNGeometry ohne texcoord-Quelle liefert dem Shader keine
+    /// Koordinaten. Genau daran hingen die Palmen: ihr Material bekam eine
+    /// Textur zugewiesen, die nie zu sehen war, und uebrig blieb eine flache
+    /// Farbe. Reihenfolge und Anzahl muessen zu `tris` passen.
     func flatDoubleMesh(_ tris: [(SCNVector3, SCNVector3, SCNVector3)],
-                        _ m: SCNMaterial) -> SCNNode {
+                        _ m: SCNMaterial,
+                        uv: [(CGPoint, CGPoint, CGPoint)]? = nil) -> SCNNode {
         var all = tris
         for t in tris { all.append((t.0, t.2, t.1)) }
-        var verts: [SCNVector3] = []; var idx: [Int32] = []
-        for t in all {
-            for p in [t.0, t.1, t.2] { verts.append(p); idx.append(Int32(verts.count - 1)) }
+        var allUV: [(CGPoint, CGPoint, CGPoint)]? = nil
+        if let u = uv, u.count == tris.count {
+            var o = u
+            for t in u { o.append((t.0, t.2, t.1)) }
+            allUV = o
         }
-        let geo = SCNGeometry(sources: [SCNGeometrySource(vertices: verts)],
+        var verts: [SCNVector3] = []; var idx: [Int32] = []
+        var uvs: [CGPoint] = []
+        for (k, t) in all.enumerated() {
+            for p in [t.0, t.1, t.2] { verts.append(p); idx.append(Int32(verts.count - 1)) }
+            if let a = allUV { uvs.append(a[k].0); uvs.append(a[k].1); uvs.append(a[k].2) }
+        }
+        var quellen = [SCNGeometrySource(vertices: verts)]
+        if !uvs.isEmpty { quellen.append(SCNGeometrySource(textureCoordinates: uvs)) }
+        let geo = SCNGeometry(sources: quellen,
                               elements: [SCNGeometryElement(indices: idx, primitiveType: .triangles)])
         geo.firstMaterial = m
         return SCNNode(geometry: geo)
@@ -861,6 +896,7 @@ extension GameController {
         g.firstMaterial = mat
         let n = SCNNode(geometry: g); n.position = SCNVector3(x, y, z); n.eulerAngles = euler
         scene.rootNode.addChildNode(n)
+        registerDetail(n, x, y, z)
     }
     // waagerechtes Rohr entlang x, mit Flanschen im Abstand
     func pipeX(_ x0: Float, _ x1: Float, _ y: Float, _ z: Float, _ r: CGFloat, _ mat: SCNMaterial) {
@@ -917,6 +953,7 @@ extension GameController {
         n.position = SCNVector3(x, y, z)
         n.eulerAngles = euler
         scene.rootNode.addChildNode(n)
+        registerDetail(n, x, y, z)
         return n
     }
 
@@ -1531,8 +1568,11 @@ extension GameController {
         scene.background.contents = fog
         scene.fogColor = fog
         scene.fogStartDistance = 20
-        scene.fogEndDistance = 62
-        scene.fogDensityExponent = 1.2
+        // Nebelende auf 30 m: die Detailabschaltung greift bei 24 m, und was
+        // dahinter aufploppt, muss im Nebel verschwinden statt sichtbar zu
+        // erscheinen. Zugleich spart die kurze Sichtweite Fuellrate.
+        scene.fogEndDistance = 30
+        scene.fogDensityExponent = 1.1
 
         // Materialien
         let wHall  = texMat(Tex.wpGreen, 6, 2.6)
@@ -1712,6 +1752,14 @@ extension GameController {
             let kellerLicht = addOmni(SCNVector3(12.5, -0.9, -16.5), 300,
                                       UIColor(red: 0.95, green: 0.82, blue: 0.60, alpha: 1), range: 7)
             registerFlicker(kellerLicht, 300)
+            // Der Abstieg muss OBEN auffindbar sein - sonst steht man in der
+            // Quellkammer und sieht nur ein dunkles Loch im Boden. Eine
+            // Wandlampe am Antritt und ein Lichtfleck davor.
+            sconce(11.25, 1.85, -13.9, 1, 0, beam: true)
+            floorPool(12.0, -12.9, 1.1, 0.9, 0.26,
+                      UIColor(red: 0.95, green: 0.84, blue: 0.62, alpha: 1))
+            lightShaft(SCNVector3(12.0, -0.55, -16.0), SCNVector3(12.0, -2.74, -16.0),
+                       1.6, 0.16, UIColor(red: 0.92, green: 0.84, blue: 0.66, alpha: 1))
             addOmni(SCNVector3(19.5, -1.6, -18.5), 260,
                     UIColor(red: 0.42, green: 0.70, blue: 0.62, alpha: 1), range: 8)
             addDust(17, -1.5, -17.5, 8, 2.2, 8, 12)
@@ -1751,7 +1799,7 @@ extension GameController {
             prop(0.24, 0.30, 0.008, 6.15 + Float(k % 3) * 0.42, 1.98 - Float(k / 3) * 0.34,
                  13.74, col(0.78, 0.75, 0.68))
         }
-        chandelier(3.0, 8.5, 4.0, 6, shadow: true)
+        chandelier(3.0, 8.5, 4.0, 6)
         cyl(0.40, 6, 6.6, 3, 2.4, stone)
         prop(1.0, 0.30, 1.0, 6.6, 5.85, 2.4, stone)
         prop(1.0, 0.24, 1.0, 6.6, 0.12, 2.4, stone)
@@ -2153,7 +2201,7 @@ extension GameController {
         stormWindow(-39.0, 2.30, -21.86, 1.50, 2.30, 0, 1, 5.6)
         sheerCurtain(-39.0, -21.55, 3.30, 2.80, false, 0.28, 1)
         radiatorAt(-39.0, -21.55, 1.60, false)
-        chandelier(-39, -14, 3.0, 4.2, shadow: true)
+        chandelier(-39, -14, 3.0, 4.2)
         for z in [-9.5, -18.5] { sconce(-46.72, 2.35, Float(z), 1, 0, beam: true) }
         addDust(-39, 2.0, -14, 14, 4.0, 14, 18)
 
@@ -2578,9 +2626,8 @@ extension GameController {
             glassRun(9, 15, -13, alongX: true, F2, 2.4, backplate: false)
             let fogM = SCNMaterial()
             fogM.lightingModel = .constant
-            fogM.diffuse.contents = Tex.windows[0]
+            fogM.diffuse.contents = Tex.fogPane
             fogM.diffuse.wrapS = .clamp; fogM.diffuse.wrapT = .clamp
-            fogM.multiply.contents = UIColor(red: 0.55, green: 0.60, blue: 0.66, alpha: 1)
             fogM.isDoubleSided = true
             for (fx, fz, frot, fw2) in [(Float(17.0), Float(-5.0), Float.pi / 2, CGFloat(18.0)),
                                         (12.5, -15.3, 0, 9.0),

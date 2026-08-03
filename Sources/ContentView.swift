@@ -30,7 +30,8 @@ struct ContentView: View {
                 if game.debugOn { debugPanel }
                 if game.editMode {
                     if game.freeCam { flyPanel }
-                    if game.wallMode { wallPanel } else { editorPanel }
+                    if game.worldMode { worldPanel }
+                    else if game.wallMode { wallPanel } else { editorPanel }
                 }
                 controls
             }
@@ -60,7 +61,18 @@ struct ContentView: View {
     private var editGesture: some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { g in
-                guard game.editMode, !game.wallMode else { return }
+                guard game.editMode else { return }
+                if game.worldMode {
+                    if !dragging {
+                        dragging = true
+                        dragStarted = g.startLocation
+                        game.worldDragBegin(g.startLocation)
+                    }
+                    let weit = abs(g.translation.width) + abs(g.translation.height)
+                    if weit > 12 { game.worldDragMove(g.location) }
+                    return
+                }
+                guard !game.wallMode else { return }
                 if !dragging {
                     dragging = true
                     dragStarted = g.startLocation
@@ -71,8 +83,13 @@ struct ContentView: View {
             }
             .onEnded { g in
                 dragging = false
-                guard game.editMode, !game.wallMode else { return }
+                guard game.editMode else { return }
                 let weit = abs(g.translation.width) + abs(g.translation.height)
+                if game.worldMode {
+                    if weit <= 12 { game.worldTap(g.startLocation) }
+                    return
+                }
+                guard !game.wallMode else { return }
                 if weit <= 12 { game.tapSelect(g.startLocation) }
             }
     }
@@ -116,6 +133,15 @@ struct ContentView: View {
                     }
                 }
                 if game.editMode {
+                    // Drei Editoren: Moebelliste, Wandliste, ganze Welt.
+                    Button { game.worldMode.toggle() } label: {
+                        Image(systemName: "globe")
+                            .font(.system(size: 14))
+                            .foregroundColor(game.worldMode ? Color(red: 1.0, green: 0.7, blue: 0.35)
+                                                            : Color(white: 0.55))
+                            .frame(width: 34, height: 34)
+                            .background(Circle().fill(Color.black.opacity(0.45)))
+                    }
                     Button { game.wallMode.toggle() } label: {
                         Image(systemName: game.wallMode ? "rectangle.split.3x1" : "chair.lounge")
                             .font(.system(size: 14))
@@ -292,6 +318,49 @@ struct ContentView: View {
                 editBtn("square.fill") { game.wallWindow(0) }
                 editBtn("arrow.left.square") { game.slideWindow(-0.4) }
                 editBtn("arrow.right.square") { game.slideWindow(0.4) }
+            }
+        }
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.72)))
+    }
+
+    // --- Welt-Editor: JEDER Koerper der Szene, nicht nur die Listen ---
+    // Der Tresen, die Gelaender, der Kessel, jedes Fensterbrett. Umkreis
+    // waehlt mehrere auf einmal, weil ein Tresen zwanzig Bretter sind.
+    private var worldPanel: some View {
+        VStack(spacing: 6) {
+            Text(game.worldSel.isEmpty
+                 ? "WELT - antippen zum Waehlen, ziehen zum Verschieben"
+                 : String(format: "WELT  %d Koerper  Umkreis %@",
+                          game.worldSel.count,
+                          game.worldRadius < 0.01 ? "einzeln"
+                              : String(format: "%.1f m", game.worldRadius)))
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundColor(Color(red: 1.0, green: 0.75, blue: 0.4))
+            HStack(spacing: 6) {
+                editBtn("scope") { game.worldSelectNearest() }
+                editBtn("circle.dashed") { game.worldRadiusNext() }
+                Text("schieben").font(.system(size: 9)).foregroundColor(Color(white: 0.6))
+                editBtn("arrow.left") { game.worldNudge(-0.1, 0, 0) }
+                editBtn("arrow.right") { game.worldNudge(0.1, 0, 0) }
+                editBtn("arrow.up") { game.worldNudge(0, 0, -0.1) }
+                editBtn("arrow.down") { game.worldNudge(0, 0, 0.1) }
+                Text("Hoehe").font(.system(size: 9)).foregroundColor(Color(white: 0.6))
+                editBtn("arrow.up.to.line") { game.worldNudge(0, 0.1, 0) }
+                editBtn("arrow.down.to.line") { game.worldNudge(0, -0.1, 0) }
+            }
+            HStack(spacing: 6) {
+                Text("Groesse").font(.system(size: 9)).foregroundColor(Color(white: 0.6))
+                editBtn("plus.magnifyingglass") { game.worldScale(1.12) }
+                editBtn("minus.magnifyingglass") { game.worldScale(1 / 1.12) }
+                editBtn("eye.slash") { game.worldHide() }
+                editBtn("arrow.uturn.backward") { game.worldReset() }
+                editBtn("trash.slash") { game.worldResetAll() }
+                editBtn("square.and.arrow.down") { game.saveWorldEdits() }
+                editBtn("doc.on.clipboard") {
+                    UIPasteboard.general.string = game.exportWorldEdits()
+                    game.say("Weltaenderungen kopiert.")
+                }
             }
         }
         .padding(8)

@@ -95,6 +95,13 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
     @Published var selectedWall: Int? = nil
     @Published var wallMode = false
     @Published var editMode = false
+    /// Welt-Editor: greift auf JEDEN Koerper der Szene zu, nicht nur auf die
+    /// 47 Listenmoebel und zwei Listenwaende. Siehe WorldEdit.swift.
+    @Published var worldMode = false
+    @Published var worldSel: [Int] = []
+    /// Umkreis der Mehrfachauswahl in Metern. 0 = nur der angetippte Koerper.
+    @Published var worldRadius: Float = 0.6
+    var worldEdits: [Int: WorldEdit] = [:]
     /// Freie Kamera zum Begutachten - loest sich vom Spieler.
     @Published var freeCam = false
     var fcPos = SCNVector3(0, 3, 8)
@@ -126,18 +133,33 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
     // schaut man von weit oben auf Raeume, in denen der Spieler nicht steht.
     var cullLights: [(node: SCNNode, x: Float, y: Float, z: Float)] = []
     var cullNodes: [(node: SCNNode, x: Float, y: Float, z: Float)] = []
+    /// Detailgeometrie (Moebel, Rohre, Geschirr, Treppenteile). Bis hierher
+    /// wurden nur die additiven Flaechen abgeschaltet - jeder der rund
+    /// zweitausend Moebelkoerper stand dauerhaft in der Szene und kostete
+    /// einen Zeichenaufruf, egal ob man im selben Fluegel war oder nicht.
+    var detailNodes: [(node: SCNNode, x: Float, y: Float, z: Float)] = []
+    var detailRadius: Float = 24
     /// So viele Lichter duerfen gleichzeitig brennen. SceneKit rechnet jedes
     /// aktive Licht fuer jeden sichtbaren Knoten - die Zahl geht direkt in die
     /// Bildrate ein.
     // Aus der Messung im Spiel: bei 18/22 m waren 14 Lichter und 135 von 318
     // Flaechen gleichzeitig aktiv. 135 additive Flaechen uebereinander sind
     // auf einem iPad bei halber Renderaufloesung immer noch Fuellrate satt.
-    var maxLights = 10
-    var lightRadius: Float = 14
-    var nodeRadius: Float = 13
+    //
+    // DER TRICK AUS DEN ALTEN SPIELEN: Licht und Lichtschein sind zwei Dinge.
+    // Der gemalte Schein (wallGlow, floorPool, lightShaft, leuchtende Birne)
+    // kostet eine Flaeche, das echte SCNLight kostet eine Rechnung fuer JEDEN
+    // sichtbaren Koerper. Deshalb reicht das echte Licht jetzt nur noch 9 m
+    // weit, der Schein aber 16 m. Dazwischen sieht man die Lampe leuchten und
+    // ihren Fleck auf dem Boden - nur beleuchtet sie nichts mehr. Genau so
+    // haben Zelda und die PS1-Horrorspiele ihre Raeume beleuchtet.
+    var maxLights = 6
+    var lightRadius: Float = 9
+    var nodeRadius: Float = 16
     /// Fuer die Anzeige im Debug-Panel - damit man misst statt raet.
     @Published var activeLights = 0
     @Published var activeNodes = 0
+    @Published var activeDetails = 0
     private var cullTick = 0
     /// Deckenflaechen fuer die Kamerabegrenzung: x0, x1, z0, z1, Hoehe.
     var ceilRects: [(Float, Float, Float, Float, Float)] = []
@@ -397,6 +419,17 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         cullNodes.append((n, x, y, z))
     }
 
+    /// Detailgeometrie: jedes Brett, Rohr, Geschirr. Bisher wurden NUR die
+    /// additiven Flaechen abgeschaltet - die rund zweitausend Moebelkoerper
+    /// standen immer alle in der Szene, quer durch das ganze Haus. Jeder ist
+    /// ein eigener Zeichenaufruf, und genau daran haengt das Ruckeln.
+    ///
+    /// Grosszuegiger Radius (24 m) und NICHT fuer Waende, Boeden und Decken -
+    /// die muessen stehen bleiben, sonst schaut man in den Nachbarraum.
+    func registerDetail(_ n: SCNNode, _ x: Float, _ y: Float, _ z: Float) {
+        detailNodes.append((n, x, y, z))
+    }
+
     /// Schaltet weit entfernte Lichter und Zusatzflaechen ab.
     /// Lichter ueber categoryBitMask = 0: sie bleiben in der Szene, beleuchten
     /// aber nichts mehr. Ein Licht zu entfernen und wieder anzuhaengen wuerde
@@ -445,11 +478,22 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
             if n.node.isHidden == nah { n.node.isHidden = !nah }
             if nah { sichtbar += 1 }
         }
-        let la = an.count, na = sichtbar
-        if la != activeLights || na != activeNodes {
+        // Detailgeometrie mit eigenem, grosszuegigerem Radius.
+        let dr2 = detailRadius * detailRadius
+        var detailAn = 0
+        for n in detailNodes {
+            if n.node.parent == nil { continue }
+            let dx = n.x - cp.x, dy = n.y - cp.y, dz = n.z - cp.z
+            let nah = (dx * dx + dy * dy + dz * dz) < dr2
+            if n.node.isHidden == nah { n.node.isHidden = !nah }
+            if nah { detailAn += 1 }
+        }
+        let la = an.count, na = sichtbar, da = detailAn
+        if la != activeLights || na != activeNodes || da != activeDetails {
             DispatchQueue.main.async { [weak self] in
                 self?.activeLights = la
                 self?.activeNodes = na
+                self?.activeDetails = da
             }
         }
     }
@@ -793,6 +837,9 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         buildFurniture()
         loadWalls()
         buildWalls()
+        // Weltaenderungen ZULETZT: sie greifen auf detailNodes zu, und die
+        // Liste muss vollstaendig sein, bevor die Indizes etwas bedeuten.
+        loadWorldEdits()
         // Auswahlmarke: schwebender Ring ueber dem gewaehlten Moebelstueck
         let ring = SCNTorus(ringRadius: 0.34, pipeRadius: 0.035)
         ring.ringSegmentCount = 12; ring.pipeSegmentCount = 6
@@ -1284,7 +1331,11 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         if !hits(player.position.x, nz) { player.position.z = nz } else { vz = 0 }
 
         // Auswahlmarke ueber dem gewaehlten Stueck fuehren
-        if editMode, let i = selectedFurniture, i < furnitureList.count {
+        if editMode, worldMode, let c = worldSelCenter() {
+            selMarker.isHidden = false
+            selMarker.position = SCNVector3(c.x, c.y + 0.55 + sin(animTime * 2.4) * 0.06, c.z)
+            selMarker.eulerAngles.y = animTime * 0.9
+        } else if editMode, !worldMode, let i = selectedFurniture, i < furnitureList.count {
             let p = furnitureList[i]
             selMarker.isHidden = false
             selMarker.position = SCNVector3(p.x, floorBase(p.floor) + 1.35 + sin(animTime * 2.4) * 0.06, p.z)
@@ -1367,11 +1418,12 @@ class GameController: NSObject, ObservableObject, SCNSceneRendererDelegate {
         if debugOn {
             let cp = cameraNode.position
             let zn = currentZone >= 0 && currentZone < camZones.count ? currentZone : -1
-            let txt = String(format: "Spieler  x %.1f  y %.1f  z %.1f\nKamera   x %.1f  y %.1f  z %.1f\nZone %d   Etage %d   %@\nLichter %d/%d   Flaechen %d/%d",
+            let txt = String(format: "Spieler  x %.1f  y %.1f  z %.1f\nKamera   x %.1f  y %.1f  z %.1f\nZone %d   Etage %d   %@\nLichter %d/%d   Flaechen %d/%d\nKoerper %d/%d",
                              player.position.x, player.position.y, player.position.z,
                              cp.x, cp.y, cp.z, zn, floorIdx, currentRoom,
                              activeLights, cullLights.count,
-                             activeNodes, cullNodes.count)
+                             activeNodes, cullNodes.count,
+                             activeDetails, detailNodes.count)
             if txt != debugText {
                 DispatchQueue.main.async { [weak self] in self?.debugText = txt }
             }

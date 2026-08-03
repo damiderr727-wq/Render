@@ -473,6 +473,85 @@ enum Tex {
     ]
     static let windowNight = windows[0]
 
+    /// Die Welt HINTER dem Fenster. Bewusst KEIN Bild aus `windows` - die
+    /// tragen einen aufgemalten Rahmen samt Sprossen, und seit die Fenster
+    /// echte Loecher haben, lag dieses gemalte Fenster als zweites hinter dem
+    /// gebauten. Genau der gemeldete Effekt "auf ihnen liegt noch eine alte
+    /// Fenster Textur die nicht funktioniert".
+    ///
+    /// Stattdessen reiner Nebel: senkrechter Verlauf von fahlem Grau oben zu
+    /// dunklerem unten, ein paar weiche Schwaden, keine Kante, kein Motiv.
+    /// Wird IMMER prozedural erzeugt, damit sie nicht versehentlich von einer
+    /// Bilddatei mit Rahmen ueberschrieben wird.
+    static let fogPane: UIImage = makeTexWH(128, 160) { c, W, H in
+        let cs = CGColorSpaceCreateDeviceRGB()
+        let grad = CGGradient(colorsSpace: cs, colors: [
+            UIColor(red: 0.74, green: 0.77, blue: 0.80, alpha: 1).cgColor,
+            UIColor(red: 0.60, green: 0.64, blue: 0.68, alpha: 1).cgColor,
+            UIColor(red: 0.43, green: 0.47, blue: 0.51, alpha: 1).cgColor,
+        ] as CFArray, locations: [0, 0.55, 1])!
+        c.drawLinearGradient(grad, start: CGPoint(x: 0, y: 0),
+                             end: CGPoint(x: 0, y: H), options: [])
+        // Schwaden: breite, sehr blasse Ellipsen. Waagerecht gestreckt,
+        // damit es sich als Nebelbank liest und nicht als Wolkenmuster.
+        for _ in 0..<26 {
+            let x = rnd(-W * 0.2, W * 1.2), y = rnd(0, H)
+            let rx = rnd(W * 0.18, W * 0.55), ry = rnd(H * 0.02, H * 0.08)
+            c.setFillColor(UIColor(white: rnd(0.55, 1.0), alpha: rnd(0.03, 0.10)).cgColor)
+            c.fillEllipse(in: CGRect(x: x - rx, y: y - ry, width: rx * 2, height: ry * 2))
+        }
+        // Ganz oben eine Ahnung von Helligkeit - da steht die Sonne im Dunst
+        c.setFillColor(UIColor(white: 1.0, alpha: 0.10).cgColor)
+        c.fillEllipse(in: CGRect(x: W * 0.15, y: -H * 0.12, width: W * 0.7, height: H * 0.34))
+    }
+
+    /// Palmwedel. Die Blaetter waren eine FLACHE EINZELFARBE ohne jede Textur -
+    /// darum sahen die Pflanzen aus wie gruene Pappdreiecke. Hier stattdessen
+    /// Mittelrippe und Fiedern quer dazu, dazu vergilbte Spitzen: die Palmen
+    /// stehen seit Jahren ungegossen in einem feuchten Glashaus.
+    /// u laeuft vom Ansatz (0) zur Spitze (1), v quer ueber die Breite.
+    static let palmLeaf: UIImage = makeTexWH(96, 128) { c, W, H in
+        c.setFillColor(UIColor(red: 0.15, green: 0.29, blue: 0.13, alpha: 1).cgColor)
+        c.fill(CGRect(x: 0, y: 0, width: W, height: H))
+        // Zur Spitze hin ausbleichen und vergilben
+        let cs = CGColorSpaceCreateDeviceRGB()
+        let g = CGGradient(colorsSpace: cs, colors: [
+            UIColor(red: 0.11, green: 0.24, blue: 0.10, alpha: 0.0).cgColor,
+            UIColor(red: 0.34, green: 0.35, blue: 0.14, alpha: 0.55).cgColor,
+            UIColor(red: 0.42, green: 0.33, blue: 0.13, alpha: 0.85).cgColor,
+        ] as CFArray, locations: [0, 0.7, 1])!
+        c.drawLinearGradient(g, start: CGPoint(x: 0, y: 0),
+                             end: CGPoint(x: 0, y: H), options: [])
+        // Fiedern: schmale Streifen schraeg von der Mittelrippe nach aussen
+        for i in 0..<34 {
+            let y = H * CGFloat(i) / 34 + rnd(-1, 1)
+            let hell = rnd(0.0, 1.0) < 0.35
+            c.setStrokeColor(UIColor(red: hell ? 0.26 : 0.09,
+                                     green: hell ? 0.42 : 0.19,
+                                     blue: hell ? 0.16 : 0.09,
+                                     alpha: rnd(0.35, 0.75)).cgColor)
+            c.setLineWidth(rnd(1.0, 2.2))
+            c.move(to: CGPoint(x: W / 2, y: y))
+            c.addLine(to: CGPoint(x: 0, y: y + H * 0.045))
+            c.strokePath()
+            c.move(to: CGPoint(x: W / 2, y: y))
+            c.addLine(to: CGPoint(x: W, y: y + H * 0.045))
+            c.strokePath()
+        }
+        // Mittelrippe
+        c.setStrokeColor(UIColor(red: 0.38, green: 0.36, blue: 0.18, alpha: 0.85).cgColor)
+        c.setLineWidth(2.6)
+        c.move(to: CGPoint(x: W / 2, y: 0)); c.addLine(to: CGPoint(x: W / 2, y: H))
+        c.strokePath()
+        // Braune Flecken - das Blatt stirbt von den Raendern her ab
+        for _ in 0..<14 {
+            let x = rnd(0, 1) < 0.5 ? rnd(0, W * 0.22) : rnd(W * 0.78, W)
+            stain(c, W, H, x, rnd(H * 0.3, H), rnd(2, 7),
+                  UIColor(red: 0.30, green: 0.22, blue: 0.08, alpha: rnd(0.2, 0.5)))
+        }
+        speckle(c, W, H, count: 200, alpha: 0.06)
+    }
+
     // Koerper-Materialien der Figur
     static let skin       = load("skin")        { flatTexture(0.78, 0.60, 0.47) }
     static let clothShirt = load("cloth_shirt") { flatTexture(0.48, 0.55, 0.65) }

@@ -48,7 +48,7 @@ def _anim_fps(anim_name: str) -> float:
     return FPS["enemy"]
 
 
-def build(out_dir: str, preview: bool) -> dict:
+def build(out_dir: str, preview_dir: str | None) -> dict:
     atlas = AtlasBuilder("game")
 
     # -- characters --------------------------------------------------------
@@ -171,8 +171,9 @@ def build(out_dir: str, preview: bool) -> dict:
     }
 
     data = atlas.write(out_dir)
-    if preview:
-        _write_previews(out_dir)
+    if preview_dir:
+        os.makedirs(preview_dir, exist_ok=True)
+        _write_previews(preview_dir)
     return data
 
 
@@ -288,11 +289,15 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--out", default="Assets/generated",
                     help="output directory for atlases and manifest")
+    ap.add_argument("--previews", default="docs/previews",
+                    help="where to write the contact sheets")
     ap.add_argument("--no-preview", action="store_true",
                     help="skip the contact sheets")
     args = ap.parse_args()
 
-    data = build(args.out, preview=not args.no_preview)
+    # Previews live outside the atlas directory so they are not copied into
+    # the app bundle at build time.
+    data = build(args.out, None if args.no_preview else args.previews)
     pages = data["pages"]
     print(f"packed {len(data['sprites'])} sprites, "
           f"{len(data['animations'])} animations into {len(pages)} page(s)")

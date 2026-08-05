@@ -30,6 +30,12 @@ let package = Package(
             dependencies: ["PixelRogueCore", "PixelRogueAssets"]
         ),
 
+        // Headless renderer for CI and for looking at the game on a machine
+        // without SpriteKit. Emits the same draw commands the real renderer
+        // consumes, as JSON.
+        .executableTarget(name: "PixelRogueSnapshot",
+                          dependencies: ["PixelRogueCore"]),
+
         .testTarget(name: "PixelRogueCoreTests", dependencies: ["PixelRogueCore"]),
     ]
 )

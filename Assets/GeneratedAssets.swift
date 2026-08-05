@@ -20,6 +20,12 @@ public enum GeneratedAssets {
                           subdirectory: "generated")
     }
 
+    /// Directory holding the generated .wav cues, if they were built.
+    public static var soundsURL: URL? {
+        bundle.url(forResource: "sfx", withExtension: nil,
+                   subdirectory: "generated")
+    }
+
     /// True when the atlas has been generated. A fresh clone has the art
     /// committed, but a `git clean` does not, and failing with a clear
     /// message beats a black window.

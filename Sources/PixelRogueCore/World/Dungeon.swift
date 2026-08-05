@@ -435,8 +435,11 @@ public struct DungeonGenerator {
                 let tx = r.x + 2 + i * (r.width - 4) / max(1, torchCount - 1 == 0 ? 1 : torchCount - 1)
                 props.append(PropPlacement(
                     name: "torch",
+                    // The wall face is drawn over the room's first floor row,
+                    // so the torch hangs one row lower than the wall tile to
+                    // land on the face rather than on the cap above it.
                     position: Vec2((Double(min(tx, r.x + r.width - 1)) + 0.5) * TileMap.tileSize,
-                                   Double(r.y) * TileMap.tileSize - 2),
+                                   Double(r.y + 1) * TileMap.tileSize),
                     room: room.index, blocking: false, destructible: false))
             }
         }

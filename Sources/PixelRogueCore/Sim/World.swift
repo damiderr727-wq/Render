@@ -36,6 +36,8 @@ public final class World {
     public private(set) var currentRoom: Int = 0
     public private(set) var doorsLocked = false
     public private(set) var floorComplete = false
+    /// Where the stairs down appear once the floor's boss is dead.
+    public private(set) var exitPosition: Vec2? = nil
     public private(set) var playerDead = false
 
     /// Slow motion. Driven by items and by the moment a boss dies.
@@ -1744,6 +1746,8 @@ public final class World {
         }
         if dungeon.rooms[currentRoom].kind == .boss {
             floorComplete = true
+            exitPosition = dungeon.map.nearestWalkable(
+                to: dungeon.rooms[currentRoom].center + Vec2(0, 48))
             events.append(.floorCleared(depth: run.depth))
         }
     }
@@ -1777,6 +1781,12 @@ public final class World {
     }
 
     public var canDescend: Bool { floorComplete }
+
+    /// True when the player is standing on the stairs and can take them.
+    public var playerIsOnExit: Bool {
+        guard let exit = exitPosition, let player = playerActor else { return false }
+        return player.position.distance(to: exit) < 18
+    }
 
     /// Builds the next floor, carrying the run over.
     public func descend() -> World? {

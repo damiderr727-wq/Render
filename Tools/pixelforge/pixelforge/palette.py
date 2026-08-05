@@ -66,10 +66,12 @@ class Ramp:
 TRANSPARENT: RGBA = (0, 0, 0, 0)
 
 # --- structural -----------------------------------------------------------
-STONE = Ramp("stone", "#12111a", "#26243a", "#3c3956", "#585379", "#7d78a0")
+STONE = Ramp("stone", "#0d0c14", "#171525", "#2a2740", "#4b4668", "#7d78a0")
 BRICK = Ramp("brick", "#161018", "#2f2130", "#4a3245", "#67485c", "#8b6478")
-FLOOR = Ramp("floor", "#191823", "#242231", "#302d40", "#3c3850", "#4a4562")
-DIRT = Ramp("dirt", "#171016", "#2e2028", "#46323a", "#5f474c", "#7d6162")
+# Warmer and lighter than the walls on purpose: the floor is where the
+# player looks, so it is the brightest large surface in the frame.
+FLOOR = Ramp("floor", "#2a2430", "#3e3644", "#544a58", "#6b5f6d", "#847686")
+DIRT = Ramp("dirt", "#26191d", "#3b2a2e", "#523c3e", "#6b5150", "#886a66")
 WOOD = Ramp("wood", "#1c1210", "#3d2419", "#5e3a24", "#835734", "#ab7c4f")
 BONE = Ramp("bone", "#2b2722", "#544d43", "#867c6b", "#b6ab94", "#e4d9bd")
 

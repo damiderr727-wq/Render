@@ -62,13 +62,13 @@ def floor_tile(theme: Theme, variant: int) -> Canvas:
     rng = random.Random(theme.seed * 100 + variant)
     c = Canvas(TILE, TILE)
     base = theme.floor
-    c.rect(0, 0, TILE, TILE, base[2])
+    c.rect(0, 0, TILE, TILE, base[3])
 
     # Subtle per-tile value shift keeps large rooms from banding.
     if variant % 3 == 1:
-        c.rect(0, 0, TILE, TILE, base[3])
+        c.rect(0, 0, TILE, TILE, base[4])
     elif variant % 3 == 2:
-        c.rect(0, 0, TILE, TILE, base[2])
+        c.rect(0, 0, TILE, TILE, base[3])
 
     for _ in range(26):
         x, y = rng.randrange(TILE), rng.randrange(TILE)
@@ -76,8 +76,8 @@ def floor_tile(theme: Theme, variant: int) -> Canvas:
 
     c.hline(0, 0, TILE, base[1])
     c.vline(0, 0, TILE, base[1])
-    c.hline(0, 1, TILE, base[3])
-    c.vline(1, 1, TILE - 1, base[3])
+    c.hline(0, 1, TILE, base[4])
+    c.vline(1, 1, TILE - 1, base[4])
 
     if variant == 1:
         # Hairline crack. Kept at one ramp step so a floor tiled with these
@@ -89,10 +89,11 @@ def floor_tile(theme: Theme, variant: int) -> Canvas:
             x += rng.choice((-1, 0, 1))
             y += 1
     elif variant == 2:
-        # A chipped inset panel.
-        rounded_rect(c, 4, 4, 8, 8, base[1], radius=1)
-        rounded_rect(c, 4, 4, 8, 7, base[2], radius=1)
-        c.hline(5, 4, 6, base[3])
+        # A chipped inset panel, one ramp step deep. Any deeper and a room
+        # tiled with these looks perforated.
+        rounded_rect(c, 4, 4, 8, 8, base[2], radius=1)
+        rounded_rect(c, 4, 4, 8, 7, base[3], radius=1)
+        c.hline(5, 4, 6, base[4])
     elif variant == 3:
         for _ in range(5):
             x, y = rng.randrange(2, 14), rng.randrange(2, 14)
@@ -173,34 +174,38 @@ def wall_cap(theme: Theme, mask: int) -> Canvas:
     rng = random.Random(theme.seed * 977 + mask)
     c = Canvas(TILE, TILE)
     top = theme.wall_top
-    c.rect(0, 0, TILE, TILE, top[3])
+    # Kept a step darker than you might expect. The gaps between rooms are
+    # solid wall, so cap tiles cover most of the screen — at full brightness
+    # they swamp the rooms the player is actually looking at.
+    c.rect(0, 0, TILE, TILE, top[0])
     for _ in range(24):
         c.put(rng.randrange(TILE), rng.randrange(TILE),
-              top[4] if rng.random() < 0.5 else top[2])
+              top[1] if rng.random() < 0.5 else top[0])
     # Two big flagstones per tile with a soft seam between them.
     seam = 7 if mask % 2 == 0 else 8
-    c.hline(0, seam, TILE, top[2])
-    c.hline(0, seam + 1, TILE, top[4])
+    c.hline(0, seam, TILE, top[1])
     if mask & 3 == 3:
-        c.vline(9, 0, seam, top[2])
+        c.vline(9, 0, seam, top[1])
     else:
-        c.vline(5, seam + 2, TILE - seam - 2, top[2])
+        c.vline(5, seam + 2, TILE - seam - 2, top[1])
 
     # Exposed edges. North catches the light, south falls into shadow, and
     # the east/west rims give the block its chamfer.
+    # Only the exposed edges catch the light. That contrast is what reads as
+    # a room's outline once the field of caps behind it is dark.
     if not mask & 1:
         c.hline(0, 0, TILE, top[4])
-        c.hline(0, 1, TILE, top[4])
-        c.hline(0, 2, TILE, top[3])
+        c.hline(0, 1, TILE, top[3])
+        c.hline(0, 2, TILE, top[2])
     if not mask & 8:
-        c.vline(0, 0, TILE, top[4])
-        c.vline(1, 0, TILE, top[3])
+        c.vline(0, 0, TILE, top[3])
+        c.vline(1, 0, TILE, top[2])
     if not mask & 2:
-        c.vline(TILE - 1, 0, TILE, top[1])
-        c.vline(TILE - 2, 0, TILE, top[2])
+        c.vline(TILE - 1, 0, TILE, top[0])
+        c.vline(TILE - 2, 0, TILE, top[1])
     if not mask & 4:
         c.hline(0, TILE - 1, TILE, top[0])
-        c.hline(0, TILE - 2, TILE, top[1])
+        c.hline(0, TILE - 2, TILE, top[0])
     # Inner corners need their own nick or two straight rims meet in a
     # visibly wrong square.
     if mask & 1 and mask & 8 and not mask & 16:
@@ -385,35 +390,39 @@ def chest(theme: Theme, state: str = "closed") -> Canvas:
 
 
 def torch_frames(theme: Theme, count: int = 4) -> list[Canvas]:
-    """Wall torch — the main animated light in every room."""
+    """Wall torch — the main animated light in every room.
+
+    Sized to exactly one wall-face tile so it can be anchored to the bottom of
+    the face. A taller sprite spills onto the cap above and the flame ends up
+    floating over the rock instead of burning on the wall.
+    """
     frames: list[Canvas] = []
     for i in range(count):
-        c = Canvas(12, 22)
+        c = Canvas(12, TILE)
         rng = random.Random(theme.seed + i * 17)
-        # bracket
-        c.rect(4, 12, 4, 8, METAL[2])
-        c.hline(4, 12, 4, METAL[3])
-        c.rect(3, 10, 6, 3, METAL[3])
-        c.hline(3, 10, 6, METAL[4])
+        # bracket, bolted to the lower half of the face
+        c.rect(5, 9, 2, 6, METAL[2])
+        c.vline(5, 9, 6, METAL[3])
+        c.rect(3, 7, 6, 3, METAL[3])
+        c.hline(3, 7, 6, METAL[4])
+        c.hline(3, 9, 6, METAL[1])
         # flame: three lobes that wobble per frame
         phase = i / count * math.tau
-        for lobe, (dx, scale, ramp_i) in enumerate(
-                ((0, 1.0, 2), (-1, 0.7, 3), (1, 0.6, 3))):
+        for lobe, (dx, scale) in enumerate(((0, 1.0), (-1, 0.7), (1, 0.6))):
             wob = math.sin(phase + lobe * 2.1)
-            cx = 6 + dx + wob * 0.9
-            h = 8 * scale + wob * 1.2
+            cx = 6 + dx + wob * 0.8
+            h = 7 * scale + wob
             for y in range(int(h)):
                 t = y / max(1.0, h)
-                half = (1.0 - t) * 2.6 * scale + 0.6
-                yy = 10 - y
-                c.hline(int(cx - half), yy, max(1, int(half * 2)),
+                half = (1.0 - t) * 2.4 * scale + 0.6
+                c.hline(int(cx - half), 7 - y, max(1, int(half * 2)),
                         (255, 200, 90, 255) if t < 0.35 else
                         (240, 140, 40, 255) if t < 0.7 else
                         (200, 70, 20, 255))
-        c.rect(5, 6, 2, 2, (255, 244, 200, 255))
-        soft_glow(c, 6, 7, 9, (255, 170, 60, 110))
+        c.rect(5, 4, 2, 2, (255, 244, 200, 255))
+        soft_glow(c, 6, 5, 8, (255, 170, 60, 110))
         for _ in range(2):
-            c.put(rng.randrange(3, 9), rng.randrange(0, 5),
+            c.put(rng.randrange(3, 9), rng.randrange(0, 3),
                   (255, 190, 100, 180))
         frames.append(c)
     return frames

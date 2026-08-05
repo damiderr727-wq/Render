@@ -1,0 +1,9767 @@
+{
+ "animations": {
+  "boss/clockwork_choir": {
+   "fps": 5.0,
+   "frames": [
+    "boss/clockwork_choir/0",
+    "boss/clockwork_choir/1",
+    "boss/clockwork_choir/2",
+    "boss/clockwork_choir/3"
+   ],
+   "loop": true
+  },
+  "boss/colossus": {
+   "fps": 5.0,
+   "frames": [
+    "boss/colossus/0",
+    "boss/colossus/1",
+    "boss/colossus/2",
+    "boss/colossus/3"
+   ],
+   "loop": true
+  },
+  "boss/hive_mother": {
+   "fps": 5.0,
+   "frames": [
+    "boss/hive_mother/0",
+    "boss/hive_mother/1",
+    "boss/hive_mother/2",
+    "boss/hive_mother/3"
+   ],
+   "loop": true
+  },
+  "boss/void_sovereign": {
+   "fps": 5.0,
+   "frames": [
+    "boss/void_sovereign/0",
+    "boss/void_sovereign/1",
+    "boss/void_sovereign/2",
+    "boss/void_sovereign/3"
+   ],
+   "loop": true
+  },
+  "char/beak/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/beak/die/0",
+    "char/beak/die/1",
+    "char/beak/die/2",
+    "char/beak/die/3"
+   ],
+   "loop": false
+  },
+  "char/beak/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/beak/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/beak/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/beak/idle_back/0",
+    "char/beak/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/beak/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/beak/idle_front/0",
+    "char/beak/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/beak/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/beak/idle_side/0",
+    "char/beak/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/beak/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/beak/roll/0",
+    "char/beak/roll/1",
+    "char/beak/roll/2",
+    "char/beak/roll/3",
+    "char/beak/roll/4"
+   ],
+   "loop": true
+  },
+  "char/beak/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/beak/walk_back/0",
+    "char/beak/walk_back/1",
+    "char/beak/walk_back/2",
+    "char/beak/walk_back/3",
+    "char/beak/walk_back/4",
+    "char/beak/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/beak/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/beak/walk_front/0",
+    "char/beak/walk_front/1",
+    "char/beak/walk_front/2",
+    "char/beak/walk_front/3",
+    "char/beak/walk_front/4",
+    "char/beak/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/beak/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/beak/walk_side/0",
+    "char/beak/walk_side/1",
+    "char/beak/walk_side/2",
+    "char/beak/walk_side/3",
+    "char/beak/walk_side/4",
+    "char/beak/walk_side/5"
+   ],
+   "loop": true
+  },
+  "char/brigand/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/brigand/die/0",
+    "char/brigand/die/1",
+    "char/brigand/die/2",
+    "char/brigand/die/3"
+   ],
+   "loop": false
+  },
+  "char/brigand/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/brigand/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/brigand/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/brigand/idle_back/0",
+    "char/brigand/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/brigand/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/brigand/idle_front/0",
+    "char/brigand/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/brigand/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/brigand/idle_side/0",
+    "char/brigand/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/brigand/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/brigand/roll/0",
+    "char/brigand/roll/1",
+    "char/brigand/roll/2",
+    "char/brigand/roll/3",
+    "char/brigand/roll/4"
+   ],
+   "loop": true
+  },
+  "char/brigand/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/brigand/walk_back/0",
+    "char/brigand/walk_back/1",
+    "char/brigand/walk_back/2",
+    "char/brigand/walk_back/3",
+    "char/brigand/walk_back/4",
+    "char/brigand/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/brigand/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/brigand/walk_front/0",
+    "char/brigand/walk_front/1",
+    "char/brigand/walk_front/2",
+    "char/brigand/walk_front/3",
+    "char/brigand/walk_front/4",
+    "char/brigand/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/brigand/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/brigand/walk_side/0",
+    "char/brigand/walk_side/1",
+    "char/brigand/walk_side/2",
+    "char/brigand/walk_side/3",
+    "char/brigand/walk_side/4",
+    "char/brigand/walk_side/5"
+   ],
+   "loop": true
+  },
+  "char/bulwark/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/bulwark/die/0",
+    "char/bulwark/die/1",
+    "char/bulwark/die/2",
+    "char/bulwark/die/3"
+   ],
+   "loop": false
+  },
+  "char/bulwark/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/bulwark/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/bulwark/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/bulwark/idle_back/0",
+    "char/bulwark/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/bulwark/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/bulwark/idle_front/0",
+    "char/bulwark/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/bulwark/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/bulwark/idle_side/0",
+    "char/bulwark/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/bulwark/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/bulwark/roll/0",
+    "char/bulwark/roll/1",
+    "char/bulwark/roll/2",
+    "char/bulwark/roll/3",
+    "char/bulwark/roll/4"
+   ],
+   "loop": true
+  },
+  "char/bulwark/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/bulwark/walk_back/0",
+    "char/bulwark/walk_back/1",
+    "char/bulwark/walk_back/2",
+    "char/bulwark/walk_back/3",
+    "char/bulwark/walk_back/4",
+    "char/bulwark/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/bulwark/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/bulwark/walk_front/0",
+    "char/bulwark/walk_front/1",
+    "char/bulwark/walk_front/2",
+    "char/bulwark/walk_front/3",
+    "char/bulwark/walk_front/4",
+    "char/bulwark/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/bulwark/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/bulwark/walk_side/0",
+    "char/bulwark/walk_side/1",
+    "char/bulwark/walk_side/2",
+    "char/bulwark/walk_side/3",
+    "char/bulwark/walk_side/4",
+    "char/bulwark/walk_side/5"
+   ],
+   "loop": true
+  },
+  "char/cultist/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/cultist/die/0",
+    "char/cultist/die/1",
+    "char/cultist/die/2",
+    "char/cultist/die/3"
+   ],
+   "loop": false
+  },
+  "char/cultist/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/cultist/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/cultist/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/cultist/idle_back/0",
+    "char/cultist/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/cultist/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/cultist/idle_front/0",
+    "char/cultist/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/cultist/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/cultist/idle_side/0",
+    "char/cultist/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/cultist/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/cultist/roll/0",
+    "char/cultist/roll/1",
+    "char/cultist/roll/2",
+    "char/cultist/roll/3",
+    "char/cultist/roll/4"
+   ],
+   "loop": true
+  },
+  "char/cultist/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/cultist/walk_back/0",
+    "char/cultist/walk_back/1",
+    "char/cultist/walk_back/2",
+    "char/cultist/walk_back/3",
+    "char/cultist/walk_back/4",
+    "char/cultist/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/cultist/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/cultist/walk_front/0",
+    "char/cultist/walk_front/1",
+    "char/cultist/walk_front/2",
+    "char/cultist/walk_front/3",
+    "char/cultist/walk_front/4",
+    "char/cultist/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/cultist/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/cultist/walk_side/0",
+    "char/cultist/walk_side/1",
+    "char/cultist/walk_side/2",
+    "char/cultist/walk_side/3",
+    "char/cultist/walk_side/4",
+    "char/cultist/walk_side/5"
+   ],
+   "loop": true
+  },
+  "char/gunner/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/gunner/die/0",
+    "char/gunner/die/1",
+    "char/gunner/die/2",
+    "char/gunner/die/3"
+   ],
+   "loop": false
+  },
+  "char/gunner/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/gunner/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/gunner/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/gunner/idle_back/0",
+    "char/gunner/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/gunner/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/gunner/idle_front/0",
+    "char/gunner/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/gunner/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/gunner/idle_side/0",
+    "char/gunner/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/gunner/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/gunner/roll/0",
+    "char/gunner/roll/1",
+    "char/gunner/roll/2",
+    "char/gunner/roll/3",
+    "char/gunner/roll/4"
+   ],
+   "loop": true
+  },
+  "char/gunner/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/gunner/walk_back/0",
+    "char/gunner/walk_back/1",
+    "char/gunner/walk_back/2",
+    "char/gunner/walk_back/3",
+    "char/gunner/walk_back/4",
+    "char/gunner/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/gunner/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/gunner/walk_front/0",
+    "char/gunner/walk_front/1",
+    "char/gunner/walk_front/2",
+    "char/gunner/walk_front/3",
+    "char/gunner/walk_front/4",
+    "char/gunner/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/gunner/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/gunner/walk_side/0",
+    "char/gunner/walk_side/1",
+    "char/gunner/walk_side/2",
+    "char/gunner/walk_side/3",
+    "char/gunner/walk_side/4",
+    "char/gunner/walk_side/5"
+   ],
+   "loop": true
+  },
+  "char/hexe/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/hexe/die/0",
+    "char/hexe/die/1",
+    "char/hexe/die/2",
+    "char/hexe/die/3"
+   ],
+   "loop": false
+  },
+  "char/hexe/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/hexe/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/hexe/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/hexe/idle_back/0",
+    "char/hexe/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/hexe/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/hexe/idle_front/0",
+    "char/hexe/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/hexe/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/hexe/idle_side/0",
+    "char/hexe/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/hexe/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/hexe/roll/0",
+    "char/hexe/roll/1",
+    "char/hexe/roll/2",
+    "char/hexe/roll/3",
+    "char/hexe/roll/4"
+   ],
+   "loop": true
+  },
+  "char/hexe/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/hexe/walk_back/0",
+    "char/hexe/walk_back/1",
+    "char/hexe/walk_back/2",
+    "char/hexe/walk_back/3",
+    "char/hexe/walk_back/4",
+    "char/hexe/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/hexe/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/hexe/walk_front/0",
+    "char/hexe/walk_front/1",
+    "char/hexe/walk_front/2",
+    "char/hexe/walk_front/3",
+    "char/hexe/walk_front/4",
+    "char/hexe/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/hexe/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/hexe/walk_side/0",
+    "char/hexe/walk_side/1",
+    "char/hexe/walk_side/2",
+    "char/hexe/walk_side/3",
+    "char/hexe/walk_side/4",
+    "char/hexe/walk_side/5"
+   ],
+   "loop": true
+  },
+  "char/hexer/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/hexer/die/0",
+    "char/hexer/die/1",
+    "char/hexer/die/2",
+    "char/hexer/die/3"
+   ],
+   "loop": false
+  },
+  "char/hexer/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/hexer/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/hexer/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/hexer/idle_back/0",
+    "char/hexer/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/hexer/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/hexer/idle_front/0",
+    "char/hexer/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/hexer/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/hexer/idle_side/0",
+    "char/hexer/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/hexer/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/hexer/roll/0",
+    "char/hexer/roll/1",
+    "char/hexer/roll/2",
+    "char/hexer/roll/3",
+    "char/hexer/roll/4"
+   ],
+   "loop": true
+  },
+  "char/hexer/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/hexer/walk_back/0",
+    "char/hexer/walk_back/1",
+    "char/hexer/walk_back/2",
+    "char/hexer/walk_back/3",
+    "char/hexer/walk_back/4",
+    "char/hexer/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/hexer/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/hexer/walk_front/0",
+    "char/hexer/walk_front/1",
+    "char/hexer/walk_front/2",
+    "char/hexer/walk_front/3",
+    "char/hexer/walk_front/4",
+    "char/hexer/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/hexer/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/hexer/walk_side/0",
+    "char/hexer/walk_side/1",
+    "char/hexer/walk_side/2",
+    "char/hexer/walk_side/3",
+    "char/hexer/walk_side/4",
+    "char/hexer/walk_side/5"
+   ],
+   "loop": true
+  },
+  "char/marauder/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/marauder/die/0",
+    "char/marauder/die/1",
+    "char/marauder/die/2",
+    "char/marauder/die/3"
+   ],
+   "loop": false
+  },
+  "char/marauder/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/marauder/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/marauder/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/marauder/idle_back/0",
+    "char/marauder/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/marauder/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/marauder/idle_front/0",
+    "char/marauder/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/marauder/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/marauder/idle_side/0",
+    "char/marauder/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/marauder/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/marauder/roll/0",
+    "char/marauder/roll/1",
+    "char/marauder/roll/2",
+    "char/marauder/roll/3",
+    "char/marauder/roll/4"
+   ],
+   "loop": true
+  },
+  "char/marauder/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/marauder/walk_back/0",
+    "char/marauder/walk_back/1",
+    "char/marauder/walk_back/2",
+    "char/marauder/walk_back/3",
+    "char/marauder/walk_back/4",
+    "char/marauder/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/marauder/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/marauder/walk_front/0",
+    "char/marauder/walk_front/1",
+    "char/marauder/walk_front/2",
+    "char/marauder/walk_front/3",
+    "char/marauder/walk_front/4",
+    "char/marauder/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/marauder/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/marauder/walk_side/0",
+    "char/marauder/walk_side/1",
+    "char/marauder/walk_side/2",
+    "char/marauder/walk_side/3",
+    "char/marauder/walk_side/4",
+    "char/marauder/walk_side/5"
+   ],
+   "loop": true
+  },
+  "char/marshal/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/marshal/die/0",
+    "char/marshal/die/1",
+    "char/marshal/die/2",
+    "char/marshal/die/3"
+   ],
+   "loop": false
+  },
+  "char/marshal/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/marshal/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/marshal/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/marshal/idle_back/0",
+    "char/marshal/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/marshal/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/marshal/idle_front/0",
+    "char/marshal/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/marshal/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/marshal/idle_side/0",
+    "char/marshal/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/marshal/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/marshal/roll/0",
+    "char/marshal/roll/1",
+    "char/marshal/roll/2",
+    "char/marshal/roll/3",
+    "char/marshal/roll/4"
+   ],
+   "loop": true
+  },
+  "char/marshal/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/marshal/walk_back/0",
+    "char/marshal/walk_back/1",
+    "char/marshal/walk_back/2",
+    "char/marshal/walk_back/3",
+    "char/marshal/walk_back/4",
+    "char/marshal/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/marshal/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/marshal/walk_front/0",
+    "char/marshal/walk_front/1",
+    "char/marshal/walk_front/2",
+    "char/marshal/walk_front/3",
+    "char/marshal/walk_front/4",
+    "char/marshal/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/marshal/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/marshal/walk_side/0",
+    "char/marshal/walk_side/1",
+    "char/marshal/walk_side/2",
+    "char/marshal/walk_side/3",
+    "char/marshal/walk_side/4",
+    "char/marshal/walk_side/5"
+   ],
+   "loop": true
+  },
+  "char/skelly/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/skelly/die/0",
+    "char/skelly/die/1",
+    "char/skelly/die/2",
+    "char/skelly/die/3"
+   ],
+   "loop": false
+  },
+  "char/skelly/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/skelly/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/skelly/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/skelly/idle_back/0",
+    "char/skelly/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/skelly/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/skelly/idle_front/0",
+    "char/skelly/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/skelly/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/skelly/idle_side/0",
+    "char/skelly/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/skelly/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/skelly/roll/0",
+    "char/skelly/roll/1",
+    "char/skelly/roll/2",
+    "char/skelly/roll/3",
+    "char/skelly/roll/4"
+   ],
+   "loop": true
+  },
+  "char/skelly/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/skelly/walk_back/0",
+    "char/skelly/walk_back/1",
+    "char/skelly/walk_back/2",
+    "char/skelly/walk_back/3",
+    "char/skelly/walk_back/4",
+    "char/skelly/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/skelly/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/skelly/walk_front/0",
+    "char/skelly/walk_front/1",
+    "char/skelly/walk_front/2",
+    "char/skelly/walk_front/3",
+    "char/skelly/walk_front/4",
+    "char/skelly/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/skelly/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/skelly/walk_side/0",
+    "char/skelly/walk_side/1",
+    "char/skelly/walk_side/2",
+    "char/skelly/walk_side/3",
+    "char/skelly/walk_side/4",
+    "char/skelly/walk_side/5"
+   ],
+   "loop": true
+  },
+  "char/stray/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/stray/die/0",
+    "char/stray/die/1",
+    "char/stray/die/2",
+    "char/stray/die/3"
+   ],
+   "loop": false
+  },
+  "char/stray/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/stray/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/stray/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/stray/idle_back/0",
+    "char/stray/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/stray/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/stray/idle_front/0",
+    "char/stray/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/stray/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/stray/idle_side/0",
+    "char/stray/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/stray/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/stray/roll/0",
+    "char/stray/roll/1",
+    "char/stray/roll/2",
+    "char/stray/roll/3",
+    "char/stray/roll/4"
+   ],
+   "loop": true
+  },
+  "char/stray/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/stray/walk_back/0",
+    "char/stray/walk_back/1",
+    "char/stray/walk_back/2",
+    "char/stray/walk_back/3",
+    "char/stray/walk_back/4",
+    "char/stray/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/stray/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/stray/walk_front/0",
+    "char/stray/walk_front/1",
+    "char/stray/walk_front/2",
+    "char/stray/walk_front/3",
+    "char/stray/walk_front/4",
+    "char/stray/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/stray/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/stray/walk_side/0",
+    "char/stray/walk_side/1",
+    "char/stray/walk_side/2",
+    "char/stray/walk_side/3",
+    "char/stray/walk_side/4",
+    "char/stray/walk_side/5"
+   ],
+   "loop": true
+  },
+  "char/tinker/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/tinker/die/0",
+    "char/tinker/die/1",
+    "char/tinker/die/2",
+    "char/tinker/die/3"
+   ],
+   "loop": false
+  },
+  "char/tinker/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/tinker/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/tinker/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/tinker/idle_back/0",
+    "char/tinker/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/tinker/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/tinker/idle_front/0",
+    "char/tinker/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/tinker/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/tinker/idle_side/0",
+    "char/tinker/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/tinker/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/tinker/roll/0",
+    "char/tinker/roll/1",
+    "char/tinker/roll/2",
+    "char/tinker/roll/3",
+    "char/tinker/roll/4"
+   ],
+   "loop": true
+  },
+  "char/tinker/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/tinker/walk_back/0",
+    "char/tinker/walk_back/1",
+    "char/tinker/walk_back/2",
+    "char/tinker/walk_back/3",
+    "char/tinker/walk_back/4",
+    "char/tinker/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/tinker/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/tinker/walk_front/0",
+    "char/tinker/walk_front/1",
+    "char/tinker/walk_front/2",
+    "char/tinker/walk_front/3",
+    "char/tinker/walk_front/4",
+    "char/tinker/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/tinker/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/tinker/walk_side/0",
+    "char/tinker/walk_side/1",
+    "char/tinker/walk_side/2",
+    "char/tinker/walk_side/3",
+    "char/tinker/walk_side/4",
+    "char/tinker/walk_side/5"
+   ],
+   "loop": true
+  },
+  "char/warden/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/warden/die/0",
+    "char/warden/die/1",
+    "char/warden/die/2",
+    "char/warden/die/3"
+   ],
+   "loop": false
+  },
+  "char/warden/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/warden/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/warden/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/warden/idle_back/0",
+    "char/warden/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/warden/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/warden/idle_front/0",
+    "char/warden/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/warden/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/warden/idle_side/0",
+    "char/warden/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/warden/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/warden/roll/0",
+    "char/warden/roll/1",
+    "char/warden/roll/2",
+    "char/warden/roll/3",
+    "char/warden/roll/4"
+   ],
+   "loop": true
+  },
+  "char/warden/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/warden/walk_back/0",
+    "char/warden/walk_back/1",
+    "char/warden/walk_back/2",
+    "char/warden/walk_back/3",
+    "char/warden/walk_back/4",
+    "char/warden/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/warden/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/warden/walk_front/0",
+    "char/warden/walk_front/1",
+    "char/warden/walk_front/2",
+    "char/warden/walk_front/3",
+    "char/warden/walk_front/4",
+    "char/warden/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/warden/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/warden/walk_side/0",
+    "char/warden/walk_side/1",
+    "char/warden/walk_side/2",
+    "char/warden/walk_side/3",
+    "char/warden/walk_side/4",
+    "char/warden/walk_side/5"
+   ],
+   "loop": true
+  },
+  "char/zealot/die": {
+   "fps": 9.0,
+   "frames": [
+    "char/zealot/die/0",
+    "char/zealot/die/1",
+    "char/zealot/die/2",
+    "char/zealot/die/3"
+   ],
+   "loop": false
+  },
+  "char/zealot/hurt": {
+   "fps": 8.0,
+   "frames": [
+    "char/zealot/hurt/0"
+   ],
+   "loop": false
+  },
+  "char/zealot/idle_back": {
+   "fps": 4.0,
+   "frames": [
+    "char/zealot/idle_back/0",
+    "char/zealot/idle_back/1"
+   ],
+   "loop": true
+  },
+  "char/zealot/idle_front": {
+   "fps": 4.0,
+   "frames": [
+    "char/zealot/idle_front/0",
+    "char/zealot/idle_front/1"
+   ],
+   "loop": true
+  },
+  "char/zealot/idle_side": {
+   "fps": 4.0,
+   "frames": [
+    "char/zealot/idle_side/0",
+    "char/zealot/idle_side/1"
+   ],
+   "loop": true
+  },
+  "char/zealot/roll": {
+   "fps": 16.0,
+   "frames": [
+    "char/zealot/roll/0",
+    "char/zealot/roll/1",
+    "char/zealot/roll/2",
+    "char/zealot/roll/3",
+    "char/zealot/roll/4"
+   ],
+   "loop": true
+  },
+  "char/zealot/walk_back": {
+   "fps": 12.0,
+   "frames": [
+    "char/zealot/walk_back/0",
+    "char/zealot/walk_back/1",
+    "char/zealot/walk_back/2",
+    "char/zealot/walk_back/3",
+    "char/zealot/walk_back/4",
+    "char/zealot/walk_back/5"
+   ],
+   "loop": true
+  },
+  "char/zealot/walk_front": {
+   "fps": 12.0,
+   "frames": [
+    "char/zealot/walk_front/0",
+    "char/zealot/walk_front/1",
+    "char/zealot/walk_front/2",
+    "char/zealot/walk_front/3",
+    "char/zealot/walk_front/4",
+    "char/zealot/walk_front/5"
+   ],
+   "loop": true
+  },
+  "char/zealot/walk_side": {
+   "fps": 12.0,
+   "frames": [
+    "char/zealot/walk_side/0",
+    "char/zealot/walk_side/1",
+    "char/zealot/walk_side/2",
+    "char/zealot/walk_side/3",
+    "char/zealot/walk_side/4",
+    "char/zealot/walk_side/5"
+   ],
+   "loop": true
+  },
+  "enemy/blob_green": {
+   "fps": 8.0,
+   "frames": [
+    "enemy/blob_green/0",
+    "enemy/blob_green/1",
+    "enemy/blob_green/2",
+    "enemy/blob_green/3",
+    "enemy/blob_green/4",
+    "enemy/blob_green/5"
+   ],
+   "loop": true
+  },
+  "enemy/blob_ice": {
+   "fps": 8.0,
+   "frames": [
+    "enemy/blob_ice/0",
+    "enemy/blob_ice/1",
+    "enemy/blob_ice/2",
+    "enemy/blob_ice/3",
+    "enemy/blob_ice/4",
+    "enemy/blob_ice/5"
+   ],
+   "loop": true
+  },
+  "enemy/blob_red": {
+   "fps": 8.0,
+   "frames": [
+    "enemy/blob_red/0",
+    "enemy/blob_red/1",
+    "enemy/blob_red/2",
+    "enemy/blob_red/3",
+    "enemy/blob_red/4",
+    "enemy/blob_red/5"
+   ],
+   "loop": true
+  },
+  "enemy/crawler": {
+   "fps": 8.0,
+   "frames": [
+    "enemy/crawler/0",
+    "enemy/crawler/1",
+    "enemy/crawler/2",
+    "enemy/crawler/3"
+   ],
+   "loop": true
+  },
+  "enemy/crawler_steel": {
+   "fps": 8.0,
+   "frames": [
+    "enemy/crawler_steel/0",
+    "enemy/crawler_steel/1",
+    "enemy/crawler_steel/2",
+    "enemy/crawler_steel/3"
+   ],
+   "loop": true
+  },
+  "enemy/imp": {
+   "fps": 8.0,
+   "frames": [
+    "enemy/imp/0",
+    "enemy/imp/1",
+    "enemy/imp/2",
+    "enemy/imp/3"
+   ],
+   "loop": true
+  },
+  "enemy/mothling": {
+   "fps": 8.0,
+   "frames": [
+    "enemy/mothling/0",
+    "enemy/mothling/1",
+    "enemy/mothling/2",
+    "enemy/mothling/3"
+   ],
+   "loop": true
+  },
+  "enemy/mothling_ember": {
+   "fps": 8.0,
+   "frames": [
+    "enemy/mothling_ember/0",
+    "enemy/mothling_ember/1",
+    "enemy/mothling_ember/2",
+    "enemy/mothling_ember/3"
+   ],
+   "loop": true
+  },
+  "enemy/sentry": {
+   "fps": 8.0,
+   "frames": [
+    "enemy/sentry/0",
+    "enemy/sentry/1",
+    "enemy/sentry/2",
+    "enemy/sentry/3"
+   ],
+   "loop": true
+  },
+  "enemy/turret": {
+   "fps": 8.0,
+   "frames": [
+    "enemy/turret/0",
+    "enemy/turret/1",
+    "enemy/turret/2",
+    "enemy/turret/3"
+   ],
+   "loop": true
+  },
+  "enemy/watcher": {
+   "fps": 8.0,
+   "frames": [
+    "enemy/watcher/0",
+    "enemy/watcher/1",
+    "enemy/watcher/2",
+    "enemy/watcher/3",
+    "enemy/watcher/4",
+    "enemy/watcher/5"
+   ],
+   "loop": true
+  },
+  "enemy/watcher_void": {
+   "fps": 8.0,
+   "frames": [
+    "enemy/watcher_void/0",
+    "enemy/watcher_void/1",
+    "enemy/watcher_void/2",
+    "enemy/watcher_void/3",
+    "enemy/watcher_void/4",
+    "enemy/watcher_void/5"
+   ],
+   "loop": true
+  },
+  "fx/blood_splat": {
+   "fps": 16.0,
+   "frames": [
+    "fx/blood_splat/0",
+    "fx/blood_splat/1",
+    "fx/blood_splat/2",
+    "fx/blood_splat/3"
+   ],
+   "loop": false
+  },
+  "fx/dust_ring": {
+   "fps": 16.0,
+   "frames": [
+    "fx/dust_ring/0",
+    "fx/dust_ring/1",
+    "fx/dust_ring/2",
+    "fx/dust_ring/3"
+   ],
+   "loop": false
+  },
+  "fx/explosion": {
+   "fps": 16.0,
+   "frames": [
+    "fx/explosion/0",
+    "fx/explosion/1",
+    "fx/explosion/2",
+    "fx/explosion/3",
+    "fx/explosion/4",
+    "fx/explosion/5"
+   ],
+   "loop": false
+  },
+  "fx/flame_puff": {
+   "fps": 16.0,
+   "frames": [
+    "fx/flame_puff/0",
+    "fx/flame_puff/1",
+    "fx/flame_puff/2",
+    "fx/flame_puff/3"
+   ],
+   "loop": false
+  },
+  "fx/freeze_shatter": {
+   "fps": 16.0,
+   "frames": [
+    "fx/freeze_shatter/0",
+    "fx/freeze_shatter/1",
+    "fx/freeze_shatter/2",
+    "fx/freeze_shatter/3"
+   ],
+   "loop": false
+  },
+  "fx/heal_sparkle": {
+   "fps": 16.0,
+   "frames": [
+    "fx/heal_sparkle/0",
+    "fx/heal_sparkle/1",
+    "fx/heal_sparkle/2",
+    "fx/heal_sparkle/3"
+   ],
+   "loop": false
+  },
+  "fx/impact_spark": {
+   "fps": 24.0,
+   "frames": [
+    "fx/impact_spark/0",
+    "fx/impact_spark/1",
+    "fx/impact_spark/2",
+    "fx/impact_spark/3"
+   ],
+   "loop": false
+  },
+  "fx/lightning_arc": {
+   "fps": 16.0,
+   "frames": [
+    "fx/lightning_arc/0",
+    "fx/lightning_arc/1",
+    "fx/lightning_arc/2"
+   ],
+   "loop": false
+  },
+  "fx/muzzle_flash": {
+   "fps": 24.0,
+   "frames": [
+    "fx/muzzle_flash/0",
+    "fx/muzzle_flash/1",
+    "fx/muzzle_flash/2"
+   ],
+   "loop": false
+  },
+  "fx/pickup_shine": {
+   "fps": 16.0,
+   "frames": [
+    "fx/pickup_shine/0",
+    "fx/pickup_shine/1",
+    "fx/pickup_shine/2",
+    "fx/pickup_shine/3"
+   ],
+   "loop": false
+  },
+  "fx/poison_cloud": {
+   "fps": 16.0,
+   "frames": [
+    "fx/poison_cloud/0",
+    "fx/poison_cloud/1",
+    "fx/poison_cloud/2",
+    "fx/poison_cloud/3",
+    "fx/poison_cloud/4"
+   ],
+   "loop": false
+  },
+  "fx/portal": {
+   "fps": 16.0,
+   "frames": [
+    "fx/portal/0",
+    "fx/portal/1",
+    "fx/portal/2",
+    "fx/portal/3",
+    "fx/portal/4",
+    "fx/portal/5"
+   ],
+   "loop": true
+  },
+  "fx/shockwave": {
+   "fps": 16.0,
+   "frames": [
+    "fx/shockwave/0",
+    "fx/shockwave/1",
+    "fx/shockwave/2",
+    "fx/shockwave/3"
+   ],
+   "loop": false
+  },
+  "fx/smoke_puff": {
+   "fps": 16.0,
+   "frames": [
+    "fx/smoke_puff/0",
+    "fx/smoke_puff/1",
+    "fx/smoke_puff/2",
+    "fx/smoke_puff/3",
+    "fx/smoke_puff/4"
+   ],
+   "loop": false
+  },
+  "fx/teleport": {
+   "fps": 16.0,
+   "frames": [
+    "fx/teleport/0",
+    "fx/teleport/1",
+    "fx/teleport/2",
+    "fx/teleport/3"
+   ],
+   "loop": false
+  },
+  "proj/flame_puff": {
+   "fps": 16.0,
+   "frames": [
+    "proj/flame_puff/0",
+    "proj/flame_puff/1",
+    "proj/flame_puff/2",
+    "proj/flame_puff/3"
+   ],
+   "loop": true
+  },
+  "proj/saw": {
+   "fps": 16.0,
+   "frames": [
+    "proj/saw/0",
+    "proj/saw/1",
+    "proj/saw/2",
+    "proj/saw/3"
+   ],
+   "loop": true
+  },
+  "prop/crypt/torch": {
+   "fps": 8.0,
+   "frames": [
+    "prop/crypt/torch/0",
+    "prop/crypt/torch/1",
+    "prop/crypt/torch/2",
+    "prop/crypt/torch/3"
+   ],
+   "loop": true
+  },
+  "prop/foundry/torch": {
+   "fps": 8.0,
+   "frames": [
+    "prop/foundry/torch/0",
+    "prop/foundry/torch/1",
+    "prop/foundry/torch/2",
+    "prop/foundry/torch/3"
+   ],
+   "loop": true
+  },
+  "prop/keep/torch": {
+   "fps": 8.0,
+   "frames": [
+    "prop/keep/torch/0",
+    "prop/keep/torch/1",
+    "prop/keep/torch/2",
+    "prop/keep/torch/3"
+   ],
+   "loop": true
+  },
+  "prop/sanctum/torch": {
+   "fps": 8.0,
+   "frames": [
+    "prop/sanctum/torch/0",
+    "prop/sanctum/torch/1",
+    "prop/sanctum/torch/2",
+    "prop/sanctum/torch/3"
+   ],
+   "loop": true
+  },
+  "ui/crosshair": {
+   "fps": 3.0,
+   "frames": [
+    "ui/crosshair/0",
+    "ui/crosshair/1"
+   ],
+   "loop": true
+  }
+ },
+ "bosses": {
+  "clockwork_choir": {
+   "height": 56,
+   "width": 52
+  },
+  "colossus": {
+   "height": 56,
+   "width": 52
+  },
+  "hive_mother": {
+   "height": 52,
+   "width": 56
+  },
+  "void_sovereign": {
+   "height": 60,
+   "width": 56
+  }
+ },
+ "enemies": {
+  "blob_green": {
+   "groundY": 20,
+   "rig": "creature"
+  },
+  "blob_ice": {
+   "groundY": 22,
+   "rig": "creature"
+  },
+  "blob_red": {
+   "groundY": 18,
+   "rig": "creature"
+  },
+  "brigand": {
+   "groundY": 21,
+   "rig": "humanoid"
+  },
+  "crawler": {
+   "groundY": 16,
+   "rig": "creature"
+  },
+  "crawler_steel": {
+   "groundY": 16,
+   "rig": "creature"
+  },
+  "cultist": {
+   "groundY": 21,
+   "rig": "humanoid"
+  },
+  "gunner": {
+   "groundY": 21,
+   "rig": "humanoid"
+  },
+  "hexer": {
+   "groundY": 21,
+   "rig": "humanoid"
+  },
+  "imp": {
+   "groundY": 18,
+   "rig": "creature"
+  },
+  "marauder": {
+   "groundY": 21,
+   "rig": "humanoid"
+  },
+  "mothling": {
+   "groundY": 16,
+   "rig": "creature"
+  },
+  "mothling_ember": {
+   "groundY": 16,
+   "rig": "creature"
+  },
+  "sentry": {
+   "groundY": 20,
+   "rig": "creature"
+  },
+  "skelly": {
+   "groundY": 21,
+   "rig": "humanoid"
+  },
+  "turret": {
+   "groundY": 20,
+   "rig": "creature"
+  },
+  "warden": {
+   "groundY": 21,
+   "rig": "humanoid"
+  },
+  "watcher": {
+   "groundY": 20,
+   "rig": "creature"
+  },
+  "watcher_void": {
+   "groundY": 20,
+   "rig": "creature"
+  },
+  "zealot": {
+   "groundY": 21,
+   "rig": "humanoid"
+  }
+ },
+ "font": {
+  "baseline": 6,
+  "glyphs": {
+   "100": {
+    "advance": 5,
+    "sprite": "font/100"
+   },
+   "101": {
+    "advance": 5,
+    "sprite": "font/101"
+   },
+   "102": {
+    "advance": 4,
+    "sprite": "font/102"
+   },
+   "103": {
+    "advance": 5,
+    "sprite": "font/103"
+   },
+   "104": {
+    "advance": 5,
+    "sprite": "font/104"
+   },
+   "105": {
+    "advance": 4,
+    "sprite": "font/105"
+   },
+   "106": {
+    "advance": 4,
+    "sprite": "font/106"
+   },
+   "107": {
+    "advance": 4,
+    "sprite": "font/107"
+   },
+   "108": {
+    "advance": 4,
+    "sprite": "font/108"
+   },
+   "109": {
+    "advance": 5,
+    "sprite": "font/109"
+   },
+   "110": {
+    "advance": 5,
+    "sprite": "font/110"
+   },
+   "111": {
+    "advance": 5,
+    "sprite": "font/111"
+   },
+   "112": {
+    "advance": 5,
+    "sprite": "font/112"
+   },
+   "113": {
+    "advance": 5,
+    "sprite": "font/113"
+   },
+   "114": {
+    "advance": 4,
+    "sprite": "font/114"
+   },
+   "115": {
+    "advance": 5,
+    "sprite": "font/115"
+   },
+   "116": {
+    "advance": 4,
+    "sprite": "font/116"
+   },
+   "117": {
+    "advance": 5,
+    "sprite": "font/117"
+   },
+   "118": {
+    "advance": 5,
+    "sprite": "font/118"
+   },
+   "119": {
+    "advance": 5,
+    "sprite": "font/119"
+   },
+   "120": {
+    "advance": 5,
+    "sprite": "font/120"
+   },
+   "121": {
+    "advance": 5,
+    "sprite": "font/121"
+   },
+   "122": {
+    "advance": 5,
+    "sprite": "font/122"
+   },
+   "124": {
+    "advance": 3,
+    "sprite": "font/124"
+   },
+   "126": {
+    "advance": 5,
+    "sprite": "font/126"
+   },
+   "32": {
+    "advance": 3,
+    "sprite": "font/32"
+   },
+   "33": {
+    "advance": 3,
+    "sprite": "font/33"
+   },
+   "34": {
+    "advance": 4,
+    "sprite": "font/34"
+   },
+   "35": {
+    "advance": 5,
+    "sprite": "font/35"
+   },
+   "36": {
+    "advance": 5,
+    "sprite": "font/36"
+   },
+   "37": {
+    "advance": 5,
+    "sprite": "font/37"
+   },
+   "38": {
+    "advance": 5,
+    "sprite": "font/38"
+   },
+   "39": {
+    "advance": 3,
+    "sprite": "font/39"
+   },
+   "40": {
+    "advance": 4,
+    "sprite": "font/40"
+   },
+   "41": {
+    "advance": 4,
+    "sprite": "font/41"
+   },
+   "42": {
+    "advance": 5,
+    "sprite": "font/42"
+   },
+   "43": {
+    "advance": 5,
+    "sprite": "font/43"
+   },
+   "44": {
+    "advance": 3,
+    "sprite": "font/44"
+   },
+   "45": {
+    "advance": 5,
+    "sprite": "font/45"
+   },
+   "46": {
+    "advance": 3,
+    "sprite": "font/46"
+   },
+   "47": {
+    "advance": 5,
+    "sprite": "font/47"
+   },
+   "48": {
+    "advance": 5,
+    "sprite": "font/48"
+   },
+   "49": {
+    "advance": 4,
+    "sprite": "font/49"
+   },
+   "50": {
+    "advance": 5,
+    "sprite": "font/50"
+   },
+   "51": {
+    "advance": 5,
+    "sprite": "font/51"
+   },
+   "52": {
+    "advance": 5,
+    "sprite": "font/52"
+   },
+   "53": {
+    "advance": 5,
+    "sprite": "font/53"
+   },
+   "54": {
+    "advance": 5,
+    "sprite": "font/54"
+   },
+   "55": {
+    "advance": 5,
+    "sprite": "font/55"
+   },
+   "56": {
+    "advance": 5,
+    "sprite": "font/56"
+   },
+   "57": {
+    "advance": 5,
+    "sprite": "font/57"
+   },
+   "58": {
+    "advance": 3,
+    "sprite": "font/58"
+   },
+   "59": {
+    "advance": 3,
+    "sprite": "font/59"
+   },
+   "60": {
+    "advance": 4,
+    "sprite": "font/60"
+   },
+   "61": {
+    "advance": 5,
+    "sprite": "font/61"
+   },
+   "62": {
+    "advance": 4,
+    "sprite": "font/62"
+   },
+   "63": {
+    "advance": 5,
+    "sprite": "font/63"
+   },
+   "64": {
+    "advance": 5,
+    "sprite": "font/64"
+   },
+   "65": {
+    "advance": 5,
+    "sprite": "font/65"
+   },
+   "66": {
+    "advance": 5,
+    "sprite": "font/66"
+   },
+   "67": {
+    "advance": 5,
+    "sprite": "font/67"
+   },
+   "68": {
+    "advance": 5,
+    "sprite": "font/68"
+   },
+   "69": {
+    "advance": 5,
+    "sprite": "font/69"
+   },
+   "70": {
+    "advance": 5,
+    "sprite": "font/70"
+   },
+   "71": {
+    "advance": 5,
+    "sprite": "font/71"
+   },
+   "72": {
+    "advance": 5,
+    "sprite": "font/72"
+   },
+   "73": {
+    "advance": 5,
+    "sprite": "font/73"
+   },
+   "74": {
+    "advance": 5,
+    "sprite": "font/74"
+   },
+   "75": {
+    "advance": 5,
+    "sprite": "font/75"
+   },
+   "76": {
+    "advance": 5,
+    "sprite": "font/76"
+   },
+   "77": {
+    "advance": 5,
+    "sprite": "font/77"
+   },
+   "78": {
+    "advance": 5,
+    "sprite": "font/78"
+   },
+   "79": {
+    "advance": 5,
+    "sprite": "font/79"
+   },
+   "80": {
+    "advance": 5,
+    "sprite": "font/80"
+   },
+   "81": {
+    "advance": 5,
+    "sprite": "font/81"
+   },
+   "82": {
+    "advance": 5,
+    "sprite": "font/82"
+   },
+   "83": {
+    "advance": 5,
+    "sprite": "font/83"
+   },
+   "84": {
+    "advance": 5,
+    "sprite": "font/84"
+   },
+   "85": {
+    "advance": 5,
+    "sprite": "font/85"
+   },
+   "86": {
+    "advance": 5,
+    "sprite": "font/86"
+   },
+   "87": {
+    "advance": 5,
+    "sprite": "font/87"
+   },
+   "88": {
+    "advance": 5,
+    "sprite": "font/88"
+   },
+   "89": {
+    "advance": 5,
+    "sprite": "font/89"
+   },
+   "90": {
+    "advance": 5,
+    "sprite": "font/90"
+   },
+   "91": {
+    "advance": 4,
+    "sprite": "font/91"
+   },
+   "92": {
+    "advance": 5,
+    "sprite": "font/92"
+   },
+   "93": {
+    "advance": 3,
+    "sprite": "font/93"
+   },
+   "94": {
+    "advance": 5,
+    "sprite": "font/94"
+   },
+   "95": {
+    "advance": 5,
+    "sprite": "font/95"
+   },
+   "97": {
+    "advance": 5,
+    "sprite": "font/97"
+   },
+   "98": {
+    "advance": 5,
+    "sprite": "font/98"
+   },
+   "99": {
+    "advance": 4,
+    "sprite": "font/99"
+   }
+  },
+  "height": 8,
+  "tracking": 1
+ },
+ "generator": "pixelforge",
+ "pages": [
+  {
+   "file": "game0.png",
+   "height": 512,
+   "width": 2048
+  }
+ ],
+ "panels": {
+  "inset": 8,
+  "size": 24
+ },
+ "players": {
+  "beak": {
+   "frameHeight": 24,
+   "frameWidth": 20,
+   "groundY": 21,
+   "title": "The Beak"
+  },
+  "bulwark": {
+   "frameHeight": 24,
+   "frameWidth": 20,
+   "groundY": 21,
+   "title": "The Bulwark"
+  },
+  "hexe": {
+   "frameHeight": 24,
+   "frameWidth": 20,
+   "groundY": 21,
+   "title": "The Hexe"
+  },
+  "marshal": {
+   "frameHeight": 24,
+   "frameWidth": 20,
+   "groundY": 21,
+   "title": "The Marshal"
+  },
+  "stray": {
+   "frameHeight": 24,
+   "frameWidth": 20,
+   "groundY": 21,
+   "title": "The Stray"
+  },
+  "tinker": {
+   "frameHeight": 24,
+   "frameWidth": 20,
+   "groundY": 21,
+   "title": "The Tinker"
+  }
+ },
+ "sprites": {
+  "boss/clockwork_choir/0": {
+   "h": 56,
+   "page": 0,
+   "w": 52,
+   "x": 229,
+   "y": 1
+  },
+  "boss/clockwork_choir/1": {
+   "h": 56,
+   "page": 0,
+   "w": 52,
+   "x": 282,
+   "y": 1
+  },
+  "boss/clockwork_choir/2": {
+   "h": 56,
+   "page": 0,
+   "w": 52,
+   "x": 335,
+   "y": 1
+  },
+  "boss/clockwork_choir/3": {
+   "h": 56,
+   "page": 0,
+   "w": 52,
+   "x": 388,
+   "y": 1
+  },
+  "boss/colossus/0": {
+   "h": 56,
+   "page": 0,
+   "w": 52,
+   "x": 441,
+   "y": 1
+  },
+  "boss/colossus/1": {
+   "h": 56,
+   "page": 0,
+   "w": 52,
+   "x": 494,
+   "y": 1
+  },
+  "boss/colossus/2": {
+   "h": 56,
+   "page": 0,
+   "w": 52,
+   "x": 547,
+   "y": 1
+  },
+  "boss/colossus/3": {
+   "h": 56,
+   "page": 0,
+   "w": 52,
+   "x": 600,
+   "y": 1
+  },
+  "boss/hive_mother/0": {
+   "h": 52,
+   "page": 0,
+   "w": 56,
+   "x": 653,
+   "y": 1
+  },
+  "boss/hive_mother/1": {
+   "h": 52,
+   "page": 0,
+   "w": 56,
+   "x": 710,
+   "y": 1
+  },
+  "boss/hive_mother/2": {
+   "h": 52,
+   "page": 0,
+   "w": 56,
+   "x": 767,
+   "y": 1
+  },
+  "boss/hive_mother/3": {
+   "h": 52,
+   "page": 0,
+   "w": 56,
+   "x": 824,
+   "y": 1
+  },
+  "boss/void_sovereign/0": {
+   "h": 60,
+   "page": 0,
+   "w": 56,
+   "x": 1,
+   "y": 1
+  },
+  "boss/void_sovereign/1": {
+   "h": 60,
+   "page": 0,
+   "w": 56,
+   "x": 58,
+   "y": 1
+  },
+  "boss/void_sovereign/2": {
+   "h": 60,
+   "page": 0,
+   "w": 56,
+   "x": 115,
+   "y": 1
+  },
+  "boss/void_sovereign/3": {
+   "h": 60,
+   "page": 0,
+   "w": 56,
+   "x": 172,
+   "y": 1
+  },
+  "char/beak/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 730,
+   "y": 62
+  },
+  "char/beak/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 751,
+   "y": 62
+  },
+  "char/beak/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 772,
+   "y": 62
+  },
+  "char/beak/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 793,
+   "y": 62
+  },
+  "char/beak/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 814,
+   "y": 62
+  },
+  "char/beak/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 835,
+   "y": 62
+  },
+  "char/beak/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 856,
+   "y": 62
+  },
+  "char/beak/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 877,
+   "y": 62
+  },
+  "char/beak/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 898,
+   "y": 62
+  },
+  "char/beak/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 919,
+   "y": 62
+  },
+  "char/beak/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 940,
+   "y": 62
+  },
+  "char/beak/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 961,
+   "y": 62
+  },
+  "char/beak/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 982,
+   "y": 62
+  },
+  "char/beak/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1003,
+   "y": 62
+  },
+  "char/beak/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1024,
+   "y": 62
+  },
+  "char/beak/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1045,
+   "y": 62
+  },
+  "char/beak/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1066,
+   "y": 62
+  },
+  "char/beak/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1087,
+   "y": 62
+  },
+  "char/beak/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1108,
+   "y": 62
+  },
+  "char/beak/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1129,
+   "y": 62
+  },
+  "char/beak/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1150,
+   "y": 62
+  },
+  "char/beak/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1171,
+   "y": 62
+  },
+  "char/beak/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1192,
+   "y": 62
+  },
+  "char/beak/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1213,
+   "y": 62
+  },
+  "char/beak/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1234,
+   "y": 62
+  },
+  "char/beak/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1255,
+   "y": 62
+  },
+  "char/beak/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1276,
+   "y": 62
+  },
+  "char/beak/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1297,
+   "y": 62
+  },
+  "char/beak/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1318,
+   "y": 62
+  },
+  "char/beak/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1339,
+   "y": 62
+  },
+  "char/beak/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1360,
+   "y": 62
+  },
+  "char/beak/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1381,
+   "y": 62
+  },
+  "char/beak/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1402,
+   "y": 62
+  },
+  "char/beak/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1423,
+   "y": 62
+  },
+  "char/brigand/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1444,
+   "y": 62
+  },
+  "char/brigand/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1465,
+   "y": 62
+  },
+  "char/brigand/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1486,
+   "y": 62
+  },
+  "char/brigand/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1507,
+   "y": 62
+  },
+  "char/brigand/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1528,
+   "y": 62
+  },
+  "char/brigand/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1549,
+   "y": 62
+  },
+  "char/brigand/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1570,
+   "y": 62
+  },
+  "char/brigand/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1591,
+   "y": 62
+  },
+  "char/brigand/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1612,
+   "y": 62
+  },
+  "char/brigand/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1633,
+   "y": 62
+  },
+  "char/brigand/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1654,
+   "y": 62
+  },
+  "char/brigand/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1675,
+   "y": 62
+  },
+  "char/brigand/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1696,
+   "y": 62
+  },
+  "char/brigand/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1717,
+   "y": 62
+  },
+  "char/brigand/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1738,
+   "y": 62
+  },
+  "char/brigand/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1759,
+   "y": 62
+  },
+  "char/brigand/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1780,
+   "y": 62
+  },
+  "char/brigand/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1801,
+   "y": 62
+  },
+  "char/brigand/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1822,
+   "y": 62
+  },
+  "char/brigand/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1843,
+   "y": 62
+  },
+  "char/brigand/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1864,
+   "y": 62
+  },
+  "char/brigand/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1885,
+   "y": 62
+  },
+  "char/brigand/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1906,
+   "y": 62
+  },
+  "char/brigand/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1927,
+   "y": 62
+  },
+  "char/brigand/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1948,
+   "y": 62
+  },
+  "char/brigand/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1969,
+   "y": 62
+  },
+  "char/brigand/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1990,
+   "y": 62
+  },
+  "char/brigand/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 2011,
+   "y": 62
+  },
+  "char/brigand/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1,
+   "y": 89
+  },
+  "char/brigand/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 22,
+   "y": 89
+  },
+  "char/brigand/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 43,
+   "y": 89
+  },
+  "char/brigand/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 64,
+   "y": 89
+  },
+  "char/brigand/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 85,
+   "y": 89
+  },
+  "char/brigand/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 106,
+   "y": 89
+  },
+  "char/bulwark/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 127,
+   "y": 89
+  },
+  "char/bulwark/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 148,
+   "y": 89
+  },
+  "char/bulwark/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 169,
+   "y": 89
+  },
+  "char/bulwark/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 190,
+   "y": 89
+  },
+  "char/bulwark/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 211,
+   "y": 89
+  },
+  "char/bulwark/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 232,
+   "y": 89
+  },
+  "char/bulwark/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 253,
+   "y": 89
+  },
+  "char/bulwark/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 274,
+   "y": 89
+  },
+  "char/bulwark/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 295,
+   "y": 89
+  },
+  "char/bulwark/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 316,
+   "y": 89
+  },
+  "char/bulwark/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 337,
+   "y": 89
+  },
+  "char/bulwark/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 358,
+   "y": 89
+  },
+  "char/bulwark/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 379,
+   "y": 89
+  },
+  "char/bulwark/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 400,
+   "y": 89
+  },
+  "char/bulwark/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 421,
+   "y": 89
+  },
+  "char/bulwark/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 442,
+   "y": 89
+  },
+  "char/bulwark/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 463,
+   "y": 89
+  },
+  "char/bulwark/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 484,
+   "y": 89
+  },
+  "char/bulwark/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 505,
+   "y": 89
+  },
+  "char/bulwark/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 526,
+   "y": 89
+  },
+  "char/bulwark/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 547,
+   "y": 89
+  },
+  "char/bulwark/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 568,
+   "y": 89
+  },
+  "char/bulwark/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 589,
+   "y": 89
+  },
+  "char/bulwark/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 610,
+   "y": 89
+  },
+  "char/bulwark/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 631,
+   "y": 89
+  },
+  "char/bulwark/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 652,
+   "y": 89
+  },
+  "char/bulwark/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 673,
+   "y": 89
+  },
+  "char/bulwark/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 694,
+   "y": 89
+  },
+  "char/bulwark/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 715,
+   "y": 89
+  },
+  "char/bulwark/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 736,
+   "y": 89
+  },
+  "char/bulwark/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 757,
+   "y": 89
+  },
+  "char/bulwark/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 778,
+   "y": 89
+  },
+  "char/bulwark/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 799,
+   "y": 89
+  },
+  "char/bulwark/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 820,
+   "y": 89
+  },
+  "char/cultist/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 841,
+   "y": 89
+  },
+  "char/cultist/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 862,
+   "y": 89
+  },
+  "char/cultist/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 883,
+   "y": 89
+  },
+  "char/cultist/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 904,
+   "y": 89
+  },
+  "char/cultist/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 925,
+   "y": 89
+  },
+  "char/cultist/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 946,
+   "y": 89
+  },
+  "char/cultist/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 967,
+   "y": 89
+  },
+  "char/cultist/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 988,
+   "y": 89
+  },
+  "char/cultist/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1009,
+   "y": 89
+  },
+  "char/cultist/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1030,
+   "y": 89
+  },
+  "char/cultist/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1051,
+   "y": 89
+  },
+  "char/cultist/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1072,
+   "y": 89
+  },
+  "char/cultist/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1093,
+   "y": 89
+  },
+  "char/cultist/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1114,
+   "y": 89
+  },
+  "char/cultist/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1135,
+   "y": 89
+  },
+  "char/cultist/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1156,
+   "y": 89
+  },
+  "char/cultist/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1177,
+   "y": 89
+  },
+  "char/cultist/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1198,
+   "y": 89
+  },
+  "char/cultist/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1219,
+   "y": 89
+  },
+  "char/cultist/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1240,
+   "y": 89
+  },
+  "char/cultist/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1261,
+   "y": 89
+  },
+  "char/cultist/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1282,
+   "y": 89
+  },
+  "char/cultist/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1303,
+   "y": 89
+  },
+  "char/cultist/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1324,
+   "y": 89
+  },
+  "char/cultist/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1345,
+   "y": 89
+  },
+  "char/cultist/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1366,
+   "y": 89
+  },
+  "char/cultist/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1387,
+   "y": 89
+  },
+  "char/cultist/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1408,
+   "y": 89
+  },
+  "char/cultist/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1429,
+   "y": 89
+  },
+  "char/cultist/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1450,
+   "y": 89
+  },
+  "char/cultist/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1471,
+   "y": 89
+  },
+  "char/cultist/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1492,
+   "y": 89
+  },
+  "char/cultist/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1513,
+   "y": 89
+  },
+  "char/cultist/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1534,
+   "y": 89
+  },
+  "char/gunner/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1555,
+   "y": 89
+  },
+  "char/gunner/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1576,
+   "y": 89
+  },
+  "char/gunner/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1597,
+   "y": 89
+  },
+  "char/gunner/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1618,
+   "y": 89
+  },
+  "char/gunner/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1639,
+   "y": 89
+  },
+  "char/gunner/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1660,
+   "y": 89
+  },
+  "char/gunner/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1681,
+   "y": 89
+  },
+  "char/gunner/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1702,
+   "y": 89
+  },
+  "char/gunner/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1723,
+   "y": 89
+  },
+  "char/gunner/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1744,
+   "y": 89
+  },
+  "char/gunner/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1765,
+   "y": 89
+  },
+  "char/gunner/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1786,
+   "y": 89
+  },
+  "char/gunner/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1807,
+   "y": 89
+  },
+  "char/gunner/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1828,
+   "y": 89
+  },
+  "char/gunner/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1849,
+   "y": 89
+  },
+  "char/gunner/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1870,
+   "y": 89
+  },
+  "char/gunner/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1891,
+   "y": 89
+  },
+  "char/gunner/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1912,
+   "y": 89
+  },
+  "char/gunner/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1933,
+   "y": 89
+  },
+  "char/gunner/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1954,
+   "y": 89
+  },
+  "char/gunner/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1975,
+   "y": 89
+  },
+  "char/gunner/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1996,
+   "y": 89
+  },
+  "char/gunner/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 2017,
+   "y": 89
+  },
+  "char/gunner/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1,
+   "y": 114
+  },
+  "char/gunner/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 22,
+   "y": 114
+  },
+  "char/gunner/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 43,
+   "y": 114
+  },
+  "char/gunner/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 64,
+   "y": 114
+  },
+  "char/gunner/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 85,
+   "y": 114
+  },
+  "char/gunner/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 106,
+   "y": 114
+  },
+  "char/gunner/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 127,
+   "y": 114
+  },
+  "char/gunner/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 148,
+   "y": 114
+  },
+  "char/gunner/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 169,
+   "y": 114
+  },
+  "char/gunner/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 190,
+   "y": 114
+  },
+  "char/gunner/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 211,
+   "y": 114
+  },
+  "char/hexe/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 232,
+   "y": 114
+  },
+  "char/hexe/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 253,
+   "y": 114
+  },
+  "char/hexe/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 274,
+   "y": 114
+  },
+  "char/hexe/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 295,
+   "y": 114
+  },
+  "char/hexe/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 316,
+   "y": 114
+  },
+  "char/hexe/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 337,
+   "y": 114
+  },
+  "char/hexe/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 358,
+   "y": 114
+  },
+  "char/hexe/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 379,
+   "y": 114
+  },
+  "char/hexe/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 400,
+   "y": 114
+  },
+  "char/hexe/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 421,
+   "y": 114
+  },
+  "char/hexe/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 442,
+   "y": 114
+  },
+  "char/hexe/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 463,
+   "y": 114
+  },
+  "char/hexe/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 484,
+   "y": 114
+  },
+  "char/hexe/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 505,
+   "y": 114
+  },
+  "char/hexe/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 526,
+   "y": 114
+  },
+  "char/hexe/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 547,
+   "y": 114
+  },
+  "char/hexe/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 568,
+   "y": 114
+  },
+  "char/hexe/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 589,
+   "y": 114
+  },
+  "char/hexe/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 610,
+   "y": 114
+  },
+  "char/hexe/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 631,
+   "y": 114
+  },
+  "char/hexe/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 652,
+   "y": 114
+  },
+  "char/hexe/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 673,
+   "y": 114
+  },
+  "char/hexe/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 694,
+   "y": 114
+  },
+  "char/hexe/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 715,
+   "y": 114
+  },
+  "char/hexe/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 736,
+   "y": 114
+  },
+  "char/hexe/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 757,
+   "y": 114
+  },
+  "char/hexe/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 778,
+   "y": 114
+  },
+  "char/hexe/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 799,
+   "y": 114
+  },
+  "char/hexe/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 820,
+   "y": 114
+  },
+  "char/hexe/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 841,
+   "y": 114
+  },
+  "char/hexe/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 862,
+   "y": 114
+  },
+  "char/hexe/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 883,
+   "y": 114
+  },
+  "char/hexe/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 904,
+   "y": 114
+  },
+  "char/hexe/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 925,
+   "y": 114
+  },
+  "char/hexer/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 946,
+   "y": 114
+  },
+  "char/hexer/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 967,
+   "y": 114
+  },
+  "char/hexer/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 988,
+   "y": 114
+  },
+  "char/hexer/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1009,
+   "y": 114
+  },
+  "char/hexer/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1030,
+   "y": 114
+  },
+  "char/hexer/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1051,
+   "y": 114
+  },
+  "char/hexer/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1072,
+   "y": 114
+  },
+  "char/hexer/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1093,
+   "y": 114
+  },
+  "char/hexer/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1114,
+   "y": 114
+  },
+  "char/hexer/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1135,
+   "y": 114
+  },
+  "char/hexer/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1156,
+   "y": 114
+  },
+  "char/hexer/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1177,
+   "y": 114
+  },
+  "char/hexer/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1198,
+   "y": 114
+  },
+  "char/hexer/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1219,
+   "y": 114
+  },
+  "char/hexer/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1240,
+   "y": 114
+  },
+  "char/hexer/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1261,
+   "y": 114
+  },
+  "char/hexer/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1282,
+   "y": 114
+  },
+  "char/hexer/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1303,
+   "y": 114
+  },
+  "char/hexer/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1324,
+   "y": 114
+  },
+  "char/hexer/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1345,
+   "y": 114
+  },
+  "char/hexer/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1366,
+   "y": 114
+  },
+  "char/hexer/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1387,
+   "y": 114
+  },
+  "char/hexer/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1408,
+   "y": 114
+  },
+  "char/hexer/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1429,
+   "y": 114
+  },
+  "char/hexer/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1450,
+   "y": 114
+  },
+  "char/hexer/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1471,
+   "y": 114
+  },
+  "char/hexer/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1492,
+   "y": 114
+  },
+  "char/hexer/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1513,
+   "y": 114
+  },
+  "char/hexer/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1534,
+   "y": 114
+  },
+  "char/hexer/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1555,
+   "y": 114
+  },
+  "char/hexer/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1576,
+   "y": 114
+  },
+  "char/hexer/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1597,
+   "y": 114
+  },
+  "char/hexer/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1618,
+   "y": 114
+  },
+  "char/hexer/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1639,
+   "y": 114
+  },
+  "char/marauder/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1660,
+   "y": 114
+  },
+  "char/marauder/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1681,
+   "y": 114
+  },
+  "char/marauder/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1702,
+   "y": 114
+  },
+  "char/marauder/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1723,
+   "y": 114
+  },
+  "char/marauder/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1744,
+   "y": 114
+  },
+  "char/marauder/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1765,
+   "y": 114
+  },
+  "char/marauder/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1786,
+   "y": 114
+  },
+  "char/marauder/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1807,
+   "y": 114
+  },
+  "char/marauder/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1828,
+   "y": 114
+  },
+  "char/marauder/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1849,
+   "y": 114
+  },
+  "char/marauder/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1870,
+   "y": 114
+  },
+  "char/marauder/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1891,
+   "y": 114
+  },
+  "char/marauder/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1912,
+   "y": 114
+  },
+  "char/marauder/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1933,
+   "y": 114
+  },
+  "char/marauder/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1954,
+   "y": 114
+  },
+  "char/marauder/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1975,
+   "y": 114
+  },
+  "char/marauder/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1996,
+   "y": 114
+  },
+  "char/marauder/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 2017,
+   "y": 114
+  },
+  "char/marauder/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1,
+   "y": 139
+  },
+  "char/marauder/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 22,
+   "y": 139
+  },
+  "char/marauder/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 43,
+   "y": 139
+  },
+  "char/marauder/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 64,
+   "y": 139
+  },
+  "char/marauder/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 85,
+   "y": 139
+  },
+  "char/marauder/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 106,
+   "y": 139
+  },
+  "char/marauder/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 127,
+   "y": 139
+  },
+  "char/marauder/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 148,
+   "y": 139
+  },
+  "char/marauder/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 169,
+   "y": 139
+  },
+  "char/marauder/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 190,
+   "y": 139
+  },
+  "char/marauder/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 211,
+   "y": 139
+  },
+  "char/marauder/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 232,
+   "y": 139
+  },
+  "char/marauder/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 253,
+   "y": 139
+  },
+  "char/marauder/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 274,
+   "y": 139
+  },
+  "char/marauder/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 295,
+   "y": 139
+  },
+  "char/marauder/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 316,
+   "y": 139
+  },
+  "char/marshal/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 337,
+   "y": 139
+  },
+  "char/marshal/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 358,
+   "y": 139
+  },
+  "char/marshal/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 379,
+   "y": 139
+  },
+  "char/marshal/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 400,
+   "y": 139
+  },
+  "char/marshal/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 421,
+   "y": 139
+  },
+  "char/marshal/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 442,
+   "y": 139
+  },
+  "char/marshal/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 463,
+   "y": 139
+  },
+  "char/marshal/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 484,
+   "y": 139
+  },
+  "char/marshal/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 505,
+   "y": 139
+  },
+  "char/marshal/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 526,
+   "y": 139
+  },
+  "char/marshal/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 547,
+   "y": 139
+  },
+  "char/marshal/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 568,
+   "y": 139
+  },
+  "char/marshal/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 589,
+   "y": 139
+  },
+  "char/marshal/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 610,
+   "y": 139
+  },
+  "char/marshal/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 631,
+   "y": 139
+  },
+  "char/marshal/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 652,
+   "y": 139
+  },
+  "char/marshal/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 673,
+   "y": 139
+  },
+  "char/marshal/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 694,
+   "y": 139
+  },
+  "char/marshal/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 715,
+   "y": 139
+  },
+  "char/marshal/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 736,
+   "y": 139
+  },
+  "char/marshal/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 757,
+   "y": 139
+  },
+  "char/marshal/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 778,
+   "y": 139
+  },
+  "char/marshal/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 799,
+   "y": 139
+  },
+  "char/marshal/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 820,
+   "y": 139
+  },
+  "char/marshal/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 841,
+   "y": 139
+  },
+  "char/marshal/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 862,
+   "y": 139
+  },
+  "char/marshal/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 883,
+   "y": 139
+  },
+  "char/marshal/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 904,
+   "y": 139
+  },
+  "char/marshal/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 925,
+   "y": 139
+  },
+  "char/marshal/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 946,
+   "y": 139
+  },
+  "char/marshal/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 967,
+   "y": 139
+  },
+  "char/marshal/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 988,
+   "y": 139
+  },
+  "char/marshal/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1009,
+   "y": 139
+  },
+  "char/marshal/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1030,
+   "y": 139
+  },
+  "char/skelly/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1051,
+   "y": 139
+  },
+  "char/skelly/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1072,
+   "y": 139
+  },
+  "char/skelly/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1093,
+   "y": 139
+  },
+  "char/skelly/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1114,
+   "y": 139
+  },
+  "char/skelly/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1135,
+   "y": 139
+  },
+  "char/skelly/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1156,
+   "y": 139
+  },
+  "char/skelly/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1177,
+   "y": 139
+  },
+  "char/skelly/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1198,
+   "y": 139
+  },
+  "char/skelly/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1219,
+   "y": 139
+  },
+  "char/skelly/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1240,
+   "y": 139
+  },
+  "char/skelly/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1261,
+   "y": 139
+  },
+  "char/skelly/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1282,
+   "y": 139
+  },
+  "char/skelly/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1303,
+   "y": 139
+  },
+  "char/skelly/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1324,
+   "y": 139
+  },
+  "char/skelly/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1345,
+   "y": 139
+  },
+  "char/skelly/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1366,
+   "y": 139
+  },
+  "char/skelly/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1387,
+   "y": 139
+  },
+  "char/skelly/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1408,
+   "y": 139
+  },
+  "char/skelly/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1429,
+   "y": 139
+  },
+  "char/skelly/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1450,
+   "y": 139
+  },
+  "char/skelly/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1471,
+   "y": 139
+  },
+  "char/skelly/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1492,
+   "y": 139
+  },
+  "char/skelly/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1513,
+   "y": 139
+  },
+  "char/skelly/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1534,
+   "y": 139
+  },
+  "char/skelly/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1555,
+   "y": 139
+  },
+  "char/skelly/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1576,
+   "y": 139
+  },
+  "char/skelly/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1597,
+   "y": 139
+  },
+  "char/skelly/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1618,
+   "y": 139
+  },
+  "char/skelly/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1639,
+   "y": 139
+  },
+  "char/skelly/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1660,
+   "y": 139
+  },
+  "char/skelly/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1681,
+   "y": 139
+  },
+  "char/skelly/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1702,
+   "y": 139
+  },
+  "char/skelly/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1723,
+   "y": 139
+  },
+  "char/skelly/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1744,
+   "y": 139
+  },
+  "char/stray/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1765,
+   "y": 139
+  },
+  "char/stray/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1786,
+   "y": 139
+  },
+  "char/stray/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1807,
+   "y": 139
+  },
+  "char/stray/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1828,
+   "y": 139
+  },
+  "char/stray/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1849,
+   "y": 139
+  },
+  "char/stray/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1870,
+   "y": 139
+  },
+  "char/stray/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1891,
+   "y": 139
+  },
+  "char/stray/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1912,
+   "y": 139
+  },
+  "char/stray/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1933,
+   "y": 139
+  },
+  "char/stray/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1954,
+   "y": 139
+  },
+  "char/stray/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1975,
+   "y": 139
+  },
+  "char/stray/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1996,
+   "y": 139
+  },
+  "char/stray/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 2017,
+   "y": 139
+  },
+  "char/stray/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1,
+   "y": 164
+  },
+  "char/stray/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 22,
+   "y": 164
+  },
+  "char/stray/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 43,
+   "y": 164
+  },
+  "char/stray/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 64,
+   "y": 164
+  },
+  "char/stray/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 85,
+   "y": 164
+  },
+  "char/stray/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 106,
+   "y": 164
+  },
+  "char/stray/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 127,
+   "y": 164
+  },
+  "char/stray/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 148,
+   "y": 164
+  },
+  "char/stray/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 169,
+   "y": 164
+  },
+  "char/stray/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 190,
+   "y": 164
+  },
+  "char/stray/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 211,
+   "y": 164
+  },
+  "char/stray/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 232,
+   "y": 164
+  },
+  "char/stray/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 253,
+   "y": 164
+  },
+  "char/stray/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 274,
+   "y": 164
+  },
+  "char/stray/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 295,
+   "y": 164
+  },
+  "char/stray/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 316,
+   "y": 164
+  },
+  "char/stray/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 337,
+   "y": 164
+  },
+  "char/stray/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 358,
+   "y": 164
+  },
+  "char/stray/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 379,
+   "y": 164
+  },
+  "char/stray/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 400,
+   "y": 164
+  },
+  "char/stray/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 421,
+   "y": 164
+  },
+  "char/tinker/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 442,
+   "y": 164
+  },
+  "char/tinker/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 463,
+   "y": 164
+  },
+  "char/tinker/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 484,
+   "y": 164
+  },
+  "char/tinker/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 505,
+   "y": 164
+  },
+  "char/tinker/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 526,
+   "y": 164
+  },
+  "char/tinker/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 547,
+   "y": 164
+  },
+  "char/tinker/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 568,
+   "y": 164
+  },
+  "char/tinker/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 589,
+   "y": 164
+  },
+  "char/tinker/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 610,
+   "y": 164
+  },
+  "char/tinker/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 631,
+   "y": 164
+  },
+  "char/tinker/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 652,
+   "y": 164
+  },
+  "char/tinker/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 673,
+   "y": 164
+  },
+  "char/tinker/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 694,
+   "y": 164
+  },
+  "char/tinker/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 715,
+   "y": 164
+  },
+  "char/tinker/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 736,
+   "y": 164
+  },
+  "char/tinker/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 757,
+   "y": 164
+  },
+  "char/tinker/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 778,
+   "y": 164
+  },
+  "char/tinker/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 799,
+   "y": 164
+  },
+  "char/tinker/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 820,
+   "y": 164
+  },
+  "char/tinker/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 841,
+   "y": 164
+  },
+  "char/tinker/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 862,
+   "y": 164
+  },
+  "char/tinker/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 883,
+   "y": 164
+  },
+  "char/tinker/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 904,
+   "y": 164
+  },
+  "char/tinker/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 925,
+   "y": 164
+  },
+  "char/tinker/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 946,
+   "y": 164
+  },
+  "char/tinker/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 967,
+   "y": 164
+  },
+  "char/tinker/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 988,
+   "y": 164
+  },
+  "char/tinker/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1009,
+   "y": 164
+  },
+  "char/tinker/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1030,
+   "y": 164
+  },
+  "char/tinker/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1051,
+   "y": 164
+  },
+  "char/tinker/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1072,
+   "y": 164
+  },
+  "char/tinker/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1093,
+   "y": 164
+  },
+  "char/tinker/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1114,
+   "y": 164
+  },
+  "char/tinker/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1135,
+   "y": 164
+  },
+  "char/warden/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1156,
+   "y": 164
+  },
+  "char/warden/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1177,
+   "y": 164
+  },
+  "char/warden/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1198,
+   "y": 164
+  },
+  "char/warden/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1219,
+   "y": 164
+  },
+  "char/warden/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1240,
+   "y": 164
+  },
+  "char/warden/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1261,
+   "y": 164
+  },
+  "char/warden/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1282,
+   "y": 164
+  },
+  "char/warden/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1303,
+   "y": 164
+  },
+  "char/warden/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1324,
+   "y": 164
+  },
+  "char/warden/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1345,
+   "y": 164
+  },
+  "char/warden/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1366,
+   "y": 164
+  },
+  "char/warden/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1387,
+   "y": 164
+  },
+  "char/warden/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1408,
+   "y": 164
+  },
+  "char/warden/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1429,
+   "y": 164
+  },
+  "char/warden/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1450,
+   "y": 164
+  },
+  "char/warden/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1471,
+   "y": 164
+  },
+  "char/warden/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1492,
+   "y": 164
+  },
+  "char/warden/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1513,
+   "y": 164
+  },
+  "char/warden/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1534,
+   "y": 164
+  },
+  "char/warden/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1555,
+   "y": 164
+  },
+  "char/warden/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1576,
+   "y": 164
+  },
+  "char/warden/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1597,
+   "y": 164
+  },
+  "char/warden/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1618,
+   "y": 164
+  },
+  "char/warden/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1639,
+   "y": 164
+  },
+  "char/warden/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1660,
+   "y": 164
+  },
+  "char/warden/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1681,
+   "y": 164
+  },
+  "char/warden/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1702,
+   "y": 164
+  },
+  "char/warden/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1723,
+   "y": 164
+  },
+  "char/warden/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1744,
+   "y": 164
+  },
+  "char/warden/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1765,
+   "y": 164
+  },
+  "char/warden/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1786,
+   "y": 164
+  },
+  "char/warden/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1807,
+   "y": 164
+  },
+  "char/warden/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1828,
+   "y": 164
+  },
+  "char/warden/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1849,
+   "y": 164
+  },
+  "char/zealot/die/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1870,
+   "y": 164
+  },
+  "char/zealot/die/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1891,
+   "y": 164
+  },
+  "char/zealot/die/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1912,
+   "y": 164
+  },
+  "char/zealot/die/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1933,
+   "y": 164
+  },
+  "char/zealot/hurt/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1954,
+   "y": 164
+  },
+  "char/zealot/idle_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1975,
+   "y": 164
+  },
+  "char/zealot/idle_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1996,
+   "y": 164
+  },
+  "char/zealot/idle_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 2017,
+   "y": 164
+  },
+  "char/zealot/idle_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 1,
+   "y": 189
+  },
+  "char/zealot/idle_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 22,
+   "y": 189
+  },
+  "char/zealot/idle_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 43,
+   "y": 189
+  },
+  "char/zealot/roll/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 64,
+   "y": 189
+  },
+  "char/zealot/roll/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 85,
+   "y": 189
+  },
+  "char/zealot/roll/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 106,
+   "y": 189
+  },
+  "char/zealot/roll/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 127,
+   "y": 189
+  },
+  "char/zealot/roll/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 148,
+   "y": 189
+  },
+  "char/zealot/walk_back/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 169,
+   "y": 189
+  },
+  "char/zealot/walk_back/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 190,
+   "y": 189
+  },
+  "char/zealot/walk_back/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 211,
+   "y": 189
+  },
+  "char/zealot/walk_back/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 232,
+   "y": 189
+  },
+  "char/zealot/walk_back/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 253,
+   "y": 189
+  },
+  "char/zealot/walk_back/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 274,
+   "y": 189
+  },
+  "char/zealot/walk_front/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 295,
+   "y": 189
+  },
+  "char/zealot/walk_front/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 316,
+   "y": 189
+  },
+  "char/zealot/walk_front/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 337,
+   "y": 189
+  },
+  "char/zealot/walk_front/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 358,
+   "y": 189
+  },
+  "char/zealot/walk_front/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 379,
+   "y": 189
+  },
+  "char/zealot/walk_front/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 400,
+   "y": 189
+  },
+  "char/zealot/walk_side/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 421,
+   "y": 189
+  },
+  "char/zealot/walk_side/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 442,
+   "y": 189
+  },
+  "char/zealot/walk_side/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 463,
+   "y": 189
+  },
+  "char/zealot/walk_side/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 484,
+   "y": 189
+  },
+  "char/zealot/walk_side/4": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 505,
+   "y": 189
+  },
+  "char/zealot/walk_side/5": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 526,
+   "y": 189
+  },
+  "enemy/blob_green/0": {
+   "h": 22,
+   "page": 0,
+   "w": 22,
+   "x": 788,
+   "y": 189
+  },
+  "enemy/blob_green/1": {
+   "h": 22,
+   "page": 0,
+   "w": 22,
+   "x": 811,
+   "y": 189
+  },
+  "enemy/blob_green/2": {
+   "h": 22,
+   "page": 0,
+   "w": 22,
+   "x": 834,
+   "y": 189
+  },
+  "enemy/blob_green/3": {
+   "h": 22,
+   "page": 0,
+   "w": 22,
+   "x": 857,
+   "y": 189
+  },
+  "enemy/blob_green/4": {
+   "h": 22,
+   "page": 0,
+   "w": 22,
+   "x": 880,
+   "y": 189
+  },
+  "enemy/blob_green/5": {
+   "h": 22,
+   "page": 0,
+   "w": 22,
+   "x": 903,
+   "y": 189
+  },
+  "enemy/blob_ice/0": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 355,
+   "y": 62
+  },
+  "enemy/blob_ice/1": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 380,
+   "y": 62
+  },
+  "enemy/blob_ice/2": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 405,
+   "y": 62
+  },
+  "enemy/blob_ice/3": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 430,
+   "y": 62
+  },
+  "enemy/blob_ice/4": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 455,
+   "y": 62
+  },
+  "enemy/blob_ice/5": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 480,
+   "y": 62
+  },
+  "enemy/blob_red/0": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1660,
+   "y": 189
+  },
+  "enemy/blob_red/1": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1681,
+   "y": 189
+  },
+  "enemy/blob_red/2": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1702,
+   "y": 189
+  },
+  "enemy/blob_red/3": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1723,
+   "y": 189
+  },
+  "enemy/blob_red/4": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1744,
+   "y": 189
+  },
+  "enemy/blob_red/5": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1765,
+   "y": 189
+  },
+  "enemy/crawler/0": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 769,
+   "y": 214
+  },
+  "enemy/crawler/1": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 792,
+   "y": 214
+  },
+  "enemy/crawler/2": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 815,
+   "y": 214
+  },
+  "enemy/crawler/3": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 838,
+   "y": 214
+  },
+  "enemy/crawler_steel/0": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 861,
+   "y": 214
+  },
+  "enemy/crawler_steel/1": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 884,
+   "y": 214
+  },
+  "enemy/crawler_steel/2": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 907,
+   "y": 214
+  },
+  "enemy/crawler_steel/3": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 930,
+   "y": 214
+  },
+  "enemy/imp/0": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1786,
+   "y": 189
+  },
+  "enemy/imp/1": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1807,
+   "y": 189
+  },
+  "enemy/imp/2": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1828,
+   "y": 189
+  },
+  "enemy/imp/3": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1849,
+   "y": 189
+  },
+  "enemy/mothling/0": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 953,
+   "y": 214
+  },
+  "enemy/mothling/1": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 976,
+   "y": 214
+  },
+  "enemy/mothling/2": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 999,
+   "y": 214
+  },
+  "enemy/mothling/3": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 1022,
+   "y": 214
+  },
+  "enemy/mothling_ember/0": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 1045,
+   "y": 214
+  },
+  "enemy/mothling_ember/1": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 1068,
+   "y": 214
+  },
+  "enemy/mothling_ember/2": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 1091,
+   "y": 214
+  },
+  "enemy/mothling_ember/3": {
+   "h": 18,
+   "page": 0,
+   "w": 22,
+   "x": 1114,
+   "y": 214
+  },
+  "enemy/sentry/0": {
+   "h": 22,
+   "page": 0,
+   "w": 22,
+   "x": 926,
+   "y": 189
+  },
+  "enemy/sentry/1": {
+   "h": 22,
+   "page": 0,
+   "w": 22,
+   "x": 949,
+   "y": 189
+  },
+  "enemy/sentry/2": {
+   "h": 22,
+   "page": 0,
+   "w": 22,
+   "x": 972,
+   "y": 189
+  },
+  "enemy/sentry/3": {
+   "h": 22,
+   "page": 0,
+   "w": 22,
+   "x": 995,
+   "y": 189
+  },
+  "enemy/turret/0": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1064,
+   "y": 189
+  },
+  "enemy/turret/1": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1085,
+   "y": 189
+  },
+  "enemy/turret/2": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1106,
+   "y": 189
+  },
+  "enemy/turret/3": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1127,
+   "y": 189
+  },
+  "enemy/watcher/0": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1148,
+   "y": 189
+  },
+  "enemy/watcher/1": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1169,
+   "y": 189
+  },
+  "enemy/watcher/2": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1190,
+   "y": 189
+  },
+  "enemy/watcher/3": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1211,
+   "y": 189
+  },
+  "enemy/watcher/4": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1232,
+   "y": 189
+  },
+  "enemy/watcher/5": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1253,
+   "y": 189
+  },
+  "enemy/watcher_void/0": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1274,
+   "y": 189
+  },
+  "enemy/watcher_void/1": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1295,
+   "y": 189
+  },
+  "enemy/watcher_void/2": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1316,
+   "y": 189
+  },
+  "enemy/watcher_void/3": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1337,
+   "y": 189
+  },
+  "enemy/watcher_void/4": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1358,
+   "y": 189
+  },
+  "enemy/watcher_void/5": {
+   "h": 22,
+   "page": 0,
+   "w": 20,
+   "x": 1379,
+   "y": 189
+  },
+  "font/100": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 394,
+   "y": 271
+  },
+  "font/101": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 400,
+   "y": 271
+  },
+  "font/102": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 406,
+   "y": 271
+  },
+  "font/103": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 412,
+   "y": 271
+  },
+  "font/104": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 418,
+   "y": 271
+  },
+  "font/105": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 424,
+   "y": 271
+  },
+  "font/106": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 430,
+   "y": 271
+  },
+  "font/107": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 436,
+   "y": 271
+  },
+  "font/108": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 442,
+   "y": 271
+  },
+  "font/109": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 448,
+   "y": 271
+  },
+  "font/110": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 454,
+   "y": 271
+  },
+  "font/111": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 460,
+   "y": 271
+  },
+  "font/112": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 466,
+   "y": 271
+  },
+  "font/113": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 472,
+   "y": 271
+  },
+  "font/114": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 478,
+   "y": 271
+  },
+  "font/115": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 484,
+   "y": 271
+  },
+  "font/116": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 490,
+   "y": 271
+  },
+  "font/117": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 496,
+   "y": 271
+  },
+  "font/118": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 502,
+   "y": 271
+  },
+  "font/119": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 508,
+   "y": 271
+  },
+  "font/120": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 514,
+   "y": 271
+  },
+  "font/121": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 520,
+   "y": 271
+  },
+  "font/122": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 526,
+   "y": 271
+  },
+  "font/124": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 532,
+   "y": 271
+  },
+  "font/126": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 538,
+   "y": 271
+  },
+  "font/32": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 544,
+   "y": 271
+  },
+  "font/33": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 550,
+   "y": 271
+  },
+  "font/34": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 556,
+   "y": 271
+  },
+  "font/35": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 562,
+   "y": 271
+  },
+  "font/36": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 568,
+   "y": 271
+  },
+  "font/37": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 574,
+   "y": 271
+  },
+  "font/38": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 580,
+   "y": 271
+  },
+  "font/39": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 586,
+   "y": 271
+  },
+  "font/40": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 592,
+   "y": 271
+  },
+  "font/41": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 598,
+   "y": 271
+  },
+  "font/42": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 604,
+   "y": 271
+  },
+  "font/43": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 610,
+   "y": 271
+  },
+  "font/44": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 616,
+   "y": 271
+  },
+  "font/45": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 622,
+   "y": 271
+  },
+  "font/46": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 628,
+   "y": 271
+  },
+  "font/47": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 634,
+   "y": 271
+  },
+  "font/48": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 640,
+   "y": 271
+  },
+  "font/49": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 646,
+   "y": 271
+  },
+  "font/50": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 652,
+   "y": 271
+  },
+  "font/51": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 658,
+   "y": 271
+  },
+  "font/52": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 664,
+   "y": 271
+  },
+  "font/53": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 670,
+   "y": 271
+  },
+  "font/54": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 676,
+   "y": 271
+  },
+  "font/55": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 682,
+   "y": 271
+  },
+  "font/56": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 688,
+   "y": 271
+  },
+  "font/57": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 694,
+   "y": 271
+  },
+  "font/58": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 700,
+   "y": 271
+  },
+  "font/59": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 706,
+   "y": 271
+  },
+  "font/60": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 712,
+   "y": 271
+  },
+  "font/61": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 718,
+   "y": 271
+  },
+  "font/62": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 724,
+   "y": 271
+  },
+  "font/63": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 730,
+   "y": 271
+  },
+  "font/64": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 736,
+   "y": 271
+  },
+  "font/65": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 742,
+   "y": 271
+  },
+  "font/66": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 748,
+   "y": 271
+  },
+  "font/67": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 754,
+   "y": 271
+  },
+  "font/68": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 760,
+   "y": 271
+  },
+  "font/69": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 766,
+   "y": 271
+  },
+  "font/70": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 772,
+   "y": 271
+  },
+  "font/71": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 778,
+   "y": 271
+  },
+  "font/72": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 784,
+   "y": 271
+  },
+  "font/73": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 790,
+   "y": 271
+  },
+  "font/74": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 796,
+   "y": 271
+  },
+  "font/75": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 802,
+   "y": 271
+  },
+  "font/76": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 808,
+   "y": 271
+  },
+  "font/77": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 814,
+   "y": 271
+  },
+  "font/78": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 820,
+   "y": 271
+  },
+  "font/79": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 826,
+   "y": 271
+  },
+  "font/80": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 832,
+   "y": 271
+  },
+  "font/81": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 838,
+   "y": 271
+  },
+  "font/82": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 844,
+   "y": 271
+  },
+  "font/83": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 850,
+   "y": 271
+  },
+  "font/84": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 856,
+   "y": 271
+  },
+  "font/85": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 862,
+   "y": 271
+  },
+  "font/86": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 868,
+   "y": 271
+  },
+  "font/87": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 874,
+   "y": 271
+  },
+  "font/88": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 880,
+   "y": 271
+  },
+  "font/89": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 886,
+   "y": 271
+  },
+  "font/90": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 892,
+   "y": 271
+  },
+  "font/91": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 898,
+   "y": 271
+  },
+  "font/92": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 904,
+   "y": 271
+  },
+  "font/93": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 910,
+   "y": 271
+  },
+  "font/94": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 916,
+   "y": 271
+  },
+  "font/95": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 922,
+   "y": 271
+  },
+  "font/97": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 928,
+   "y": 271
+  },
+  "font/98": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 934,
+   "y": 271
+  },
+  "font/99": {
+   "h": 8,
+   "page": 0,
+   "w": 5,
+   "x": 940,
+   "y": 271
+  },
+  "fx/blood_splat/0": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1870,
+   "y": 189
+  },
+  "fx/blood_splat/1": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1891,
+   "y": 189
+  },
+  "fx/blood_splat/2": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1912,
+   "y": 189
+  },
+  "fx/blood_splat/3": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1933,
+   "y": 189
+  },
+  "fx/dust_ring/0": {
+   "h": 14,
+   "page": 0,
+   "w": 28,
+   "x": 1472,
+   "y": 254
+  },
+  "fx/dust_ring/1": {
+   "h": 14,
+   "page": 0,
+   "w": 28,
+   "x": 1501,
+   "y": 254
+  },
+  "fx/dust_ring/2": {
+   "h": 14,
+   "page": 0,
+   "w": 28,
+   "x": 1530,
+   "y": 254
+  },
+  "fx/dust_ring/3": {
+   "h": 14,
+   "page": 0,
+   "w": 28,
+   "x": 1559,
+   "y": 254
+  },
+  "fx/explosion/0": {
+   "h": 40,
+   "page": 0,
+   "w": 40,
+   "x": 1042,
+   "y": 1
+  },
+  "fx/explosion/1": {
+   "h": 40,
+   "page": 0,
+   "w": 40,
+   "x": 1083,
+   "y": 1
+  },
+  "fx/explosion/2": {
+   "h": 40,
+   "page": 0,
+   "w": 40,
+   "x": 1124,
+   "y": 1
+  },
+  "fx/explosion/3": {
+   "h": 40,
+   "page": 0,
+   "w": 40,
+   "x": 1165,
+   "y": 1
+  },
+  "fx/explosion/4": {
+   "h": 40,
+   "page": 0,
+   "w": 40,
+   "x": 1206,
+   "y": 1
+  },
+  "fx/explosion/5": {
+   "h": 40,
+   "page": 0,
+   "w": 40,
+   "x": 1247,
+   "y": 1
+  },
+  "fx/flame_puff/0": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1137,
+   "y": 214
+  },
+  "fx/flame_puff/1": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1156,
+   "y": 214
+  },
+  "fx/flame_puff/2": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1175,
+   "y": 214
+  },
+  "fx/flame_puff/3": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1194,
+   "y": 214
+  },
+  "fx/freeze_shatter/0": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 505,
+   "y": 62
+  },
+  "fx/freeze_shatter/1": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 530,
+   "y": 62
+  },
+  "fx/freeze_shatter/2": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 555,
+   "y": 62
+  },
+  "fx/freeze_shatter/3": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 580,
+   "y": 62
+  },
+  "fx/heal_sparkle/0": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 547,
+   "y": 189
+  },
+  "fx/heal_sparkle/1": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 568,
+   "y": 189
+  },
+  "fx/heal_sparkle/2": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 589,
+   "y": 189
+  },
+  "fx/heal_sparkle/3": {
+   "h": 24,
+   "page": 0,
+   "w": 20,
+   "x": 610,
+   "y": 189
+  },
+  "fx/impact_spark/0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 386,
+   "y": 235
+  },
+  "fx/impact_spark/1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 403,
+   "y": 235
+  },
+  "fx/impact_spark/2": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 420,
+   "y": 235
+  },
+  "fx/impact_spark/3": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 437,
+   "y": 235
+  },
+  "fx/lightning_arc/0": {
+   "h": 16,
+   "page": 0,
+   "w": 32,
+   "x": 106,
+   "y": 235
+  },
+  "fx/lightning_arc/1": {
+   "h": 16,
+   "page": 0,
+   "w": 32,
+   "x": 139,
+   "y": 235
+  },
+  "fx/lightning_arc/2": {
+   "h": 16,
+   "page": 0,
+   "w": 32,
+   "x": 172,
+   "y": 235
+  },
+  "fx/muzzle_flash/0": {
+   "h": 16,
+   "page": 0,
+   "w": 20,
+   "x": 323,
+   "y": 235
+  },
+  "fx/muzzle_flash/1": {
+   "h": 16,
+   "page": 0,
+   "w": 20,
+   "x": 344,
+   "y": 235
+  },
+  "fx/muzzle_flash/2": {
+   "h": 16,
+   "page": 0,
+   "w": 20,
+   "x": 365,
+   "y": 235
+  },
+  "fx/pickup_shine/0": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1954,
+   "y": 189
+  },
+  "fx/pickup_shine/1": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1975,
+   "y": 189
+  },
+  "fx/pickup_shine/2": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1996,
+   "y": 189
+  },
+  "fx/pickup_shine/3": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 2017,
+   "y": 189
+  },
+  "fx/poison_cloud/0": {
+   "h": 26,
+   "page": 0,
+   "w": 32,
+   "x": 2000,
+   "y": 1
+  },
+  "fx/poison_cloud/1": {
+   "h": 26,
+   "page": 0,
+   "w": 32,
+   "x": 1,
+   "y": 62
+  },
+  "fx/poison_cloud/2": {
+   "h": 26,
+   "page": 0,
+   "w": 32,
+   "x": 34,
+   "y": 62
+  },
+  "fx/poison_cloud/3": {
+   "h": 26,
+   "page": 0,
+   "w": 32,
+   "x": 67,
+   "y": 62
+  },
+  "fx/poison_cloud/4": {
+   "h": 26,
+   "page": 0,
+   "w": 32,
+   "x": 100,
+   "y": 62
+  },
+  "fx/portal/0": {
+   "h": 24,
+   "page": 0,
+   "w": 36,
+   "x": 133,
+   "y": 62
+  },
+  "fx/portal/1": {
+   "h": 24,
+   "page": 0,
+   "w": 36,
+   "x": 170,
+   "y": 62
+  },
+  "fx/portal/2": {
+   "h": 24,
+   "page": 0,
+   "w": 36,
+   "x": 207,
+   "y": 62
+  },
+  "fx/portal/3": {
+   "h": 24,
+   "page": 0,
+   "w": 36,
+   "x": 244,
+   "y": 62
+  },
+  "fx/portal/4": {
+   "h": 24,
+   "page": 0,
+   "w": 36,
+   "x": 281,
+   "y": 62
+  },
+  "fx/portal/5": {
+   "h": 24,
+   "page": 0,
+   "w": 36,
+   "x": 318,
+   "y": 62
+  },
+  "fx/shockwave/0": {
+   "h": 32,
+   "page": 0,
+   "w": 48,
+   "x": 1288,
+   "y": 1
+  },
+  "fx/shockwave/1": {
+   "h": 32,
+   "page": 0,
+   "w": 48,
+   "x": 1337,
+   "y": 1
+  },
+  "fx/shockwave/2": {
+   "h": 32,
+   "page": 0,
+   "w": 48,
+   "x": 1386,
+   "y": 1
+  },
+  "fx/shockwave/3": {
+   "h": 32,
+   "page": 0,
+   "w": 48,
+   "x": 1435,
+   "y": 1
+  },
+  "fx/smoke_puff/0": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 1,
+   "y": 214
+  },
+  "fx/smoke_puff/1": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 22,
+   "y": 214
+  },
+  "fx/smoke_puff/2": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 43,
+   "y": 214
+  },
+  "fx/smoke_puff/3": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 64,
+   "y": 214
+  },
+  "fx/smoke_puff/4": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 85,
+   "y": 214
+  },
+  "fx/teleport/0": {
+   "h": 28,
+   "page": 0,
+   "w": 24,
+   "x": 1832,
+   "y": 1
+  },
+  "fx/teleport/1": {
+   "h": 28,
+   "page": 0,
+   "w": 24,
+   "x": 1857,
+   "y": 1
+  },
+  "fx/teleport/2": {
+   "h": 28,
+   "page": 0,
+   "w": 24,
+   "x": 1882,
+   "y": 1
+  },
+  "fx/teleport/3": {
+   "h": 28,
+   "page": 0,
+   "w": 24,
+   "x": 1907,
+   "y": 1
+  },
+  "item/ammo_belt": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1213,
+   "y": 214
+  },
+  "item/bandolier": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1232,
+   "y": 214
+  },
+  "item/bloodstone": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1251,
+   "y": 214
+  },
+  "item/clock_spring": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1270,
+   "y": 214
+  },
+  "item/echo_bell": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1289,
+   "y": 214
+  },
+  "item/ember_core": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1308,
+   "y": 214
+  },
+  "item/feather_boots": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1327,
+   "y": 214
+  },
+  "item/frost_core": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1346,
+   "y": 214
+  },
+  "item/glass_cannon": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1365,
+   "y": 214
+  },
+  "item/gunpowder_keg": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1384,
+   "y": 214
+  },
+  "item/heavy_slug": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1403,
+   "y": 214
+  },
+  "item/hex_tome": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1422,
+   "y": 214
+  },
+  "item/homing_chip": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1441,
+   "y": 214
+  },
+  "item/iron_heart": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1460,
+   "y": 214
+  },
+  "item/long_lens": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1479,
+   "y": 214
+  },
+  "item/lucky_coin": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1498,
+   "y": 214
+  },
+  "item/magnet_core": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1517,
+   "y": 214
+  },
+  "item/mirror_shard": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1536,
+   "y": 214
+  },
+  "item/orbital_shard": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1555,
+   "y": 214
+  },
+  "item/phase_cloak": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1574,
+   "y": 214
+  },
+  "item/piercing_tip": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1593,
+   "y": 214
+  },
+  "item/quickpowder": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1612,
+   "y": 214
+  },
+  "item/ricochet_ring": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1631,
+   "y": 214
+  },
+  "item/serpent_eye": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1650,
+   "y": 214
+  },
+  "item/speed_loader": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1669,
+   "y": 214
+  },
+  "item/split_shot": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1688,
+   "y": 214
+  },
+  "item/sun_medal": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1707,
+   "y": 214
+  },
+  "item/tesla_capacitor": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1726,
+   "y": 214
+  },
+  "item/thorn_mail": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1745,
+   "y": 214
+  },
+  "item/vampire_fang": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1764,
+   "y": 214
+  },
+  "item/venom_vial": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1783,
+   "y": 214
+  },
+  "item/void_prism": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1802,
+   "y": 214
+  },
+  "pickup/ammo_box": {
+   "h": 14,
+   "page": 0,
+   "w": 16,
+   "x": 1588,
+   "y": 254
+  },
+  "pickup/armor": {
+   "h": 14,
+   "page": 0,
+   "w": 14,
+   "x": 1605,
+   "y": 254
+  },
+  "pickup/blank": {
+   "h": 14,
+   "page": 0,
+   "w": 14,
+   "x": 1620,
+   "y": 254
+  },
+  "pickup/coin": {
+   "h": 12,
+   "page": 0,
+   "w": 12,
+   "x": 1863,
+   "y": 254
+  },
+  "pickup/heart": {
+   "h": 14,
+   "page": 0,
+   "w": 14,
+   "x": 1635,
+   "y": 254
+  },
+  "pickup/heart_half": {
+   "h": 14,
+   "page": 0,
+   "w": 14,
+   "x": 1650,
+   "y": 254
+  },
+  "pickup/key": {
+   "h": 12,
+   "page": 0,
+   "w": 16,
+   "x": 1778,
+   "y": 254
+  },
+  "portrait/beak": {
+   "h": 32,
+   "page": 0,
+   "w": 32,
+   "x": 1484,
+   "y": 1
+  },
+  "portrait/bulwark": {
+   "h": 32,
+   "page": 0,
+   "w": 32,
+   "x": 1517,
+   "y": 1
+  },
+  "portrait/hexe": {
+   "h": 32,
+   "page": 0,
+   "w": 32,
+   "x": 1550,
+   "y": 1
+  },
+  "portrait/marshal": {
+   "h": 32,
+   "page": 0,
+   "w": 32,
+   "x": 1583,
+   "y": 1
+  },
+  "portrait/stray": {
+   "h": 32,
+   "page": 0,
+   "w": 32,
+   "x": 1616,
+   "y": 1
+  },
+  "portrait/tinker": {
+   "h": 32,
+   "page": 0,
+   "w": 32,
+   "x": 1649,
+   "y": 1
+  },
+  "proj/beam_seg_ice": {
+   "h": 10,
+   "page": 0,
+   "w": 8,
+   "x": 61,
+   "y": 271
+  },
+  "proj/beam_seg_void": {
+   "h": 10,
+   "page": 0,
+   "w": 8,
+   "x": 70,
+   "y": 271
+  },
+  "proj/beam_tip_ice": {
+   "h": 12,
+   "page": 0,
+   "w": 12,
+   "x": 1876,
+   "y": 254
+  },
+  "proj/beam_tip_void": {
+   "h": 12,
+   "page": 0,
+   "w": 12,
+   "x": 1889,
+   "y": 254
+  },
+  "proj/bolt_arcane": {
+   "h": 11,
+   "page": 0,
+   "w": 15,
+   "x": 1937,
+   "y": 254
+  },
+  "proj/bolt_enemy": {
+   "h": 10,
+   "page": 0,
+   "w": 13,
+   "x": 1,
+   "y": 271
+  },
+  "proj/bolt_heavy": {
+   "h": 12,
+   "page": 0,
+   "w": 18,
+   "x": 1759,
+   "y": 254
+  },
+  "proj/bolt_player": {
+   "h": 10,
+   "page": 0,
+   "w": 14,
+   "x": 2018,
+   "y": 254
+  },
+  "proj/bolt_toxic": {
+   "h": 10,
+   "page": 0,
+   "w": 14,
+   "x": 2033,
+   "y": 254
+  },
+  "proj/flame_puff/0": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1821,
+   "y": 214
+  },
+  "proj/flame_puff/1": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1840,
+   "y": 214
+  },
+  "proj/flame_puff/2": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1859,
+   "y": 214
+  },
+  "proj/flame_puff/3": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1878,
+   "y": 214
+  },
+  "proj/grenade": {
+   "h": 12,
+   "page": 0,
+   "w": 12,
+   "x": 1902,
+   "y": 254
+  },
+  "proj/nail": {
+   "h": 6,
+   "page": 0,
+   "w": 14,
+   "x": 1214,
+   "y": 271
+  },
+  "proj/orb_enemy": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 454,
+   "y": 235
+  },
+  "proj/orb_plasma": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 471,
+   "y": 235
+  },
+  "proj/orb_void": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1897,
+   "y": 214
+  },
+  "proj/pellet_enemy": {
+   "h": 10,
+   "page": 0,
+   "w": 10,
+   "x": 28,
+   "y": 271
+  },
+  "proj/pellet_player": {
+   "h": 10,
+   "page": 0,
+   "w": 10,
+   "x": 39,
+   "y": 271
+  },
+  "proj/pellet_small": {
+   "h": 8,
+   "page": 0,
+   "w": 8,
+   "x": 385,
+   "y": 271
+  },
+  "proj/saw/0": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1916,
+   "y": 214
+  },
+  "proj/saw/1": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1935,
+   "y": 214
+  },
+  "proj/saw/2": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1954,
+   "y": 214
+  },
+  "proj/saw/3": {
+   "h": 18,
+   "page": 0,
+   "w": 18,
+   "x": 1973,
+   "y": 214
+  },
+  "proj/shard_bone": {
+   "h": 8,
+   "page": 0,
+   "w": 14,
+   "x": 355,
+   "y": 271
+  },
+  "proj/shard_ice": {
+   "h": 8,
+   "page": 0,
+   "w": 14,
+   "x": 370,
+   "y": 271
+  },
+  "prop/crypt/barrel": {
+   "h": 20,
+   "page": 0,
+   "w": 16,
+   "x": 358,
+   "y": 214
+  },
+  "prop/crypt/barrel_explosive": {
+   "h": 20,
+   "page": 0,
+   "w": 16,
+   "x": 375,
+   "y": 214
+  },
+  "prop/crypt/bone_pile": {
+   "h": 12,
+   "page": 0,
+   "w": 16,
+   "x": 1795,
+   "y": 254
+  },
+  "prop/crypt/chest_closed": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 106,
+   "y": 214
+  },
+  "prop/crypt/chest_open": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 127,
+   "y": 214
+  },
+  "prop/crypt/chest_rare": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 148,
+   "y": 214
+  },
+  "prop/crypt/crate": {
+   "h": 18,
+   "page": 0,
+   "w": 16,
+   "x": 1992,
+   "y": 214
+  },
+  "prop/crypt/pedestal": {
+   "h": 20,
+   "page": 0,
+   "w": 16,
+   "x": 392,
+   "y": 214
+  },
+  "prop/crypt/pillar": {
+   "h": 28,
+   "page": 0,
+   "w": 16,
+   "x": 1932,
+   "y": 1
+  },
+  "prop/crypt/shop_counter": {
+   "h": 22,
+   "page": 0,
+   "w": 32,
+   "x": 631,
+   "y": 189
+  },
+  "prop/crypt/statue": {
+   "h": 30,
+   "page": 0,
+   "w": 20,
+   "x": 1748,
+   "y": 1
+  },
+  "prop/crypt/torch/0": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1400,
+   "y": 189
+  },
+  "prop/crypt/torch/1": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1413,
+   "y": 189
+  },
+  "prop/crypt/torch/2": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1426,
+   "y": 189
+  },
+  "prop/crypt/torch/3": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1439,
+   "y": 189
+  },
+  "prop/foundry/barrel": {
+   "h": 20,
+   "page": 0,
+   "w": 16,
+   "x": 409,
+   "y": 214
+  },
+  "prop/foundry/barrel_explosive": {
+   "h": 20,
+   "page": 0,
+   "w": 16,
+   "x": 426,
+   "y": 214
+  },
+  "prop/foundry/bone_pile": {
+   "h": 12,
+   "page": 0,
+   "w": 16,
+   "x": 1812,
+   "y": 254
+  },
+  "prop/foundry/chest_closed": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 169,
+   "y": 214
+  },
+  "prop/foundry/chest_open": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 190,
+   "y": 214
+  },
+  "prop/foundry/chest_rare": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 211,
+   "y": 214
+  },
+  "prop/foundry/crate": {
+   "h": 18,
+   "page": 0,
+   "w": 16,
+   "x": 2009,
+   "y": 214
+  },
+  "prop/foundry/pedestal": {
+   "h": 20,
+   "page": 0,
+   "w": 16,
+   "x": 443,
+   "y": 214
+  },
+  "prop/foundry/pillar": {
+   "h": 28,
+   "page": 0,
+   "w": 16,
+   "x": 1949,
+   "y": 1
+  },
+  "prop/foundry/shop_counter": {
+   "h": 22,
+   "page": 0,
+   "w": 32,
+   "x": 664,
+   "y": 189
+  },
+  "prop/foundry/statue": {
+   "h": 30,
+   "page": 0,
+   "w": 20,
+   "x": 1769,
+   "y": 1
+  },
+  "prop/foundry/torch/0": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1452,
+   "y": 189
+  },
+  "prop/foundry/torch/1": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1465,
+   "y": 189
+  },
+  "prop/foundry/torch/2": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1478,
+   "y": 189
+  },
+  "prop/foundry/torch/3": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1491,
+   "y": 189
+  },
+  "prop/keep/barrel": {
+   "h": 20,
+   "page": 0,
+   "w": 16,
+   "x": 460,
+   "y": 214
+  },
+  "prop/keep/barrel_explosive": {
+   "h": 20,
+   "page": 0,
+   "w": 16,
+   "x": 477,
+   "y": 214
+  },
+  "prop/keep/bone_pile": {
+   "h": 12,
+   "page": 0,
+   "w": 16,
+   "x": 1829,
+   "y": 254
+  },
+  "prop/keep/chest_closed": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 232,
+   "y": 214
+  },
+  "prop/keep/chest_open": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 253,
+   "y": 214
+  },
+  "prop/keep/chest_rare": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 274,
+   "y": 214
+  },
+  "prop/keep/crate": {
+   "h": 18,
+   "page": 0,
+   "w": 16,
+   "x": 2026,
+   "y": 214
+  },
+  "prop/keep/pedestal": {
+   "h": 20,
+   "page": 0,
+   "w": 16,
+   "x": 494,
+   "y": 214
+  },
+  "prop/keep/pillar": {
+   "h": 28,
+   "page": 0,
+   "w": 16,
+   "x": 1966,
+   "y": 1
+  },
+  "prop/keep/shop_counter": {
+   "h": 22,
+   "page": 0,
+   "w": 32,
+   "x": 697,
+   "y": 189
+  },
+  "prop/keep/statue": {
+   "h": 30,
+   "page": 0,
+   "w": 20,
+   "x": 1790,
+   "y": 1
+  },
+  "prop/keep/torch/0": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1504,
+   "y": 189
+  },
+  "prop/keep/torch/1": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1517,
+   "y": 189
+  },
+  "prop/keep/torch/2": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1530,
+   "y": 189
+  },
+  "prop/keep/torch/3": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1543,
+   "y": 189
+  },
+  "prop/sanctum/barrel": {
+   "h": 20,
+   "page": 0,
+   "w": 16,
+   "x": 511,
+   "y": 214
+  },
+  "prop/sanctum/barrel_explosive": {
+   "h": 20,
+   "page": 0,
+   "w": 16,
+   "x": 528,
+   "y": 214
+  },
+  "prop/sanctum/bone_pile": {
+   "h": 12,
+   "page": 0,
+   "w": 16,
+   "x": 1846,
+   "y": 254
+  },
+  "prop/sanctum/chest_closed": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 295,
+   "y": 214
+  },
+  "prop/sanctum/chest_open": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 316,
+   "y": 214
+  },
+  "prop/sanctum/chest_rare": {
+   "h": 20,
+   "page": 0,
+   "w": 20,
+   "x": 337,
+   "y": 214
+  },
+  "prop/sanctum/crate": {
+   "h": 18,
+   "page": 0,
+   "w": 16,
+   "x": 1,
+   "y": 235
+  },
+  "prop/sanctum/pedestal": {
+   "h": 20,
+   "page": 0,
+   "w": 16,
+   "x": 545,
+   "y": 214
+  },
+  "prop/sanctum/pillar": {
+   "h": 28,
+   "page": 0,
+   "w": 16,
+   "x": 1983,
+   "y": 1
+  },
+  "prop/sanctum/shop_counter": {
+   "h": 22,
+   "page": 0,
+   "w": 32,
+   "x": 730,
+   "y": 189
+  },
+  "prop/sanctum/statue": {
+   "h": 30,
+   "page": 0,
+   "w": 20,
+   "x": 1811,
+   "y": 1
+  },
+  "prop/sanctum/torch/0": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1556,
+   "y": 189
+  },
+  "prop/sanctum/torch/1": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1569,
+   "y": 189
+  },
+  "prop/sanctum/torch/2": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1582,
+   "y": 189
+  },
+  "prop/sanctum/torch/3": {
+   "h": 22,
+   "page": 0,
+   "w": 12,
+   "x": 1595,
+   "y": 189
+  },
+  "shadow/12x5": {
+   "h": 5,
+   "page": 0,
+   "w": 12,
+   "x": 1229,
+   "y": 271
+  },
+  "shadow/16x6": {
+   "h": 6,
+   "page": 0,
+   "w": 16,
+   "x": 1129,
+   "y": 271
+  },
+  "shadow/22x8": {
+   "h": 8,
+   "page": 0,
+   "w": 22,
+   "x": 332,
+   "y": 271
+  },
+  "shadow/34x12": {
+   "h": 12,
+   "page": 0,
+   "w": 34,
+   "x": 1724,
+   "y": 254
+  },
+  "shadow/48x16": {
+   "h": 16,
+   "page": 0,
+   "w": 48,
+   "x": 18,
+   "y": 235
+  },
+  "tile/crypt/cap_0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 488,
+   "y": 235
+  },
+  "tile/crypt/cap_1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 505,
+   "y": 235
+  },
+  "tile/crypt/cap_10": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 522,
+   "y": 235
+  },
+  "tile/crypt/cap_11": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 539,
+   "y": 235
+  },
+  "tile/crypt/cap_12": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 556,
+   "y": 235
+  },
+  "tile/crypt/cap_13": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 573,
+   "y": 235
+  },
+  "tile/crypt/cap_14": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 590,
+   "y": 235
+  },
+  "tile/crypt/cap_15": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 607,
+   "y": 235
+  },
+  "tile/crypt/cap_2": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 624,
+   "y": 235
+  },
+  "tile/crypt/cap_3": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 641,
+   "y": 235
+  },
+  "tile/crypt/cap_4": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 658,
+   "y": 235
+  },
+  "tile/crypt/cap_5": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 675,
+   "y": 235
+  },
+  "tile/crypt/cap_6": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 692,
+   "y": 235
+  },
+  "tile/crypt/cap_7": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 709,
+   "y": 235
+  },
+  "tile/crypt/cap_8": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 726,
+   "y": 235
+  },
+  "tile/crypt/cap_9": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 743,
+   "y": 235
+  },
+  "tile/crypt/door_boss_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 760,
+   "y": 235
+  },
+  "tile/crypt/door_boss_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 777,
+   "y": 235
+  },
+  "tile/crypt/door_closed_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 794,
+   "y": 235
+  },
+  "tile/crypt/door_closed_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 811,
+   "y": 235
+  },
+  "tile/crypt/door_locked_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 828,
+   "y": 235
+  },
+  "tile/crypt/door_locked_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 845,
+   "y": 235
+  },
+  "tile/crypt/door_open_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 862,
+   "y": 235
+  },
+  "tile/crypt/door_open_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 879,
+   "y": 235
+  },
+  "tile/crypt/face_0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 896,
+   "y": 235
+  },
+  "tile/crypt/face_1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 913,
+   "y": 235
+  },
+  "tile/crypt/face_2": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 930,
+   "y": 235
+  },
+  "tile/crypt/face_3": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 947,
+   "y": 235
+  },
+  "tile/crypt/floor_0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 964,
+   "y": 235
+  },
+  "tile/crypt/floor_1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 981,
+   "y": 235
+  },
+  "tile/crypt/floor_2": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 998,
+   "y": 235
+  },
+  "tile/crypt/floor_3": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1015,
+   "y": 235
+  },
+  "tile/crypt/floor_grate": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1032,
+   "y": 235
+  },
+  "tile/crypt/floor_pit": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1049,
+   "y": 235
+  },
+  "tile/crypt/rug_center": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1066,
+   "y": 235
+  },
+  "tile/crypt/rug_corner": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1083,
+   "y": 235
+  },
+  "tile/crypt/rug_edge_e": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1100,
+   "y": 235
+  },
+  "tile/crypt/rug_edge_n": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1117,
+   "y": 235
+  },
+  "tile/crypt/rug_edge_s": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1134,
+   "y": 235
+  },
+  "tile/crypt/rug_edge_w": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1151,
+   "y": 235
+  },
+  "tile/crypt/wall_shadow": {
+   "h": 6,
+   "page": 0,
+   "w": 16,
+   "x": 1146,
+   "y": 271
+  },
+  "tile/crypt/wall_side": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1168,
+   "y": 235
+  },
+  "tile/foundry/cap_0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1185,
+   "y": 235
+  },
+  "tile/foundry/cap_1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1202,
+   "y": 235
+  },
+  "tile/foundry/cap_10": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1219,
+   "y": 235
+  },
+  "tile/foundry/cap_11": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1236,
+   "y": 235
+  },
+  "tile/foundry/cap_12": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1253,
+   "y": 235
+  },
+  "tile/foundry/cap_13": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1270,
+   "y": 235
+  },
+  "tile/foundry/cap_14": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1287,
+   "y": 235
+  },
+  "tile/foundry/cap_15": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1304,
+   "y": 235
+  },
+  "tile/foundry/cap_2": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1321,
+   "y": 235
+  },
+  "tile/foundry/cap_3": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1338,
+   "y": 235
+  },
+  "tile/foundry/cap_4": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1355,
+   "y": 235
+  },
+  "tile/foundry/cap_5": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1372,
+   "y": 235
+  },
+  "tile/foundry/cap_6": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1389,
+   "y": 235
+  },
+  "tile/foundry/cap_7": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1406,
+   "y": 235
+  },
+  "tile/foundry/cap_8": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1423,
+   "y": 235
+  },
+  "tile/foundry/cap_9": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1440,
+   "y": 235
+  },
+  "tile/foundry/door_boss_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1457,
+   "y": 235
+  },
+  "tile/foundry/door_boss_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1474,
+   "y": 235
+  },
+  "tile/foundry/door_closed_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1491,
+   "y": 235
+  },
+  "tile/foundry/door_closed_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1508,
+   "y": 235
+  },
+  "tile/foundry/door_locked_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1525,
+   "y": 235
+  },
+  "tile/foundry/door_locked_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1542,
+   "y": 235
+  },
+  "tile/foundry/door_open_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1559,
+   "y": 235
+  },
+  "tile/foundry/door_open_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1576,
+   "y": 235
+  },
+  "tile/foundry/face_0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1593,
+   "y": 235
+  },
+  "tile/foundry/face_1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1610,
+   "y": 235
+  },
+  "tile/foundry/face_2": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1627,
+   "y": 235
+  },
+  "tile/foundry/face_3": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1644,
+   "y": 235
+  },
+  "tile/foundry/floor_0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1661,
+   "y": 235
+  },
+  "tile/foundry/floor_1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1678,
+   "y": 235
+  },
+  "tile/foundry/floor_2": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1695,
+   "y": 235
+  },
+  "tile/foundry/floor_3": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1712,
+   "y": 235
+  },
+  "tile/foundry/floor_grate": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1729,
+   "y": 235
+  },
+  "tile/foundry/floor_pit": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1746,
+   "y": 235
+  },
+  "tile/foundry/rug_center": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1763,
+   "y": 235
+  },
+  "tile/foundry/rug_corner": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1780,
+   "y": 235
+  },
+  "tile/foundry/rug_edge_e": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1797,
+   "y": 235
+  },
+  "tile/foundry/rug_edge_n": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1814,
+   "y": 235
+  },
+  "tile/foundry/rug_edge_s": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1831,
+   "y": 235
+  },
+  "tile/foundry/rug_edge_w": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1848,
+   "y": 235
+  },
+  "tile/foundry/wall_shadow": {
+   "h": 6,
+   "page": 0,
+   "w": 16,
+   "x": 1163,
+   "y": 271
+  },
+  "tile/foundry/wall_side": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1865,
+   "y": 235
+  },
+  "tile/keep/cap_0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1882,
+   "y": 235
+  },
+  "tile/keep/cap_1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1899,
+   "y": 235
+  },
+  "tile/keep/cap_10": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1916,
+   "y": 235
+  },
+  "tile/keep/cap_11": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1933,
+   "y": 235
+  },
+  "tile/keep/cap_12": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1950,
+   "y": 235
+  },
+  "tile/keep/cap_13": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1967,
+   "y": 235
+  },
+  "tile/keep/cap_14": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1984,
+   "y": 235
+  },
+  "tile/keep/cap_15": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 2001,
+   "y": 235
+  },
+  "tile/keep/cap_2": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 2018,
+   "y": 235
+  },
+  "tile/keep/cap_3": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1,
+   "y": 254
+  },
+  "tile/keep/cap_4": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 18,
+   "y": 254
+  },
+  "tile/keep/cap_5": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 35,
+   "y": 254
+  },
+  "tile/keep/cap_6": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 52,
+   "y": 254
+  },
+  "tile/keep/cap_7": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 69,
+   "y": 254
+  },
+  "tile/keep/cap_8": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 86,
+   "y": 254
+  },
+  "tile/keep/cap_9": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 103,
+   "y": 254
+  },
+  "tile/keep/door_boss_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 120,
+   "y": 254
+  },
+  "tile/keep/door_boss_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 137,
+   "y": 254
+  },
+  "tile/keep/door_closed_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 154,
+   "y": 254
+  },
+  "tile/keep/door_closed_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 171,
+   "y": 254
+  },
+  "tile/keep/door_locked_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 188,
+   "y": 254
+  },
+  "tile/keep/door_locked_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 205,
+   "y": 254
+  },
+  "tile/keep/door_open_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 222,
+   "y": 254
+  },
+  "tile/keep/door_open_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 239,
+   "y": 254
+  },
+  "tile/keep/face_0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 256,
+   "y": 254
+  },
+  "tile/keep/face_1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 273,
+   "y": 254
+  },
+  "tile/keep/face_2": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 290,
+   "y": 254
+  },
+  "tile/keep/face_3": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 307,
+   "y": 254
+  },
+  "tile/keep/floor_0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 324,
+   "y": 254
+  },
+  "tile/keep/floor_1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 341,
+   "y": 254
+  },
+  "tile/keep/floor_2": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 358,
+   "y": 254
+  },
+  "tile/keep/floor_3": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 375,
+   "y": 254
+  },
+  "tile/keep/floor_grate": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 392,
+   "y": 254
+  },
+  "tile/keep/floor_pit": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 409,
+   "y": 254
+  },
+  "tile/keep/rug_center": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 426,
+   "y": 254
+  },
+  "tile/keep/rug_corner": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 443,
+   "y": 254
+  },
+  "tile/keep/rug_edge_e": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 460,
+   "y": 254
+  },
+  "tile/keep/rug_edge_n": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 477,
+   "y": 254
+  },
+  "tile/keep/rug_edge_s": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 494,
+   "y": 254
+  },
+  "tile/keep/rug_edge_w": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 511,
+   "y": 254
+  },
+  "tile/keep/wall_shadow": {
+   "h": 6,
+   "page": 0,
+   "w": 16,
+   "x": 1180,
+   "y": 271
+  },
+  "tile/keep/wall_side": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 528,
+   "y": 254
+  },
+  "tile/sanctum/cap_0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 545,
+   "y": 254
+  },
+  "tile/sanctum/cap_1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 562,
+   "y": 254
+  },
+  "tile/sanctum/cap_10": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 579,
+   "y": 254
+  },
+  "tile/sanctum/cap_11": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 596,
+   "y": 254
+  },
+  "tile/sanctum/cap_12": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 613,
+   "y": 254
+  },
+  "tile/sanctum/cap_13": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 630,
+   "y": 254
+  },
+  "tile/sanctum/cap_14": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 647,
+   "y": 254
+  },
+  "tile/sanctum/cap_15": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 664,
+   "y": 254
+  },
+  "tile/sanctum/cap_2": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 681,
+   "y": 254
+  },
+  "tile/sanctum/cap_3": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 698,
+   "y": 254
+  },
+  "tile/sanctum/cap_4": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 715,
+   "y": 254
+  },
+  "tile/sanctum/cap_5": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 732,
+   "y": 254
+  },
+  "tile/sanctum/cap_6": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 749,
+   "y": 254
+  },
+  "tile/sanctum/cap_7": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 766,
+   "y": 254
+  },
+  "tile/sanctum/cap_8": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 783,
+   "y": 254
+  },
+  "tile/sanctum/cap_9": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 800,
+   "y": 254
+  },
+  "tile/sanctum/door_boss_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 817,
+   "y": 254
+  },
+  "tile/sanctum/door_boss_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 834,
+   "y": 254
+  },
+  "tile/sanctum/door_closed_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 851,
+   "y": 254
+  },
+  "tile/sanctum/door_closed_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 868,
+   "y": 254
+  },
+  "tile/sanctum/door_locked_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 885,
+   "y": 254
+  },
+  "tile/sanctum/door_locked_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 902,
+   "y": 254
+  },
+  "tile/sanctum/door_open_h": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 919,
+   "y": 254
+  },
+  "tile/sanctum/door_open_v": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 936,
+   "y": 254
+  },
+  "tile/sanctum/face_0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 953,
+   "y": 254
+  },
+  "tile/sanctum/face_1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 970,
+   "y": 254
+  },
+  "tile/sanctum/face_2": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 987,
+   "y": 254
+  },
+  "tile/sanctum/face_3": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1004,
+   "y": 254
+  },
+  "tile/sanctum/floor_0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1021,
+   "y": 254
+  },
+  "tile/sanctum/floor_1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1038,
+   "y": 254
+  },
+  "tile/sanctum/floor_2": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1055,
+   "y": 254
+  },
+  "tile/sanctum/floor_3": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1072,
+   "y": 254
+  },
+  "tile/sanctum/floor_grate": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1089,
+   "y": 254
+  },
+  "tile/sanctum/floor_pit": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1106,
+   "y": 254
+  },
+  "tile/sanctum/rug_center": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1123,
+   "y": 254
+  },
+  "tile/sanctum/rug_corner": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1140,
+   "y": 254
+  },
+  "tile/sanctum/rug_edge_e": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1157,
+   "y": 254
+  },
+  "tile/sanctum/rug_edge_n": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1174,
+   "y": 254
+  },
+  "tile/sanctum/rug_edge_s": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1191,
+   "y": 254
+  },
+  "tile/sanctum/rug_edge_w": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1208,
+   "y": 254
+  },
+  "tile/sanctum/wall_shadow": {
+   "h": 6,
+   "page": 0,
+   "w": 16,
+   "x": 1197,
+   "y": 271
+  },
+  "tile/sanctum/wall_side": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1225,
+   "y": 254
+  },
+  "ui/ammo_icon": {
+   "h": 12,
+   "page": 0,
+   "w": 8,
+   "x": 1928,
+   "y": 254
+  },
+  "ui/armor_ui": {
+   "h": 13,
+   "page": 0,
+   "w": 13,
+   "x": 1710,
+   "y": 254
+  },
+  "ui/bar_fill_armor": {
+   "h": 6,
+   "page": 0,
+   "w": 60,
+   "x": 946,
+   "y": 271
+  },
+  "ui/bar_fill_boss": {
+   "h": 8,
+   "page": 0,
+   "w": 156,
+   "x": 175,
+   "y": 271
+  },
+  "ui/bar_fill_charge": {
+   "h": 6,
+   "page": 0,
+   "w": 60,
+   "x": 1007,
+   "y": 271
+  },
+  "ui/bar_fill_health": {
+   "h": 6,
+   "page": 0,
+   "w": 60,
+   "x": 1068,
+   "y": 271
+  },
+  "ui/bar_frame": {
+   "h": 10,
+   "page": 0,
+   "w": 64,
+   "x": 1953,
+   "y": 254
+  },
+  "ui/blank_icon": {
+   "h": 12,
+   "page": 0,
+   "w": 12,
+   "x": 1915,
+   "y": 254
+  },
+  "ui/boss_bar_frame": {
+   "h": 14,
+   "page": 0,
+   "w": 160,
+   "x": 1276,
+   "y": 254
+  },
+  "ui/button": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 605,
+   "y": 62
+  },
+  "ui/button_pressed": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 630,
+   "y": 62
+  },
+  "ui/coin_icon": {
+   "h": 10,
+   "page": 0,
+   "w": 10,
+   "x": 50,
+   "y": 271
+  },
+  "ui/crosshair/0": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1242,
+   "y": 254
+  },
+  "ui/crosshair/1": {
+   "h": 16,
+   "page": 0,
+   "w": 16,
+   "x": 1259,
+   "y": 254
+  },
+  "ui/damage_flash": {
+   "h": 32,
+   "page": 0,
+   "w": 32,
+   "x": 1682,
+   "y": 1
+  },
+  "ui/heart_empty": {
+   "h": 13,
+   "page": 0,
+   "w": 14,
+   "x": 1665,
+   "y": 254
+  },
+  "ui/heart_full": {
+   "h": 13,
+   "page": 0,
+   "w": 14,
+   "x": 1680,
+   "y": 254
+  },
+  "ui/heart_half": {
+   "h": 13,
+   "page": 0,
+   "w": 14,
+   "x": 1695,
+   "y": 254
+  },
+  "ui/key_icon": {
+   "h": 10,
+   "page": 0,
+   "w": 12,
+   "x": 15,
+   "y": 271
+  },
+  "ui/minimap_boss": {
+   "h": 9,
+   "page": 0,
+   "w": 11,
+   "x": 79,
+   "y": 271
+  },
+  "ui/minimap_cleared": {
+   "h": 9,
+   "page": 0,
+   "w": 11,
+   "x": 91,
+   "y": 271
+  },
+  "ui/minimap_current": {
+   "h": 9,
+   "page": 0,
+   "w": 11,
+   "x": 103,
+   "y": 271
+  },
+  "ui/minimap_link_h": {
+   "h": 5,
+   "page": 0,
+   "w": 5,
+   "x": 1242,
+   "y": 271
+  },
+  "ui/minimap_link_v": {
+   "h": 5,
+   "page": 0,
+   "w": 5,
+   "x": 1248,
+   "y": 271
+  },
+  "ui/minimap_normal": {
+   "h": 9,
+   "page": 0,
+   "w": 11,
+   "x": 115,
+   "y": 271
+  },
+  "ui/minimap_shop": {
+   "h": 9,
+   "page": 0,
+   "w": 11,
+   "x": 127,
+   "y": 271
+  },
+  "ui/minimap_start": {
+   "h": 9,
+   "page": 0,
+   "w": 11,
+   "x": 139,
+   "y": 271
+  },
+  "ui/minimap_treasure": {
+   "h": 9,
+   "page": 0,
+   "w": 11,
+   "x": 151,
+   "y": 271
+  },
+  "ui/minimap_unknown": {
+   "h": 9,
+   "page": 0,
+   "w": 11,
+   "x": 163,
+   "y": 271
+  },
+  "ui/panel": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 655,
+   "y": 62
+  },
+  "ui/panel_arcane": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 680,
+   "y": 62
+  },
+  "ui/panel_plain": {
+   "h": 24,
+   "page": 0,
+   "w": 24,
+   "x": 705,
+   "y": 62
+  },
+  "ui/slot": {
+   "h": 22,
+   "page": 0,
+   "w": 22,
+   "x": 1018,
+   "y": 189
+  },
+  "ui/slot_active": {
+   "h": 22,
+   "page": 0,
+   "w": 22,
+   "x": 1041,
+   "y": 189
+  },
+  "ui/title_banner": {
+   "h": 40,
+   "page": 0,
+   "w": 160,
+   "x": 881,
+   "y": 1
+  },
+  "ui/vignette": {
+   "h": 32,
+   "page": 0,
+   "w": 32,
+   "x": 1715,
+   "y": 1
+  },
+  "weapon/arc_coil": {
+   "h": 18,
+   "page": 0,
+   "w": 28,
+   "x": 657,
+   "y": 214
+  },
+  "weapon/bone_saw": {
+   "h": 20,
+   "page": 0,
+   "w": 24,
+   "x": 1635,
+   "y": 189
+  },
+  "weapon/cryo_lance": {
+   "h": 16,
+   "page": 0,
+   "w": 32,
+   "x": 205,
+   "y": 235
+  },
+  "weapon/flamer": {
+   "h": 18,
+   "page": 0,
+   "w": 30,
+   "x": 595,
+   "y": 214
+  },
+  "weapon/hand_cannon": {
+   "h": 18,
+   "page": 0,
+   "w": 32,
+   "x": 562,
+   "y": 214
+  },
+  "weapon/hexbolt": {
+   "h": 16,
+   "page": 0,
+   "w": 26,
+   "x": 269,
+   "y": 235
+  },
+  "weapon/longarm": {
+   "h": 16,
+   "page": 0,
+   "w": 38,
+   "x": 67,
+   "y": 235
+  },
+  "weapon/nail_driver": {
+   "h": 18,
+   "page": 0,
+   "w": 28,
+   "x": 686,
+   "y": 214
+  },
+  "weapon/peacemaker": {
+   "h": 16,
+   "page": 0,
+   "w": 26,
+   "x": 296,
+   "y": 235
+  },
+  "weapon/plague_censer": {
+   "h": 22,
+   "page": 0,
+   "w": 24,
+   "x": 763,
+   "y": 189
+  },
+  "weapon/ripper": {
+   "h": 18,
+   "page": 0,
+   "w": 26,
+   "x": 715,
+   "y": 214
+  },
+  "weapon/scattergun": {
+   "h": 16,
+   "page": 0,
+   "w": 30,
+   "x": 238,
+   "y": 235
+  },
+  "weapon/star_caller": {
+   "h": 18,
+   "page": 0,
+   "w": 26,
+   "x": 742,
+   "y": 214
+  },
+  "weapon/sunburst": {
+   "h": 20,
+   "page": 0,
+   "w": 26,
+   "x": 1608,
+   "y": 189
+  },
+  "weapon/thumper": {
+   "h": 18,
+   "page": 0,
+   "w": 30,
+   "x": 626,
+   "y": 214
+  },
+  "weapon/void_needle": {
+   "h": 14,
+   "page": 0,
+   "w": 34,
+   "x": 1437,
+   "y": 254
+  }
+ },
+ "themes": [
+  "keep",
+  "crypt",
+  "foundry",
+  "sanctum"
+ ],
+ "tileSize": 16,
+ "version": 1,
+ "wallHeight": 16,
+ "weapons": {
+  "arc_coil": {
+   "muzzle": [
+    27,
+    9
+   ],
+   "pivot": [
+    8,
+    13
+   ]
+  },
+  "bone_saw": {
+   "muzzle": [
+    23,
+    10
+   ],
+   "pivot": [
+    6,
+    12
+   ]
+  },
+  "cryo_lance": {
+   "muzzle": [
+    31,
+    8
+   ],
+   "pivot": [
+    9,
+    11
+   ]
+  },
+  "flamer": {
+   "muzzle": [
+    30,
+    9
+   ],
+   "pivot": [
+    9,
+    13
+   ]
+  },
+  "hand_cannon": {
+   "muzzle": [
+    32,
+    8
+   ],
+   "pivot": [
+    9,
+    13
+   ]
+  },
+  "hexbolt": {
+   "muzzle": [
+    25,
+    7
+   ],
+   "pivot": [
+    7,
+    11
+   ]
+  },
+  "longarm": {
+   "muzzle": [
+    37,
+    7
+   ],
+   "pivot": [
+    12,
+    11
+   ]
+  },
+  "nail_driver": {
+   "muzzle": [
+    28,
+    8
+   ],
+   "pivot": [
+    9,
+    13
+   ]
+  },
+  "peacemaker": {
+   "muzzle": [
+    25,
+    6
+   ],
+   "pivot": [
+    7,
+    11
+   ]
+  },
+  "plague_censer": {
+   "muzzle": [
+    23,
+    15
+   ],
+   "pivot": [
+    6,
+    12
+   ]
+  },
+  "ripper": {
+   "muzzle": [
+    25,
+    5
+   ],
+   "pivot": [
+    9,
+    11
+   ]
+  },
+  "scattergun": {
+   "muzzle": [
+    29,
+    6
+   ],
+   "pivot": [
+    8,
+    11
+   ]
+  },
+  "star_caller": {
+   "muzzle": [
+    25,
+    8
+   ],
+   "pivot": [
+    7,
+    12
+   ]
+  },
+  "sunburst": {
+   "muzzle": [
+    25,
+    9
+   ],
+   "pivot": [
+    7,
+    13
+   ]
+  },
+  "thumper": {
+   "muzzle": [
+    30,
+    8
+   ],
+   "pivot": [
+    8,
+    13
+   ]
+  },
+  "void_needle": {
+   "muzzle": [
+    34,
+    6
+   ],
+   "pivot": [
+    8,
+    10
+   ]
+  }
+ }
+}

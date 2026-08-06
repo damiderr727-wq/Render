@@ -27,11 +27,15 @@ let package = Package(
                 .pad,
                 .phone
             ],
-            // Landscape only. The playfield is wider than it is tall and the
-            // thumb controls need the width.
+            // Landscape is how the game wants to be held — the playfield is
+            // wider than it is tall and the thumb controls need the width —
+            // but all four are listed because Playgrounds warns otherwise,
+            // and the HUD anchors to the corners so portrait still works.
             supportedInterfaceOrientations: [
                 .landscapeRight,
-                .landscapeLeft
+                .landscapeLeft,
+                .portrait,
+                .portraitUpsideDown(.when(deviceFamilies: [.pad]))
             ]
         )
     ],

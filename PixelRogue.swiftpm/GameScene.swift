@@ -1,7 +1,6 @@
 #if canImport(SpriteKit)
 import Foundation
 import SpriteKit
-import PixelRogueCore
 
 #if canImport(AppKit)
 import AppKit

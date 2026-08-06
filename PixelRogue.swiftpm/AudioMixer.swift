@@ -2,7 +2,6 @@
 import AVFoundation
 import Foundation
 import QuartzCore          // CACurrentMediaTime, for the retrigger guard
-import PixelRogueAssets
 
 /// Plays the generated sound effects.
 ///

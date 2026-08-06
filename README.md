@@ -15,6 +15,12 @@ repository — `Tools/pixelforge` draws all of it.
 
 ## Running it
 
+**On iPad (Swift Playgrounds):** download the repository, unzip it in the
+Files app and tap `PixelRogue.swiftpm`. Full instructions and the touch
+controls are in **[docs/IPAD.md](docs/IPAD.md)**.
+
+**On macOS:**
+
 ```bash
 # 1. generate the art and audio (any platform, needs Pillow)
 pip install pillow
@@ -118,6 +124,9 @@ Sources/
     View/             SceneSnapshot — what to draw, and where
   PixelRogueApp/      SpriteKit renderer, HUD, input, audio, macOS shell
   PixelRogueSnapshot/ headless frame dumper
+PixelRogue.swiftpm/   the iPad build, assembled from the above by
+                      Tools/make_swiftpm.py — one flat module, SwiftUI shell,
+                      touch controls
 ```
 
 The simulation never touches SpriteKit, never plays a sound and never moves a
@@ -183,11 +192,12 @@ Rebuild the atlas and run the tests after any of these.
 
 ## Known limitations
 
-- **The renderer is macOS-only.** SpriteKit is an Apple framework; the game
-  logic is portable but the presentation layer is not. Because that layer
-  cannot be compiled anywhere but macOS, it is the least-verified code in the
-  repository — the snapshot tool exists specifically to cover for that, but it
-  exercises `SceneSnapshot`, not SpriteKit itself.
+- **The renderer needs an Apple platform.** SpriteKit is an Apple framework;
+  the game logic is portable but the presentation layer is not. Because that
+  layer cannot be compiled anywhere but on macOS or iPadOS, it is the
+  least-verified code in the repository — the snapshot tool exists
+  specifically to cover for that, but it exercises `SceneSnapshot`, not
+  SpriteKit itself.
 - **No music**, only sound effects.
 - **No save or meta-progression.** A run is a run.
 - **Secret rooms are generated but have no reveal mechanic** — they are

@@ -20,10 +20,19 @@ public enum GeneratedAssets {
                           subdirectory: "generated")
     }
 
-    /// Directory holding the generated .wav cues, if they were built.
-    public static var soundsURL: URL? {
-        bundle.url(forResource: "sfx", withExtension: nil,
-                   subdirectory: "generated")
+    /// Every generated .wav cue. Callers key off the file name, so the
+    /// on-disk layout can differ per platform without them caring.
+    ///
+    /// Walks the directory rather than using `Bundle.urls(forResources…)`,
+    /// whose signature differs between Darwin and corelibs Foundation.
+    public static func soundURLs() -> [URL] {
+        guard let directory = bundle.url(forResource: "sfx", withExtension: nil,
+                                         subdirectory: "generated") else {
+            return []
+        }
+        let contents = (try? FileManager.default.contentsOfDirectory(
+            at: directory, includingPropertiesForKeys: nil)) ?? []
+        return contents.filter { $0.pathExtension == "wav" }
     }
 
     /// True when the atlas has been generated. A fresh clone has the art

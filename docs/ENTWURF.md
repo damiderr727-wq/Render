@@ -31,15 +31,56 @@ kehrt wieder, nur kippt jede vierte Note einen Halbton weg.
 
 ## Cadence
 
-Eine kleine Figur mit langen Gliedern und einem kleinen Kopf — die
-Silhouette entscheidet, nicht das Gesicht. Der Umhang hat einen leuchtenden
-Saum, damit man sie im Dunkeln findet.
+Der erste Entwurf war ein Mädchen im Umhang mit Gesicht, Haar und Hautton.
+Bei zwanzig Pixeln war das Matsch — und vor allem war es keine Marke. Man
+konnte es nicht in einem Bild wiedererkennen.
 
-Sie wird parametrisch gezeichnet: eine Pose ist eine Handvoll Zahlen
-(Neigung, Wippen, Beinphase, Haarschwung, Armwinkel). Das war keine
-Bequemlichkeit, sondern eine Entscheidung — 127 Bilder aus drei
-Instrumenten mal elf Bewegungen hätte niemand von Hand nachgezogen, wenn
-sich die Silhouette noch einmal ändert.
+Sie ist jetzt keine Person, sondern eine Form aus drei Teilen:
+
+- eine bleiche **Maske** mit **einem** großen dunklen Auge
+- darüber die zwei nach außen geneigten Zinken einer **Stimmgabel**, mit
+  bernsteinfarbenen Spitzen
+- darunter ein fast schwarzer **Umhang** ohne sichtbare Beine, mit
+  zerfranstem Saum
+
+Die Stimmgabel ist ohnehin schon das Zeichen dieser Welt — die Rastpunkte
+sind Stimmgabeln. Sie auf den Kopf zu setzen macht die Figur zur Trägerin
+des Symbols, statt ihr nur ein Instrument in die Hand zu geben.
+
+Zwei Regeln haben den Entwurf getragen: **eine Silhouette, drei Elemente**,
+und **ein Akzent** (Bernstein an den Zinken, sonst nichts Warmes an ihr).
+Die Zinken standen zuerst senkrecht und dicht — da las sich die Figur als
+Hase. Nach außen geneigt und dünner lesen sie sich als Gabel.
+
+Gezeichnet wird sie parametrisch: eine Pose ist eine Handvoll Zahlen. Das
+war keine Bequemlichkeit — 127 Bilder aus drei Instrumenten mal elf
+Bewegungen hätte niemand von Hand nachgezogen, als die Silhouette noch
+einmal komplett umgeworfen wurde.
+
+## Die Werteordnung
+
+Der zweite große Fehler des ersten Entwurfs: alles lag im selben
+Helligkeitsbereich. Dunkelgrün auf Dunkelgrün, sauber gekachelt, und
+trotzdem Matsch — weil nichts vor etwas anderem stand.
+
+Die Welt hat jetzt eine feste Staffelung, von hell nach dunkel:
+
+| Schicht | Rolle |
+|---|---|
+| Himmel | hellster Wert im Bild |
+| ferne Silhouetten | Stämme, Pfeiler, hängende Formen |
+| nahe Silhouetten | dieselben Formen, deutlich dunkler |
+| begehbarer Fels | dunkle Masse mit **heller Lichtkante** oben |
+| Vordergrund | fast schwarz, läuft schneller als die Kamera |
+
+Der Griff, der alles zusammenhält, ist der vorletzte: der Boden ist dunkel,
+sichtbar wird er über seine beleuchtete Oberkante. Dadurch braucht es
+keinen Nebel, um Tiefe zu erzeugen, und die bleiche Maske der Figur hebt
+sich gegen die dunkle Masse ab, wo immer sie steht.
+
+Dazu kommt der Maßstab: die Hintergründe sind so groß wie das Sichtfeld,
+Stämme spannen die volle Bildhöhe, und an Fäden hängen Zapfen, Rauchfässer
+und Kristalle. Erst an solchen Dingen sieht man, wie groß eine Halle ist.
 
 ## Der Kampf
 

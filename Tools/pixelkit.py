@@ -60,24 +60,51 @@ class Palette:
     ROT_DIM = hexc("#6d2338")
     BILE = hexc("#8fa03c")
 
-    # Heldin "Cadence"
-    SKIN = hexc("#e8c3a6")
-    SKIN_SH = hexc("#b98a72")
-    HAIR = hexc("#2b3d5c")
-    HAIR_HI = hexc("#48628c")
-    CLOAK = hexc("#1d2b46")
-    CLOAK_HI = hexc("#31486f")
-    CLOAK_LO = hexc("#111a2c")
+    # Cadence.
+    #
+    # Sie ist keine Person, sie ist eine Form: bleiche Maske, ein Auge,
+    # darueber die zwei Zinken einer Stimmgabel. Das liest sich auch bei
+    # zwanzig Pixeln noch - ein Gesicht taete das nicht.
+    BONE = hexc("#e9e3d2")
+    BONE_SH = hexc("#a89f8b")
+    BONE_LO = hexc("#6e6757")
+    CLOAK = hexc("#161923")
+    CLOAK_HI = hexc("#272d3d")
+    CLOAK_LO = hexc("#0a0c12")
+    EYE = hexc("#090a10")
+    AMBER = hexc("#ffb454")
     TRIM = hexc("#7fe8d8")
-    BOOT = hexc("#15203a")
 
-    # Regionsfarben (Boden, Kante, Akzent)
+    # Regionsfarben: Boden, Kante, Akzent, Himmel, Ferne.
+    #
+    # Die Ordnung der Helligkeiten traegt das ganze Bild. Der Himmel ist
+    # der hellste Wert, davor stehen die fernen Silhouetten, dann der
+    # begehbare Fels, und ganz vorn liegt Fast-Schwarz. Wer alles gleich
+    # dunkel haelt, bekommt Matsch - egal wie sauber die Kacheln sind.
     REGIONS = {
-        "hain": (hexc("#1c3330"), hexc("#396b5f"), hexc("#7fe8d8")),
-        "kathedrale": (hexc("#232236"), hexc("#4a4670"), hexc("#e6b3ff")),
-        "grotten": (hexc("#182a3f"), hexc("#356089"), hexc("#8fd7ff")),
-        "dissonanz": (hexc("#2a1622"), hexc("#5e2b3f"), hexc("#c2415f")),
+        # Der begehbare Fels ist dunkel; sichtbar wird er ueber seine
+        # beleuchtete Oberkante. Das ist der Griff, der Vordergrund von
+        # Hintergrund trennt, ohne dass Nebel noetig waere.
+        "hain": (hexc("#15211f"), hexc("#6ea78f"), hexc("#ffc46b"),
+                 hexc("#8d9c9a"), hexc("#3f5a56")),
+        "kathedrale": (hexc("#1a1826"), hexc("#7a6f9e"), hexc("#ffd08a"),
+                       hexc("#9a93a8"), hexc("#4b4468")),
+        "grotten": (hexc("#141d28"), hexc("#5f8bad"), hexc("#9ee0ff"),
+                    hexc("#8ea3b5"), hexc("#3d5a75")),
+        "dissonanz": (hexc("#1d1116"), hexc("#8a4352"), hexc("#ff8a5c"),
+                      hexc("#6b4b52"), hexc("#4d2b36")),
     }
+
+    # Vordergrund - fast schwarz, in jeder Region gleich.
+    FOREGROUND = hexc("#080a10")
+
+
+def hash01(x: int, y: int = 0) -> float:
+    """Deterministischer Wert 0..1 aus zwei ganzen Zahlen."""
+    h = (x * 374761393 + y * 668265263) & 0xFFFFFFFF
+    h = (h ^ (h >> 13)) & 0xFFFFFFFF
+    h = (h * 1274126177) & 0xFFFFFFFF
+    return ((h ^ (h >> 16)) & 0xFFFFFFFF) / 0xFFFFFFFF
 
 
 # --------------------------------------------------------------- Leinwand

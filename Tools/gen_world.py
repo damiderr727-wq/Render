@@ -26,7 +26,7 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
     Ein Bodenstueck. `edges` enthaelt die freiliegenden Seiten:
     't' oben, 'b' unten, 'l' links, 'r' rechts.
     """
-    body, edge, accent = P.REGIONS[region]
+    body, edge, accent = P.REGIONS[region][:3]
     c = Canvas(TS, TS)
     rng = Rng(1000 + variant * 7919 + (sum(map(ord, region)) * 131) % 4096)
 
@@ -41,11 +41,11 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
             c.set(x, y, col)
 
     # Adern aus erstarrtem Klang - nur angedeutet.
-    for _ in range(rng.int(0, 1)):
+    if rng.chance(0.5):
         vx = rng.int(2, TS - 3)
         vy = rng.int(3, TS - 5)
         for i in range(rng.int(2, 4)):
-            c.set(vx, vy + i, mix(body, accent, 0.10))
+            c.set(vx, vy + i, mix(body, accent, 0.06))
             if rng.chance(0.4):
                 vx += 1 if rng.chance(0.5) else -1
 
@@ -93,7 +93,7 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
 
 def tile_platform(region: str) -> Canvas:
     """Durchsteigbare Plattform - schwebende Notenlinie."""
-    body, edge, accent = P.REGIONS[region]
+    body, edge, accent = P.REGIONS[region][:3]
     c = Canvas(TS, 6)
     c.rect(0, 0, TS, 1, mix(edge, accent, 0.5))
     c.rect(0, 1, TS, 2, edge)
@@ -106,7 +106,7 @@ def tile_platform(region: str) -> Canvas:
 
 def tile_spike(region: str) -> Canvas:
     """Dissonanzdornen - scharfe, verstimmte Kristallnadeln."""
-    body, edge, accent = P.REGIONS[region]
+    body, edge, accent = P.REGIONS[region][:3][:3]
     c = Canvas(TS, TS)
     c.rect(0, TS - 3, TS, 3, shade(body, -0.25))
     for i in range(4):
@@ -205,68 +205,202 @@ def tile_bench(frame: int) -> Canvas:
 
 # ------------------------------------------------------------- Hintergruende
 
-def backdrop(region: str, layer: int, w: int = 384, h: int = 216) -> Canvas:
-    """Ein Parallax-Streifen. Layer 0 = fernste Schicht."""
-    body, edge, accent = P.REGIONS[region]
-    c = Canvas(w, h)
+BG_W, BG_H = 512, 288   # so gross wie das Sichtfeld: ein Bild fuellt den Blick
+
+
+def _trunk(c: Canvas, x: int, width: int, col, taper: float = 0.35,
+           rng: Rng | None = None) -> None:
+    """Ein Stamm oder Pfeiler ueber die volle Bildhoehe."""
+    rng = rng or Rng(7)
+    lean = rng.range(-0.10, 0.10)
+    for y in range(BG_H):
+        t = y / BG_H
+        w = int(width * (1 - taper * (1 - t)))
+        cx = x + int(lean * (BG_H - y))
+        c.rect(cx - w // 2, y, max(2, w), 1, col)
+    # Rindenkanten: eine Spur heller an der Lichtseite.
+    hi = shade(col, 0.10)
+    for y in range(0, BG_H, 3):
+        t = y / BG_H
+        w = int(width * (1 - taper * (1 - t)))
+        cx = x + int(lean * (BG_H - y))
+        c.rect(cx - w // 2, y, 1, 2, hi)
+
+
+def _hanging(c: Canvas, x: int, y: int, length: int, size: int, col, accent) -> None:
+    """
+    Etwas, das an einem Faden haengt: Zapfen, Rauchfass, Kristall.
+
+    Solche Objekte geben dem Bild Massstab - erst an ihnen sieht man, wie
+    gross die Halle ist. In den Vorlagen sind sie das, was den Raum tief
+    macht.
+    """
+    for i in range(length):
+        c.set(x, y + i, mix(col, accent, 0.15 if i % 4 else 0.35))
+    cy = y + length + size
+    c.ellipse(x, cy, size * 0.55, size, col)
+    c.ellipse(x - size * 0.18, cy - size * 0.2, size * 0.35, size * 0.7, shade(col, 0.12))
+    for i in range(int(size)):
+        c.set(int(x + size * 0.3), int(cy - size + i * 2), shade(col, -0.25))
+
+
+def _canopy(c: Canvas, x: int, y: int, span: int, col, rng: Rng) -> None:
+    """Ein Zweig mit Nadeln, der von oben ins Bild ragt."""
+    for i in range(span):
+        t = i / span
+        bx = x + i
+        by = y + int(t * t * 22)
+        c.rect(bx, by, 1, 2, col)
+        needles = int(10 * (1 - t) + 3)
+        for n in range(needles):
+            u = n / max(1, needles)
+            c.set(bx, by + 2 + int(u * 9), mix(col, shade(col, -0.2), u))
+            c.set(bx, by - 2 - int(u * 7), mix(col, shade(col, -0.2), u))
+
+
+def backdrop(region: str, layer: int) -> Canvas:
+    """
+    Eine Parallax-Schicht.
+
+    Die Helligkeiten sind fest gestaffelt: Schicht 0 ist der helle Himmel,
+    Schicht 1 die ferne Silhouette, Schicht 2 die nahe. Dadurch entsteht
+    Tiefe durch Wert, nicht durch Nebel - und die Figur hebt sich als
+    heller Fleck gegen dunkles Vorn ab.
+    """
+    body, edge, accent, sky, far = P.REGIONS[region]
+    c = Canvas(BG_W, BG_H)
     rng = Rng(100 + layer * 7 + REGIONS.index(region) * 91)
-    depth = layer / 2.0
-    silhouette = mix(P.VOID, body, 0.18 + depth * 0.42)
 
     if layer == 0:
-        # Himmels-/Hoehlenverlauf mit Sternstaub
-        for y in range(h):
-            t = y / h
-            c.rect(0, y, w, 1, mix(mix(P.VOID, body, 0.28), P.VOID, t * 0.75))
-        for _ in range(int(w * h * 0.0018)):
-            x, y = rng.int(0, w - 1), rng.int(0, int(h * 0.75))
-            a = rng.int(40, 150)
-            c.blend(x, y, (accent[0], accent[1], accent[2], a))
+        # Himmel: der hellste Wert im ganzen Bild.
+        for y in range(BG_H):
+            t = y / BG_H
+            c.rect(0, y, BG_W, 1, mix(sky, far, t ** 0.8))
+        # Staubkoerner im Licht.
+        for _ in range(260):
+            x, y = rng.int(0, BG_W - 1), rng.int(0, BG_H - 1)
+            c.blend(x, y, (255, 255, 255, rng.int(10, 40)))
+        # Ganz ferne Andeutungen, kaum abgesetzt.
+        veil = mix(far, sky, 0.35)
+        for i in range(7):
+            _trunk(c, rng.int(0, BG_W), rng.int(14, 34), veil, 0.5, rng)
+        return c
+
+    # Silhouetten: Schicht 1 mittel, Schicht 2 dunkel.
+    col = mix(far, P.FOREGROUND, 0.35 if layer == 1 else 0.68)
+    count = 5 if layer == 1 else 3
 
     if region in ("hain", "grotten"):
-        # Kristallspitzen / Baumstaemme
-        count = 7 + layer * 5
         for i in range(count):
-            x = int(i * w / count + rng.int(-14, 14))
-            bw = rng.int(6, 16 + layer * 6)
-            bh = rng.int(int(h * 0.3), int(h * 0.85))
-            for y in range(bh):
-                t = y / bh
-                ww = int(bw * (0.35 + t * 0.65))
-                c.rect(x - ww // 2, h - y, ww, 1, silhouette)
-            if layer >= 1 and rng.chance(0.5):
-                c.glow(x, h - bh, 10, (accent[0], accent[1], accent[2], 40))
-    elif region == "kathedrale":
-        # Saeulen und Bogenfenster
-        count = 4 + layer * 3
-        for i in range(count):
-            x = int((i + 0.5) * w / count)
-            bw = rng.int(10, 20 + layer * 8)
-            c.rect(x - bw // 2, int(h * 0.1), bw, h, silhouette)
-            # Bogen
-            for a in range(180):
-                rad = math.radians(a)
-                c.set(int(x + math.cos(rad) * bw * 0.8), int(h * 0.28 - math.sin(rad) * bw * 0.8), silhouette)
-            if layer >= 1:
-                c.rect(x - 2, int(h * 0.32), 4, int(h * 0.3), mix(silhouette, accent, 0.22))
-    else:
-        # Dissonanz: zerbrochene Strukturen, schief
-        for i in range(8 + layer * 6):
-            x = rng.int(0, w)
-            bh = rng.int(int(h * 0.2), int(h * 0.7))
-            skew = rng.range(-0.35, 0.35)
-            for y in range(bh):
-                t = y / bh
-                ww = int(rng.int(4, 14) * (0.4 + t * 0.6))
-                c.rect(int(x + skew * y - ww // 2), h - y, max(1, ww), 1, silhouette)
+            x = int((i + 0.5) * BG_W / count + rng.range(-40, 40))
+            _trunk(c, x, rng.int(38, 84) if layer == 2 else rng.int(22, 52), col, 0.30, rng)
+        if region == "hain":
+            # Zweige von oben, Zapfen an Faeden - der Massstab des Waldes.
+            for i in range(3 if layer == 1 else 2):
+                _canopy(c, rng.int(-30, BG_W - 60), rng.int(-6, 30),
+                        rng.int(70, 150), shade(col, -0.12), rng)
+            for _ in range(2 if layer == 1 else 3):
+                _hanging(c, rng.int(30, BG_W - 30), 0,
+                         rng.int(40, 130), rng.int(7, 14), shade(col, -0.15), accent)
+        else:
+            # Grotten: Kristalle haengen von der Decke.
+            for _ in range(3 if layer == 1 else 4):
+                x = rng.int(20, BG_W - 20)
+                h = rng.int(50, 130)
+                w = rng.int(10, 26)
+                for y in range(h):
+                    t = y / h
+                    c.rect(int(x - w * (1 - t) / 2), y, max(1, int(w * (1 - t))), 1, col)
+                c.glow(x, h, 18, (accent[0], accent[1], accent[2], 26 if layer == 1 else 16))
 
-    # Dunst nach unten, weich ansteigend.
-    for y in range(h):
-        t = y / h
-        if t > 0.45:
-            u = (t - 0.45) / 0.55
-            a = int((u ** 1.6) * 80 * (1 - depth * 0.4))
-            c.rect_blend(0, y, w, 1, (P.VOID[0], P.VOID[1], P.VOID[2], a))
+    elif region == "kathedrale":
+        # Pfeiler und Bogenfenster - das Licht kommt von hinten durch.
+        for i in range(count):
+            x = int((i + 0.5) * BG_W / count)
+            width = rng.int(46, 78) if layer == 2 else rng.int(26, 46)
+            c.rect(x - width // 2, 0, width, BG_H, col)
+            # Fenster: heller Ausschnitt im Pfeilerzwischenraum.
+            if layer == 1 and i < count - 1:
+                wx = int((i + 1) * BG_W / count)
+                ww, wh = 26, 96
+                top = 46
+                for y in range(wh):
+                    t = y / wh
+                    glass = mix(sky, accent, 0.25 + 0.25 * (1 - t))
+                    c.rect(wx - ww // 2, top + y, ww, 1, glass)
+                for a in range(180):
+                    rad = math.radians(a)
+                    c.set(int(wx + math.cos(rad) * ww / 2),
+                          int(top - math.sin(rad) * ww / 2), glass)
+                c.glow(wx, top + wh // 2, 46, (accent[0], accent[1], accent[2], 22))
+        # Haengende Rauchfaesser.
+        for _ in range(2 if layer == 1 else 3):
+            _hanging(c, rng.int(40, BG_W - 40), 0,
+                     rng.int(50, 140), rng.int(6, 12), shade(col, -0.2), accent)
+
+    else:
+        # Dissonanz: gekippte, gebrochene Formen. Nichts steht mehr gerade.
+        for i in range(count + 3):
+            x = rng.int(0, BG_W)
+            h = rng.int(int(BG_H * 0.45), BG_H)
+            skew = rng.range(-0.45, 0.45)
+            w0 = rng.int(14, 46)
+            for y in range(h):
+                t = y / h
+                w = int(w0 * (0.35 + t * 0.65))
+                c.rect(int(x + skew * (h - y) - w // 2), BG_H - y, max(2, w), 1, col)
+        for _ in range(3):
+            _hanging(c, rng.int(30, BG_W - 30), 0,
+                     rng.int(30, 110), rng.int(8, 15), shade(col, -0.15), accent)
+
+    return c
+
+
+def foreground(region: str) -> Canvas:
+    """
+    Die vorderste Schicht: fast schwarze Massen am unteren Bildrand.
+
+    Sie steht vor allem anderen und laeuft schneller als die Kamera. Ohne
+    sie klebt das Bild flach am Bildschirm - mit ihr schaut man in eine
+    Tiefe hinein.
+    """
+    body, edge, accent, sky, far = P.REGIONS[region]
+    c = Canvas(BG_W, BG_H)
+    rng = Rng(555 + REGIONS.index(region) * 37)
+    col = P.FOREGROUND
+
+    # Unterer Saum: eine geschlossene, unruhige Masse. Einzelne duenne
+    # Halme lesen sich aus der Entfernung als Antennen - es braucht Volumen.
+    base = BG_H - 10
+    for i in range(60):
+        x = int(i * BG_W / 52 + rng.range(-18, 18))
+        r = rng.range(22, 62)
+        c.ellipse(x, base + rng.range(0, 26), r, r * rng.range(0.45, 0.85), col)
+    c.rect(0, base + 16, BG_W, BG_H - base - 16, col)
+
+    # Wenige, dafuer dicke Formen, die aus der Masse aufragen.
+    for _ in range(7):
+        x = rng.int(0, BG_W)
+        h = rng.int(26, 78)
+        lean = rng.range(-0.25, 0.25)
+        for y in range(h):
+            t = y / h
+            w = max(2, int(7 * (1 - t * 0.75)))
+            c.rect(int(x + lean * y) - w // 2, base - y, w, 1, col)
+        if region == "hain":
+            # Ein paar Blattkronen auf den Halmen.
+            top = base - h
+            c.ellipse(int(x + lean * h), top, 7, 9, col)
+        elif region == "grotten":
+            c.ellipse(int(x + lean * h), top if False else base - h, 5, 12, col)
+
+    # Oben hereinragende Aeste, damit der Blick gerahmt ist.
+    for _ in range(3):
+        x = rng.int(-40, BG_W)
+        span = rng.int(80, 200)
+        for i in range(span):
+            t = i / span
+            c.rect(x + i, int(t * t * 30), 1, int(6 * (1 - t)) + 2, col)
     return c
 
 
@@ -476,10 +610,12 @@ def build() -> None:
     png, js = fx.write(OUT)
     print(f"fx         -> {png.name} ({len(fx.frames)} Frames)")
 
-    bg = Atlas("backdrops", padding=2, max_width=384)
+    bg = Atlas("backdrops", padding=2, max_width=512)
     for region in REGIONS:
         for layer in range(3):
-            bg.add(f"{region}_bg{layer}", backdrop(region, layer), pivot=(0, 0), parallax=[0.15, 0.35, 0.6][layer])
+            bg.add(f"{region}_bg{layer}", backdrop(region, layer), pivot=(0, 0),
+                   parallax=[0.10, 0.28, 0.52][layer])
+        bg.add(f"{region}_fg", foreground(region), pivot=(0, 0), parallax=1.30)
     png, js = bg.write(OUT)
     print(f"backdrops  -> {png.name} ({len(bg.frames)} Frames)")
 

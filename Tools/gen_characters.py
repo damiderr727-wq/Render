@@ -12,11 +12,11 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from pixelkit import Atlas, Canvas, Palette as P, Rng, hexc, mix, shade
+from pixelkit import Atlas, Canvas, Palette as P, Rng, hash01, hexc, mix, shade
 
 OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Resources" / "Atlas"
 
-HERO_W, HERO_H = 20, 26
+HERO_W, HERO_H = 22, 30
 GROUND = HERO_H - 1  # unterste Pixelzeile = Fussboden
 
 
@@ -27,154 +27,138 @@ def draw_heroine(
     lean: float = 0.0,        # Oberkoerperneigung in Pixeln
     bob: float = 0.0,         # vertikales Wippen
     leg_phase: float | None = None,   # None = Stand
-    leg_spread: float = 0.0,  # Sprung/Fall-Beinstellung
+    leg_spread: float = 0.0,  # Sprung/Fall-Haltung
     arm_front: float = 0.0,   # vorderer Arm: -1 unten .. +1 oben
     arm_back: float = 0.0,
-    hair_sway: float = 0.0,
+    hair_sway: float = 0.0,   # Schwingen der Zinken
     cloak_sway: float = 0.0,
     cloak_lift: float = 0.0,
     instrument: str | None = "leier",
-    aim: float = 0.0,         # -1 nach unten, 0 vorn, +1 nach oben
+    aim: float = 0.0,
     crouch: float = 0.0,
     glow: float = 0.35,
     alpha_body: int = 255,
 ) -> Canvas:
-    """Zeichnet Cadence nach rechts blickend."""
+    """
+    Zeichnet Cadence nach rechts blickend.
+
+    Sie ist bewusst keine Person. Bei zwanzig Pixeln verliert ein Gesicht
+    jede Wirkung - eine Form nicht. Also: eine bleiche Maske mit einem
+    grossen dunklen Auge, darueber die zwei Zinken einer Stimmgabel, darunter
+    ein fast schwarzer Umhang ohne sichtbare Beine. Drei Elemente, die man
+    auch als Silhouette gegen jeden Hintergrund wiedererkennt.
+    """
     c = Canvas(HERO_W, HERO_H)
 
     cx = HERO_W // 2
     base = GROUND - int(round(bob)) - int(round(crouch))
     lean_i = int(round(lean))
+    sway = cloak_sway
 
-    # Koerperbau: kleiner Kopf, lange Glieder - schlanke Silhouette.
-    hip_y = base - 9        # Huefte
-    waist_y = base - 12     # Taille (schmalste Stelle)
-    shoulder_y = base - 16
-    neck_y = base - 17
-    head_bot = base - 17
-    head_top = base - 23
+    hem_y = base
+    shoulder_y = base - 15
+    mask_cy = base - 19
+    fork_base = mask_cy - 4
 
-    # --- Beine (zuerst, liegen hinter dem Rock) ---------------------------
-    if leg_phase is None:
-        legs = [(-2.0, 0.0, 0.0), (1.0, 0.0, 0.0)]
-    elif leg_spread:
-        legs = [(-2.0 - leg_spread, leg_spread * 0.7, -1.0), (1.0 + leg_spread, -leg_spread * 0.5, 1.0)]
-    else:
-        s = math.sin(leg_phase)
-        s2 = math.sin(leg_phase + math.pi)
-        legs = [(-1.5 + s * 3.0, max(0.0, -s * 2.2), s), (0.5 + s2 * 3.0, max(0.0, -s2 * 2.2), s2)]
-
-    for i, (dx, lift, swing) in enumerate(legs):
-        col = shade(P.CLOAK_LO, -0.15) if i == 0 else P.CLOAK
-        lx = cx + int(round(dx)) + lean_i // 2
-        bottom = base - int(round(lift))
-        knee = hip_y + 4
-        # Oberschenkel bleibt im Rock, Unterschenkel schaut heraus.
-        c.rect(lx, hip_y, 2, max(1, knee - hip_y), col)
-        c.rect(lx + (1 if swing > 0.3 else 0), knee, 2, max(1, bottom - knee - 1), col)
-        # Stiefel
-        bx0 = lx + (1 if swing > 0.3 else 0)
-        c.rect(bx0 - 1, bottom - 2, 3, 2, P.BOOT)
-        c.rect(bx0 - 1, bottom - 1, 4 if swing > 0 else 3, 1, shade(P.BOOT, -0.25))
-        c.set(bx0, bottom - 3, mix(P.TRIM, P.BOOT, 0.55))
-
-    # --- Rock / Umhang: von der Taille ausgestellt ------------------------
-    skirt_bot = hip_y + 2
-    for y in range(waist_y, skirt_bot + 1):
-        t = (y - waist_y) / max(1, skirt_bot - waist_y)
-        half = 2.0 + (t ** 1.35) * 4.6 + cloak_lift * t * 0.6
-        off = lean_i * (1 - t) * 0.6 + cloak_sway * t
-        col = mix(P.CLOAK_HI, P.CLOAK_LO, 0.25 + t * 0.7)
+    # --- Umhang: eine geschlossene Glockenform ----------------------------
+    #
+    # Keine Beine, keine Taille. Die Silhouette bleibt eine einzige Masse -
+    # dadurch liest sie sich noch, wenn die Figur nur zwanzig Pixel hoch ist.
+    for y in range(shoulder_y, hem_y + 1):
+        t = (y - shoulder_y) / max(1, hem_y - shoulder_y)
+        half = 2.2 + (t ** 1.35) * 5.6 + cloak_lift * t * 0.7
+        off = lean_i * (1 - t) * 0.7 + sway * (t ** 1.4)
+        # Oben heller, unten fast schwarz: der Umhang faellt ins Dunkle.
+        col = mix(P.CLOAK_HI, P.CLOAK_LO, min(1.0, t * 1.35))
         c.rect(int(round(cx - half + off)), y, max(1, int(round(half * 2))), 1, col)
-    # Klangsaum: nur die Ecken leuchten, der Rest bleibt dunkel.
-    half_e = 2.0 + 4.6 + cloak_lift * 0.6
-    off_e = cloak_sway
-    for dx in (-half_e, half_e - 1):
-        c.set(int(round(cx + dx + off_e)), skirt_bot, mix(P.TRIM, P.CLOAK, 0.45))
-        c.set(int(round(cx + dx + off_e)), skirt_bot - 1, mix(P.TRIM, P.CLOAK, 0.75))
-    c.rect(int(round(cx - half_e + off_e + 1)), skirt_bot, max(1, int(round(half_e * 2 - 2))), 1,
-           shade(P.CLOAK_LO, -0.2))
 
-    # Nach hinten wehender Umhangzipfel
-    if abs(cloak_sway) > 0.8 or cloak_lift > 1.0:
-        d = -1 if cloak_sway < 0 else 1
-        for i in range(4):
-            c.set(int(cx + d * (4 + i)), int(waist_y + 2 + i - cloak_lift * 0.6), shade(P.CLOAK_LO, -0.1))
-            c.set(int(cx + d * (4 + i)), int(waist_y + 3 + i - cloak_lift * 0.6), P.CLOAK_LO)
+    # Zerfranster Saum - ein glatter Abschluss wirkt gestanzt.
+    hem_half = 2.2 + 5.6 + cloak_lift * 0.7
+    for i in range(int(hem_half * 2)):
+        x = int(round(cx - hem_half + sway)) + i
+        notch = int(hash01(x * 7, 3) * 2.2)
+        for k in range(notch):
+            c.set(x, hem_y - k, None)
+        if leg_phase is not None:
+            # Im Lauf flattert der Saum gegenlaeufig zur Schrittfolge.
+            if (i + int(leg_phase * 2)) % 4 == 0:
+                c.set(x, hem_y - notch, None)
 
-    # --- Torso: Schulter breit, Taille schmal -----------------------------
-    for y in range(shoulder_y, waist_y + 1):
-        t = (y - shoulder_y) / max(1, waist_y - shoulder_y)
-        half = 2.6 - t * 0.7
-        off = lean_i * (1 - t * 0.5)
-        col = mix(P.CLOAK_HI, P.CLOAK, t)
-        c.rect(int(round(cx - half + off)), y, max(1, int(round(half * 2))), 1, col)
-    # Schattenkante rechts
-    c.rect(cx + 2 + lean_i, shoulder_y + 1, 1, waist_y - shoulder_y, shade(P.CLOAK, -0.25))
-    # Resonanzbrosche am Brustbein
-    c.set(cx + lean_i, shoulder_y + 2, P.TRIM)
-    c.set(cx + lean_i, shoulder_y + 3, mix(P.TRIM, P.CLOAK, 0.45))
+    # Zwei dunkle Fussspitzen schauen im Lauf hervor.
+    if leg_phase is not None and not leg_spread:
+        step = math.sin(leg_phase)
+        for side, phase in ((-1, step), (1, -step)):
+            fx = cx + side * 2 + int(round(phase * 1.6)) + lean_i // 2
+            fy = hem_y - max(0, int(round(phase * 1.4)))
+            c.rect(fx - 1, fy - 1, 3, 2, P.CLOAK_LO)
 
-    # --- Kopf -------------------------------------------------------------
-    hx = cx - 2 + lean_i
-    hs = int(round(hair_sway))
+    # Wehender Zipfel nach hinten.
+    if abs(sway) > 0.8 or cloak_lift > 1.0:
+        d = -1 if sway < 0 else 1
+        for i in range(5):
+            y = int(shoulder_y + 5 + i * 1.6 - cloak_lift * 0.8)
+            c.set(int(cx + d * (5 + i)), y, P.CLOAK_LO)
+            c.set(int(cx + d * (5 + i)), y + 1, mix(P.CLOAK_LO, P.CLOAK, 0.5))
 
-    # Haarmasse hinter dem Kopf, laeuft in einen wehenden Zopf aus.
-    c.rect(hx - 2 + hs // 2, head_top + 1, 2, 6, P.HAIR)
-    for i in range(9):
-        t = i / 8
-        x = hx - 2 + int(round(hair_sway * (0.3 + t * 1.5)))
-        y = head_top + 6 + i
-        w = 2 if t < 0.7 else 1
-        c.rect(x, y, w, 1, mix(P.HAIR, shade(P.HAIR, -0.3), t))
+    # Schulterpartie: eine Andeutung von Kragen.
+    c.rect(cx - 3 + lean_i, shoulder_y, 7, 2, P.CLOAK_HI)
+    c.rect(cx - 3 + lean_i, shoulder_y + 2, 7, 1, P.CLOAK)
 
-    # Gesicht
-    c.rect(hx, head_top + 1, 5, 6, P.SKIN)
-    c.rect(hx, head_bot - 1, 5, 1, P.SKIN_SH)
-    c.rect(hx + 4, head_top + 2, 1, 4, P.SKIN_SH)
-    c.set(hx, head_top + 1, P.SKIN_SH)
-    # Auge
-    eye_y = head_top + 3 - (1 if aim > 0.5 else 0)
-    c.set(hx + 3, eye_y, P.INK)
-    c.set(hx + 3, eye_y + 1, mix(P.INK, P.SKIN, 0.55))
-
-    # Scheitel und Pony
-    c.rect(hx - 1, head_top, 7, 2, P.HAIR)
-    c.rect(hx - 1, head_top, 6, 1, P.HAIR_HI)
-    c.rect(hx + 2, head_top + 2, 3, 1, P.HAIR)
-    c.set(hx + 5, head_top + 2, P.HAIR)
-    # Kristallspange
-    c.set(hx - 1, head_top + 1, P.TRIM)
-
-    # Hals
-    c.rect(cx - 1 + lean_i, neck_y, 2, 1, P.SKIN_SH)
-
-    # --- Arme + Instrument ------------------------------------------------
-    sh_y = shoulder_y + 1
-    fx = cx + 2 + lean_i          # vorderer Arm
-    bx = cx - 2 + lean_i          # hinterer Arm
-
-    def arm(x: int, raise_amt: float, col, skin) -> tuple[int, int]:
-        # raise_amt: -1 haengt herab, +1 gestreckt nach oben/vorn.
-        length = 6.0
-        a = (-math.pi / 2) * raise_amt  # 0 = gerade nach unten
-        ex = x + int(round(math.sin(a + math.pi / 2) * 0 + length * 0.55 * max(raise_amt, -0.2) + 1))
-        ey = sh_y + int(round(length * math.cos(a) * 0.85))
-        c.line(x, sh_y, ex, ey, col)
-        c.set(ex, ey, skin)
+    # --- Arme: nur zwei kurze dunkle Striche ------------------------------
+    def arm(x: int, raise_amt: float, col) -> tuple[int, int]:
+        length = 5.0
+        ex = x + int(round(length * 0.5 * max(raise_amt, -0.3) + 1.5))
+        ey = shoulder_y + 2 + int(round(length * (1 - abs(raise_amt) * 0.8)))
+        c.line(x, shoulder_y + 2, ex, ey, col)
         return ex, ey
 
-    bex, bey = arm(bx, arm_back, shade(P.CLOAK, -0.3), P.SKIN_SH)
-    fex, fey = arm(fx, arm_front, P.CLOAK_HI, P.SKIN)
+    arm(cx - 3 + lean_i, arm_back, P.CLOAK_LO)
+    fex, fey = arm(cx + 3 + lean_i, arm_front, P.CLOAK)
+
+    # --- Maske ------------------------------------------------------------
+    mx = cx + lean_i
+    # Klein und laenglich, nicht rund - ein runder Kopf wirkt niedlich.
+    c.ellipse(mx, mask_cy, 3.4, 4.0, P.BONE)
+    c.ellipse(mx - 1.2, mask_cy + 1.4, 2.4, 2.8, P.BONE_SH)
+    c.ellipse(mx + 0.5, mask_cy - 0.8, 2.8, 3.0, P.BONE)
+
+    # Ein grosses Auge auf der Blickseite - das Erkennungszeichen.
+    eye_x = mx + 1
+    eye_y = mask_cy - 1 - (1 if aim > 0.5 else 0)
+    c.ellipse(eye_x, eye_y, 1.5, 2.1, P.EYE)
+    c.set(int(eye_x + 1), int(eye_y - 1), mix(P.EYE, P.BONE, 0.4))   # Lichtpunkt
+
+    # Feiner Riss ueber der Wange - die Maske hat schon etwas erlebt.
+    c.set(mx - 2, mask_cy - 2, P.BONE_LO)
+    c.set(mx - 2, mask_cy - 1, P.BONE_LO)
+
+    # --- Stimmgabel-Krone -------------------------------------------------
+    #
+    # Das Zeichen der Welt sitzt ihr auf dem Kopf. Zwei Zinken, die im
+    # Takt nachschwingen.
+    # Der Querbalken sitzt auf der Stirn, die Zinken stehen leicht nach
+    # aussen - senkrecht und dicht beieinander lesen sie sich als Ohren.
+    swing = hair_sway * 0.5
+    c.rect(mx - 2, fork_base + 1, 5, 1, P.BONE_SH)
+    c.rect(mx - 2, fork_base, 5, 1, P.BONE)
+    for side in (-1, 1):
+        bx = mx + side * 2
+        tip_x = bx + side * 2 + int(round(swing * (1 if side > 0 else 0.6)))
+        c.line(bx, fork_base, tip_x, 1, P.BONE_SH)
+        # Der Klang sitzt in den Spitzen.
+        c.set(tip_x, 1, P.AMBER)
+        c.set(tip_x, 2, mix(P.AMBER, P.BONE_SH, 0.5))
 
     if instrument:
         draw_instrument(c, instrument, fex, fey, glow)
 
-    c.shadow_pass((0, 1), -0.16)
-    c.outline(hexc("#05060c", 210), diagonal=False)
+    # Harte Kontur: die Figur muss sich gegen jeden Hintergrund abheben.
+    c.outline(hexc("#04050a", 255), diagonal=False)
 
     if glow > 0:
-        c.glow(cx, shoulder_y + 2, 10, (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(46 * glow)), power=2.4)
+        for side in (-1, 1):
+            c.glow(mx + side * 4 + swing, 2, 5,
+                   (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(80 * glow)), power=2.0)
 
     if alpha_body < 255:
         for i in range(len(c.px)):
@@ -183,31 +167,31 @@ def draw_heroine(
 
 
 def draw_instrument(c: Canvas, kind: str, hx: int, hy: int, glow: float) -> None:
-    """Die drei Startinstrumente in der Hand der Heldin."""
+    """
+    Das Instrument bleibt eine Andeutung. Es darf die Silhouette der Maske
+    nicht schlagen - man soll die Figur erkennen, nicht ihr Werkzeug.
+    """
     if kind == "leier":
-        # Leier: geschwungener Rahmen mit vier Saiten.
-        c.rect(hx, hy - 4, 1, 7, P.GOLD)
-        c.rect(hx + 4, hy - 4, 1, 7, P.GOLD)
-        c.rect(hx, hy + 2, 5, 1, shade(P.GOLD, -0.2))
-        c.rect(hx + 1, hy - 5, 3, 1, P.GOLD)
-        for i in range(3):
-            c.rect(hx + 1 + i, hy - 3, 1, 5, mix(P.TRIM, P.GOLD, 0.35))
-        c.glow(hx + 2, hy - 1, 5, (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(70 * glow)))
+        c.rect(hx, hy - 3, 1, 6, P.BONE_SH)
+        c.rect(hx + 3, hy - 3, 1, 6, P.BONE_SH)
+        c.rect(hx, hy + 2, 4, 1, P.BONE_LO)
+        c.set(hx + 1, hy - 4, P.BONE_SH)
+        c.set(hx + 2, hy - 4, P.BONE_SH)
+        for i in range(2):
+            c.rect(hx + 1 + i, hy - 2, 1, 4, mix(P.AMBER, P.BONE_LO, 0.55))
+        c.glow(hx + 2, hy, 5, (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(52 * glow)))
     elif kind == "trommel":
-        # Handtrommel: Fell und Spannreif.
-        c.ellipse(hx + 2, hy, 4, 3.4, shade(P.WARM, -0.25))
-        c.ellipse(hx + 2, hy - 1, 3.4, 2.8, P.WARM)
-        c.ring(hx + 2, hy, 3.8, 1.2, mix(P.GOLD, P.INK, 0.25))
-        c.set(hx + 1, hy - 1, shade(P.WARM, 0.25))
-        c.glow(hx + 2, hy, 6, (P.GOLD[0], P.GOLD[1], P.GOLD[2], int(60 * glow)))
+        c.ellipse(hx + 1, hy, 3.2, 2.8, P.BONE_LO)
+        c.ellipse(hx + 1, hy - 0.5, 2.6, 2.2, P.BONE_SH)
+        c.set(hx, hy - 1, P.BONE)
+        c.glow(hx + 1, hy, 5, (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(46 * glow)))
     else:
-        # Floete: schlanker Schaft mit Grifflochern.
-        c.rect(hx - 1, hy - 1, 8, 2, mix(P.STONE_HI, P.WARM, 0.35))
-        c.rect(hx - 1, hy, 8, 1, shade(mix(P.STONE_HI, P.WARM, 0.35), -0.25))
-        for i in range(3):
-            c.set(hx + 1 + i * 2, hy - 1, P.INK)
-        c.set(hx + 7, hy - 1, P.TRIM)
-        c.glow(hx + 6, hy, 5, (P.BLOOM[0], P.BLOOM[1], P.BLOOM[2], int(64 * glow)))
+        c.rect(hx - 1, hy - 1, 7, 1, P.BONE_SH)
+        c.rect(hx - 1, hy, 7, 1, P.BONE_LO)
+        for i in range(2):
+            c.set(hx + 1 + i * 2, hy - 1, P.EYE)
+        c.set(hx + 6, hy - 1, P.AMBER)
+        c.glow(hx + 5, hy, 5, (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(52 * glow)))
 
 
 # ------------------------------------------------------ Animations-Sequenzen

@@ -155,6 +155,12 @@ def render(room_id: str) -> Image.Image:
     for lore in room["lore"]:
         place(*fx.frame("mote_1"), lore["x"], lore["y"] - 0.7)
 
+    # Vorderste Schicht: fast schwarze Massen, laufen vor allem anderen.
+    fg_img, _ = backdrops.frame(f"{region}_fg")
+    if fg_img is not None:
+        for ox in range(0, w * TS, fg_img.width):
+            canvas.alpha_composite(fg_img, (ox, h * TS - fg_img.height))
+
     # Verdunklung tiefer Regionen
     if room.get("darkness", 0) > 0:
         veil = Image.new("RGBA", canvas.size, (0, 0, 0, int(255 * room["darkness"])))

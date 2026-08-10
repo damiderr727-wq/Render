@@ -1,0 +1,115 @@
+{
+ "atlas": "backdrops",
+ "frames": {
+  "dissonanz_bg0": {
+   "h": 216,
+   "parallax": 0.15,
+   "pivotX": 0,
+   "pivotY": 0,
+   "w": 384,
+   "x": 2,
+   "y": 1964
+  },
+  "dissonanz_bg1": {
+   "h": 216,
+   "parallax": 0.35,
+   "pivotX": 0,
+   "pivotY": 0,
+   "w": 384,
+   "x": 2,
+   "y": 2182
+  },
+  "dissonanz_bg2": {
+   "h": 216,
+   "parallax": 0.6,
+   "pivotX": 0,
+   "pivotY": 0,
+   "w": 384,
+   "x": 2,
+   "y": 2400
+  },
+  "grotten_bg0": {
+   "h": 216,
+   "parallax": 0.15,
+   "pivotX": 0,
+   "pivotY": 0,
+   "w": 384,
+   "x": 2,
+   "y": 1310
+  },
+  "grotten_bg1": {
+   "h": 216,
+   "parallax": 0.35,
+   "pivotX": 0,
+   "pivotY": 0,
+   "w": 384,
+   "x": 2,
+   "y": 1528
+  },
+  "grotten_bg2": {
+   "h": 216,
+   "parallax": 0.6,
+   "pivotX": 0,
+   "pivotY": 0,
+   "w": 384,
+   "x": 2,
+   "y": 1746
+  },
+  "hain_bg0": {
+   "h": 216,
+   "parallax": 0.15,
+   "pivotX": 0,
+   "pivotY": 0,
+   "w": 384,
+   "x": 2,
+   "y": 2
+  },
+  "hain_bg1": {
+   "h": 216,
+   "parallax": 0.35,
+   "pivotX": 0,
+   "pivotY": 0,
+   "w": 384,
+   "x": 2,
+   "y": 220
+  },
+  "hain_bg2": {
+   "h": 216,
+   "parallax": 0.6,
+   "pivotX": 0,
+   "pivotY": 0,
+   "w": 384,
+   "x": 2,
+   "y": 438
+  },
+  "kathedrale_bg0": {
+   "h": 216,
+   "parallax": 0.15,
+   "pivotX": 0,
+   "pivotY": 0,
+   "w": 384,
+   "x": 2,
+   "y": 656
+  },
+  "kathedrale_bg1": {
+   "h": 216,
+   "parallax": 0.35,
+   "pivotX": 0,
+   "pivotY": 0,
+   "w": 384,
+   "x": 2,
+   "y": 874
+  },
+  "kathedrale_bg2": {
+   "h": 216,
+   "parallax": 0.6,
+   "pivotX": 0,
+   "pivotY": 0,
+   "w": 384,
+   "x": 2,
+   "y": 1092
+  }
+ },
+ "height": 2618,
+ "width": 384
+}

@@ -1,0 +1,27 @@
+{
+  "": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/ResonanzCoreTests.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/ResonanzCoreTests.o",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/master.swiftdeps"
+  },
+  "/home/user/Render/Tests/ResonanzCoreTests/PhysicsTests.swift": {
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/PhysicsTests.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/PhysicsTests~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/PhysicsTests.swiftdeps"
+  },
+  "/home/user/Render/Tests/ResonanzCoreTests/ProgressionTests.swift": {
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/ProgressionTests.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/ProgressionTests~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/ProgressionTests.swiftdeps"
+  },
+  "/home/user/Render/Tests/ResonanzCoreTests/SimulationTests.swift": {
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SimulationTests.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SimulationTests~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SimulationTests.swiftdeps"
+  },
+  "/home/user/Render/Tests/ResonanzCoreTests/WorldTests.swift": {
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/WorldTests.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/WorldTests~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/WorldTests.swiftdeps"
+  }
+}

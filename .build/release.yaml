@@ -1,0 +1,222 @@
+client:
+  name: basic
+  file-system: device-agnostic
+tools: {}
+targets:
+  "PackageStructure": ["<PackageStructure>"]
+  "ResonanzApp-x86_64-unknown-linux-gnu-release.module": ["<ResonanzApp-x86_64-unknown-linux-gnu-release.module>"]
+  "ResonanzCheck-x86_64-unknown-linux-gnu-release.module": ["<ResonanzCheck-x86_64-unknown-linux-gnu-release.module>"]
+  "ResonanzCore-x86_64-unknown-linux-gnu-release.module": ["<ResonanzCore-x86_64-unknown-linux-gnu-release.module>"]
+  "ResonanzCoreTests-x86_64-unknown-linux-gnu-release.module": ["<ResonanzCoreTests-x86_64-unknown-linux-gnu-release.module>"]
+  "ResonanzPackageDiscoveredTests-x86_64-unknown-linux-gnu-release.module": ["<ResonanzPackageDiscoveredTests-x86_64-unknown-linux-gnu-release.module>"]
+  "ResonanzPackageTests-x86_64-unknown-linux-gnu-release.module": ["<ResonanzPackageTests-x86_64-unknown-linux-gnu-release.module>"]
+  "ResonanzPackageTests-x86_64-unknown-linux-gnu-release.test": ["<ResonanzPackageTests-x86_64-unknown-linux-gnu-release.test>"]
+  "main": ["<ResonanzApp-x86_64-unknown-linux-gnu-release.module>","<ResonanzCheck-x86_64-unknown-linux-gnu-release.module>","<ResonanzCore-x86_64-unknown-linux-gnu-release.module>","<resonanz-check-x86_64-unknown-linux-gnu-release.exe>"]
+  "resonanz-check-x86_64-unknown-linux-gnu-release.exe": ["<resonanz-check-x86_64-unknown-linux-gnu-release.exe>"]
+  "test": ["<ResonanzApp-x86_64-unknown-linux-gnu-release.module>","<ResonanzCheck-x86_64-unknown-linux-gnu-release.module>","<ResonanzCore-x86_64-unknown-linux-gnu-release.module>","<ResonanzCoreTests-x86_64-unknown-linux-gnu-release.module>","<ResonanzPackageTests-x86_64-unknown-linux-gnu-release.test>","<resonanz-check-x86_64-unknown-linux-gnu-release.exe>"]
+default: "main"
+nodes:
+  "/home/user/Render/Sources/ResonanzApp/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+  "/home/user/Render/Sources/ResonanzCheck/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+  "/home/user/Render/Sources/ResonanzCore/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+  "/home/user/Render/Tests/ResonanzCoreTests/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+commands:
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzApp.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/home/user/Render/Sources/ResonanzApp/Placeholder.swift"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzApp.build/sources"]
+    description: "Write auxiliary file /home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzApp.build/sources"
+
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/home/user/Render/Sources/ResonanzCheck/dbg.swift","/home/user/Render/Sources/ResonanzCheck/main.swift"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/sources"]
+    description: "Write auxiliary file /home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/sources"
+
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/home/user/Render/Sources/ResonanzCore/Combat/Tuning.swift","/home/user/Render/Sources/ResonanzCore/Entities/Boss.swift","/home/user/Render/Sources/ResonanzCore/Entities/Enemy.swift","/home/user/Render/Sources/ResonanzCore/Entities/Player.swift","/home/user/Render/Sources/ResonanzCore/Entities/Projectile.swift","/home/user/Render/Sources/ResonanzCore/Math/Geometry.swift","/home/user/Render/Sources/ResonanzCore/Music/Score.swift","/home/user/Render/Sources/ResonanzCore/Progress/Abilities.swift","/home/user/Render/Sources/ResonanzCore/Sim/GameEvent.swift","/home/user/Render/Sources/ResonanzCore/Sim/GameSimulation.swift","/home/user/Render/Sources/ResonanzCore/Sim/InputState.swift","/home/user/Render/Sources/ResonanzCore/World/ReachabilityProbe.swift","/home/user/Render/Sources/ResonanzCore/World/Room.swift","/home/user/Render/Sources/ResonanzCore/World/RoomData.swift","/home/user/Render/Sources/ResonanzCore/World/Tile.swift","/home/user/Render/Sources/ResonanzCore/World/WorldCatalog.swift","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/DerivedSources/resource_bundle_accessor.swift"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/sources"]
+    description: "Write auxiliary file /home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/sources"
+
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/home/user/Render/Tests/ResonanzCoreTests/PhysicsTests.swift","/home/user/Render/Tests/ResonanzCoreTests/ProgressionTests.swift","/home/user/Render/Tests/ResonanzCoreTests/SimulationTests.swift","/home/user/Render/Tests/ResonanzCoreTests/WorldTests.swift"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/sources"]
+    description: "Write auxiliary file /home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/sources"
+
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.derived/ResonanzCoreTests.swift","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.derived/all-discovered-tests.swift"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/sources"]
+    description: "Write auxiliary file /home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/sources"
+
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.derived/all-discovered-tests.swift":
+    tool: test-discovery-tool
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/PhysicsTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/ProgressionTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SimulationTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/WorldTests.swift.o"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.derived/ResonanzCoreTests.swift","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.derived/all-discovered-tests.swift"]
+
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.derived/runner.swift"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.build/sources"]
+    description: "Write auxiliary file /home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.build/sources"
+
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.derived/runner.swift":
+    tool: test-entry-point-tool
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzPackageDiscoveredTests.swiftmodule"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.derived/runner.swift"]
+
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.product/Objects.LinkFileList":
+    tool: write-auxiliary-file
+    inputs: ["<link-file-list>","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Abilities.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Boss.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Enemy.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/GameEvent.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/GameSimulation.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Geometry.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/InputState.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Player.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Projectile.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/ReachabilityProbe.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Room.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/RoomData.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Score.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Tile.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Tuning.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/WorldCatalog.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/resource_bundle_accessor.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/PhysicsTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/ProgressionTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SimulationTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/WorldTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/ResonanzCoreTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/all-discovered-tests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.build/runner.swift.o"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.product/Objects.LinkFileList"]
+    description: "Write auxiliary file /home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.product/Objects.LinkFileList"
+
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Resonanz_ResonanzCore.resources/Atlas":
+    tool: copy-tool
+    inputs: ["/home/user/Render/Sources/ResonanzCore/Resources/Atlas/"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Resonanz_ResonanzCore.resources/Atlas/"]
+    description: "Copying /home/user/Render/Sources/ResonanzCore/Resources/Atlas"
+
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Resonanz_ResonanzCore.resources/Levels":
+    tool: copy-tool
+    inputs: ["/home/user/Render/Sources/ResonanzCore/Resources/Levels/"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Resonanz_ResonanzCore.resources/Levels/"]
+    description: "Copying /home/user/Render/Sources/ResonanzCore/Resources/Levels"
+
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Resonanz_ResonanzCore.resources/Scores":
+    tool: copy-tool
+    inputs: ["/home/user/Render/Sources/ResonanzCore/Resources/Scores/"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Resonanz_ResonanzCore.resources/Scores/"]
+    description: "Copying /home/user/Render/Sources/ResonanzCore/Resources/Scores"
+
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/resonanz-check.product/Objects.LinkFileList":
+    tool: write-auxiliary-file
+    inputs: ["<link-file-list>","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/dbg.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/main.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Abilities.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Boss.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Enemy.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/GameEvent.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/GameSimulation.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Geometry.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/InputState.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Player.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Projectile.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/ReachabilityProbe.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Room.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/RoomData.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Score.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Tile.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Tuning.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/WorldCatalog.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/resource_bundle_accessor.swift.o"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/resonanz-check.product/Objects.LinkFileList"]
+    description: "Write auxiliary file /home/user/Render/.build/x86_64-unknown-linux-gnu/release/resonanz-check.product/Objects.LinkFileList"
+
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/swift-version-6A52383ED409C6A7.txt":
+    tool: write-auxiliary-file
+    inputs: ["<swift-get-version>","/opt/swift/usr/bin/swiftc"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/swift-version-6A52383ED409C6A7.txt"]
+    always-out-of-date: "true"
+    description: "Write auxiliary file /home/user/Render/.build/x86_64-unknown-linux-gnu/release/swift-version-6A52383ED409C6A7.txt"
+
+  "<ResonanzApp-x86_64-unknown-linux-gnu-release.module>":
+    tool: phony
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzApp.build/Placeholder.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzApp.swiftmodule"]
+    outputs: ["<ResonanzApp-x86_64-unknown-linux-gnu-release.module>"]
+
+  "<ResonanzCheck-x86_64-unknown-linux-gnu-release.module>":
+    tool: phony
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/dbg.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/main.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCheck.swiftmodule"]
+    outputs: ["<ResonanzCheck-x86_64-unknown-linux-gnu-release.module>"]
+
+  "<ResonanzCore-x86_64-unknown-linux-gnu-release.module>":
+    tool: phony
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Tuning.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Boss.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Enemy.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Player.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Projectile.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Geometry.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Score.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Abilities.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/GameEvent.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/GameSimulation.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/InputState.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/ReachabilityProbe.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Room.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/RoomData.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Tile.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/WorldCatalog.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/resource_bundle_accessor.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCore.swiftmodule"]
+    outputs: ["<ResonanzCore-x86_64-unknown-linux-gnu-release.module>"]
+
+  "<ResonanzCoreTests-x86_64-unknown-linux-gnu-release.module>":
+    tool: phony
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/PhysicsTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/ProgressionTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SimulationTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/WorldTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCoreTests.swiftmodule"]
+    outputs: ["<ResonanzCoreTests-x86_64-unknown-linux-gnu-release.module>"]
+
+  "<ResonanzPackageDiscoveredTests-x86_64-unknown-linux-gnu-release.module>":
+    tool: phony
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/ResonanzCoreTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/all-discovered-tests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzPackageDiscoveredTests.swiftmodule"]
+    outputs: ["<ResonanzPackageDiscoveredTests-x86_64-unknown-linux-gnu-release.module>"]
+
+  "<ResonanzPackageTests-x86_64-unknown-linux-gnu-release.module>":
+    tool: phony
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.build/runner.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzPackageTests.swiftmodule"]
+    outputs: ["<ResonanzPackageTests-x86_64-unknown-linux-gnu-release.module>"]
+
+  "<ResonanzPackageTests-x86_64-unknown-linux-gnu-release.test>":
+    tool: phony
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.xctest"]
+    outputs: ["<ResonanzPackageTests-x86_64-unknown-linux-gnu-release.test>"]
+
+  "<resonanz-check-x86_64-unknown-linux-gnu-release.exe>":
+    tool: phony
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/resonanz-check"]
+    outputs: ["<resonanz-check-x86_64-unknown-linux-gnu-release.exe>"]
+
+  "C.ResonanzApp-x86_64-unknown-linux-gnu-release.module":
+    tool: shell
+    inputs: ["/home/user/Render/Sources/ResonanzApp/Placeholder.swift","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/swift-version-6A52383ED409C6A7.txt","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCore.swiftmodule","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzApp.build/sources"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzApp.build/Placeholder.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzApp.swiftmodule"]
+    description: "Compiling Swift Module 'ResonanzApp' (1 sources)"
+    args: ["/opt/swift/usr/bin/swiftc","-module-name","ResonanzApp","-emit-dependencies","-emit-module","-emit-module-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzApp.swiftmodule","-output-file-map","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzApp.build/output-file-map.json","-parse-as-library","-whole-module-optimization","-num-threads","4","-c","@/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzApp.build/sources","-I","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules","-target","x86_64-unknown-linux-gnu","-O","-j4","-DSWIFT_PACKAGE","-module-cache-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ModuleCache","-parseable-output","-parse-as-library","-swift-version","5","-g","-Xcc","-fPIC","-Xcc","-g","-package-name","render","-Xcc","-fno-omit-frame-pointer"]
+
+  "C.ResonanzCheck-x86_64-unknown-linux-gnu-release.module":
+    tool: shell
+    inputs: ["/home/user/Render/Sources/ResonanzCheck/dbg.swift","/home/user/Render/Sources/ResonanzCheck/main.swift","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/swift-version-6A52383ED409C6A7.txt","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCore.swiftmodule","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/sources"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/dbg.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/main.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCheck.swiftmodule"]
+    description: "Compiling Swift Module 'ResonanzCheck' (2 sources)"
+    args: ["/opt/swift/usr/bin/swiftc","-module-name","ResonanzCheck","-emit-dependencies","-emit-module","-emit-module-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCheck.swiftmodule","-output-file-map","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/output-file-map.json","-whole-module-optimization","-num-threads","4","-c","@/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/sources","-I","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules","-target","x86_64-unknown-linux-gnu","-O","-j4","-DSWIFT_PACKAGE","-module-cache-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ModuleCache","-parseable-output","-Xfrontend","-entry-point-function-name","-Xfrontend","ResonanzCheck_main","-swift-version","5","-g","-Xcc","-fPIC","-Xcc","-g","-package-name","render","-Xcc","-fno-omit-frame-pointer"]
+
+  "C.ResonanzCore-x86_64-unknown-linux-gnu-release.module":
+    tool: shell
+    inputs: ["/home/user/Render/Sources/ResonanzCore/Combat/Tuning.swift","/home/user/Render/Sources/ResonanzCore/Entities/Boss.swift","/home/user/Render/Sources/ResonanzCore/Entities/Enemy.swift","/home/user/Render/Sources/ResonanzCore/Entities/Player.swift","/home/user/Render/Sources/ResonanzCore/Entities/Projectile.swift","/home/user/Render/Sources/ResonanzCore/Math/Geometry.swift","/home/user/Render/Sources/ResonanzCore/Music/Score.swift","/home/user/Render/Sources/ResonanzCore/Progress/Abilities.swift","/home/user/Render/Sources/ResonanzCore/Sim/GameEvent.swift","/home/user/Render/Sources/ResonanzCore/Sim/GameSimulation.swift","/home/user/Render/Sources/ResonanzCore/Sim/InputState.swift","/home/user/Render/Sources/ResonanzCore/World/ReachabilityProbe.swift","/home/user/Render/Sources/ResonanzCore/World/Room.swift","/home/user/Render/Sources/ResonanzCore/World/RoomData.swift","/home/user/Render/Sources/ResonanzCore/World/Tile.swift","/home/user/Render/Sources/ResonanzCore/World/WorldCatalog.swift","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/DerivedSources/resource_bundle_accessor.swift","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/swift-version-6A52383ED409C6A7.txt","<ResonanzCore-x86_64-unknown-linux-gnu-release.module-resources>","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/sources"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Tuning.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Boss.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Enemy.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Player.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Projectile.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Geometry.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Score.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Abilities.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/GameEvent.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/GameSimulation.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/InputState.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/ReachabilityProbe.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Room.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/RoomData.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Tile.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/WorldCatalog.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/resource_bundle_accessor.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCore.swiftmodule"]
+    description: "Compiling Swift Module 'ResonanzCore' (17 sources)"
+    args: ["/opt/swift/usr/bin/swiftc","-module-name","ResonanzCore","-emit-dependencies","-emit-module","-emit-module-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCore.swiftmodule","-output-file-map","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/output-file-map.json","-parse-as-library","-whole-module-optimization","-num-threads","4","-c","@/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/sources","-I","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules","-target","x86_64-unknown-linux-gnu","-O","-j4","-DSWIFT_PACKAGE","-module-cache-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ModuleCache","-parseable-output","-parse-as-library","-swift-version","5","-g","-Xcc","-fPIC","-Xcc","-g","-package-name","render","-Xcc","-fno-omit-frame-pointer"]
+
+  "C.ResonanzCoreTests-x86_64-unknown-linux-gnu-release.module":
+    tool: shell
+    inputs: ["/home/user/Render/Tests/ResonanzCoreTests/PhysicsTests.swift","/home/user/Render/Tests/ResonanzCoreTests/ProgressionTests.swift","/home/user/Render/Tests/ResonanzCoreTests/SimulationTests.swift","/home/user/Render/Tests/ResonanzCoreTests/WorldTests.swift","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/swift-version-6A52383ED409C6A7.txt","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCore.swiftmodule","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/sources"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/PhysicsTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/ProgressionTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SimulationTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/WorldTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCoreTests.swiftmodule"]
+    description: "Compiling Swift Module 'ResonanzCoreTests' (4 sources)"
+    args: ["/opt/swift/usr/bin/swiftc","-module-name","ResonanzCoreTests","-emit-dependencies","-emit-module","-emit-module-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCoreTests.swiftmodule","-output-file-map","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/output-file-map.json","-parse-as-library","-whole-module-optimization","-num-threads","4","-c","@/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/sources","-I","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules","-target","x86_64-unknown-linux-gnu","-index-store-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/index/store","-O","-enable-testing","-j4","-DSWIFT_PACKAGE","-module-cache-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ModuleCache","-parseable-output","-parse-as-library","-swift-version","5","-g","-Xcc","-fPIC","-Xcc","-g","-package-name","render","-Xcc","-fno-omit-frame-pointer"]
+
+  "C.ResonanzPackageDiscoveredTests-x86_64-unknown-linux-gnu-release.module":
+    tool: shell
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.derived/ResonanzCoreTests.swift","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.derived/all-discovered-tests.swift","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/swift-version-6A52383ED409C6A7.txt","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCoreTests.swiftmodule","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/sources"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/ResonanzCoreTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/all-discovered-tests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzPackageDiscoveredTests.swiftmodule"]
+    description: "Compiling Swift Module 'ResonanzPackageDiscoveredTests' (2 sources)"
+    args: ["/opt/swift/usr/bin/swiftc","-module-name","ResonanzPackageDiscoveredTests","-emit-dependencies","-emit-module","-emit-module-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzPackageDiscoveredTests.swiftmodule","-output-file-map","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/output-file-map.json","-parse-as-library","-whole-module-optimization","-num-threads","4","-c","@/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/sources","-I","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules","-target","x86_64-unknown-linux-gnu","-O","-enable-testing","-j4","-DSWIFT_PACKAGE","-module-cache-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ModuleCache","-parseable-output","-parse-as-library","-g","-Xcc","-fPIC","-Xcc","-g","-package-name","render","-Xcc","-fno-omit-frame-pointer"]
+
+  "C.ResonanzPackageTests-x86_64-unknown-linux-gnu-release.module":
+    tool: shell
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.derived/runner.swift","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/swift-version-6A52383ED409C6A7.txt","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzCoreTests.swiftmodule","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzPackageDiscoveredTests.swiftmodule","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.build/sources"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.build/runner.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzPackageTests.swiftmodule"]
+    description: "Compiling Swift Module 'ResonanzPackageTests' (1 sources)"
+    args: ["/opt/swift/usr/bin/swiftc","-module-name","ResonanzPackageTests","-emit-dependencies","-emit-module","-emit-module-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules/ResonanzPackageTests.swiftmodule","-output-file-map","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.build/output-file-map.json","-parse-as-library","-whole-module-optimization","-num-threads","4","-c","@/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.build/sources","-I","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules","-target","x86_64-unknown-linux-gnu","-O","-enable-testing","-j4","-DSWIFT_PACKAGE","-module-cache-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ModuleCache","-parseable-output","-parse-as-library","-g","-Xcc","-fPIC","-Xcc","-g","-package-name","render","-Xcc","-fno-omit-frame-pointer"]
+
+  "C.ResonanzPackageTests-x86_64-unknown-linux-gnu-release.test":
+    tool: shell
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Abilities.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Boss.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Enemy.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/GameEvent.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/GameSimulation.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Geometry.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/InputState.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Player.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Projectile.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/ReachabilityProbe.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Room.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/RoomData.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Score.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Tile.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Tuning.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/WorldCatalog.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/resource_bundle_accessor.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/PhysicsTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/ProgressionTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SimulationTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/WorldTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/ResonanzCoreTests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/all-discovered-tests.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.build/runner.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.product/Objects.LinkFileList"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.xctest"]
+    description: "Linking ./.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.xctest"
+    args: ["/opt/swift/usr/bin/swiftc","-L","/home/user/Render/.build/x86_64-unknown-linux-gnu/release","-o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.xctest","-module-name","ResonanzPackageTests","-emit-executable","-Xlinker","--gc-sections","-Xlinker","-rpath=$ORIGIN","@/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageTests.product/Objects.LinkFileList","-target","x86_64-unknown-linux-gnu","-g"]
+
+  "C.resonanz-check-x86_64-unknown-linux-gnu-release.exe":
+    tool: shell
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/dbg.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCheck.build/main.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Abilities.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Boss.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Enemy.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/GameEvent.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/GameSimulation.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Geometry.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/InputState.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Player.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Projectile.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/ReachabilityProbe.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Room.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/RoomData.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Score.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Tile.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/Tuning.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/WorldCatalog.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCore.build/resource_bundle_accessor.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/resonanz-check.product/Objects.LinkFileList"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/resonanz-check"]
+    description: "Linking ./.build/x86_64-unknown-linux-gnu/release/resonanz-check"
+    args: ["/opt/swift/usr/bin/swiftc","-L","/home/user/Render/.build/x86_64-unknown-linux-gnu/release","-o","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/resonanz-check","-module-name","resonanz_check","-emit-executable","-Xlinker","--gc-sections","-Xlinker","--defsym","-Xlinker","main=ResonanzCheck_main","-Xlinker","-rpath=$ORIGIN","@/home/user/Render/.build/x86_64-unknown-linux-gnu/release/resonanz-check.product/Objects.LinkFileList","-target","x86_64-unknown-linux-gnu","-g"]
+
+  "PackageStructure":
+    tool: package-structure-tool
+    inputs: ["/home/user/Render/Sources/ResonanzApp/","/home/user/Render/Sources/ResonanzCheck/","/home/user/Render/Sources/ResonanzCore/","/home/user/Render/Tests/ResonanzCoreTests/","/home/user/Render/Package.swift","/home/user/Render/Package.resolved"]
+    outputs: ["<PackageStructure>"]
+    description: "Planning build"
+    allow-missing-inputs: true
+
+  "ResonanzCore-x86_64-unknown-linux-gnu-release.module-resources":
+    tool: phony
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Resonanz_ResonanzCore.resources/Atlas/","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Resonanz_ResonanzCore.resources/Levels/","/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Resonanz_ResonanzCore.resources/Scores/"]
+    outputs: ["<ResonanzCore-x86_64-unknown-linux-gnu-release.module-resources>"]
+

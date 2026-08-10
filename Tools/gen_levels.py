@@ -134,6 +134,61 @@ class Room:
         })
         return self
 
+    def side_door(self, did: str, side: str, target: str, target_door: str,
+                  requires: str | None = None, height: int = 4,
+                  hint: int = 1, spawn_facing: int | None = None) -> "Room":
+        """
+        Tuer in der linken oder rechten Wand, buendig auf dem Boden.
+
+        Von Hand gesetzte Tuerhoehen passen selten zum spaeter gezeichneten
+        Gelaende - die Tuer haengt dann in der Wand oder ist zugewachsen.
+        Hier wird stattdessen der Boden gesucht, ein kurzer Gang freigeraeumt
+        und flach gelegt, und die Tuer darauf gesetzt.
+        """
+        inward = 4
+        if side == "left":
+            xs = list(range(0, inward))
+            door_x, probe_x = 0, inward
+            facing = 1
+        else:
+            xs = list(range(self.w - inward, self.w))
+            door_x, probe_x = self.w - 1, self.w - inward - 1
+            facing = -1
+
+        floor = self.floor_at(probe_x, hint)
+        for x in xs:
+            self.fill(x, floor, 1, self.h - floor, SOLID)   # Boden auffuellen
+            self.carve(x, max(0, floor - height - 1), 1, height + 1)  # Gang freiraeumen
+        self.door(did, door_x, floor - height, 1, height, target, target_door, requires)
+        # Jeder Raum haelt einen Spawnpunkt, der so heisst wie seine eigene Tuer.
+        self.spawn(did, probe_x, floor, spawn_facing if spawn_facing is not None else facing)
+        return self
+
+    def shaft_door(self, did: str, x: int, w: int, side: str, target: str, target_door: str,
+                   requires: str | None = None) -> "Room":
+        """
+        Tuer in Decke oder Boden. Der Schacht wird durch das gesamte Material
+        gestochen, damit die Oeffnung nicht hinter einer Deckenschicht liegt.
+        """
+        if side == "up":
+            rows = range(0, self.h)
+            door_y = 0
+        else:
+            rows = range(self.h - 1, -1, -1)
+            door_y = self.h - 1
+
+        for x_i in range(x, x + w):
+            for y in rows:
+                if self.grid[y][x_i] == AIR:
+                    break
+                self.set(x_i, y, AIR)
+        self.doors.append({
+            "id": did, "x": x, "y": door_y, "w": w, "h": 1,
+            "target": target, "targetDoor": target_door,
+            **({"requires": requires} if requires else {}),
+        })
+        return self
+
     def spawn(self, name: str, x: float, y: float, facing: int = 1) -> "Room":
         self.spawns[name] = {"x": x, "y": y, "facing": facing}
         return self
@@ -173,9 +228,9 @@ class Room:
             x, y = spots[rng.int(0, len(spots) - 1)]
             kind = kinds[rng.int(0, len(kinds) - 1)]
             if kind == "crystal":
-                self.crystal(x + 0.5, y, rng.int(0, 2))
+                self.crystal(x, y, rng.int(0, 2))
             else:
-                self.reed(x + 0.5, y)
+                self.reed(x, y)
         return self
 
     def note(self, x: float, y: float, text: str) -> "Room":
@@ -217,6 +272,12 @@ class _Rng:
 
 # =====================================================================
 #  Region A - Der schlafende Hain
+#
+#  Sprungwerte aus Tuning.swift, in Kacheln gerechnet:
+#    einfacher Sprung   ~3,3 hoch   /  ~4 weit
+#    mit Fluegelschlag  ~6,2 hoch   /  ~6 weit
+#  Sprossen liegen deshalb 3 Kacheln auseinander, solange die Figur noch
+#  nichts kann, und 4 Kacheln, sobald sie den Doppelsprung hat.
 # =====================================================================
 
 def room_A1() -> Room:
@@ -230,9 +291,8 @@ def room_A1() -> Room:
     r.ledge(34, 12, 6, 2)
     r.platform(44, 11, 5)
 
-    r.door("R", 58, 12, 1, 4, "A2", "L")
+    r.side_door("R", "right", "A2", "L")
     r.spawn_on("start", 8, 7, 1)
-    r.spawn_on("R", 56, 7, -1)
     r.bench_on(11, 7)
 
     r.enemy("klangmotte", 28, 8)
@@ -254,35 +314,34 @@ def room_A2() -> Room:
     r.border()
     r.ground(1, 71, lambda x: 27 - 3 * math.sin(x * 0.07))
     r.ceiling(1, 44, lambda x: 14 + 2 * math.sin(x * 0.11))
-    # Schacht nach oben (rechte Haelfte offen bis zur Decke)
     r.ceiling(44, 71, lambda x: 2)
-    r.fill(44, 3, 2, 12)          # Schachtwand links
-    r.fill(60, 3, 11, 14)         # Schachtwand rechts
+    # Der Kamin nach oben: links und rechts von Fels gefasst.
+    r.fill(44, 3, 2, 12)
+    r.fill(60, 3, 11, 14)
 
     r.platform(8, 23, 6)
     r.platform(18, 20, 5)
     r.ledge(26, 22, 7, 2)
     r.platform(37, 19, 6)
-    r.ledge(48, 23, 8, 2)
-    r.platform(50, 18, 5)
-    # Der Schacht: Absaetze nur mit Doppelsprung erreichbar
-    r.platform(47, 13, 4)
-    r.platform(55, 9, 4)
-    r.platform(48, 5, 5)
 
-    r.door("L", 0, 22, 1, 4, "A1", "R")
-    r.door("R", 71, 22, 1, 4, "A3", "L")
-    r.door("U", 48, 0, 5, 1, "B1", "N", requires="fluegelschlag")
-    r.spawn_on("L", 3, 17, 1)
-    r.spawn_on("R", 68, 17, -1)
-    r.spawn("U", 50, 5, 1)
+    # Kaminboden: fuenf Kacheln ueber dem Grund - ohne Fluegelschlag zu hoch.
+    r.ledge(47, 23, 9, 2)
+    r.platform(46, 19, 5)
+    r.platform(53, 15, 5)
+    r.platform(46, 11, 5)
+    r.platform(53, 7, 5)
 
-    r.pickup("instrument", "trommel", 30, 22)
+    r.side_door("L", "left", "A1", "R")
+    r.side_door("R", "right", "A3", "L", hint=17)
+    r.shaft_door("U", 53, 5, "up", "B1", "N", requires="fluegelschlag")
+    r.spawn_on("U", 55, 4, 1)
+
+    r.pickup("instrument", "trommel", 30, 21)
 
     r.enemy("klangmotte", 16, 19)
     r.enemy_on("stilleschreiter", 27, 17, patrol=6)
     r.enemy("klangmotte", 41, 15)
-    r.enemy_on("dissonanzknospe", 52, 17)
+    r.enemy_on("dissonanzknospe", 34, 17)
     r.enemy_on("stilleschreiter", 62, 17, patrol=5)
 
     r.crystal_on(12, 17, 2)
@@ -292,7 +351,7 @@ def room_A2() -> Room:
 
     r.note_on(24, 17, "DIE TROMMEL SCHLAEGT DEN GRUNDTON. "
                       "WAS DEN GRUNDTON HAELT, HAELT DIE WELT.")
-    r.note(46, 13, "OBEN LIEGT DIE KATHEDRALE. "
+    r.note(50, 22, "OBEN LIEGT DIE KATHEDRALE. "
                    "OHNE FLUEGEL KOMMST DU NICHT HINAUF.")
     return r
 
@@ -303,15 +362,17 @@ def room_A3() -> Room:
     r.ground(1, 63, lambda x: 20 - 4 * math.sin(x * 0.06 + 2))
     r.ceiling(1, 63, lambda x: 4 + 3 * math.sin(x * 0.09))
 
+    # Abstieg nach rechts, dann eine Treppe zurueck nach oben.
     r.ledge(12, 17, 6, 2)
     r.platform(21, 14, 5)
+    r.ledge(24, 19, 5, 2)
     r.ledge(30, 16, 8, 2)
-    r.spikes(39, 19, 5)
-    r.platform(45, 13, 5)
-    r.ledge(52, 15, 9, 2)
+    r.spikes(40, 23, 5)
+    r.ledge(42, 21, 5, 2)
+    r.ledge(48, 18, 5, 2)
+    r.ledge(53, 15, 8, 2)
 
-    r.door("L", 0, 16, 1, 4, "A2", "R")
-    r.spawn_on("L", 3, 8, 1)
+    r.side_door("L", "left", "A2", "R")
 
     r.pickup("instrument", "floete", 34, 15)
     r.pickup("ability", "fluegelschlag", 56, 13)
@@ -319,10 +380,10 @@ def room_A3() -> Room:
     r.enemy("klangmotte", 20, 11)
     r.enemy_on("dissonanzknospe", 32, 8)
     r.enemy("klangmotte", 44, 9)
-    r.enemy_on("stilleschreiter", 54, 8, patrol=4)
+    r.enemy_on("stilleschreiter", 56, 8, patrol=3)
 
     r.crystal_on(16, 8, 1)
-    r.crystal_on(48, 8, 2)
+    r.crystal_on(46, 8, 2)
     r.scatter_decor(33, 18)
 
     r.note_on(26, 8, "DIE FLOETE TRAEGT DEN REINEN TON. "
@@ -339,37 +400,39 @@ def room_A3() -> Room:
 def room_B1() -> Room:
     r = Room("B1", "VORHALLE DER FUGEN", "kathedrale", 44, 48)
     r.border()
-    r.fill(1, 44, 42, 3)              # Boden
-    # Seitliche Emporen als Aufstieg
-    for i in range(7):
-        y = 41 - i * 6
-        if i % 2 == 0:
-            r.ledge(3, y, 11, 2)
-        else:
-            r.ledge(30, y, 11, 2)
-    r.platform(18, 38, 8)
-    r.platform(18, 26, 8)
-    r.platform(18, 14, 8)
+    r.fill(1, 44, 42, 3)
 
-    r.door("N", 18, 47, 5, 1, "A2", "U")
-    r.door("U", 18, 0, 5, 1, "B2", "N", requires="fluegelschlag")
-    r.door("R", 43, 40, 1, 4, "B3", "L")
-    r.spawn_on("N", 20, 40, 1)
-    r.spawn("U", 20, 3, 1)
-    r.spawn_on("R", 40, 40, -1)
-    r.bench_on(25, 43)
+    # Aufstieg im Zickzack: Empore links - Mittelsteg - Empore rechts.
+    # Vier Reihen Abstand, drei Kacheln seitlicher Versatz.
+    rungs = [(40, "left"), (36, "mid"), (32, "right"), (28, "mid"),
+             (24, "left"), (20, "mid"), (16, "right"), (12, "mid"),
+             (8, "left"), (4, "mid")]
+    for y, side in rungs:
+        if side == "left":
+            r.ledge(3, y, 13, 2)
+        elif side == "right":
+            r.ledge(28, y, 13, 2)
+        else:
+            r.platform(18, y, 8)
+
+    r.shaft_door("U", 18, 5, "up", "B2", "N", requires="fluegelschlag")
+    r.shaft_door("N", 33, 5, "down", "A2", "U")
+    r.spawn_on("U", 20, 5, 1)
+    r.spawn_on("N", 26, 42, 1)
+    r.side_door("R", "right", "B3", "L", hint=42)
+    r.bench_on(9, 42)
 
     r.enemy("klangmotte", 22, 34)
     r.enemy("klangmotte", 20, 20)
-    r.enemy_on("dissonanzknospe", 16, 43)
+    r.enemy_on("dissonanzknospe", 24, 42)
     r.enemy("echoscherbe", 34, 30)
     r.enemy_on("stilleschreiter", 33, 30, patrol=4)
 
     r.crystal_on(14, 42, 2)
-    r.crystal_on(28, 42, 1)
+    r.crystal_on(30, 42, 1)
     r.scatter_decor(44, 14, kinds=("crystal",))
 
-    r.note_on(24, 42, "DIE FUGE IST EIN GESPRAECH, IN DEM NIEMAND "
+    r.note_on(20, 42, "DIE FUGE IST EIN GESPRAECH, IN DEM NIEMAND "
                       "DEM ANDEREN INS WORT FAELLT.")
     return r
 
@@ -378,33 +441,33 @@ def room_B2() -> Room:
     r = Room("B2", "DAS ORGELREGISTER", "kathedrale", 56, 34)
     r.border()
     r.fill(1, 30, 54, 3)
-    # Orgelpfeifen als Saeulen mit Kaminen dazwischen
-    for i in range(5):
-        x = 8 + i * 10
-        r.fill(x, 4, 4, 26 - i % 2 * 4)
-    r.platform(4, 24, 4)
-    r.platform(14, 20, 4)
-    r.platform(24, 16, 4)
-    r.platform(34, 12, 4)
-    r.platform(44, 9, 6)
-    r.spikes(20, 29, 6)
-    r.spikes(40, 29, 5)
 
-    r.door("N", 2, 30, 5, 4, "B1", "U")
-    r.spawn_on("N", 7, 24, 1)
+    # Die Pfeifen haengen von der Decke - man geht unter ihnen hindurch.
+    for i in range(6):
+        r.fill(5 + i * 8, 1, 3, 4 + (i % 3) * 2)
 
-    r.pickup("ability", "klangschritt", 47, 7)
+    # Aufstieg: vier Kacheln Luecke, drei bis vier Kacheln Hoehe.
+    for x, y in [(4, 27), (12, 24), (20, 20), (28, 17), (36, 13), (44, 10)]:
+        r.platform(x, y, 5)
+
+    r.spikes(15, 29, 5)
+    r.spikes(31, 29, 5)
+
+    r.shaft_door("N", 2, 4, "down", "B1", "U")
+    r.spawn_on("N", 9, 26, 1)
+
+    r.pickup("ability", "klangschritt", 42, 9)
 
     r.enemy("echoscherbe", 16, 22)
     r.enemy("echoscherbe", 33, 14)
-    r.enemy_on("dissonanzknospe", 26, 24)
-    r.enemy("klangmotte", 44, 10)
+    r.enemy_on("dissonanzknospe", 25, 26)
+    r.enemy("klangmotte", 42, 8)
 
-    r.scatter_decor(55, 12, kinds=("crystal",))
-    r.note_on(6, 24, "JEDE PFEIFE KENNT NUR EINEN TON. "
-                     "ZUSAMMEN KENNEN SIE ALLE.")
-    r.note(45, 8, "WER DEN KLANG IN DER WAND HOERT, "
-                  "KANN AUF IHM STEHEN.")
+    r.scatter_decor(55, 10, kinds=("crystal",))
+    r.note_on(20, 26, "JEDE PFEIFE KENNT NUR EINEN TON. "
+                      "ZUSAMMEN KENNEN SIE ALLE.")
+    r.note(42, 12, "WER DEN KLANG IN DER WAND HOERT, "
+                   "KANN AUF IHM STEHEN.")
     return r
 
 
@@ -412,7 +475,8 @@ def room_B3() -> Room:
     r = Room("B3", "KREUZGANG DER STIMMEN", "kathedrale", 80, 32)
     r.border()
     r.fill(1, 28, 78, 3)
-    # Kamine: schmale Schaechte, nur mit Wandhaftung passierbar
+
+    # Kamine: schmale Schaechte zwischen hohen Pfeilern.
     r.fill(20, 6, 3, 22)
     r.fill(30, 0, 3, 20)
     r.fill(44, 8, 3, 20)
@@ -423,22 +487,21 @@ def room_B3() -> Room:
     r.platform(34, 8, 8)
     r.platform(48, 14, 5)
     r.ledge(58, 18, 8, 2)
-    # Weite Kluft vor dem rechten Ausgang - nur mit Herzschlag zu ueberspringen
+    # Die Kluft vor dem Ausgang - genau einen Herzschlag weit.
     r.carve(66, 20, 12, 11)
     r.ledge(66, 17, 3, 2)
-    r.ledge(75, 17, 4, 2)
+    r.ledge(70, 16, 10, 2)
 
-    r.door("L", 0, 24, 1, 4, "B1", "R")
+    r.side_door("L", "left", "B1", "R", hint=20)
     r.door("R", 79, 12, 1, 4, "B4", "L", requires="klangschritt")
-    r.door("N", 36, 31, 5, 1, "C1", "U", requires="herzschlag")
-    r.spawn_on("L", 3, 20, 1)
     r.spawn_on("R", 76, 12, -1)
-    r.spawn_on("N", 38, 20, 1)
+    r.shaft_door("N", 36, 5, "down", "C1", "U", requires="herzschlag")
+    r.spawn_on("N", 42, 20, 1)
 
     r.enemy_on("stilleschreiter", 12, 20, patrol=7)
     r.enemy("echoscherbe", 26, 18)
     r.enemy("klangmotte", 38, 6)
-    r.enemy_on("dissonanzknospe", 60, 15)
+    r.enemy_on("dissonanzknospe", 60, 12)
     r.enemy("echoscherbe", 60, 14)
     r.enemy_on("stilleschreiter", 62, 12, patrol=4)
 
@@ -459,8 +522,7 @@ def room_B4() -> Room:
     r.platform(19, 12, 8)
     r.spikes(18, 21, 7)
 
-    r.door("L", 0, 16, 1, 4, "B3", "R")
-    r.spawn_on("L", 3, 6, 1)
+    r.side_door("L", "left", "B3", "R", hint=6)
     r.bench_on(6, 6)
 
     r.pickup("ability", "herzschlag", 30, 14)
@@ -486,22 +548,28 @@ def room_C1() -> Room:
     r.border()
     r.ground(1, 87, lambda x: 24 - 3 * math.sin(x * 0.05) - 2 * math.sin(x * 0.17))
     r.ceiling(1, 87, lambda x: 4 + 2 * math.sin(x * 0.08 + 3))
-    # Weite Luecken fuer den Dash
-    r.carve(20, 18, 10, 12)
-    r.carve(42, 18, 11, 12)
-    r.carve(64, 18, 10, 12)
+
+    # Aufstieg zurueck zur Kathedrale, links im Raum.
+    for x, y in [(3, 18), (11, 15), (3, 12), (11, 9), (3, 6)]:
+        r.ledge(x, y, 8, 2)
+
+    # Weite Luecken - Gelaende fuer den Herzschlag.
+    # Die Kluefte enden eine Kachel ueber dem Rand - der Raum bleibt dicht.
+    r.carve(20, 18, 10, 11)
+    r.carve(42, 18, 11, 11)
+    r.carve(64, 18, 10, 11)
     r.ledge(30, 15, 12, 2)
     r.ledge(53, 15, 11, 2)
     r.platform(24, 12, 5)
     r.platform(46, 11, 5)
     r.spikes(21, 28, 8)
+    r.spikes(43, 28, 9)
     r.spikes(65, 28, 8)
 
-    r.door("U", 8, 0, 5, 1, "B3", "N")
-    r.door("R", 87, 18, 1, 4, "C2", "L")
-    r.spawn_on("U", 10, 8, 1)
-    r.spawn_on("R", 84, 8, -1)
-    r.bench_on(13, 8)
+    r.shaft_door("U", 6, 5, "up", "B3", "N")
+    r.spawn_on("U", 8, 8, 1)
+    r.side_door("R", "right", "C2", "L", hint=8)
+    r.bench_on(16, 8)
 
     r.enemy("echoscherbe", 26, 14)
     r.enemy("klangmotte", 36, 10)
@@ -510,10 +578,10 @@ def room_C1() -> Room:
     r.enemy("echoscherbe", 70, 16)
     r.enemy("klangmotte", 78, 12)
 
-    for x, s in ((16, 2), (34, 1), (56, 2), (76, 1), (82, 2)):
+    for x, s in ((34, 1), (56, 2), (76, 1), (82, 2)):
         r.crystal_on(x, 8, s)
     r.scatter_decor(88, 24)
-    r.note_on(15, 8, "DIE KRISTALLE WACHSEN DORT, WO EIN TON "
+    r.note_on(18, 8, "DIE KRISTALLE WACHSEN DORT, WO EIN TON "
                      "LANGE GENUG GEHALTEN WURDE.")
     return r
 
@@ -522,36 +590,37 @@ def room_C2() -> Room:
     r = Room("C2", "DER SCHLUND", "grotten", 52, 40)
     r.border()
     r.fill(1, 36, 50, 3)
-    for i in range(6):
-        y = 33 - i * 5
-        if i % 2 == 0:
-            r.ledge(4, y, 12, 2)
+
+    # Der Schlund wird im Zickzack erklommen: breite Simse aussen,
+    # schmale Stege in der Mitte, immer vier Kacheln Hoehenunterschied.
+    rungs = [(33, "left"), (29, "mid"), (25, "right"), (21, "mid"),
+             (17, "left"), (13, "mid"), (9, "right"), (5, "mid")]
+    for y, side in rungs:
+        if side == "left":
+            r.ledge(6, y, 14, 2)
+        elif side == "right":
+            r.ledge(32, y, 16, 2)
         else:
-            r.ledge(34, y, 13, 2)
-    r.platform(20, 30, 8)
-    r.platform(22, 20, 8)
-    r.platform(20, 10, 8)
-    r.spikes(17, 35, 18)
+            r.platform(22, y, 8)
 
-    r.door("L", 0, 32, 1, 4, "C1", "R")
-    # Oben rechts hinaus - erst nach dem Basston erreichbar.
-    r.door("R", 51, 4, 1, 4, "C3", "L")
-    r.spawn_on("L", 3, 34, 1)
-    r.spawn_on("R", 48, 5, -1)
+    r.spikes(21, 35, 10)
 
-    r.pickup("ability", "basston", 26, 8)
+    r.side_door("L", "left", "C1", "R", hint=34)
+    r.side_door("R", "right", "C3", "L", hint=6)
+
+    r.pickup("ability", "basston", 26, 4)
 
     r.enemy("echoscherbe", 12, 28)
     r.enemy("klangmotte", 26, 24)
-    r.enemy("echoscherbe", 40, 22)
-    r.enemy_on("dissonanzknospe", 8, 30)
+    r.enemy("echoscherbe", 40, 20)
+    r.enemy_on("dissonanzknospe", 10, 30)
     r.enemy("klangmotte", 24, 12)
 
-    r.crystal_on(10, 34, 2)
+    r.crystal_on(8, 34, 2)
     r.crystal_on(44, 34, 1)
     r.scatter_decor(99, 14)
-    r.note_on(8, 34, "GANZ UNTEN LIEGT DER TON, DEN NIEMAND SINGT. "
-                     "MAN SCHLAEGT IHN.")
+    r.note_on(14, 34, "GANZ UNTEN LIEGT DER TON, DEN NIEMAND SINGT. "
+                      "MAN SCHLAEGT IHN.")
     return r
 
 
@@ -566,21 +635,19 @@ def room_C3() -> Room:
     r.platform(24, 12, 6)
     r.platform(44, 11, 6)
 
-    # Verstimmte Sperren - nur der Basston bricht sie
+    # Verstimmte Sperren - nur der Basston bricht sie.
     r.dissowall(28, 14, 2, 8)
     r.dissowall(48, 12, 2, 10)
     r.dissowall(64, 16, 2, 6)
 
-    r.door("L", 0, 18, 1, 4, "C2", "R")
-    r.door("R", 75, 18, 1, 4, "D0", "L", requires="basston")
-    r.spawn_on("L", 3, 7, 1)
-    r.spawn_on("R", 72, 7, -1)
+    r.side_door("L", "left", "C2", "R", hint=7)
+    r.side_door("R", "right", "D0", "L", hint=7, requires="basston")
 
     r.enemy_on("stilleschreiter", 18, 7, patrol=5)
     r.enemy_on("dissonanzknospe", 34, 7)
     r.enemy("echoscherbe", 42, 12)
     r.enemy("klangmotte", 56, 12)
-    r.enemy_on("stilleschreiter", 68, 7, patrol=4)
+    r.enemy_on("stilleschreiter", 70, 7, patrol=3)
 
     r.crystal_on(10, 7, 1)
     r.crystal_on(60, 7, 2)
@@ -602,14 +669,12 @@ def room_D0() -> Room:
     r.ledge(16, 13, 12, 2)
     r.dark = 0.25
 
-    r.door("L", 0, 13, 1, 4, "C3", "R")
-    r.door("R", 43, 13, 1, 4, "D1", "L")
-    r.spawn_on("L", 3, 6, 1)
-    r.spawn_on("R", 40, 6, -1)
+    r.side_door("L", "left", "C3", "R", hint=6)
+    r.side_door("R", "right", "D1", "L", hint=6)
     r.bench_on(9, 6)
 
     r.crystal_on(22, 6, 2)
-    r.note_on(14, 6, "AB HIER HOERT MAN NICHTS MEHR. "
+    r.note_on(13, 6, "AB HIER HOERT MAN NICHTS MEHR. "
                      "NICHT WEIL ES STILL IST - WEIL ALLES ZUGLEICH KLINGT.")
     r.note_on(34, 6, "ER WAR DER, DER DEN TAKT GAB. "
                      "NIEMAND SAGTE IHM, WANN ER AUFHOEREN SOLL.")
@@ -627,9 +692,8 @@ def room_D1() -> Room:
     r.platform(32, 15, 8)
     r.dark = 0.4
 
-    r.door("L", 0, 21, 1, 4, "D0", "R")
-    r.spawn_on("L", 4, 6, 1)
-    r.set_boss("kantor", 42, 24, (2, 4, 56, 21))
+    r.side_door("L", "left", "D0", "R", hint=6)
+    r.set_boss("kantor", 42, 25, (2, 4, 56, 21))
     return r
 
 

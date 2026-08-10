@@ -1,0 +1,107 @@
+{
+  "": {
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/master.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/Combat/Tuning.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Tuning.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Tuning.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Tuning~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Tuning.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/Entities/Boss.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Boss.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Boss.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Boss~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Boss.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/Entities/Enemy.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Enemy.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Enemy.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Enemy~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Enemy.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/Entities/Player.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Player.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Player.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Player~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Player.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/Entities/Projectile.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Projectile.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Projectile.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Projectile~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Projectile.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/Math/Geometry.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Geometry.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Geometry.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Geometry~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Geometry.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/Music/Score.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Score.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Score.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Score~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Score.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/Progress/Abilities.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Abilities.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Abilities.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Abilities~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Abilities.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/Sim/GameEvent.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/GameEvent.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/GameEvent.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/GameEvent~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/GameEvent.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/Sim/GameSimulation.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/GameSimulation.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/GameSimulation.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/GameSimulation~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/GameSimulation.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/Sim/InputState.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/InputState.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/InputState.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/InputState~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/InputState.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/World/ReachabilityProbe.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/ReachabilityProbe.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/ReachabilityProbe.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/ReachabilityProbe~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/ReachabilityProbe.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/World/Room.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Room.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Room.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Room~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Room.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/World/RoomData.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/RoomData.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/RoomData.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/RoomData~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/RoomData.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/World/Tile.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Tile.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Tile.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Tile~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/Tile.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzCore/World/WorldCatalog.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/WorldCatalog.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/WorldCatalog.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/WorldCatalog~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/WorldCatalog.swiftdeps"
+  },
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/DerivedSources/resource_bundle_accessor.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/resource_bundle_accessor.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/resource_bundle_accessor.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/resource_bundle_accessor~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCore.build/resource_bundle_accessor.swiftdeps"
+  }
+}

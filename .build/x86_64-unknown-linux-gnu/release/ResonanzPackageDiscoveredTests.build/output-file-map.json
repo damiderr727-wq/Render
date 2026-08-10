@@ -1,0 +1,17 @@
+{
+  "": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/ResonanzPackageDiscoveredTests.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/ResonanzPackageDiscoveredTests.o",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/master.swiftdeps"
+  },
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.derived/ResonanzCoreTests.swift": {
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/ResonanzCoreTests.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/ResonanzCoreTests~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/ResonanzCoreTests.swiftdeps"
+  },
+  "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.derived/all-discovered-tests.swift": {
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/all-discovered-tests.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/all-discovered-tests~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzPackageDiscoveredTests.build/all-discovered-tests.swiftdeps"
+  }
+}

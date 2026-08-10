@@ -1,0 +1,6 @@
+version: "Swift version 6.0.3 (swift-6.0.3-RELEASE)"
+options: "24732e82c528dde2ea2aed82f4b71e4e5750688b8582e05121125b2b56606687"
+build_start_time: [1786346382, 165146000]
+build_end_time: [1786346382, 289639000]
+inputs:
+  "/home/user/Render/Sources/ResonanzApp/Placeholder.swift": [1786345724, 0]

@@ -28,22 +28,24 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
     """
     body, edge, accent = P.REGIONS[region]
     c = Canvas(TS, TS)
-    rng = Rng(1000 + variant * 17 + hash(region) % 1000)
+    rng = Rng(1000 + variant * 7919 + (sum(map(ord, region)) * 131) % 4096)
 
-    # Grundmasse mit koerniger Struktur
+    # Grundmasse mit koerniger Struktur. Die Koernung bleibt flach - bei
+    # 16 Pixeln faellt jeder starke Kontrast als Muster auf, sobald sich
+    # dieselbe Kachel wiederholt.
     for y in range(TS):
         for x in range(TS):
             n = rng.next()
             depth = y / TS
-            col = mix(body, shade(body, -0.35), depth * 0.6 + n * 0.18)
+            col = mix(body, shade(body, -0.30), depth * 0.55 + n * 0.10)
             c.set(x, y, col)
 
-    # Adern aus erstarrtem Klang
-    for _ in range(2):
-        vx = rng.int(1, TS - 2)
-        vy = rng.int(2, TS - 3)
-        for i in range(rng.int(3, 6)):
-            c.set(vx, vy + i, mix(body, accent, 0.22))
+    # Adern aus erstarrtem Klang - nur angedeutet.
+    for _ in range(rng.int(0, 1)):
+        vx = rng.int(2, TS - 3)
+        vy = rng.int(3, TS - 5)
+        for i in range(rng.int(2, 4)):
+            c.set(vx, vy + i, mix(body, accent, 0.10))
             if rng.chance(0.4):
                 vx += 1 if rng.chance(0.5) else -1
 
@@ -258,11 +260,12 @@ def backdrop(region: str, layer: int, w: int = 384, h: int = 216) -> Canvas:
                 ww = int(rng.int(4, 14) * (0.4 + t * 0.6))
                 c.rect(int(x + skew * y - ww // 2), h - y, max(1, ww), 1, silhouette)
 
-    # Dunst nach unten
+    # Dunst nach unten, weich ansteigend.
     for y in range(h):
         t = y / h
-        if t > 0.55:
-            a = int((t - 0.55) / 0.45 * 90 * (1 - depth * 0.4))
+        if t > 0.45:
+            u = (t - 0.45) / 0.55
+            a = int((u ** 1.6) * 80 * (1 - depth * 0.4))
             c.rect_blend(0, y, w, 1, (P.VOID[0], P.VOID[1], P.VOID[2], a))
     return c
 
@@ -377,9 +380,16 @@ def fx_mote(frame: int, tint) -> Canvas:
     return c
 
 
+SIGIL_TINTS = {
+    "fluegelschlag": P.TRIM, "herzschlag": P.ROT,
+    "klangschritt": P.BLOOM, "basston": P.GOLD,
+    "leier": P.GLOW, "trommel": P.GOLD, "floete": P.BLOOM,
+}
+
+
 def fx_sigil(kind: str, frame: int) -> Canvas:
-    """Faehigkeits-Siegel: das schwebende Zeichen vor dem Aufnehmen."""
-    tint = {"fluegelschlag": P.TRIM, "herzschlag": P.ROT, "klangschritt": P.BLOOM, "basston": P.GOLD}[kind]
+    """Siegel: das schwebende Zeichen eines Fundstuecks vor dem Aufnehmen."""
+    tint = SIGIL_TINTS[kind]
     c = Canvas(28, 28)
     p = 0.5 + 0.5 * math.sin(frame / 6 * math.tau)
     cx = cy = 14
@@ -398,7 +408,23 @@ def fx_sigil(kind: str, frame: int) -> Canvas:
     elif kind == "klangschritt":
         for i in range(3):
             c.rect(cx - 6 + i * 5, cy - 5 + i * 3, 3, 7, tint)
-    else:
+    elif kind == "leier":
+        # Rahmen mit Saiten
+        c.rect(cx - 4, cy - 6, 1, 11, tint)
+        c.rect(cx + 4, cy - 6, 1, 11, tint)
+        c.rect(cx - 4, cy + 5, 9, 1, tint)
+        for i in range(3):
+            c.rect(cx - 2 + i * 2, cy - 4, 1, 9, mix(tint, P.WARM, 0.4))
+    elif kind == "trommel":
+        c.ellipse(cx, cy, 6, 4.6, mix(tint, P.INK, 0.45))
+        c.ring(cx, cy, 5.4, 1.2, tint)
+        c.rect(cx - 5, cy - 1, 11, 1, mix(tint, P.WARM, 0.5))
+    elif kind == "floete":
+        c.rect(cx - 7, cy - 1, 15, 2, mix(tint, P.STONE_HI, 0.3))
+        for i in range(4):
+            c.set(cx - 4 + i * 3, cy - 1, P.INK)
+        c.set(cx + 7, cy - 1, mix(tint, P.WARM, 0.5))
+    elif kind == "basston":
         for i in range(3):
             c.ring(cx, cy, 3 + i * 2.4, 1, (tint[0], tint[1], tint[2], int(200 - i * 45)))
     c.glow(cx, cy, 13, (tint[0], tint[1], tint[2], int(50 + 40 * p)))
@@ -412,8 +438,9 @@ def build() -> None:
     EDGE_SETS = ["", "t", "tl", "tr", "tlr", "l", "r", "lr", "b", "tb", "blr", "tblr"]
     for region in REGIONS:
         for edges in EDGE_SETS:
-            for v in range(2):
-                tiles.add(f"{region}_solid_{edges or 'mid'}_{v}", tile_solid(region, v, edges), pivot=(0, 0))
+            for v in range(4):
+                tiles.add(f"{region}_solid_{edges or 'mid'}_{v}",
+                          tile_solid(region, v, edges), pivot=(0, 0))
         tiles.add(f"{region}_platform", tile_platform(region), pivot=(0, 0))
         tiles.add(f"{region}_spike", tile_spike(region), pivot=(0, 0))
     for f in range(4):
@@ -428,8 +455,9 @@ def build() -> None:
                                [tile_crystal(size, f, tint) for f in range(4)], pivot=(0.5, 1.0), fps=4)
         props.add_sequence(f"reed_{region}", [tile_reed(f, tint) for f in range(4)], pivot=(0.5, 1.0), fps=5)
     props.add_sequence("bench", [tile_bench(f) for f in range(4)], pivot=(0.5, 1.0), fps=4)
-    for kind in ("fluegelschlag", "herzschlag", "klangschritt", "basston"):
-        props.add_sequence(f"sigil_{kind}", [fx_sigil(kind, f) for f in range(6)], pivot=(0.5, 0.5), fps=8)
+    for kind in SIGIL_TINTS:
+        props.add_sequence(f"sigil_{kind}", [fx_sigil(kind, f) for f in range(6)],
+                           pivot=(0.5, 0.5), fps=8)
     png, js = props.write(OUT)
     print(f"props      -> {png.name} ({len(props.frames)} Frames)")
 

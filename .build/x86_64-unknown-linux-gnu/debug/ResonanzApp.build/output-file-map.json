@@ -2,10 +2,58 @@
   "": {
     "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/master.swiftdeps"
   },
-  "/home/user/Render/Sources/ResonanzApp/Placeholder.swift": {
-    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/Placeholder.d",
-    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/Placeholder.swift.o",
-    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/Placeholder~partial.swiftmodule",
-    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/Placeholder.swiftdeps"
+  "/home/user/Render/Sources/ResonanzApp/Audio/SoundBoard.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SoundBoard.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SoundBoard.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SoundBoard~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SoundBoard.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzApp/Audio/SynthEngine.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SynthEngine.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SynthEngine.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SynthEngine~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SynthEngine.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzApp/Input/InputRouter.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/InputRouter.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/InputRouter.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/InputRouter~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/InputRouter.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzApp/Input/TouchControlLayer.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/TouchControlLayer.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/TouchControlLayer.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/TouchControlLayer~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/TouchControlLayer.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzApp/Render/AtlasStore.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/AtlasStore.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/AtlasStore.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/AtlasStore~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/AtlasStore.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzApp/Render/GameScene.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/GameScene.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/GameScene.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/GameScene~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/GameScene.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzApp/Render/RoomRenderer.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/RoomRenderer.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/RoomRenderer.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/RoomRenderer~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/RoomRenderer.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzApp/ResonanzApp.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/ResonanzApp.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/ResonanzApp.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/ResonanzApp~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/ResonanzApp.swiftdeps"
+  },
+  "/home/user/Render/Sources/ResonanzApp/UI/HUDNode.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/HUDNode.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/HUDNode.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/HUDNode~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/HUDNode.swiftdeps"
   }
 }

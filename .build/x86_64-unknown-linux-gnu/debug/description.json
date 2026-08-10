@@ -69,7 +69,39 @@
       "inputs" : [
         {
           "kind" : "file",
-          "name" : "/home/user/Render/Sources/ResonanzApp/Placeholder.swift"
+          "name" : "/home/user/Render/Sources/ResonanzApp/Audio/SoundBoard.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/Audio/SynthEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/Input/InputRouter.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/Input/TouchControlLayer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/Render/AtlasStore.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/Render/GameScene.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/Render/RoomRenderer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/ResonanzApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/UI/HUDNode.swift"
         },
         {
           "kind" : "file",
@@ -88,7 +120,15 @@
       "moduleName" : "ResonanzApp",
       "moduleOutputPath" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/Modules/ResonanzApp.swiftmodule",
       "objects" : [
-        "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/Placeholder.swift.o"
+        "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SoundBoard.swift.o",
+        "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SynthEngine.swift.o",
+        "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/InputRouter.swift.o",
+        "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/TouchControlLayer.swift.o",
+        "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/AtlasStore.swift.o",
+        "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/GameScene.swift.o",
+        "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/RoomRenderer.swift.o",
+        "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/ResonanzApp.swift.o",
+        "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/HUDNode.swift.o"
       ],
       "otherArguments" : [
         "-target",
@@ -121,7 +161,39 @@
       "outputs" : [
         {
           "kind" : "file",
-          "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/Placeholder.swift.o"
+          "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SoundBoard.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SynthEngine.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/InputRouter.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/TouchControlLayer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/AtlasStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/GameScene.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/RoomRenderer.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/ResonanzApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/HUDNode.swift.o"
         },
         {
           "kind" : "file",
@@ -130,7 +202,15 @@
       ],
       "prepareForIndexing" : false,
       "sources" : [
-        "/home/user/Render/Sources/ResonanzApp/Placeholder.swift"
+        "/home/user/Render/Sources/ResonanzApp/Audio/SoundBoard.swift",
+        "/home/user/Render/Sources/ResonanzApp/Audio/SynthEngine.swift",
+        "/home/user/Render/Sources/ResonanzApp/Input/InputRouter.swift",
+        "/home/user/Render/Sources/ResonanzApp/Input/TouchControlLayer.swift",
+        "/home/user/Render/Sources/ResonanzApp/Render/AtlasStore.swift",
+        "/home/user/Render/Sources/ResonanzApp/Render/GameScene.swift",
+        "/home/user/Render/Sources/ResonanzApp/Render/RoomRenderer.swift",
+        "/home/user/Render/Sources/ResonanzApp/ResonanzApp.swift",
+        "/home/user/Render/Sources/ResonanzApp/UI/HUDNode.swift"
       ],
       "tempsPath" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build",
       "wholeModuleOptimization" : false
@@ -716,7 +796,15 @@
       "render",
       "-incremental",
       "-c",
-      "/home/user/Render/Sources/ResonanzApp/Placeholder.swift",
+      "/home/user/Render/Sources/ResonanzApp/Audio/SoundBoard.swift",
+      "/home/user/Render/Sources/ResonanzApp/Audio/SynthEngine.swift",
+      "/home/user/Render/Sources/ResonanzApp/Input/InputRouter.swift",
+      "/home/user/Render/Sources/ResonanzApp/Input/TouchControlLayer.swift",
+      "/home/user/Render/Sources/ResonanzApp/Render/AtlasStore.swift",
+      "/home/user/Render/Sources/ResonanzApp/Render/GameScene.swift",
+      "/home/user/Render/Sources/ResonanzApp/Render/RoomRenderer.swift",
+      "/home/user/Render/Sources/ResonanzApp/ResonanzApp.swift",
+      "/home/user/Render/Sources/ResonanzApp/UI/HUDNode.swift",
       "-I",
       "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/Modules",
       "-target",
@@ -1043,7 +1131,39 @@
         },
         {
           "kind" : "file",
-          "name" : "/home/user/Render/Sources/ResonanzApp/Placeholder.swift"
+          "name" : "/home/user/Render/Sources/ResonanzApp/Audio/SoundBoard.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/Audio/SynthEngine.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/Input/InputRouter.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/Input/TouchControlLayer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/Render/AtlasStore.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/Render/GameScene.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/Render/RoomRenderer.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/ResonanzApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/Sources/ResonanzApp/UI/HUDNode.swift"
         }
       ],
       "outputFilePath" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/sources"

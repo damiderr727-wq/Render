@@ -38,7 +38,7 @@ commands:
 
   "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/sources":
     tool: write-auxiliary-file
-    inputs: ["<sources-file-list>","/home/user/Render/Sources/ResonanzApp/Placeholder.swift"]
+    inputs: ["<sources-file-list>","/home/user/Render/Sources/ResonanzApp/Audio/SoundBoard.swift","/home/user/Render/Sources/ResonanzApp/Audio/SynthEngine.swift","/home/user/Render/Sources/ResonanzApp/Input/InputRouter.swift","/home/user/Render/Sources/ResonanzApp/Input/TouchControlLayer.swift","/home/user/Render/Sources/ResonanzApp/Render/AtlasStore.swift","/home/user/Render/Sources/ResonanzApp/Render/GameScene.swift","/home/user/Render/Sources/ResonanzApp/Render/RoomRenderer.swift","/home/user/Render/Sources/ResonanzApp/ResonanzApp.swift","/home/user/Render/Sources/ResonanzApp/UI/HUDNode.swift"]
     outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/sources"]
     description: "Write auxiliary file /home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/sources"
 
@@ -156,7 +156,7 @@ commands:
 
   "<ResonanzApp-x86_64-unknown-linux-gnu-debug.module>":
     tool: phony
-    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/Placeholder.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/Modules/ResonanzApp.swiftmodule"]
+    inputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SoundBoard.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SynthEngine.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/InputRouter.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/TouchControlLayer.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/AtlasStore.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/GameScene.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/RoomRenderer.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/ResonanzApp.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/HUDNode.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/Modules/ResonanzApp.swiftmodule"]
     outputs: ["<ResonanzApp-x86_64-unknown-linux-gnu-debug.module>"]
 
   "<ResonanzCheck-x86_64-unknown-linux-gnu-debug.module>":
@@ -196,9 +196,9 @@ commands:
 
   "C.ResonanzApp-x86_64-unknown-linux-gnu-debug.module":
     tool: shell
-    inputs: ["/home/user/Render/Sources/ResonanzApp/Placeholder.swift","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/swift-version-6A52383ED409C6A7.txt","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/Modules/ResonanzCore.swiftmodule","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/sources"]
-    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/Placeholder.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/Modules/ResonanzApp.swiftmodule"]
-    description: "Compiling Swift Module 'ResonanzApp' (1 sources)"
+    inputs: ["/home/user/Render/Sources/ResonanzApp/Audio/SoundBoard.swift","/home/user/Render/Sources/ResonanzApp/Audio/SynthEngine.swift","/home/user/Render/Sources/ResonanzApp/Input/InputRouter.swift","/home/user/Render/Sources/ResonanzApp/Input/TouchControlLayer.swift","/home/user/Render/Sources/ResonanzApp/Render/AtlasStore.swift","/home/user/Render/Sources/ResonanzApp/Render/GameScene.swift","/home/user/Render/Sources/ResonanzApp/Render/RoomRenderer.swift","/home/user/Render/Sources/ResonanzApp/ResonanzApp.swift","/home/user/Render/Sources/ResonanzApp/UI/HUDNode.swift","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/swift-version-6A52383ED409C6A7.txt","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/Modules/ResonanzCore.swiftmodule","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/sources"]
+    outputs: ["/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SoundBoard.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/SynthEngine.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/InputRouter.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/TouchControlLayer.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/AtlasStore.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/GameScene.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/RoomRenderer.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/ResonanzApp.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/HUDNode.swift.o","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/Modules/ResonanzApp.swiftmodule"]
+    description: "Compiling Swift Module 'ResonanzApp' (9 sources)"
     args: ["/opt/swift/usr/bin/swiftc","-module-name","ResonanzApp","-emit-dependencies","-emit-module","-emit-module-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/Modules/ResonanzApp.swiftmodule","-output-file-map","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/output-file-map.json","-parse-as-library","-incremental","-c","@/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzApp.build/sources","-I","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/Modules","-target","x86_64-unknown-linux-gnu","-enable-batch-mode","-index-store-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/index/store","-Onone","-enable-testing","-j4","-DSWIFT_PACKAGE","-DDEBUG","-module-cache-path","/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ModuleCache","-parseable-output","-parse-as-library","-swift-version","5","-g","-Xcc","-fPIC","-Xcc","-g","-package-name","render","-Xcc","-fno-omit-frame-pointer"]
 
   "C.ResonanzCheck-x86_64-unknown-linux-gnu-debug.module":

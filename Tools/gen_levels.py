@@ -667,7 +667,7 @@ def room_D0() -> Room:
     r.fill(1, 17, 42, 5)
     r.ceiling(1, 43, lambda x: 3)
     r.ledge(16, 13, 12, 2)
-    r.dark = 0.25
+    r.dark = 0.15
 
     r.side_door("L", "left", "C3", "R", hint=6)
     r.side_door("R", "right", "D1", "L", hint=6)
@@ -690,7 +690,7 @@ def room_D1() -> Room:
     r.ledge(46, 18, 8, 2)
     r.platform(20, 15, 8)
     r.platform(32, 15, 8)
-    r.dark = 0.4
+    r.dark = 0.22
 
     r.side_door("L", "left", "D0", "R", hint=6)
     r.set_boss("kantor", 42, 25, (2, 4, 56, 21))

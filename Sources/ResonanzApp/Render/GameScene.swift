@@ -1,0 +1,440 @@
+#if canImport(SpriteKit) && !os(Linux)
+import Foundation
+import SpriteKit
+import ResonanzCore
+
+/// Die Buehne. Sie besitzt keine Spielregeln - sie zeigt nur, was die
+/// Simulation entschieden hat, und gibt ihre Ereignisse an Klang und
+/// Anzeige weiter.
+public final class GameScene: SKScene {
+
+    public static let designSize = CGSize(width: 512, height: 288)
+
+    private var sim: GameSimulation!
+    private let renderer = RoomRenderer()
+    private let atlas = AtlasStore.shared
+    private let hud = HUDNode()
+    private let input = InputRouter()
+
+    private let synth = SynthEngine()
+    private var board: SoundBoard!
+    private var music: MusicDirector!
+
+    private let cameraNode = SKCameraNode()
+    private var lastUpdate: TimeInterval = 0
+    private var shake: Double = 0
+    private var currentRoomID = ""
+    private var playerState: PlayerState = .idle
+    private var playerInstrument: Instrument = .leier
+
+    private var playerNode = SKSpriteNode()
+    private var bossNode: SKSpriteNode?
+    private var enemyNodes: [Int: SKSpriteNode] = [:]
+    private var projectileNodes: [SKSpriteNode] = []
+    private var pickupNodes: [String: SKNode] = [:]
+    private var hazardNodes: [SKShapeNode] = []
+
+    // MARK: - Aufbau
+
+    public override func didMove(to view: SKView) {
+        scaleMode = .aspectFit
+        size = Self.designSize
+        backgroundColor = SKColor(red: 0.02, green: 0.024, blue: 0.047, alpha: 1)
+        view.preferredFramesPerSecond = 60
+        view.ignoresSiblingOrder = false
+
+        do {
+            try atlas.loadAll()
+            let catalog = try WorldCatalog()
+            sim = try GameSimulation(catalog: catalog, save: SaveStore.load())
+            music = MusicDirector(library: try ScoreLibrary())
+        } catch {
+            showFatal("\(error)")
+            return
+        }
+
+        synth.start()
+        board = SoundBoard(synth: synth)
+
+        addChild(renderer.root)
+        camera = cameraNode
+        addChild(cameraNode)
+        cameraNode.addChild(hud)
+        hud.build(in: Self.designSize)
+
+        playerNode = atlas.sprite("cadence_leier_idle_0")
+        playerNode.zPosition = 5
+        renderer.layers.entities.addChild(playerNode)
+
+        input.attach(to: view)
+
+        #if os(iOS) || os(tvOS)
+        let touchLayer = TouchControlLayer()
+        touchLayer.build(in: Self.designSize)
+        cameraNode.addChild(touchLayer)
+        input.bind(touchLayer: touchLayer)
+        #endif
+
+        loadRoom(force: true)
+    }
+
+    private func showFatal(_ message: String) {
+        let label = SKLabelNode(text: "FEHLER: \(message)")
+        label.fontName = "Menlo"
+        label.fontSize = 10
+        label.fontColor = .red
+        label.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        label.numberOfLines = 4
+        label.preferredMaxLayoutWidth = size.width - 40
+        addChild(label)
+    }
+
+    // MARK: - Raum
+
+    private func loadRoom(force: Bool = false) {
+        guard force || sim.room.id != currentRoomID else { return }
+        currentRoomID = sim.room.id
+
+        renderer.build(room: sim.room)
+        enemyNodes.values.forEach { $0.removeFromParent() }
+        enemyNodes.removeAll()
+        projectileNodes.forEach { $0.removeFromParent() }
+        projectileNodes.removeAll()
+        pickupNodes.values.forEach { $0.removeFromParent() }
+        pickupNodes.removeAll()
+        bossNode?.removeFromParent()
+        bossNode = nil
+        hazardNodes.forEach { $0.removeFromParent() }
+        hazardNodes.removeAll()
+
+        for pickup in sim.pickups {
+            let name: String
+            switch pickup.payload {
+            case .instrument(let instrument): name = "sigil_\(instrument.rawValue)"
+            case .ability(let ability): name = "sigil_\(ability.rawValue)"
+            }
+            let node = atlas.sprite(name)
+            node.position = WorldSpace.scenePoint(pickup.position)
+            node.zPosition = 6
+            if let loop = atlas.loop(name) { node.run(loop) }
+            node.run(.repeatForever(.sequence([
+                .moveBy(x: 0, y: 3, duration: 1.1),
+                .moveBy(x: 0, y: -3, duration: 1.1),
+            ])))
+            pickupNodes[pickup.key] = node
+            renderer.layers.decor.addChild(node)
+        }
+
+        if let boss = sim.boss {
+            let node = atlas.sprite("kantor_idle_0")
+            node.zPosition = 7
+            node.position = WorldSpace.scenePoint(boss.position)
+            if let loop = atlas.loop("kantor_idle") { node.run(loop) }
+            renderer.layers.entities.addChild(node)
+            bossNode = node
+        }
+
+        hud.showRoomTitle(sim.room.name, region: sim.room.region.displayName)
+        music.play(sim.musicTrack, now: synth.currentTime)
+        cameraNode.position = WorldSpace.scenePoint(sim.cameraTarget)
+    }
+
+    // MARK: - Bild pro Bild
+
+    public override func update(_ currentTime: TimeInterval) {
+        guard sim != nil else { return }
+        if lastUpdate == 0 { lastUpdate = currentTime }
+        // Grosse Spruenge (App war im Hintergrund) nicht nachholen.
+        let dt = min(1.0 / 30.0, max(0.0001, currentTime - lastUpdate))
+        lastUpdate = currentTime
+
+        let events = sim.update(dt: dt, input: input.snapshot())
+        input.endFrame()
+
+        handle(events: events)
+        syncPlayer()
+        syncEnemies()
+        syncBoss()
+        syncProjectiles()
+        syncPickups()
+        updateCamera(dt: dt)
+        pumpMusic(dt: dt)
+        hud.update(sim: sim, dt: dt)
+    }
+
+    private func handle(events: [GameEvent]) {
+        for event in events {
+            switch event {
+            case .sound(let cue):
+                board.play(cue)
+
+            case .effect(let kind, let position, _):
+                spawnEffect(kind, at: position)
+
+            case .shake(let amount):
+                shake = max(shake, amount)
+
+            case .wallsBroken(_, let tiles):
+                for (tx, ty) in tiles { renderer.breakTile(room: sim.room, tx: tx, ty: ty) }
+
+            case .roomChanged:
+                loadRoom()
+
+            case .musicChanged(let track, _):
+                music.play(track, now: synth.currentTime)
+
+            case .instrumentPicked(let instrument):
+                hud.announce(instrument.displayName, subtitle: instrument.summary)
+
+            case .abilityPicked(let ability):
+                hud.announce(ability.displayName, subtitle: ability.summary,
+                             lore: ability.loreLine)
+
+            case .instrumentSwitched:
+                hud.flashInstrument()
+
+            case .loreRead(let text):
+                hud.showLore(text)
+
+            case .gateHint(let ability):
+                hud.showHint("HIER FEHLT: \(ability.displayName)")
+
+            case .bossPhaseChanged(let phase):
+                bossNode?.removeAllActions()
+                let name = phase >= 3 ? "kantor_rage" : "kantor_idle"
+                if let loop = atlas.loop(name) { bossNode?.run(loop) }
+
+            case .gameCompleted:
+                hud.announce("DIE WELT KLINGT WIEDER",
+                             subtitle: "DANK FUER DAS SPIELEN",
+                             lore: "MUSIK NACH J. S. BACH - BWV 846, 578, 1068, 565")
+
+            case .benchRested:
+                SaveStore.save(sim.snapshotSave())
+                hud.showHint("GESPEICHERT")
+
+            default:
+                break
+            }
+        }
+    }
+
+    // MARK: - Figuren
+
+    private func syncPlayer() {
+        let player = sim.player
+        playerNode.position = WorldSpace.scenePoint(player.position)
+        playerNode.xScale = player.facing >= 0 ? 1 : -1
+
+        if player.state != playerState || player.instrument != playerInstrument {
+            playerState = player.state
+            playerInstrument = player.instrument
+            let name = "cadence_\(player.instrument.rawValue)_\(animationName(for: player.state))"
+            playerNode.removeAllActions()
+            if let info = atlas.frame(name) {
+                playerNode.texture = info.texture
+                playerNode.size = info.size
+                playerNode.anchorPoint = info.anchor
+            }
+            if let loop = atlas.loop(name) { playerNode.run(loop) }
+        }
+
+        // Waehrend der Unverwundbarkeit blinkt die Figur.
+        if player.isDead {
+            playerNode.alpha = 0.4
+        } else if player.invulnerable > 0 {
+            playerNode.alpha = Int(sim.elapsed * 20) % 2 == 0 ? 0.35 : 1.0
+        } else {
+            playerNode.alpha = 1.0
+        }
+    }
+
+    private func animationName(for state: PlayerState) -> String {
+        switch state {
+        case .idle: return "idle"
+        case .run: return "run"
+        case .jump: return "jump"
+        case .fall: return "fall"
+        case .wallSlide: return "wall"
+        case .dash: return "dash"
+        case .melee: return "melee"
+        case .cast: return "cast"
+        case .hurt, .dead: return "hurt"
+        case .slam: return "fall"
+        case .rest: return "rest"
+        }
+    }
+
+    private func syncEnemies() {
+        var lebend: Set<Int> = []
+        for enemy in sim.enemies {
+            lebend.insert(enemy.id)
+            let node: SKSpriteNode
+            if let existing = enemyNodes[enemy.id] {
+                node = existing
+            } else {
+                let name = spriteName(for: enemy.kind)
+                node = atlas.sprite(name)
+                node.zPosition = 4
+                if let loop = atlas.loop(name) { node.run(loop) }
+                renderer.layers.entities.addChild(node)
+                enemyNodes[enemy.id] = node
+            }
+            node.position = WorldSpace.scenePoint(enemy.position)
+            node.xScale = enemy.facing >= 0 ? 1 : -1
+            node.colorBlendFactor = enemy.hitFlash > 0 ? 0.8 : 0
+            node.color = .white
+        }
+        for (id, node) in enemyNodes where !lebend.contains(id) {
+            node.removeFromParent()
+            enemyNodes.removeValue(forKey: id)
+        }
+    }
+
+    private func spriteName(for kind: EnemyKind) -> String {
+        switch kind {
+        case .klangmotte: return "klangmotte_fly"
+        case .stilleschreiter: return "stilleschreiter_walk"
+        case .dissonanzknospe: return "dissonanzknospe_bloom"
+        case .echoscherbe: return "echoscherbe_spin"
+        }
+    }
+
+    private func syncBoss() {
+        guard let boss = sim.boss, let node = bossNode else { return }
+        node.position = WorldSpace.scenePoint(boss.position)
+        node.xScale = boss.facing >= 0 ? 1 : -1
+        node.colorBlendFactor = boss.hitFlash > 0 ? 0.7 : 0
+        node.color = .white
+        node.alpha = boss.alive ? 1 : max(0, node.alpha - 0.02)
+
+        // Angekuendigte Gefahrenzonen: erst leuchten, dann treffen.
+        while hazardNodes.count < boss.hazards.count {
+            let shape = SKShapeNode(rectOf: CGSize(width: 20, height: 70))
+            shape.lineWidth = 1
+            shape.zPosition = 8
+            renderer.layers.effects.addChild(shape)
+            hazardNodes.append(shape)
+        }
+        for (index, node) in hazardNodes.enumerated() {
+            guard index < boss.hazards.count else {
+                node.isHidden = true
+                continue
+            }
+            let hazard = boss.hazards[index]
+            node.isHidden = false
+            let rect = hazard.rect
+            node.path = CGPath(rect: CGRect(x: -rect.width / 2, y: -rect.height / 2,
+                                            width: rect.width, height: rect.height),
+                               transform: nil)
+            node.position = WorldSpace.scenePoint(rect.center)
+            if hazard.isWarning {
+                node.strokeColor = SKColor(red: 1, green: 0.75, blue: 0.4, alpha: 0.9)
+                node.fillColor = SKColor(red: 1, green: 0.6, blue: 0.3,
+                                         alpha: CGFloat(0.1 + 0.2 * hazard.warningProgress))
+            } else {
+                node.strokeColor = SKColor(red: 1, green: 0.95, blue: 0.85, alpha: 1)
+                node.fillColor = SKColor(red: 0.95, green: 0.4, blue: 0.5, alpha: 0.65)
+            }
+        }
+    }
+
+    private func syncProjectiles() {
+        while projectileNodes.count < sim.projectiles.count {
+            let node = atlas.sprite("note_leier")
+            node.zPosition = 9
+            renderer.layers.effects.addChild(node)
+            projectileNodes.append(node)
+        }
+        for (index, node) in projectileNodes.enumerated() {
+            guard index < sim.projectiles.count else {
+                node.isHidden = true
+                continue
+            }
+            let projectile = sim.projectiles[index]
+            node.isHidden = false
+            if let info = atlas.frame(projectile.kind) {
+                node.texture = info.texture
+                node.size = info.size
+                node.anchorPoint = info.anchor
+            }
+            node.position = WorldSpace.scenePoint(projectile.position)
+            node.zRotation = CGFloat(atan2(-projectile.velocity.y, projectile.velocity.x))
+        }
+    }
+
+    private func syncPickups() {
+        let vorhanden = Set(sim.pickups.map(\.key))
+        for (key, node) in pickupNodes where !vorhanden.contains(key) {
+            node.run(.sequence([
+                .group([.scale(to: 2.2, duration: 0.35), .fadeOut(withDuration: 0.35)]),
+                .removeFromParent(),
+            ]))
+            pickupNodes.removeValue(forKey: key)
+        }
+    }
+
+    // MARK: - Wirkung
+
+    private func spawnEffect(_ kind: EffectKind, at position: Vec2) {
+        let name: String
+        switch kind {
+        case .dust: name = "dust"
+        case .feather: name = "feather"
+        case .heartbeat: name = "heartbeat"
+        case .burstGlow: name = "burst_glow"
+        case .burstRot: name = "burst_rot"
+        case .ringLeier: name = "ring_leier"
+        case .ringTrommel: name = "ring_trommel"
+        case .ringFloete: name = "ring_floete"
+        case .mote: name = "mote"
+        }
+        let node = atlas.sprite("\(name)_0")
+        node.position = WorldSpace.scenePoint(position)
+        node.zPosition = 12
+        node.blendMode = .add
+        renderer.layers.effects.addChild(node)
+        node.run(atlas.once(name))
+    }
+
+    // MARK: - Kamera
+
+    private func updateCamera(dt: Double) {
+        var target = WorldSpace.scenePoint(sim.cameraTarget)
+
+        // Der Blick bleibt im Raum, damit man nie ins Leere schaut.
+        let halfWidth = Self.designSize.width / 2
+        let halfHeight = Self.designSize.height / 2
+        let roomWidth = Double(sim.room.width) * tileSize
+        let roomHeight = Double(sim.room.height) * tileSize
+        if roomWidth > Double(halfWidth) * 2 {
+            target.x = CGFloat(clamp(Double(target.x), Double(halfWidth), roomWidth - Double(halfWidth)))
+        } else {
+            target.x = CGFloat(roomWidth / 2)
+        }
+        if roomHeight > Double(halfHeight) * 2 {
+            target.y = CGFloat(clamp(Double(target.y), -roomHeight + Double(halfHeight), -Double(halfHeight)))
+        } else {
+            target.y = CGFloat(-roomHeight / 2)
+        }
+
+        if shake > 0.02 {
+            shake = max(0, shake - dt * 22)
+            target.x += CGFloat.random(in: -CGFloat(shake)...CGFloat(shake))
+            target.y += CGFloat.random(in: -CGFloat(shake)...CGFloat(shake))
+        }
+
+        cameraNode.position = target
+        renderer.updateParallax(cameraPosition: target)
+    }
+
+    // MARK: - Musik
+
+    private func pumpMusic(dt: Double) {
+        music.targetIntensity = sim.musicIntensity
+        for note in music.pull(now: synth.currentTime, dt: dt) {
+            synth.schedule(note)
+        }
+    }
+}
+#endif

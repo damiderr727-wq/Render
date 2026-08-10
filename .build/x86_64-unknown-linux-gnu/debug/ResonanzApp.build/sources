@@ -1,1 +1,9 @@
-/home/user/Render/Sources/ResonanzApp/Placeholder.swift
+/home/user/Render/Sources/ResonanzApp/Audio/SoundBoard.swift
+/home/user/Render/Sources/ResonanzApp/Audio/SynthEngine.swift
+/home/user/Render/Sources/ResonanzApp/Input/InputRouter.swift
+/home/user/Render/Sources/ResonanzApp/Input/TouchControlLayer.swift
+/home/user/Render/Sources/ResonanzApp/Render/AtlasStore.swift
+/home/user/Render/Sources/ResonanzApp/Render/GameScene.swift
+/home/user/Render/Sources/ResonanzApp/Render/RoomRenderer.swift
+/home/user/Render/Sources/ResonanzApp/ResonanzApp.swift
+/home/user/Render/Sources/ResonanzApp/UI/HUDNode.swift

@@ -1,7 +1,6 @@
 version: "Swift version 6.0.3 (swift-6.0.3-RELEASE)"
 options: "f4d18668b51fb0d4f429eb373a69db9a921658965a14536c801791d352333e48"
-build_start_time: [1786347220, 343821000]
-build_end_time: [1786347223, 539336000]
+build_start_time: [1786347853, 78783000]
+build_end_time: [1786347856, 478916000]
 inputs:
-  "/home/user/Render/Sources/ResonanzCheck/dbg.swift": [1786347219, 0]
-  "/home/user/Render/Sources/ResonanzCheck/main.swift": [1786347182, 0]
+  "/home/user/Render/Sources/ResonanzCheck/main.swift": [1786347251, 0]

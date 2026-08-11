@@ -1,6 +1,0 @@
-version: "Swift version 6.0.3 (swift-6.0.3-RELEASE)"
-options: "f4d18668b51fb0d4f429eb373a69db9a921658965a14536c801791d352333e48"
-build_start_time: [1786438254, 379343000]
-build_end_time: [1786438257, 528549000]
-inputs:
-  "/home/user/Render/Sources/ResonanzCheck/main.swift": [1786438140, 0]

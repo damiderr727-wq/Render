@@ -14,7 +14,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from pixelkit import Atlas, Canvas, Palette as P, Rng, hexc, mix, shade
+from pixelkit import Atlas, Canvas, Palette as P, Rng, hash01, hexc, mix, shade
 
 OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Resources" / "Atlas"
 TS = 16  # Kachelgroesse
@@ -24,86 +24,197 @@ REGIONS = ["hain", "kathedrale", "grotten", "dissonanz"]
 
 # ----------------------------------------------------------------- Kacheln
 
+TILE_OVERHANG = 8   # Platz ueber der Kachel fuer Bewuchs, der ueberhaengt
+
+
 def tile_solid(region: str, variant: int, edges: str) -> Canvas:
     """
-    Ein Bodenstueck. `edges` enthaelt die freiliegenden Seiten:
-    't' oben, 'b' unten, 'l' links, 'r' rechts.
+    Ein Bodenstueck.
+
+    Die Kachel ist hoeher als das Raster: oben liegen acht Pixel Luft, in die
+    Gras, Moos und Wurzeln hineinwachsen duerfen. Ohne diesen Ueberhang endet
+    jeder Boden an einer geraden Linie, und genau daran erkennt man ein
+    Kachelspiel sofort. Die Kollision bleibt davon unberuehrt - sie kennt nur
+    das Raster.
+
+    `edges` enthaelt die freiliegenden Seiten: 't' oben, 'b' unten,
+    'l' links, 'r' rechts.
     """
     body, edge, accent = P.REGIONS[region][:3]
-    c = Canvas(TS, TS)
+    c = Canvas(TS, TS + TILE_OVERHANG)
+    top = TILE_OVERHANG
     rng = Rng(1000 + variant * 7919 + (sum(map(ord, region)) * 131) % 4096)
 
-    # Grundmasse mit koerniger Struktur. Die Koernung bleibt flach - bei
-    # 16 Pixeln faellt jeder starke Kontrast als Muster auf, sobald sich
-    # dieselbe Kachel wiederholt.
+    # Grundmasse. Die Koernung bleibt flach - bei 16 Pixeln faellt jeder
+    # starke Kontrast als Muster auf, sobald sich dieselbe Kachel wiederholt.
     for y in range(TS):
         for x in range(TS):
-            n = rng.next()
-            depth = y / TS
-            col = mix(body, shade(body, -0.30), depth * 0.55 + n * 0.10)
-            c.set(x, y, col)
+            # Ein gleichmaessiger Verlauf ueber die Kachelhoehe ergibt bei
+            # Wiederholung waagerechte Streifen. Deshalb nur die obersten
+            # Reihen aufhellen und den Rest fleckig halten.
+            near_top = max(0.0, 1 - y / 6) * 0.16
+            mottle = (hash01(x * 3 + variant * 17, y * 5) * 0.5
+                      + rng.next() * 0.5) * 0.13
+            col = mix(body, shade(body, -0.30), 0.22 + mottle - near_top)
+            c.set(x, top + y, col)
 
-    # Adern aus erstarrtem Klang - nur angedeutet.
-    if rng.chance(0.5):
-        vx = rng.int(2, TS - 3)
-        vy = rng.int(3, TS - 5)
-        for i in range(rng.int(2, 4)):
-            c.set(vx, vy + i, mix(body, accent, 0.06))
-            if rng.chance(0.4):
-                vx += 1 if rng.chance(0.5) else -1
-
-    # Kanten
-    if "t" in edges:
-        c.rect(0, 0, TS, 1, mix(edge, accent, 0.35))
-        c.rect(0, 1, TS, 1, edge)
-        c.rect(0, 2, TS, 1, mix(edge, body, 0.55))
-        for x in range(TS):
-            if rng.chance(0.28):
-                c.set(x, 3, mix(edge, body, 0.7))
-    if "b" in edges:
-        c.rect(0, TS - 1, TS, 1, shade(body, -0.45))
+    if region == "kathedrale":
+        # Gemauerter Stein: Quader mit Fugen, versetzt gesetzt.
+        for row in range(4):
+            yy = top + row * 4
+            c.rect(0, yy, TS, 1, shade(body, -0.42))
+            offset = 0 if row % 2 == 0 else 4
+            for k in range(3):
+                c.rect((offset + k * 8) % TS, yy, 1, 4, shade(body, -0.42))
+            c.rect(0, yy + 1, TS, 1, shade(body, 0.07))
+    elif region == "grotten":
+        # Kristalladern ziehen sich durch den Fels.
+        for _ in range(2):
+            vx, vy = rng.int(1, TS - 2), rng.int(1, TS - 6)
+            for i in range(rng.int(4, 9)):
+                c.set(vx, top + vy + i, mix(body, accent, 0.30))
+                c.set(vx + 1, top + vy + i, mix(body, accent, 0.12))
+                if rng.chance(0.45):
+                    vx += 1 if rng.chance(0.5) else -1
+    elif region == "dissonanz":
+        # Faeule frisst sich von oben hinein.
         for x in range(TS):
             if rng.chance(0.3):
-                c.set(x, TS - 2, shade(body, -0.3))
-    if "l" in edges:
-        c.rect(0, 0, 1, TS, mix(edge, body, 0.45))
-        c.rect(1, 0, 1, TS, mix(edge, body, 0.75))
-    if "r" in edges:
-        c.rect(TS - 1, 0, 1, TS, shade(body, -0.35))
-        c.rect(TS - 2, 0, 1, TS, shade(body, -0.18))
+                d = rng.int(2, 7)
+                for i in range(d):
+                    c.set(x, top + i, mix(body, P.ROT_DIM, 0.5 - i / d * 0.4))
+    else:
+        # Hain: eingelagerte Steine, damit die Masse nicht leer wirkt.
+        for _ in range(rng.int(1, 3)):
+            px, py = rng.int(2, TS - 4), rng.int(4, TS - 4)
+            r = rng.range(1.4, 2.6)
+            c.ellipse(px, top + py, r, r * 0.8, shade(body, -0.22))
+            c.ellipse(px - 0.4, top + py - 0.5, r * 0.6, r * 0.5, shade(body, -0.08))
 
-    # Regionsspezifischer Bewuchs auf der Oberkante
+    # ---- Kanten
+
     if "t" in edges:
+        # Der Kamm laeuft unregelmaessig - eine gerade Linie verraet das Raster.
+        crest = [int(hash01(x * 13 + variant * 71, 5) * 3) for x in range(TS)]
+        for x in range(TS):
+            k = crest[x]
+            c.rect(x, top - k, 1, k, mix(body, shade(body, -0.2), 0.4))
+            c.set(x, top - k, mix(edge, accent, 0.30))
+            c.set(x, top - k + 1, edge)
+            c.set(x, top - k + 2, mix(edge, body, 0.5))
+            # Unter dem Licht wird es sofort dunkel: das gibt der Kante Tiefe.
+            c.set(x, top - k + 3, shade(body, -0.14))
+
+        # Bewuchs, der in den Ueberhang hineinragt.
         if region == "hain":
+            # Nicht jede Kachel traegt gleich viel: sonst laeuft ueber den
+            # ganzen Boden ein gleichmaessiger Kamm.
+            density = (0.30, 0.62, 0.44, 0.10)[variant % 4]
+            dark_blade = mix(edge, body, 0.55)
             for x in range(TS):
-                if rng.chance(0.35):
-                    h = rng.int(1, 3)
-                    for i in range(h):
-                        c.set(x, -1 + 0 - i, None)
-                    c.set(x, 0, mix(accent, edge, 0.35))
+                if hash01(x * 7 + variant * 31, 9) >= density:
+                    continue
+                h = 2 + int(hash01(x, variant) * 6)
+                lean = -1 if hash01(x, 3) > 0.5 else 1
+                # Der Halm steht im Schatten, nur die Spitze faengt Licht.
+                for i in range(h):
+                    t = i / max(1, h)
+                    c.set(x + int(lean * i * 0.35), top - crest[x] - i,
+                          mix(dark_blade, edge, t * 0.75))
+                tip = mix(edge, accent, 0.30) if hash01(x, 23) > 0.7 else edge
+                c.set(x + int(lean * h * 0.35), top - crest[x] - h, tip)
+            # Moospolster in den Senken.
+            for x in range(TS):
+                if crest[x] == 0 and hash01(x, 17) > 0.62:
+                    c.set(x, top - 1, mix(edge, body, 0.35))
         elif region == "grotten":
             for _ in range(2):
                 x = rng.int(1, TS - 2)
-                c.set(x, 0, accent)
-                c.set(x, 1, mix(accent, body, 0.5))
+                h = rng.int(2, 5)
+                for i in range(h):
+                    w = 1 if i > h // 2 else 2
+                    c.rect(x, top - crest[x] - i, w, 1,
+                           mix(accent, edge, i / max(1, h)))
         elif region == "dissonanz":
             for x in range(TS):
-                if rng.chance(0.22):
-                    c.set(x, 1, P.ROT)
-                    c.set(x, 2, mix(P.ROT_DIM, body, 0.4))
+                if hash01(x * 5, variant) > 0.72:
+                    h = rng.int(2, 4)
+                    for i in range(h):
+                        c.set(x, top - crest[x] - i, mix(P.ROT, P.ROT_DIM, i / h))
+        else:
+            # Kathedrale: eine schmale Simskante, kein Bewuchs.
+            c.rect(0, top - 1, TS, 1, shade(edge, 0.10))
+
+        # Wurzeln und Risse laufen von der Kante nach unten in die Masse.
+        for _ in range(rng.int(1, 3)):
+            rx = rng.int(1, TS - 2)
+            depth = rng.int(4, 11)
+            for i in range(depth):
+                c.set(rx, top + i, shade(body, -0.26))
+                if rng.chance(0.35):
+                    rx += 1 if rng.chance(0.5) else -1
+
+    if "b" in edges:
+        c.rect(0, top + TS - 1, TS, 1, shade(body, -0.45))
+        # Ausgefranste Unterkante mit einzelnen Zapfen.
+        for x in range(TS):
+            if hash01(x * 3, variant + 40) > 0.62:
+                c.set(x, top + TS - 2, shade(body, -0.32))
+                if hash01(x, 51) > 0.7:
+                    c.set(x, top + TS - 3, shade(body, -0.22))
+    if "l" in edges:
+        c.rect(0, top, 1, TS, mix(edge, body, 0.40))
+        c.rect(1, top, 1, TS, mix(edge, body, 0.72))
+    if "r" in edges:
+        c.rect(TS - 1, top, 1, TS, shade(body, -0.38))
+        c.rect(TS - 2, top, 1, TS, shade(body, -0.20))
+
     return c
 
 
-def tile_platform(region: str) -> Canvas:
-    """Durchsteigbare Plattform - schwebende Notenlinie."""
+def tile_platform(region: str, variant: int = 0) -> Canvas:
+    """
+    Eine durchsteigbare Plattform.
+
+    Sie bekommt dieselbe Behandlung wie der Boden: unregelmaessiger Kamm,
+    Licht nur auf der Oberkante, Bewuchs im Ueberhang. Ein glatter heller
+    Balken faellt sonst aus dem ganzen Bild heraus.
+    """
     body, edge, accent = P.REGIONS[region][:3]
-    c = Canvas(TS, 6)
-    c.rect(0, 0, TS, 1, mix(edge, accent, 0.5))
-    c.rect(0, 1, TS, 2, edge)
-    c.rect(0, 3, TS, 1, mix(body, edge, 0.5))
-    c.rect(0, 4, TS, 1, shade(body, -0.3))
-    for x in range(0, TS, 4):
-        c.set(x, 4, mix(accent, body, 0.5))
+    c = Canvas(TS, 8 + TILE_OVERHANG)
+    top = TILE_OVERHANG
+
+    crest = [int(hash01(x * 11 + variant * 53, 7) * 2) for x in range(TS)]
+    for x in range(TS):
+        k = crest[x]
+        # Der Koerper: nach unten schnell ins Dunkle.
+        for i in range(6 + k):
+            t = i / (6 + k)
+            c.set(x, top - k + i, mix(shade(body, 0.10), shade(body, -0.35), t ** 0.7))
+        c.set(x, top - k, mix(edge, accent, 0.22))
+        c.set(x, top - k + 1, mix(edge, body, 0.30))
+
+    # Unterkante ausgefranst, damit die Plattform nicht schwebt wie ein Brett.
+    for x in range(TS):
+        if hash01(x * 3, variant + 9) > 0.55:
+            c.set(x, top + 6, shade(body, -0.42))
+        if hash01(x * 5, variant + 19) > 0.78:
+            c.set(x, top + 7, shade(body, -0.5))
+
+    if region == "hain":
+        for x in range(TS):
+            if hash01(x * 9 + variant * 23, 13) < 0.30:
+                h = 2 + int(hash01(x, variant + 5) * 4)
+                lean = -1 if hash01(x, 11) > 0.5 else 1
+                for i in range(h):
+                    t = i / max(1, h)
+                    c.set(x + int(lean * i * 0.3), top - crest[x] - 1 - i,
+                          mix(mix(edge, body, 0.55), edge, t * 0.7))
+    elif region == "grotten":
+        for x in range(0, TS, 5):
+            if hash01(x, variant) > 0.4:
+                c.set(x, top - crest[x] - 1, mix(accent, edge, 0.4))
+                c.set(x, top - crest[x] - 2, mix(accent, edge, 0.7))
     return c
 
 
@@ -378,8 +489,11 @@ def build() -> None:
         for edges in EDGE_SETS:
             for v in range(4):
                 tiles.add(f"{region}_solid_{edges or 'mid'}_{v}",
-                          tile_solid(region, v, edges), pivot=(0, 0))
-        tiles.add(f"{region}_platform", tile_platform(region), pivot=(0, 0))
+                          tile_solid(region, v, edges),
+                          pivot=(0, TILE_OVERHANG / (TS + TILE_OVERHANG)))
+        for v in range(3):
+            tiles.add(f"{region}_platform_{v}", tile_platform(region, v),
+                      pivot=(0, TILE_OVERHANG / (8 + TILE_OVERHANG)))
         tiles.add(f"{region}_spike", tile_spike(region), pivot=(0, 0))
     for f in range(4):
         tiles.add(f"dissowall_{f}", tile_dissowall(f), pivot=(0, 0), fps=6)

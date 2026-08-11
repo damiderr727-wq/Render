@@ -240,10 +240,11 @@ def hain(layer: int) -> Canvas:
 
         # Ein Dach aus Zweigen, das den oberen Rand schliesst.
         # Die Nadeln nehmen die Kaelte des Dunstes auf, das Holz bleibt warm.
+        # Zwei Zweige, die den oberen Rand von links und rechts her
+        # schliessen. Drei uebereinander ergaben nur noch Filz.
         needles = mix(col, sky, 0.42)
-        conifer_bough(c, -20, 16, 200, 54, col, rng, 1, needles)
-        conifer_bough(c, 240, 6, 168, 46, col, rng, 1, needles)
-        conifer_bough(c, 520, 22, 186, 60, col, rng, -1, needles)
+        conifer_bough(c, -24, 14, 176, 48, col, rng, 1, needles, sub=1)
+        conifer_bough(c, 536, 20, 168, 54, col, rng, -1, needles, sub=1)
 
         # Zapfen in drei Laengen - nie auf gleicher Hoehe.
         cone_on_chain(c, 152, 0, 96, 11, shade(col, -0.14), accent)
@@ -267,8 +268,8 @@ def hain(layer: int) -> Canvas:
         # Ein schwerer Ast quer durch das obere Drittel.
         c.branch(90, 34, -0.18, 120, 11, 3, col, rng, leaf=None, curve=0.22)
         needles = mix(col, sky, 0.22)
-        conifer_bough(c, 110, 26, 250, 78, col, rng, 1, needles, sub=3)
-        conifer_bough(c, 486, 8, 216, 70, col, rng, -1, needles, sub=3)
+        conifer_bough(c, 86, 22, 196, 66, col, rng, 1, needles, sub=1)
+        conifer_bough(c, 500, 4, 170, 58, col, rng, -1, needles, sub=1)
 
         cone_on_chain(c, 236, 0, 150, 15, shade(col, 0.05), accent)
         cone_on_chain(c, 392, 0, 84, 12, shade(col, 0.05), accent)
@@ -283,71 +284,138 @@ def hain(layer: int) -> Canvas:
 
 # ------------------------------------------------------------ Kathedrale
 
+def masonry(c: Canvas, x: int, y: int, w: int, h: int, col, course: int = 9,
+            seed: int = 0) -> None:
+    """Eine gemauerte Flaeche: versetzte Quader mit angedeuteten Fugen."""
+    c.rect(x, y, w, h, col)
+    joint = shade(col, -0.16)
+    light = shade(col, 0.07)
+    for row in range((h // course) + 1):
+        yy = y + row * course
+        if yy >= y + h:
+            break
+        c.rect(x, yy, w, 1, joint)
+        c.rect(x, yy + 1, w, 1, light)
+        offset = (row % 2) * (course * 2)
+        for k in range((w // (course * 4)) + 2):
+            jx = x + offset + k * course * 4 + int(hash01(k, row + seed) * 4)
+            if x <= jx < x + w:
+                c.rect(jx, yy, 1, course, joint)
+
+
+def rose_window(c: Canvas, cx: int, cy: int, r: int, wall, glass, stone,
+                accent) -> None:
+    """
+    Eine Fensterrose, in die Wand eingelassen.
+
+    Der erste Versuch klebte sie als Scheibe vor den Dunst - dabei ist eine
+    Rose ein Loch in einer Mauer. Also: erst die Laibung als abgestufter
+    Ring in die Wand schneiden, dann das Glas, dann das Masswerk darueber.
+    Ohne die Laibung fehlt der Mauer ihre Dicke, und das Fenster schwebt.
+    """
+    for i, amt in enumerate((0.16, -0.05, -0.24)):
+        c.ellipse(cx, cy, r + 9 - i * 3, r + 9 - i * 3, shade(wall, amt))
+    c.ellipse(cx, cy, r, r, glass)
+    c.ellipse(cx - r * 0.18, cy - r * 0.18, r * 0.82, r * 0.82,
+              mix(glass, accent, 0.30))
+
+    # Masswerk: aeusserer Kranz aus Lanzetten, dann Speichen und Ringe.
+    for i in range(16):
+        a = i / 16 * math.tau
+        lx, ly = cx + math.cos(a) * r * 0.80, cy + math.sin(a) * r * 0.80
+        c.ellipse(lx, ly, r * 0.115, r * 0.115, mix(glass, accent, 0.55))
+        c.ring(lx, ly, r * 0.115, 1, stone)
+    for i in range(8):
+        a = i / 8 * math.tau + math.pi / 8
+        c.line(cx + math.cos(a) * r * 0.22, cy + math.sin(a) * r * 0.22,
+               cx + math.cos(a) * r * 0.66, cy + math.sin(a) * r * 0.66, stone)
+    c.ring(cx, cy, r * 0.66, 2, stone)
+    c.ring(cx, cy, r * 0.22, 2, stone)
+    c.ellipse(cx, cy, r * 0.16, r * 0.16, mix(accent, (255, 255, 255, 255), 0.35))
+    c.ring(cx, cy, r, 3, stone)
+    c.glow(cx, cy, r * 2.4, (accent[0], accent[1], accent[2], 30), power=1.8)
+
+
+def lancet(c: Canvas, cx: int, top: int, w: int, h: int, wall, glass,
+           stone, accent) -> None:
+    """Ein hohes Spitzbogenfenster, ebenfalls in die Wand geschnitten."""
+    c.gothic_arch(cx, top - 4, w + 8, h + 8, shade(wall, 0.12))
+    c.gothic_arch(cx, top - 2, w + 4, h + 6, shade(wall, -0.18))
+    c.gothic_arch(cx, top, w, h, glass)
+    c.gothic_arch(cx, top + 3, w - 6, h - 6, mix(glass, accent, 0.35))
+    c.rect(cx, top + int(h * 0.35), 1, int(h * 0.65), stone)
+    c.gothic_arch(cx, top, w, h, stone, filled=False)
+    c.glow(cx, top + h * 0.5, w * 1.8, (accent[0], accent[1], accent[2], 22))
+
+
 def kathedrale(layer: int) -> Canvas:
     body, edge, accent, sky, far = P.REGIONS["kathedrale"]
     c = Canvas(W, H)
     rng = Rng(2202 + layer * 17)
 
     if layer == 0:
+        # Nur Luft und Licht. Die Architektur steht eine Schicht davor -
+        # eine frei schwebende Rose im Dunst sieht aufgeklebt aus.
         c.dither_v(0, 0, W, H, sky, mix(far, sky, 0.30), levels=7)
-
-        # Die Fensterrose: der einzige Blickfang im ganzen Bild.
-        cx, cy, r = 256, 96, 46
-        c.glow(cx, cy, r * 2.1, (accent[0], accent[1], accent[2], 34), power=1.7)
-        c.ellipse(cx, cy, r, r, mix(sky, accent, 0.45))
-        c.ellipse(cx, cy, r - 4, r - 4, mix(sky, accent, 0.62))
-        # Masswerk: Speichen und ein Ring.
-        for i in range(12):
-            a = i / 12 * math.tau
-            c.line(cx + math.cos(a) * 8, cy + math.sin(a) * 8,
-                   cx + math.cos(a) * (r - 2), cy + math.sin(a) * (r - 2),
-                   mix(far, P.FOREGROUND, 0.5))
-        c.ring(cx, cy, r * 0.55, 2, mix(far, P.FOREGROUND, 0.5))
-        c.ring(cx, cy, r, 3, mix(far, P.FOREGROUND, 0.6))
-        c.ellipse(cx, cy, 7, 7, mix(accent, (255, 255, 255, 255), 0.4))
-
-        light_shaft(c, 214, 46, accent, 30)
-        motes(c, 260, rng, accent, alpha=(10, 40))
+        light_shaft(c, 196, 52, accent, 26)
+        light_shaft(c, 318, 30, accent, 18)
+        motes(c, 240, rng, accent, alpha=(10, 38))
         return c
 
     if layer == 1:
-        col = mix(far, P.FOREGROUND, 0.36)
-        # Eine Arkade: vier Pfeiler, dazwischen Spitzbogen. Die Mitte bleibt
-        # frei, damit die Rose sichtbar bleibt.
-        for i, x in enumerate((40, 152, 360, 472)):
-            c.rect(x - 15, 40, 30, H - 40, col)
-            c.rect(x + 9, 40, 4, H - 40, shade(col, 0.12))     # Lichtkante
-            c.rect(x - 22, 26, 44, 16, col)                    # Kapitell
-            c.rect(x - 26, 22, 52, 5, shade(col, 0.10))
-            c.gothic_arch(x, 0, 54, 28, col)
-        # Bogen zwischen den Pfeilern.
-        for x0, x1 in ((40, 152), (360, 472)):
-            mid = (x0 + x1) / 2
-            c.gothic_arch(mid, 6, (x1 - x0) - 26, 44, col, filled=False)
-            c.gothic_arch(mid, 8, (x1 - x0) - 30, 40, col, filled=False)
+        wall = mix(far, P.FOREGROUND, 0.30)
+        stone = shade(wall, -0.34)
+        glass = mix(sky, accent, 0.42)
 
-        # Rauchfaesser an Ketten.
-        cone_on_chain(c, 206, 0, 74, 9, shade(col, -0.12), accent)
-        cone_on_chain(c, 308, 0, 118, 11, shade(col, -0.12), accent)
-        motes(c, 90, rng, accent, alpha=(8, 26))
+        # Die Chorwand traegt alles andere. Unten franst sie aus, damit der
+        # Blick zum Boden hin frei bleibt.
+        masonry(c, 0, 0, W, 214, wall, course=9, seed=3)
+        c.rough_edge(0, 208, W, 8, wall, seed=41)
+
+        # Wandvorlagen gliedern die Flaeche senkrecht.
+        for x in (46, 150, 362, 466):
+            masonry(c, x - 13, 0, 26, 226, shade(wall, 0.09), course=11, seed=x)
+            c.rect(x + 9, 0, 4, 226, shade(wall, 0.18))
+            c.rect(x - 13, 0, 2, 226, shade(wall, -0.16))
+            c.rect(x - 18, 150, 36, 9, shade(wall, 0.14))     # Kapitell
+            c.rect(x - 20, 148, 40, 3, shade(wall, 0.20))
+
+        # Gesims: ein waagerechtes Band trennt Rosen- und Fensterzone.
+        c.rect(0, 152, W, 5, shade(wall, 0.16))
+        c.rect(0, 157, W, 2, shade(wall, -0.22))
+        c.rect(0, 150, W, 2, shade(wall, 0.24))
+
+        rose_window(c, 256, 84, 46, wall, glass, stone, accent)
+
+        for x in (98, 256, 414):
+            lancet(c, x, 168, 30, 52, wall, glass, stone, accent)
+
+        # Blendarkade ganz oben, damit die Wand nicht leer beginnt.
+        for i in range(9):
+            c.gothic_arch(24 + i * 58, 6, 44, 26, shade(wall, -0.12), filled=False)
+            c.gothic_arch(24 + i * 58, 8, 40, 22, shade(wall, -0.06), filled=False)
+
+        cone_on_chain(c, 196, 0, 96, 9, shade(wall, -0.26), accent)
+        cone_on_chain(c, 318, 0, 142, 11, shade(wall, -0.26), accent)
         return c
 
     if layer == 2:
         col = mix(far, P.FOREGROUND, 0.72)
-        # Zwei schwere Pfeiler am Rand - sie rahmen und schneiden an.
-        for x, w in ((-6, 70), (500, 78)):
-            c.rect(x - w // 2, 0, w, H, col)
-            c.rect(x + w // 2 - 4, 0, 4, H, shade(col, 0.10))
-        # Orgelpfeifen als Silhouette rechts.
+        # Zwei schwere Buendelpfeiler am Rand - sie rahmen und schneiden an.
+        for x, w in ((-4, 74), (500, 82)):
+            masonry(c, x - w // 2, 0, w, H, col, course=13, seed=int(x))
+            for k in range(4):
+                sx = x - w // 2 + 6 + k * (w // 4)
+                c.rect(sx, 0, 5, H, shade(col, 0.08))
+                c.rect(sx + 4, 0, 1, H, shade(col, -0.2))
         for i in range(9):
-            px = 372 + i * 13
-            ph = 96 + int(abs(math.sin(i * 0.9)) * 62)
+            px = 366 + i * 13
+            ph = 92 + int(abs(math.sin(i * 0.9)) * 66)
             c.rect(px, 0, 10, ph, col)
             c.rect(px + 7, 0, 3, ph, shade(col, 0.09))
-            c.rect(px, ph - 4, 10, 4, shade(col, -0.2))
-            # Aufschnitt: die Kerbe, durch die der Ton entsteht.
-            c.rect(px + 3, ph - 16, 4, 4, shade(col, -0.35))
-        cone_on_chain(c, 128, 0, 168, 14, shade(col, 0.06), accent)
+            c.rect(px, ph - 5, 10, 5, shade(col, -0.22))
+            c.rect(px + 3, ph - 17, 4, 5, shade(col, -0.38))   # Aufschnitt
+        cone_on_chain(c, 128, 0, 170, 14, shade(col, 0.06), accent)
         return c
 
     return c

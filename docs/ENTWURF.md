@@ -109,6 +109,25 @@ Das Zeichnen selbst brauchte erst Werkzeug: Bezierkurven, Striche mit
 Verjüngung, rekursive Äste, organische Massen aus überlappenden Beulen,
 Ketten aus einzelnen Gliedern, Spitzbögen.
 
+**Der Boden ist keine Kachel.** Die Kacheln sind acht Pixel höher als das
+Raster: darüber liegt Luft, in die Gras, Moos und Wurzeln hineinwachsen.
+Ohne diesen Überhang endet jeder Boden an einer geraden Linie — daran
+erkennt man ein Kachelspiel sofort. Der Kamm läuft unregelmäßig, unter dem
+Licht wird es sofort dunkel, Wurzeln laufen von der Kante in die Masse
+hinein, und je nach Kachelvariante wächst viel, wenig oder gar nichts. Die
+Kollision merkt davon nichts — sie kennt weiter nur das Raster.
+
+Dasselbe gilt für die durchsteigbaren Plattformen. Ein glatter heller
+Balken fällt sonst aus dem ganzen Bild heraus.
+
+**Die Rosette war ein Aufkleber.** Sie schwebte als Scheibe im Dunst, weil
+dahinter keine Wand stand. Eine Rose ist aber ein *Loch in einer Mauer*.
+Jetzt trägt die Kathedrale eine gemauerte Chorwand mit Wandvorlagen,
+Kapitellen und einem Gesims; die Rose ist mit abgestufter Laibung
+hineingeschnitten, darunter stehen Lanzettfenster. Erst die Laibung gibt
+der Mauer ihre Dicke — ohne sie schwebt das Fenster, egal wie fein das
+Maßwerk ist.
+
 Der lehrreichste Fehler steckt in `frond()`. Nadelzweige waren zweimal
 falsch — erst als einzeln gesetzte Punkte (las sich als Fischgräte), dann
 als gezeichnete Striche (als Federkiel). Beide Male wurde **entlang** der

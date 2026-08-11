@@ -104,16 +104,17 @@ def render(room_id: str) -> Image.Image:
             if ch == "#":
                 name = f"{region}_solid_{edge_key(tiles, x, y, w, h)}_{(x * 31 + y * 17) % 4}"
             elif ch == "=":
-                name = f"{region}_platform"
+                name = f"{region}_platform_{(x * 13 + y * 7) % 3}"
             elif ch == "^":
                 name = f"{region}_spike"
             elif ch == "D":
                 name = "dissowall_0"
             else:
                 continue
-            img, _ = tile_atlas.frame(name)
+            img, pivot = tile_atlas.frame(name)
             if img is not None:
-                canvas.alpha_composite(img, (x * TS, y * TS))
+                # Der Ueberhang der Bodenkacheln steht ueber dem Raster.
+                canvas.alpha_composite(img, (x * TS, int(y * TS - img.height * pivot[1])))
 
     def place(img, pivot, tx: float, ty: float) -> None:
         if img is None:

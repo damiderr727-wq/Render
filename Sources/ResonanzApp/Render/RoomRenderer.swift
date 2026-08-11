@@ -127,7 +127,7 @@ public final class RoomRenderer {
                     node = atlas.sprite("\(region)_solid_\(edgeKey(room: room, tx: tx, ty: ty))_"
                                         + "\((tx &* 31 &+ ty &* 17) % 4)")
                 case .platform:
-                    node = atlas.sprite("\(region)_platform")
+                    node = atlas.sprite("\(region)_platform_\((tx &* 13 &+ ty &* 7) % 3)")
                 case .spike:
                     node = atlas.sprite("\(region)_spike")
                 case .dissoWall:
@@ -137,7 +137,12 @@ public final class RoomRenderer {
                     continue
                 }
 
-                node.anchorPoint = CGPoint(x: 0, y: 1)
+                // Bodenkacheln ragen oben ueber ihr Raster hinaus (Gras,
+                // Moos, Wurzeln). Ihr Ursprung steht im Atlas - er darf
+                // hier nicht ueberschrieben werden.
+                if tile != .solid && tile != .platform {
+                    node.anchorPoint = CGPoint(x: 0, y: 1)
+                }
                 node.position = WorldSpace.sceneTile(tx, ty)
                 layers.terrain.addChild(node)
 

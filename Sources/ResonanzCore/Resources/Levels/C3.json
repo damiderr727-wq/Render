@@ -111,6 +111,18 @@
    "id": "windschliff",
    "x": 46,
    "y": 10
+  },
+  {
+   "kind": "equipment",
+   "id": "flimmerhemd",
+   "x": 20,
+   "y": 11
+  },
+  {
+   "kind": "siegel",
+   "id": "nadelsiegel",
+   "x": 68,
+   "y": 21
   }
  ],
  "decor": [

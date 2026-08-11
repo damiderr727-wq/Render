@@ -706,6 +706,7 @@ SIGIL_TINTS = {
     "fluegelschlag": P.TRIM, "herzschlag": P.ROT,
     "klangschritt": P.BLOOM, "basston": P.GOLD,
     "leier": P.GLOW, "trommel": P.GOLD, "floete": P.BLOOM,
+    "metronom": P.WARM, "glocke": P.GOLD, "orgelpfeife": P.TRIM,
 }
 
 
@@ -787,6 +788,12 @@ def fx_equipment_sigil(openings: int, tint, frame: int) -> Canvas:
 # Siegel. Die Kerben am Rand sind die Kosten - man sieht dem Fundstueck
 # also an, was es belegt, bevor man es aufhebt.
 SIEGEL_SIGILS = {
+    "scherbenherz": (2, P.ROT),
+    "bleisiegel":   (2, P.STONE_HI),
+    "taubes_ohr":   (2, hexc("#6d7a94")),
+    "pilgerstab":   (1, P.WARM),
+    "kreiselsiegel": (3, P.GLOW),
+    "nadelsiegel":  (3, P.BLOOM),
     "nachhall":   (1, P.GLOW),
     "dauerton":   (2, P.TRIM),
     "bruchstein": (2, P.STONE_HI),
@@ -906,6 +913,26 @@ def fx_sigil(kind: str, frame: int) -> Canvas:
         for i in range(4):
             c.set(cx - 4 + i * 3, cy - 1, P.INK)
         c.set(cx + 7, cy - 1, mix(tint, P.WARM, 0.5))
+    elif kind == "metronom":
+        # Ein Keil mit Arm.
+        c.line(cx - 3, cy + 5, cx, cy - 5, tint)
+        c.line(cx + 3, cy + 5, cx, cy - 5, tint)
+        c.rect(cx - 4, cy + 5, 9, 1, tint)
+        a = -math.pi / 2 + math.sin(frame) * 0.5
+        c.line(cx, cy + 4, cx + math.cos(a) * 8, cy + 4 + math.sin(a) * 8,
+               mix(tint, P.BONE, 0.4))
+    elif kind == "glocke":
+        for i in range(7):
+            w = 1.6 + i * 0.7
+            c.rect(int(cx - w), cy - 5 + i, int(w * 2) + 1, 1,
+                   tint if i in (0, 6) else mix(tint, P.INK, 0.45))
+        c.rect(cx - 6, cy + 2, 13, 1, tint)
+        c.set(cx, cy + 4, mix(tint, P.BONE, 0.6))
+    elif kind == "orgelpfeife":
+        c.rect(cx - 2, cy - 8, 5, 15, mix(tint, P.INK, 0.4))
+        c.rect(cx - 2, cy - 8, 5, 1, tint)
+        c.rect(cx - 2, cy + 6, 5, 1, tint)
+        c.rect(cx - 2, cy, 5, 1, mix(tint, P.BONE, 0.5))
     elif kind == "basston":
         for i in range(3):
             c.ring(cx, cy, 3 + i * 2.4, 1, (tint[0], tint[1], tint[2], int(200 - i * 45)))

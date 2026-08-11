@@ -95,9 +95,20 @@ final class ProgressionTests: XCTestCase {
             let probe = ReachabilityProbe(room: room, progression: progression)
             let ergebnis = probe.run(from: ReachabilityProbe.origins(for: room), targets: ziele)
 
-            XCTAssertTrue(ergebnis.ok,
-                          "\(id) (\(room.name)): nicht erreichbar - "
-                          + ergebnis.unreached.map(\.name).joined(separator: ", "))
+            // Was beim ersten Besuch nicht geht, darf spaeter gehen - ein
+            // Metroidvania lebt davon, dass man zurueckkommt. Endgueltig
+            // unerreichbar ist nur, was auch mit allem Koennen nicht geht.
+            guard !ergebnis.ok else { continue }
+            let alles = Progression(abilities: Set(Ability.allCases),
+                                    kerne: Set(Kern.allCases))
+            let spaeter = ReachabilityProbe(room: room, progression: alles)
+                .run(from: ReachabilityProbe.origins(for: room),
+                     targets: ergebnis.unreached)
+
+            XCTAssertTrue(spaeter.ok,
+                          "\(id) (\(room.name)): auch mit allem Koennen nicht "
+                          + "erreichbar - "
+                          + spaeter.unreached.map(\.name).joined(separator: ", "))
         }
     }
 

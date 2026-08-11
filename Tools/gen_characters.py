@@ -64,6 +64,12 @@ def _profile(t: float, instrument: str) -> float:
         a, low, high = 7.2, 0.55, 0.40     # schmal, hoch, spitz
     elif instrument == "leier":
         a, low, high = 9.4, 0.38, 0.60     # ausgewogen
+    elif instrument == "glocke":
+        a, low, high = 11.4, 0.28, 0.90    # schwer, sitzt tief
+    elif instrument == "orgelpfeife":
+        a, low, high = 6.8, 0.60, 0.34     # sehr schlank, sehr hoch
+    elif instrument == "metronom":
+        a, low, high = 8.2, 0.44, 0.58     # aufrecht, schmal
     else:
         a, low, high = 8.6, 0.42, 0.55     # Stimmgabel: schlank, unauffaellig
     return a * ((t * 1.1 + 0.06) ** low) * ((1 - t) ** high)
@@ -112,6 +118,15 @@ GARMENTS = {
     "gerissenes_gewand": dict(
         openings=14, cut="cape", deckung=0.60,
         stoff=mix(mix(P.CLOAK, P.STONE, 0.6), P.WARM, 0.14), licht=P.AMBER),
+    "chorpanzer": dict(
+        openings=3, cut="harnisch", deckung=0.68,
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.6), P.STONE_HI, 0.30), licht=P.TRIM),
+    "pfeifenharnisch": dict(
+        openings=1, cut="harnisch", deckung=0.72,
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.BILE, 0.16), licht=P.WARM),
+    "flimmerhemd": dict(
+        openings=12, cut="mantel", deckung=0.60,
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.55), P.BLOOM, 0.20), licht=P.BLOOM),
     # Der Bruch: kein Gefaess mehr, nur noch Fetzen an ihr. Was bleibt,
     # traegt nichts - es haengt nur noch dran.
     "bruch": dict(
@@ -356,6 +371,65 @@ def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
             c.glow(tipx, tipy, 6 * S, (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(105 * glow)))
         return
 
+    if kern == "metronom":
+        # Ein Keil mit einem Arm, der tickt. Der Arm steht nie still - er
+        # ist der einzige Teil von ihr, der einen festen Takt hat.
+        for i in range(int(10 * S)):
+            v = i / (10 * S)
+            w = int((3.4 - 2.2 * v) * S)
+            for dx in range(-w, w + 1):
+                c.set(int(fx + dx), int(fy - i), P.BONE if abs(dx) < w else P.BONE_SH)
+        # Die Skala.
+        for k in range(4):
+            c.set(int(fx + 1 * S), int(fy - (2 + k * 2) * S), P.BONE_LO)
+        # Der Arm mit dem Gewicht.
+        a = -math.pi / 2 + math.sin(phase * 2.2) * 0.55
+        for i in range(int(11 * S)):
+            c.set(int(fx + math.cos(a) * i), int(fy - 1 + math.sin(a) * i), P.BONE_SH)
+        gx = int(fx + math.cos(a) * 8 * S)
+        gy = int(fy - 1 + math.sin(a) * 8 * S)
+        c.rect(gx - 1, gy, 3, 2, mix(P.BONE, P.AMBER, 0.45))
+        if glow > 0:
+            c.glow(gx, gy, 5 * S, (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(90 * glow)))
+        return
+
+    if kern == "glocke":
+        # Eine Glocke, kopfueber in ihr. Der Kloeppel schwingt nach - er
+        # laeuft dem Takt hinterher, weil die Glocke laenger nachhallt.
+        oben = fy - int(7 * S)
+        for i in range(int(7 * S)):
+            v = i / (7 * S)
+            w = (1.2 + 2.9 * v ** 1.4) * S
+            for dx in range(-int(w), int(w) + 1):
+                rand = abs(dx) >= int(w)
+                c.set(int(fx + dx), int(oben + i),
+                      mix(P.BONE_SH, P.GOLD, 0.35) if rand else P.BONE_LO)
+        c.rect(int(fx - 3.9 * S), int(fy - 1), int(7.8 * S), 1,
+               mix(P.BONE, P.GOLD, 0.5))
+        kx = int(fx + math.sin(phase * 1.4) * 2.6 * S)
+        c.set(kx, int(fy - 2), mix(P.BONE, P.AMBER, 0.6))
+        c.set(kx, int(fy - 3), P.BONE_SH)
+        if glow > 0:
+            c.glow(fx, fy - 4 * S, 9 * S, (P.GOLD[0], P.GOLD[1], P.GOLD[2], int(85 * glow)))
+        return
+
+    if kern == "orgelpfeife":
+        # Ein gerades Rohr mit Mundstueck. Sie kennt genau einen Ton, und
+        # der geht durch alles hindurch.
+        hoehe = int(11 * S)
+        for i in range(hoehe):
+            for dx in (-1, 0, 1):
+                col = P.BONE if dx == 0 else (P.BONE_SH if dx > 0 else P.BONE_LO)
+                c.set(int(fx + dx * S), int(fy - i), col)
+        # Das Labium: die Kerbe, an der der Ton entsteht.
+        c.rect(int(fx - 1.4 * S), int(fy - int(4 * S)), int(3 * S), 1, P.BONE_LO)
+        c.set(int(fx), int(fy - int(4 * S) - 1),
+              mix(P.TRIM, P.BONE, 0.4 + 0.4 * (0.5 + 0.5 * math.sin(phase * 2))))
+        c.rect(int(fx - 2 * S), int(fy - hoehe), int(4 * S), 1, mix(P.BONE, P.TRIM, 0.35))
+        if glow > 0:
+            c.glow(fx, fy - 4 * S, 7 * S, (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(90 * glow)))
+        return
+
     if kern == "leier":
         # Ein Rahmen mit Saiten. Drei Toene zugleich - also drei Faeden, die
         # zwischen zwei Armen stehen und im Takt mitschwingen.
@@ -510,9 +584,11 @@ def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
             # Metall haengt nicht. Es sitzt auf ihr und folgt nur der Neigung.
             sx = cx + lean * t
             sx += math.sin(t * 2.6 + phase) * (0.6 + t * 0.9) * 0.5
-            # Enger Sitz: die Schienen liegen dicht auf ihr, unten laeuft
-            # der Rand der Beintaschen ein Stueck aus.
-            w = bauch * (1.02 + 0.30 * hang) + 0.8
+            # Ein Harnisch ist getrieben, nicht gebaut: er sitzt eng an und
+            # wird nach unten schmaler. Waagerechte Schienen ueber die ganze
+            # Hoehe machen daraus eine Tonne - die gibt es nur noch unten,
+            # wo die Beintaschen sitzen.
+            w = bauch * (0.66 + 0.16 * hang) + 0.5
         else:
             # Lose: der Saum haengt weit hinterher und schwingt nach.
             sx = cx + lean * t * (1 - 0.42 * hang)
@@ -552,10 +628,16 @@ def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
             if rand:
                 # Ihr Licht sitzt hinter dem Stoff: der Rand glueht.
                 col = mix(stoff, saum_licht, 0.45)
-            elif starr and i % 3 == 0:
-                col = shade(stoff, -0.40)          # Fuge zwischen den Schienen
-            elif starr and i % 3 == 1:
+            elif starr and u < 0.34 and i % 3 == 0:
+                col = shade(stoff, -0.42)          # Fuge der Beintaschen
+            elif starr and u < 0.34 and i % 3 == 1:
                 col = stoff_hi                     # Grat darueber
+            elif starr and abs(x - int(sx)) <= 1:
+                # Der Mittelgrat des Brustpanzers - eine senkrechte Linie
+                # statt lauter waagerechter. Das macht ihn schlank.
+                col = stoff_hi
+            elif starr and abs(x - int(sx)) == 2:
+                col = shade(stoff, -0.28)
             elif abs(x - int(sx)) <= 1:
                 col = shade(stoff, 0.16)           # Licht laeuft mittig durch
             else:
@@ -580,10 +662,15 @@ def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
             c.set(links, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 190))
             c.set(rechts, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 190))
             if starr:
+                # Kehle und Schulterspitzen. Der Kragen steht hoch und
+                # laesst genau den Kopf frei - und an den Ecken sitzt je
+                # eine Spitze, damit die Schulter eine Kante bekommt.
                 for x in range(links + 1, rechts):
                     c.set(x, int(y - 1), stoff_hi)
-                c.set(links, int(y - 1), mix(stoff, saum_licht, 0.5))
-                c.set(rechts, int(y - 1), mix(stoff, saum_licht, 0.5))
+                for seite, kante in ((-1, links), (1, rechts)):
+                    c.set(kante, int(y - 1), mix(stoff, saum_licht, 0.5))
+                    c.set(kante + seite, int(y - 1), stoff)
+                    c.set(kante + seite, int(y - 2), mix(stoff, saum_licht, 0.65))
 
     return coverage
 
@@ -1171,9 +1258,13 @@ def draw_kantor(phase: float, enraged: bool = False) -> Canvas:
 # -------------------------------------------------------------------- Bau
 
 def build() -> None:
-    atlas = Atlas("characters", padding=1, max_width=512)
+    # Sieben Kerne mal zehn Fassungen: die Blaetter werden hoch. Breiter
+    # packen heisst weniger hoch - und ueber 4096 Pixel Hoehe hoert bei
+    # manchen Geraeten der Spass auf.
+    atlas = Atlas("characters", padding=1, max_width=2048)
 
-    for instrument in ("stimmgabel", "leier", "trommel", "floete"):
+    for instrument in ("stimmgabel", "leier", "trommel", "floete",
+                       "metronom", "glocke", "orgelpfeife"):
         for garment in GARMENTS:
             if garment == "bruch":
                 continue        # der Bruch kennt keinen heilen Kern mehr

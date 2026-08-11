@@ -101,6 +101,18 @@
    "id": "stille",
    "x": 6,
    "y": 26
+  },
+  {
+   "kind": "equipment",
+   "id": "pfeifenharnisch",
+   "x": 22,
+   "y": 19
+  },
+  {
+   "kind": "kern",
+   "id": "orgelpfeife",
+   "x": 46,
+   "y": 12
   }
  ],
  "decor": [

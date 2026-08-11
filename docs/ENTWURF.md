@@ -282,7 +282,11 @@ Stich; ein offenes Gewand einen Wirbel um sie herum.
 
 | Fassung | Stil | Schlag |
 | --- | --- | --- |
+| Ohne alles | Bogen | weit, ausgewogen (der Startzustand) |
 | Schlichter Mantel | Bogen | weit, ausgewogen |
+| Chorpanzer | Bogen | derselbe Schlag, viel mehr Zusammenhalt |
+| Pfeifenharnisch | Peitsche | sehr weit, sehr schmal |
+| Flimmerhemd | Flirren | viele winzige Treffer statt weniger großer |
 | Wehendes Cape | Hetze | zwei schnelle statt einem grossen |
 | Enge Fassung | Stich | lang und schmal, trifft nur nach vorn |
 | Offene Fassung | Wirbel | rundum, auch nach hinten |

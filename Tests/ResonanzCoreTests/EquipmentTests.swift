@@ -192,6 +192,62 @@ final class EquipmentTests: XCTestCase {
         XCTAssertTrue(p.siegelWorn.isEmpty)
     }
 
+    /// Die teuersten Siegel aendern nicht die Werte, sondern den Schlag -
+    /// und ueberstimmen dabei die Fassung.
+    func testEinSiegelKannDenKampfstilUeberstimmen() {
+        let harnisch = EquipmentCatalog.engeFassung          // .stich
+        XCTAssertEqual(stats(harnisch).stil, .stich)
+
+        let mitKreisel = stats(harnisch, siegel: [SiegelKatalog.kreiselsiegel])
+        XCTAssertEqual(mitKreisel.stil, .wirbel, "Das Siegel ueberstimmt die Fassung")
+        XCTAssertEqual(mitKreisel.melee.shape, .radial)
+
+        let mitNadel = stats(EquipmentCatalog.schlagfassung,
+                             siegel: [SiegelKatalog.nadelsiegel])
+        XCTAssertEqual(mitNadel.stil, .peitsche)
+        XCTAssertGreaterThan(mitNadel.melee.reach,
+                             stats(EquipmentCatalog.schlagfassung).melee.reach)
+    }
+
+    func testDieNeuenFassungenBringenIhrenStilMit() {
+        XCTAssertEqual(EquipmentCatalog.pfeifenharnisch.stil, .peitsche)
+        XCTAssertEqual(EquipmentCatalog.flimmerhemd.stil, .flirren)
+        XCTAssertEqual(EquipmentCatalog.chorpanzer.stil, .bogen)
+
+        let peitsche = stats(EquipmentCatalog.pfeifenharnisch)
+        let flirren = stats(EquipmentCatalog.flimmerhemd)
+        let panzer = stats(EquipmentCatalog.chorpanzer)
+
+        // Die Peitsche reicht am weitesten, das Flirren am kuerzesten -
+        // dafuer schlaegt es fast dreimal so oft zu.
+        XCTAssertGreaterThan(peitsche.melee.reach, flirren.melee.reach * 2)
+        XCTAssertLessThan(flirren.melee.cooldown, peitsche.melee.cooldown / 3)
+        // Der Chorpanzer haelt am meisten aus und ist am langsamsten.
+        XCTAssertGreaterThan(panzer.maxHealth(crystals: 5),
+                             stats(EquipmentCatalog.mantel).maxHealth(crystals: 5))
+        XCTAssertLessThan(panzer.runSpeed, stats(EquipmentCatalog.mantel).runSpeed)
+    }
+
+    func testDieNeuenKerneKlingenVerschieden() {
+        let m = EquipmentCatalog.mantel
+        let takt = stats(m, kern: .metronom)
+        let glocke = stats(m, kern: .glocke)
+        let pfeife = stats(m, kern: .orgelpfeife)
+
+        // Das Metronom tickt: billig und ununterbrochen.
+        XCTAssertLessThan(takt.ranged.cooldown, glocke.ranged.cooldown / 4)
+        XCTAssertLessThan(takt.ranged.cost, glocke.ranged.cost / 2)
+        // Die Glocke schlaegt schwer und langsam.
+        XCTAssertGreaterThan(glocke.ranged.damage, takt.ranged.damage)
+        XCTAssertGreaterThan(glocke.ranged.radius, pfeife.ranged.radius)
+        // Die Pfeife geht durch alles hindurch.
+        XCTAssertGreaterThan(pfeife.ranged.pierces, glocke.ranged.pierces)
+        XCTAssertGreaterThan(pfeife.ranged.speed, glocke.ranged.speed * 2)
+        // Und jeder verschiebt ihre Anlage anders.
+        XCTAssertGreaterThan(glocke.maxHealth(crystals: 5), pfeife.maxHealth(crystals: 5))
+        XCTAssertGreaterThan(takt.resonanceRegen, glocke.resonanceRegen)
+    }
+
     // MARK: - Nichts darf unspielbar werden
 
     func testJedeKombinationBleibtSpielbar() {

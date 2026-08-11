@@ -16,15 +16,21 @@ public struct Siegel: Codable, Sendable, Equatable, Identifiable {
     public let summary: String
     public let flavour: String
     public let modifiers: Modifiers
+    /// Manche Siegel aendern nicht die Werte, sondern den Schlag selbst.
+    /// Das sind die teuersten - und die einzigen, die eine Fassung
+    /// ueberstimmen duerfen.
+    public let stil: Kampfstil?
 
     public init(id: String, name: String, kerben: Int,
-                summary: String, flavour: String, modifiers: Modifiers) {
+                summary: String, flavour: String, modifiers: Modifiers,
+                stil: Kampfstil? = nil) {
         self.id = id
         self.name = name
         self.kerben = kerben
         self.summary = summary
         self.flavour = flavour
         self.modifiers = modifiers
+        self.stil = stil
     }
 }
 
@@ -77,8 +83,59 @@ public enum SiegelKatalog {
         flavour: "WER LEISE ANFAENGT, HAT MEHR UEBRIG.",
         modifiers: Modifiers(rangedCost: 0.7))
 
+    // ---- Was man mit Leben bezahlt -------------------------------------
+
+    public static let scherbenherz = Siegel(
+        id: "scherbenherz", name: "SCHERBENHERZ", kerben: 2,
+        summary: "SIE SCHLAEGT VIEL HAERTER - UND HAELT VIEL WENIGER AUS",
+        flavour: "EIN KRISTALL, DER IN SICH GESPRUNGEN IST UND TROTZDEM "
+               + "WEITERKLINGT. LAUTER ALS VORHER.",
+        modifiers: Modifiers(meleeDamage: 1.35, cohesion: 0.75))
+
+    public static let bleisiegel = Siegel(
+        id: "bleisiegel", name: "BLEISIEGEL", kerben: 2,
+        summary: "MEHR ZUSAMMENHALT - DAFUER SCHWER WIE STEIN",
+        flavour: "MAN HAENGT ES SICH UM UND MERKT ERST BEIM ERSTEN SPRUNG, "
+               + "WAS MAN GETAN HAT.",
+        modifiers: Modifiers(moveSpeed: 0.88, jumpPower: 0.92, cohesion: 1.35))
+
+    public static let taubesOhr = Siegel(
+        id: "taubes_ohr", name: "TAUBES OHR", kerben: 2,
+        summary: "FERNKLANG SCHLAEGT HART - ABER SIE FUELLT SICH KAUM NOCH",
+        flavour: "WER NICHT MEHR HINHOERT, TRIFFT GENAUER. "
+               + "ER MERKT NUR NICHT MEHR, WANN ER LEER IST.",
+        modifiers: Modifiers(rangedDamage: 1.3, resonanceRegen: 0.6))
+
+    public static let pilgerstab = Siegel(
+        id: "pilgerstab", name: "PILGERSTAB", kerben: 1,
+        summary: "NAHKAMPF REICHT WEITER - TRIFFT DAFUER WEICHER",
+        flavour: "WER LANGE GEHT, LERNT, VON WEITER WEG ZU ZEIGEN.",
+        modifiers: Modifiers(meleeReach: 1.25, meleeDamage: 0.85))
+
+    // ---- Was den Schlag selbst umbaut ----------------------------------
+    //
+    // Diese beiden kosten fast alle Kerben, und das ist der Punkt: sie
+    // ueberstimmen die Fassung. Wer so eines traegt, hat sich fuer einen
+    // Kampfstil entschieden und gegen alles andere.
+
+    public static let kreiselsiegel = Siegel(
+        id: "kreiselsiegel", name: "KREISELSIEGEL", kerben: 3,
+        summary: "SIE SCHLAEGT RUNDUM - EGAL, WAS SIE TRAEGT",
+        flavour: "EIN TON, DER SICH NICHT ENTSCHEIDEN KONNTE, "
+               + "IN WELCHE RICHTUNG ER GEHT. JETZT GEHT ER IN ALLE.",
+        modifiers: Modifiers(meleeDamage: 0.9), stil: .wirbel)
+
+    public static let nadelsiegel = Siegel(
+        id: "nadelsiegel", name: "NADELSIEGEL", kerben: 3,
+        summary: "SIE SCHLAEGT SEHR WEIT UND SEHR SCHMAL - EGAL, WAS SIE TRAEGT",
+        flavour: "DUENN GENUG, UM DURCH EINE FUGE ZU PASSEN, "
+               + "UND LANG GENUG, UM DAHINTER ANZUKOMMEN.",
+        modifiers: Modifiers(), stil: .peitsche)
+
     public static let all: [Siegel] = [
         nachhall, dauerton, bruchstein, federstaub, windschliff, hohlklang, stille,
+        scherbenherz, bleisiegel, taubesOhr, pilgerstab,
+        kreiselsiegel, nadelsiegel,
     ]
 
     public static func find(_ id: String) -> Siegel? {

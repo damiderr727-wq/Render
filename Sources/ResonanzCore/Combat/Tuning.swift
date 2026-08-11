@@ -91,6 +91,21 @@ public enum Tuning {
             return RangedProfile(damage: 2, speed: 430, cost: 10, cooldown: 0.22,
                                  count: 1, spread: 0, radius: 4,
                                  pierces: 1, lifetime: 0.85, gravity: 0)
+        case .metronom:
+            // Ticken: einzeln fast nichts, aber ununterbrochen.
+            return RangedProfile(damage: 1, speed: 340, cost: 6, cooldown: 0.13,
+                                 count: 1, spread: 0, radius: 3,
+                                 pierces: 0, lifetime: 0.70, gravity: 0)
+        case .glocke:
+            // Ein schwerer Schlag, der langsam durch den Raum wandert.
+            return RangedProfile(damage: 4, speed: 150, cost: 30, cooldown: 0.78,
+                                 count: 1, spread: 0, radius: 11,
+                                 pierces: 3, lifetime: 1.9, gravity: 0)
+        case .orgelpfeife:
+            // Eine Lanze: schnell, schmal, geht durch alles hindurch.
+            return RangedProfile(damage: 2, speed: 520, cost: 16, cooldown: 0.36,
+                                 count: 1, spread: 0, radius: 3,
+                                 pierces: 4, lifetime: 1.0, gravity: 0)
         }
     }
 }

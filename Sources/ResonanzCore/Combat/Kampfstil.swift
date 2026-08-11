@@ -18,6 +18,12 @@ public enum Kampfstil: String, Codable, Sendable, CaseIterable {
     case sturz
     /// Zwei schnelle Schlaege statt einem grossen.
     case hetze
+    /// Sehr weit und sehr schmal. Trifft, was sonst ausser Reichweite ist,
+    /// aber nur, was genau davor steht.
+    case peitsche
+    /// Ein Flirren aus winzigen Treffern. Einzeln nichts, zusammen viel -
+    /// wenn man dranbleiben kann.
+    case flirren
     /// Nach dem Bruch: alles zugleich. Weit, hart und schnell - sie hat
     /// nichts mehr, was sie zurueckhaelt.
     case entfesselt
@@ -29,6 +35,8 @@ public enum Kampfstil: String, Codable, Sendable, CaseIterable {
         case .wirbel: return "WIRBEL"
         case .sturz: return "STURZ"
         case .hetze: return "HETZE"
+        case .peitsche: return "PEITSCHE"
+        case .flirren: return "FLIRREN"
         case .entfesselt: return "ENTFESSELT"
         }
     }
@@ -40,6 +48,8 @@ public enum Kampfstil: String, Codable, Sendable, CaseIterable {
         case .wirbel: return "RUNDUM - AUCH NACH HINTEN"
         case .sturz: return "SCHWER UND LANGSAM, DAFUER REISST ES"
         case .hetze: return "ZWEI SCHNELLE SCHLAEGE STATT EINEM"
+        case .peitsche: return "SEHR WEIT, SEHR SCHMAL"
+        case .flirren: return "VIELE WINZIGE TREFFER STATT WENIGER GROSSER"
         case .entfesselt: return "ALLES ZUGLEICH - WEIT, HART UND SCHNELL"
         }
     }
@@ -67,6 +77,14 @@ public enum Kampfstil: String, Codable, Sendable, CaseIterable {
             return MeleeProfile(reach: 26, halfHeight: 12, damage: 1,
                                 cooldown: 0.15, knockback: 70, shape: .arc,
                                 windup: 0.02, active: 0.07)
+        case .peitsche:
+            return MeleeProfile(reach: 54, halfHeight: 5, damage: 2,
+                                cooldown: 0.42, knockback: 80, shape: .thrust,
+                                windup: 0.09, active: 0.07)
+        case .flirren:
+            return MeleeProfile(reach: 18, halfHeight: 11, damage: 1,
+                                cooldown: 0.10, knockback: 40, shape: .arc,
+                                windup: 0.015, active: 0.05)
         case .entfesselt:
             return MeleeProfile(reach: 34, halfHeight: 20, damage: 3,
                                 cooldown: 0.14, knockback: 210, shape: .radial,

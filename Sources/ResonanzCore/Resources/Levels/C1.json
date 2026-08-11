@@ -121,6 +121,18 @@
    "id": "hohlklang",
    "x": 6,
    "y": 11
+  },
+  {
+   "kind": "kern",
+   "id": "glocke",
+   "x": 34,
+   "y": 14
+  },
+  {
+   "kind": "siegel",
+   "id": "kreiselsiegel",
+   "x": 56,
+   "y": 14
   }
  ],
  "decor": [

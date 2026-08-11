@@ -187,8 +187,47 @@ public enum EquipmentCatalog {
         modifiers: Modifiers(moveSpeed: 1.06, jumpPower: 1.16, dashDistance: 1.18,
                              meleeReach: 0.9, cohesion: 0.9))
 
+    /// Drei Oeffnungen, gleichmaessig verteilt: nichts ragt heraus, nichts
+    /// faellt aus. Der Panzer fuer die, die nicht sterben wollen.
+    public static let chorpanzer = Equipment(
+        id: "chorpanzer",
+        name: "CHORPANZER",
+        openings: 3,
+        stil: .bogen,
+        summary: "HAELT VIEL AUS - DAFUER IST SIE SCHWERFAELLIG",
+        flavour: "VIER STIMMEN, DIE EINANDER TRAGEN. EINZELN WAERE JEDE "
+               + "ZU SCHWACH, ZUSAMMEN HALTEN SIE ALLES.",
+        modifiers: Modifiers(moveSpeed: 0.86, jumpPower: 0.92, dashDistance: 0.88,
+                             resonanceRegen: 0.9, cohesion: 1.45))
+
+    /// Eine Oeffnung, aber nach vorn gezogen wie ein Rohr: der Schlag geht
+    /// weit hinaus, statt hart zu werden.
+    public static let pfeifenharnisch = Equipment(
+        id: "pfeifenharnisch",
+        name: "PFEIFENHARNISCH",
+        openings: 1,
+        stil: .peitsche,
+        summary: "SIE TRIFFT, WAS WEIT WEG STEHT - ABER NUR GENAU DAVOR",
+        flavour: "AUS DEM REGISTER GESCHNITTEN UND UM SIE GEBOGEN. "
+               + "WAS HERAUSKOMMT, KOMMT LANG HERAUS.",
+        modifiers: Modifiers(moveSpeed: 0.94, meleeDamage: 0.9,
+                             rangedRange: 1.25, rangedCost: 1.1))
+
+    /// Zwoelf feine Schlitze: sie klingt ununterbrochen, aber leise.
+    public static let flimmerhemd = Equipment(
+        id: "flimmerhemd",
+        name: "FLIMMERHEMD",
+        openings: 12,
+        stil: .flirren,
+        summary: "SEHR SCHNELLE, SEHR KLEINE TREFFER - UND SIE HAELT WENIG AUS",
+        flavour: "SO DUENN, DASS MAN DEN TON DURCH DEN STOFF SIEHT. "
+               + "ER HOERT NIE AUF, ER WIRD NUR NIE LAUT.",
+        modifiers: Modifiers(moveSpeed: 1.14, dashDistance: 1.1,
+                             rangedDamage: 0.85, resonanceRegen: 1.4,
+                             cohesion: 0.85))
+
     public static let all: [Equipment] = [
-        ohne, mantel, cape, engeFassung, offeneFassung, schlagfassung, gerissenesGewand,
+        ohne, mantel, cape, chorpanzer, pfeifenharnisch, flimmerhemd, engeFassung, offeneFassung, schlagfassung, gerissenesGewand,
     ]
 
     public static func find(_ id: String) -> Equipment? {
@@ -262,9 +301,16 @@ public struct Stats: Sendable {
         Swift.max(1, Int((Double(crystals * 2) * m.cohesion).rounded()))
     }
 
-    /// Der Schlag: Stil aus der Fassung, Feinschliff aus allen Quellen.
+    /// Welcher Stil tatsaechlich gilt. Normalerweise der der Fassung - es
+    /// sei denn, ein Siegel ueberstimmt sie. Das duerfen nur die teuersten.
+    public var stil: Kampfstil {
+        siegel.compactMap(\.stil).first ?? equipment.stil
+    }
+
+    /// Der Schlag: Stil aus der Fassung (oder einem Siegel), Feinschliff
+    /// aus allen Quellen.
     public var melee: MeleeProfile {
-        let p = equipment.stil.melee
+        let p = stil.melee
         return MeleeProfile(reach: p.reach * m.meleeReach,
                             halfHeight: p.halfHeight * (0.6 + 0.4 * m.meleeReach),
                             damage: scaledDamage(p.damage, m.meleeDamage),

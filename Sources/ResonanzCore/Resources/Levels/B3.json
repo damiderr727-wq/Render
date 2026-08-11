@@ -129,6 +129,12 @@
    "id": "bruchstein",
    "x": 74,
    "y": 15
+  },
+  {
+   "kind": "equipment",
+   "id": "chorpanzer",
+   "x": 12,
+   "y": 27
   }
  ],
  "decor": [

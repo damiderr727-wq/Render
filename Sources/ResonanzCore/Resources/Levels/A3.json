@@ -96,6 +96,12 @@
    "y": 16
   },
   {
+   "kind": "siegel",
+   "id": "pilgerstab",
+   "x": 44,
+   "y": 20
+  },
+  {
    "kind": "klinge",
    "id": "gezackt",
    "x": 26,

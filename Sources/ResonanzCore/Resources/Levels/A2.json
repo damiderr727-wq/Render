@@ -137,6 +137,18 @@
    "id": "cape",
    "x": 10,
    "y": 22
+  },
+  {
+   "kind": "kern",
+   "id": "metronom",
+   "x": 39,
+   "y": 18
+  },
+  {
+   "kind": "siegel",
+   "id": "scherbenherz",
+   "x": 55,
+   "y": 22
   }
  ],
  "decor": [

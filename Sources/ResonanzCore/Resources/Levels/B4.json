@@ -90,6 +90,12 @@
    "id": "dauerton",
    "x": 12,
    "y": 17
+  },
+  {
+   "kind": "siegel",
+   "id": "bleisiegel",
+   "x": 36,
+   "y": 15
   }
  ],
  "decor": [

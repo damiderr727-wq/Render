@@ -48,6 +48,17 @@ fileprivate extension SimulationTests {
     ]
 }
 
+fileprivate extension SlopeTests {
+    @available(*, deprecated, message: "Not actually deprecated. Marked as deprecated to allow inclusion of deprecated tests (which test deprecated functionality) without warnings")
+    static nonisolated(unsafe) let __allTests__SlopeTests = [
+        ("testFigurLaeuftDieRampeHinauf", testFigurLaeuftDieRampeHinauf),
+        ("testFigurLaeuftDieRampeHinunter", testFigurLaeuftDieRampeHinunter),
+        ("testHoehenfunktionLaeuftLinear", testHoehenfunktionLaeuftLinear),
+        ("testSchraegeBlockiertNichtWaagerecht", testSchraegeBlockiertNichtWaagerecht),
+        ("testSchraegenZaehlenAlsStandflaeche", testSchraegenZaehlenAlsStandflaeche)
+    ]
+}
+
 fileprivate extension WorldTests {
     @available(*, deprecated, message: "Not actually deprecated. Marked as deprecated to allow inclusion of deprecated tests (which test deprecated functionality) without warnings")
     static nonisolated(unsafe) let __allTests__WorldTests = [
@@ -64,6 +75,7 @@ func __ResonanzCoreTests__allTests() -> [XCTestCaseEntry] {
         testCase(PhysicsTests.__allTests__PhysicsTests),
         testCase(ProgressionTests.__allTests__ProgressionTests),
         testCase(SimulationTests.__allTests__SimulationTests),
+        testCase(SlopeTests.__allTests__SlopeTests),
         testCase(WorldTests.__allTests__WorldTests)
     ]
 }

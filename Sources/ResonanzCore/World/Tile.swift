@@ -11,6 +11,10 @@ public enum Tile: UInt8, Sendable, CaseIterable {
     case spike
     /// Verstimmte Sperre. Nur der Basston bricht sie.
     case dissoWall
+    /// Schraege, die nach rechts ansteigt.
+    case slopeUp
+    /// Schraege, die nach rechts abfaellt.
+    case slopeDown
 
     public init(character: Character) {
         switch character {
@@ -18,13 +22,23 @@ public enum Tile: UInt8, Sendable, CaseIterable {
         case "=": self = .platform
         case "^": self = .spike
         case "D": self = .dissoWall
+        case "/": self = .slopeUp
+        case "\\": self = .slopeDown
         default: self = .air
         }
     }
 
     /// Blockiert Bewegung aus allen Richtungen.
+    ///
+    /// Schraegen blockieren waagerecht nicht - sonst liefe man gegen ihre
+    /// Kachelkante wie gegen eine Wand. Ihre Oberflaeche wird stattdessen
+    /// beim senkrechten Aufsetzen berechnet.
     public var isBlocking: Bool {
         self == .solid || self == .dissoWall
+    }
+
+    public var isSlope: Bool {
+        self == .slopeUp || self == .slopeDown
     }
 
     /// Blockiert nur von oben, wenn die Figur faellt.
@@ -34,7 +48,7 @@ public enum Tile: UInt8, Sendable, CaseIterable {
 
     /// Kann als Boden dienen.
     public var isStandable: Bool {
-        isBlocking || isOneWay
+        isBlocking || isOneWay || isSlope
     }
 
     public var isHazard: Bool {

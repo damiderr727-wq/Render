@@ -25,6 +25,7 @@ TS = 16
 
 KNOWN_EDGES = ['', 't', 'l', 'r', 'b', 'tl', 'tr', 'tb', 'lr', 'lb', 'rb', 'tlr', 'tlb', 'trb', 'lrb', 'tlrb']
 BLOCKING = {"#", "D"}
+SLOPES = {"/": "up", "\\": "down"}
 
 
 class Atlas:
@@ -112,6 +113,8 @@ def render(room_id: str) -> Image.Image:
                 name = f"{region}_platform_{cap or 'mid'}_{(x * 13 + y * 7) % 4}"
             elif ch == "^":
                 name = f"{region}_spike"
+            elif ch in SLOPES:
+                name = f"{region}_slope_{SLOPES[ch]}_{(x * 17 + y * 5) % 4}"
             elif ch == "D":
                 name = "dissowall_0"
             else:

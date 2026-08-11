@@ -105,11 +105,41 @@ public final class Room {
         return nil
     }
 
+    /// Hoehe der Schraegen-Oberflaeche an einer Weltposition, sonst `nil`.
+    ///
+    /// Eine 45-Grad-Schraege ist die einfachste Form, die sich sauber in ein
+    /// Kachelraster fuegt: an einer Kante liegt die Oberflaeche oben, an der
+    /// anderen unten, dazwischen linear.
+    public func slopeSurfaceY(_ tx: Int, _ ty: Int, worldX: Double) -> Double? {
+        let tile = tile(tx, ty)
+        guard tile.isSlope else { return nil }
+        let localX = clamp((worldX - Double(tx) * tileSize) / tileSize, 0, 1)
+        let top = Double(ty) * tileSize
+        let rise = tile == .slopeUp ? (1 - localX) : localX
+        return top + rise * tileSize
+    }
+
+    /// Sucht an der Fusslinie nach einer Schraege und meldet deren Hoehe.
+    public func slopeUnder(footX: Double, footY: Double, tolerance: Double = 12) -> Double? {
+        let tx = Int(floor(footX / tileSize))
+        let center = Int(floor(footY / tileSize))
+        for ty in [center, center - 1, center + 1] {
+            guard let surface = slopeSurfaceY(tx, ty, worldX: footX) else { continue }
+            if footY >= surface - tolerance && footY <= surface + tolerance {
+                return surface
+            }
+        }
+        return nil
+    }
+
     /// Erste begehbare Oberflaeche unterhalb von `point` (in Punkten).
     public func floorBelow(_ point: Vec2, maxTiles: Int = 64) -> Double? {
         let tx = Int(floor(point.x / tileSize))
         var ty = Int(floor(point.y / tileSize))
         for _ in 0..<maxTiles {
+            if let surface = slopeSurfaceY(tx, ty, worldX: point.x) {
+                return surface
+            }
             if tile(tx, ty).isStandable {
                 return Double(ty) * tileSize
             }

@@ -528,6 +528,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/home/user/Render/Tests/ResonanzCoreTests/SlopeTests.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/home/user/Render/Tests/ResonanzCoreTests/WorldTests.swift"
         },
         {
@@ -550,6 +554,7 @@
         "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/PhysicsTests.swift.o",
         "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/ProgressionTests.swift.o",
         "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SimulationTests.swift.o",
+        "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SlopeTests.swift.o",
         "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/WorldTests.swift.o"
       ],
       "otherArguments" : [
@@ -593,6 +598,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SlopeTests.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/WorldTests.swift.o"
         },
         {
@@ -605,6 +614,7 @@
         "/home/user/Render/Tests/ResonanzCoreTests/PhysicsTests.swift",
         "/home/user/Render/Tests/ResonanzCoreTests/ProgressionTests.swift",
         "/home/user/Render/Tests/ResonanzCoreTests/SimulationTests.swift",
+        "/home/user/Render/Tests/ResonanzCoreTests/SlopeTests.swift",
         "/home/user/Render/Tests/ResonanzCoreTests/WorldTests.swift"
       ],
       "tempsPath" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build",
@@ -911,6 +921,7 @@
       "/home/user/Render/Tests/ResonanzCoreTests/PhysicsTests.swift",
       "/home/user/Render/Tests/ResonanzCoreTests/ProgressionTests.swift",
       "/home/user/Render/Tests/ResonanzCoreTests/SimulationTests.swift",
+      "/home/user/Render/Tests/ResonanzCoreTests/SlopeTests.swift",
       "/home/user/Render/Tests/ResonanzCoreTests/WorldTests.swift",
       "-I",
       "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/Modules",
@@ -1049,6 +1060,10 @@
         {
           "kind" : "file",
           "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SimulationTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SlopeTests.swift.o"
         },
         {
           "kind" : "file",
@@ -1243,6 +1258,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/home/user/Render/Tests/ResonanzCoreTests/SlopeTests.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/home/user/Render/Tests/ResonanzCoreTests/WorldTests.swift"
         }
       ],
@@ -1366,6 +1385,10 @@
         {
           "kind" : "file",
           "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SimulationTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/home/user/Render/.build/x86_64-unknown-linux-gnu/release/ResonanzCoreTests.build/SlopeTests.swift.o"
         },
         {
           "kind" : "file",

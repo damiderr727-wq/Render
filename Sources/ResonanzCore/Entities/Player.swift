@@ -379,7 +379,19 @@ public final class Player {
         let hitWall = moveX(velocity.x * dt, room: room)
         if hitWall { velocity.x = 0 }
 
-        let vertical = moveY(velocity.y * dt, room: room)
+        var vertical = moveY(velocity.y * dt, room: room)
+
+        // Schraegen loesen sich nicht ueber Rechtecke, sondern ueber ihre
+        // Hoehenfunktion: an der Fusslinie nachschlagen und aufsetzen.
+        if vertical != .ceiling, velocity.y >= -1,
+           let surface = room.slopeUnder(footX: position.x, footY: position.y,
+                                         tolerance: onGround ? 12 : 8) {
+            if position.y >= surface - 8 {
+                position.y = surface
+                vertical = .ground
+            }
+        }
+
         switch vertical {
         case .none:
             onGround = false
@@ -441,9 +453,35 @@ public final class Player {
     }
 
     /// Bewegt in X-Richtung und meldet, ob eine Wand im Weg war.
+    ///
+    /// Auf einer Schraege braucht es eine Stufenhilfe: sobald die Figur
+    /// abwaerts rutscht, ragt ihr Koerper in die Vollkachel hinter ihr, und
+    /// ohne Nachhilfe bleibt sie daran haengen. Die Hilfe greift nur, wenn
+    /// tatsaechlich eine Schraege im Spiel ist - sonst koennte man ueberall
+    /// halbe Kacheln hochlaufen.
     @discardableResult
     private func moveX(_ amount: Double, room: Room) -> Bool {
-        slide(amount, axis: Vec2(1, 0)) { room.overlapsSolid($0) }
+        let blocked = slide(amount, axis: Vec2(1, 0)) { room.overlapsSolid($0) }
+        guard blocked, amount != 0 else { return blocked }
+
+        let ahead = position.x + sign(amount) * (Tuning.playerWidth / 2 + 2)
+        guard room.slopeUnder(footX: ahead, footY: position.y, tolerance: 20) != nil
+                || room.slopeUnder(footX: position.x, footY: position.y, tolerance: 20) != nil
+        else { return true }
+
+        let saved = position
+        var lift = 2.0
+        while lift <= 10 {
+            position.y = saved.y - lift
+            if !room.overlapsSolid(rect) {
+                if !slide(amount, axis: Vec2(1, 0), blocked: { room.overlapsSolid($0) }) {
+                    return false
+                }
+            }
+            lift += 2
+        }
+        position = saved
+        return true
     }
 
     private func moveY(_ amount: Double, room: Room) -> VerticalContact {

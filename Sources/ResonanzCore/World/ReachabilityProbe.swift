@@ -61,7 +61,9 @@ public struct ReachabilityProbe {
         let headroom = Int(ceil(Tuning.playerHeight / tileSize))
         for ty in 1..<room.height {
             for tx in 0..<room.width where room.tile(tx, ty).isStandable {
-                guard room.tile(tx, ty - 1) == .air else { continue }
+                // Auf einer Schraege steht man in der Kachel selbst.
+                guard room.tile(tx, ty).isSlope || room.tile(tx, ty - 1) == .air
+                else { continue }
                 var clear = true
                 for h in 1...headroom where room.tile(tx, ty - h).isBlocking {
                     clear = false

@@ -20,6 +20,12 @@
     "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCoreTests.build/SimulationTests~partial.swiftmodule",
     "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCoreTests.build/SimulationTests.swiftdeps"
   },
+  "/home/user/Render/Tests/ResonanzCoreTests/SlopeTests.swift": {
+    "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCoreTests.build/SlopeTests.d",
+    "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCoreTests.build/SlopeTests.swift.o",
+    "swiftmodule": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCoreTests.build/SlopeTests~partial.swiftmodule",
+    "swift-dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCoreTests.build/SlopeTests.swiftdeps"
+  },
   "/home/user/Render/Tests/ResonanzCoreTests/WorldTests.swift": {
     "dependencies": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCoreTests.build/WorldTests.d",
     "object": "/home/user/Render/.build/x86_64-unknown-linux-gnu/debug/ResonanzCoreTests.build/WorldTests.swift.o",

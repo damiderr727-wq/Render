@@ -134,6 +134,8 @@ func drawMap(roomID: String, abilities: Set<Ability>) throws -> Int32 {
             case .platform: return "="
             case .spike: return "^"
             case .dissoWall: return "D"
+            case .slopeUp: return "/"
+            case .slopeDown: return "\\"
             case .air: return " "
             }
         }

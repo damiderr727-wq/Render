@@ -20,6 +20,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Resources" / "Levels"
 
 AIR, SOLID, PLATFORM, SPIKE, DWALL = ".", "#", "=", "^", "D"
+SLOPE_UP, SLOPE_DOWN = "/", "\\"
 
 
 class Room:
@@ -87,6 +88,26 @@ class Room:
 
     def dissowall(self, x: int, y: int, w: int, h: int) -> "Room":
         return self.fill(x, y, w, h, DWALL)
+
+    def slope(self, x: int, y: int, length: int, direction: int = 1) -> "Room":
+        """
+        Ein schraeger Weg. `direction` 1 steigt nach rechts, -1 faellt.
+
+        `y` ist die Reihe der ersten Kachel, und ihre *anschliessende* Kante
+        liegt auf deren Oberkante: eine fallende Rampe beginnt also in
+        derselben Reihe wie der Boden davor, eine steigende in derselben
+        Reihe wie der Boden dahinter. Um eins daneben, und die Rampe erzeugt
+        genau die Stufe, die sie beseitigen soll.
+
+        Unter jeder Kachel wird bis zum Raumboden aufgefuellt - sonst haengt
+        die Rampe in der Luft.
+        """
+        for i in range(length):
+            tx = x + i
+            ty = y - i * direction
+            self.set(tx, ty, SLOPE_UP if direction > 0 else SLOPE_DOWN)
+            self.fill(tx, ty + 1, 1, self.h - ty - 1, SOLID)
+        return self
 
     def stairs(self, x: int, y: int, steps: int, dx: int = 1, dy: int = -1, w: int = 3) -> "Room":
         for i in range(steps):
@@ -288,19 +309,27 @@ def room_A1() -> Room:
     # Aufstieg ist vier Kacheln hoch - ohne die Plattformen kommt man da
     # nicht rauf, und damit haben sie einen Grund, dort zu liegen.
     def gelaende(x: float) -> float:
-        if x < 20:
-            return 15 - 0.8 * math.sin(x * 0.13)          # Terrasse
+        if x < 18:
+            return 15            # Terrasse
+        if x < 22:
+            return 15 + (x - 17)  # Rampe hinunter
+        if x < 35:
+            return 19            # Muldenboden
+        if x < 38:
+            return 19 - (x - 34)  # Rampe herauf
         if x < 42:
-            t = (x - 20) / 22
-            return 15 + 4 * math.sin(t * math.pi) ** 0.8  # Mulde
-        return 12                                         # Absatz zur Tuer
+            return 16            # Absatz
+        return 12                # Kanzel zur Tuer
 
     r.ground(1, 59, gelaende)
     r.ceiling(1, 59, lambda x: 3 + 1.5 * math.sin(x * 0.13 + 1))
 
-    r.platform(29, 16, 5)
-    r.platform(35, 14, 5)
-    r.platform(38, 12, 4)
+    # Die beiden Uebergaenge sind Rampen, keine Stufen. Nur der letzte
+    # Aufstieg zur Tuer bleibt eine Kante - vier Kacheln, also genau das,
+    # wofuer die Plattform da ist.
+    r.slope(18, 15, 4, -1)
+    r.slope(35, 18, 3, 1)
+    r.platform(38, 14, 4)
 
     r.side_door("R", "right", "A2", "L")
     r.spawn_on("start", 8, 7, 1)

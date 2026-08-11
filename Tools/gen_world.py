@@ -258,6 +258,50 @@ def tile_platform(region: str, variant: int = 0, cap: str = "") -> Canvas:
     return c
 
 
+def tile_slope(region: str, variant: int, rising: bool) -> Canvas:
+    """
+    Eine 45-Grad-Schraege.
+
+    Nur aus Stufen gebaute Welten wirken gestanzt. Eine Schraege ist die
+    einfachste Form, die sich sauber ins Raster fuegt und trotzdem einen
+    weichen Weg ergibt - die Kollision rechnet ihre Hoehe linear aus.
+    """
+    body, edge, accent = P.REGIONS[region][:3]
+    c = Canvas(TS, TS + TILE_OVERHANG)
+    top = TILE_OVERHANG
+
+    for x in range(TS):
+        # Oberflaeche: links unten und rechts oben, oder umgekehrt.
+        rise = (TS - 1 - x) if rising else x
+        surface = top + rise
+        jitter = int(hash01(x * 9 + variant * 41, 3) * 2)
+        surface = max(top, surface - jitter)
+
+        for y in range(surface, top + TS):
+            d = (y - surface) / TS
+            col = mix(body, shade(body, -0.30), 0.22 + d * 0.35)
+            c.set(x, y, col)
+
+        c.set(x, surface, mix(edge, accent, 0.28))
+        c.set(x, surface + 1, edge)
+        c.set(x, surface + 2, mix(edge, body, 0.5))
+        c.set(x, surface + 3, shade(body, -0.14))
+
+        if region == "hain":
+            density = (0.34, 0.58, 0.44, 0.16)[variant % 4]
+            if hash01(x * 7 + variant * 31, 9) < density:
+                h = 2 + int(hash01(x, variant) * 4)
+                lean = -1 if hash01(x, 3) > 0.5 else 1
+                for i in range(h):
+                    t = i / max(1, h)
+                    c.set(x + int(lean * i * 0.35), surface - 1 - i,
+                          mix(mix(edge, body, 0.55), edge, t * 0.75))
+        elif region == "grotten":
+            if hash01(x * 5, variant) > 0.82:
+                c.set(x, surface - 1, mix(accent, edge, 0.5))
+    return c
+
+
 def tile_spike(region: str) -> Canvas:
     """Dissonanzdornen - scharfe, verstimmte Kristallnadeln."""
     body, edge, accent = P.REGIONS[region][:3][:3]
@@ -533,6 +577,11 @@ def build() -> None:
             for v in range(6):
                 tiles.add(f"{region}_solid_{edges or 'mid'}_{v}",
                           tile_solid(region, v, edges),
+                          pivot=(0, TILE_OVERHANG / (TS + TILE_OVERHANG)))
+        for v in range(4):
+            for rising in (True, False):
+                tiles.add(f"{region}_slope_{'up' if rising else 'down'}_{v}",
+                          tile_slope(region, v, rising),
                           pivot=(0, TILE_OVERHANG / (TS + TILE_OVERHANG)))
         for cap in ("mid", "l", "r", "lr"):
             for v in range(4):

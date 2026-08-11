@@ -9,13 +9,22 @@ final class HealthTests: XCTestCase {
         try GameSimulation.newGame(catalog: try WorldCatalog())
     }
 
-    func testFuenfKristalleSindZehnHaelften() throws {
+    /// Sie faengt ohne alles an, und ohne Gefaess haelt sie weniger aus:
+    /// vier Kristalle statt fuenf. Der schlichte Mantel gibt den fuenften
+    /// zurueck - das ist der erste Fund im Spiel und der Grund, warum er
+    /// sich sofort anfuehlt.
+    func testSieStartetMitVierKristallen() throws {
         let sim = try spiel()
-        XCTAssertEqual(sim.save.progression.crystals, 5)
-        XCTAssertEqual(sim.player.maxHealth, 10)
-        XCTAssertEqual(sim.player.health, 10)
-        XCTAssertEqual(sim.player.crystalsFull, 5)
+        XCTAssertEqual(sim.save.progression.crystals, 5, "Der Grundwert bleibt fuenf")
+        XCTAssertEqual(sim.player.maxHealth, 8, "Ohne Fassung sind es acht Haelften")
+        XCTAssertEqual(sim.player.crystalsFull, 4)
         XCTAssertFalse(sim.player.hasHalfCrystal)
+
+        var save = SaveState()
+        save.progression.equipmentOwned.insert(EquipmentCatalog.mantel.id)
+        save.progression.equipmentWorn = EquipmentCatalog.mantel.id
+        let mitMantel = try GameSimulation(catalog: try WorldCatalog(), save: save)
+        XCTAssertEqual(mitMantel.player.maxHealth, 10, "Mit Mantel wieder fuenf Kristalle")
     }
 
     func testAnderthalbSchadenLaesstEinenHalbenKristallStehen() throws {
@@ -23,8 +32,8 @@ final class HealthTests: XCTestCase {
         var events: [GameEvent] = []
         sim.player.takeDamage(3, from: Vec2(0, 0), events: &events)
 
-        XCTAssertEqual(sim.player.health, 7, "Zehn minus drei Haelften")
-        XCTAssertEqual(sim.player.crystalsFull, 3)
+        XCTAssertEqual(sim.player.health, 5, "Acht minus drei Haelften")
+        XCTAssertEqual(sim.player.crystalsFull, 2)
         XCTAssertTrue(sim.player.hasHalfCrystal, "Ein halber haengt noch dran")
     }
 
@@ -33,7 +42,7 @@ final class HealthTests: XCTestCase {
     func testAufEinemHalbenKristallUeberlebtSieNichts() throws {
         let sim = try spiel()
         var events: [GameEvent] = []
-        sim.player.takeDamage(9, from: Vec2(0, 0), events: &events)
+        sim.player.takeDamage(7, from: Vec2(0, 0), events: &events)
         XCTAssertEqual(sim.player.health, 1)
         XCTAssertFalse(sim.player.isDead)
 
@@ -50,7 +59,7 @@ final class HealthTests: XCTestCase {
         let sim = try spiel()
         var events: [GameEvent] = []
         sim.player.takeDamage(Tuning.spikeDamage, from: Vec2(0, 0), events: &events)
-        XCTAssertEqual(sim.player.crystalsFull, 4)
+        XCTAssertEqual(sim.player.crystalsFull, 3)
         XCTAssertFalse(sim.player.hasHalfCrystal)
     }
 
@@ -86,7 +95,7 @@ final class HealthTests: XCTestCase {
         let sim = try spiel()
         var events: [GameEvent] = []
         sim.player.takeDamage(5, from: Vec2(0, 0), events: &events)
-        XCTAssertEqual(sim.player.health, 5)
+        XCTAssertEqual(sim.player.health, 3)
         sim.player.restore()
         XCTAssertEqual(sim.player.health, sim.player.maxHealth)
     }

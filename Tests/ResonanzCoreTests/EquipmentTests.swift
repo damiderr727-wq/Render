@@ -39,12 +39,12 @@ final class EquipmentTests: XCTestCase {
         XCTAssertEqual(s.ranged.damage, Tuning.ranged(.stimmgabel).damage)
     }
 
-    func testOhneGueltigeFassungTraegtSieDenMantel() {
+    func testOhneGueltigeFassungStehtSieDaWieSieAufgewachtIst() {
         var progression = Progression()
-        XCTAssertEqual(progression.equipment.id, EquipmentCatalog.mantel.id)
+        XCTAssertEqual(progression.equipment.id, EquipmentCatalog.ohne.id,
+                       "So faengt das Spiel an")
         progression.equipmentWorn = "gibt_es_nicht"
-        XCTAssertEqual(progression.equipment.id, EquipmentCatalog.mantel.id,
-                       "Ganz ohne Gefaess wuerde sie sich aufloesen")
+        XCTAssertEqual(progression.equipment.id, EquipmentCatalog.ohne.id)
         progression.klingeWorn = "gibt_es_nicht"
         XCTAssertEqual(progression.klinge.id, KlingenKatalog.schlicht.id)
     }
@@ -200,7 +200,9 @@ final class EquipmentTests: XCTestCase {
                 // Der teuerste tragbare Satz Siegel.
                 let s = Stats(equipment: equipment, kern: kern,
                               siegel: [SiegelKatalog.windschliff])
-                XCTAssertGreaterThan(equipment.openings, 0, equipment.id)
+                // Null Oeffnungen hat genau eine: "ohne". Das ist kein
+                // geschlossenes Gefaess, sondern gar keines.
+                XCTAssertGreaterThanOrEqual(equipment.openings, 0, equipment.id)
                 XCTAssertGreaterThan(s.runSpeed, 0, equipment.id)
                 XCTAssertLessThan(s.jumpVelocity, 0, equipment.id)
                 XCTAssertGreaterThanOrEqual(s.maxHealth(crystals: 5), 1, equipment.id)
@@ -259,7 +261,7 @@ final class EquipmentTests: XCTestCase {
 
         XCTAssertFalse(sim.wear(EquipmentCatalog.engeFassung.id),
                        "Mitten im Raum ist das kein Kleiderwechsel, sondern ein Umbau")
-        XCTAssertEqual(sim.save.progression.equipmentWorn, EquipmentCatalog.mantel.id)
+        XCTAssertEqual(sim.save.progression.equipmentWorn, EquipmentCatalog.ohne.id)
 
         sim.player.beginRest()
         XCTAssertTrue(sim.wear(EquipmentCatalog.engeFassung.id))
@@ -274,7 +276,7 @@ final class EquipmentTests: XCTestCase {
         sim.player.beginRest()
         XCTAssertFalse(sim.wear(EquipmentCatalog.schlagfassung.id))
         XCTAssertFalse(sim.wear("gibt_es_nicht"))
-        XCTAssertEqual(sim.save.progression.equipmentWorn, EquipmentCatalog.mantel.id)
+        XCTAssertEqual(sim.save.progression.equipmentWorn, EquipmentCatalog.ohne.id)
     }
 
     // MARK: - In der Welt
@@ -289,12 +291,12 @@ final class EquipmentTests: XCTestCase {
                 gefunden[pickup.id, default: 0] += 1
             }
         }
-        for equipment in EquipmentCatalog.all where equipment.id != EquipmentCatalog.mantel.id {
+        for equipment in EquipmentCatalog.all where equipment.id != EquipmentCatalog.ohne.id {
             XCTAssertEqual(gefunden[equipment.id], 1,
                            "\(equipment.id) muss genau einmal in der Welt liegen")
         }
-        XCTAssertNil(gefunden[EquipmentCatalog.mantel.id],
-                     "Den Mantel traegt sie von Anfang an")
+        XCTAssertNil(gefunden[EquipmentCatalog.ohne.id],
+                     "Ohne alles faengt sie an - das liegt nirgends herum")
     }
 
     func testJedesSiegelUndJedeKlingeLiegenGenauEinmalInDerWelt() throws {

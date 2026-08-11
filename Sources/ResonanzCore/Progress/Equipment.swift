@@ -94,7 +94,24 @@ public struct Equipment: Codable, Sendable, Equatable, Identifiable {
 /// Alle Fassungen, die es gibt.
 public enum EquipmentCatalog {
 
-    /// Die Standardausruestung. Sie tut nichts, ausser sie zusammenzuhalten -
+    /// So faengt sie an: ohne alles.
+    ///
+    /// Kein Gefaess, also nichts, was sie zusammenhaelt - sie traegt einen
+    /// Kristall weniger als mit dem schlichten Mantel. Dafuer haengt ihr
+    /// auch nichts im Weg. Das ist der Ausgangspunkt, an dem alles andere
+    /// gemessen wird, und der Grund, warum der erste Fund im Spiel kein
+    /// Schwert ist, sondern etwas zum Anziehen.
+    public static let ohne = Equipment(
+        id: "ohne",
+        name: "OHNE ALLES",
+        openings: 0,
+        stil: .bogen,
+        summary: "NICHTS HAELT SIE - DAFUER HAENGT IHR AUCH NICHTS IM WEG",
+        flavour: "SO IST SIE AUFGEWACHT. EIN KLANG, EINE STIMMGABEL, "
+               + "ZWEI SPITZEN, AUF DENEN SIE STEHT.",
+        modifiers: Modifiers(moveSpeed: 1.06, dashDistance: 1.05, cohesion: 0.8))
+
+    /// Das erste Fundstueck. Er tut nichts, ausser sie zusammenzuhalten -
     /// und genau das ist ihr Zweck.
     public static let mantel = Equipment(
         id: "mantel",
@@ -171,7 +188,7 @@ public enum EquipmentCatalog {
                              meleeReach: 0.9, cohesion: 0.9))
 
     public static let all: [Equipment] = [
-        mantel, cape, engeFassung, offeneFassung, schlagfassung, gerissenesGewand,
+        ohne, mantel, cape, engeFassung, offeneFassung, schlagfassung, gerissenesGewand,
     ]
 
     public static func find(_ id: String) -> Equipment? {

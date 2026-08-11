@@ -82,12 +82,37 @@ solange die Bilder aus einem Programm fallen und nicht aus einer Hand:
 ein neuer Kern kostet einen `elif`-Zweig und einen Durchlauf des
 Generators, nicht einen Tag Zeichnen.
 
-### Sie ohne alles
+### Sie ohne alles — und so fängt das Spiel an
 
-Eine Bildreihe fällt aus dem Schema: **`ohne`** — sie selbst, ohne Fassung,
-nur Nadeln, Flamme und der Kern, der gerade in ihr steckt. Das ist der
-Bogen fürs Inventar: dort soll man sehen, wie weit sie schon ist, und was
-von ihr selbst kommt statt von dem, was sie trägt.
+**`ohne`** ist keine Sonderansicht, sondern der Ausgangszustand: so wacht
+sie auf. Ein Klang, eine Stimmgabel, zwei Spitzen zum Stehen, zwei Spitzen
+als Arme, und die Schallklinge auf dem Rücken.
+
+Daraus folgt zweierlei:
+
+- **Der erste Fund im Spiel ist kein Schwert, sondern etwas zum Anziehen.**
+  Der schlichte Mantel liegt gleich in A1. Ohne Gefäß hält sie weniger aus
+  — vier Kristalle statt fünf —, dafür hängt ihr nichts im Weg (etwas
+  schneller, etwas weiter im Sprint). Der Mantel gibt genau den fünften
+  Kristall zurück und sonst nichts. „Er gibt ihr nichts, er nimmt ihr nur
+  das Vergehen" ist damit wörtlich wahr.
+- **Alles wird von hier aus gemessen.** `ohne` ist die Grundlinie, an der
+  jede Fassung sich rechtfertigen muss.
+
+Im Inventar steht dieselbe Reihe: dort sieht man sie ohne alles und damit,
+was von ihr selbst kommt und was von dem, was sie trägt.
+
+### Die Klinge auf dem Rücken
+
+Sie ist das einzige Rosa an ihr — und das mit Absicht. Alles andere ist
+kalt und blass, also trägt genau ein Gegenstand die Gegenfarbe, und man
+sieht schon an der Silhouette, dass sie bewaffnet ist. Kristall, nicht
+Metall: die Klinge ist gewachsen wie die Spitzen, auf denen sie geht.
+
+Sie liegt schräg über dem Rücken, Griff unten rechts, Spitze oben links —
+**entgegen** der Stimmgabel, die nach oben rechts steht. Der erste Versuch
+legte beide in dieselbe Richtung, und sie kreuzten sich zu einem Gestrüpp.
+Jetzt bilden sie ein X, und beides bleibt lesbar.
 Der Grund scheint durch sie hindurch — dicht in der Mitte, dünner zum Rand
 und nach oben. Die Silhouette trägt trotzdem, weil der Mantel deckt: das
 Durchscheinende ist der Körper, nicht die Kleidung. Kein

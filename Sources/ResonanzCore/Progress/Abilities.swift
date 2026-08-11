@@ -77,8 +77,8 @@ public struct Progression: Codable, Sendable, Equatable {
                 crystals: Int = 5,
                 maxResonance: Double = 100,
                 readLore: Set<String> = [],
-                equipmentOwned: Set<String> = [EquipmentCatalog.mantel.id],
-                equipmentWorn: String = EquipmentCatalog.mantel.id,
+                equipmentOwned: Set<String> = [EquipmentCatalog.ohne.id],
+                equipmentWorn: String = EquipmentCatalog.ohne.id,
                 klingenOwned: Set<String> = [KlingenKatalog.schlicht.id],
                 klingeWorn: String = KlingenKatalog.schlicht.id,
                 siegelOwned: Set<String> = [],
@@ -101,15 +101,15 @@ public struct Progression: Codable, Sendable, Equatable {
         self.gebrochen = gebrochen
     }
 
-    /// Die getragene Fassung. Ohne eine gueltige faellt sie auf den Mantel
-    /// zurueck - ganz ohne Gefaess wuerde sich Cadence aufloesen.
+    /// Die getragene Fassung. Ohne eine gueltige steht sie da, wie sie
+    /// aufgewacht ist: ohne alles.
     public var equipment: Equipment {
         // Nach dem Bruch traegt sie nichts mehr. Es gibt kein Zurueck in
         // die Fassung - das ist der Punkt des Ereignisses.
         if gebrochen { return Bruch.entfesselt }
         guard equipmentOwned.contains(equipmentWorn),
               let found = EquipmentCatalog.find(equipmentWorn) else {
-            return EquipmentCatalog.mantel
+            return EquipmentCatalog.ohne
         }
         return found
     }

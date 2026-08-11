@@ -421,6 +421,9 @@ def room_A1() -> Room:
     # Der erste Fund ueberhaupt: ein zweiter Kern. Er liegt in der Mulde,
     # also sichtbar, aber unterhalb des Weges - man muss hinunter.
     r.pickup("kern", "leier", 30, 18)
+    # Das erste Fundstueck des Spiels ist kein Schwert, sondern etwas zum
+    # Anziehen: ohne Gefaess zerstreut sie sich.
+    r.pickup("equipment", "mantel", 15, 14)
 
     r.enemy("klangmotte", 30, 10)
     r.enemy("klangmotte", 48, 7)

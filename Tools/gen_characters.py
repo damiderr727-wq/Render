@@ -152,6 +152,106 @@ def _garment_slits(openings: int) -> list[tuple[float, int, float]]:
 # frei heraus. So sitzt er *in* ihr und nicht *auf* ihr - egal welcher.
 
 
+
+def _draw_arme(c: Canvas, *, cx: int, base: float, height: float, phase: float,
+               lean: float, leg_phase: float | None, arm_front: float,
+               arm_back: float, whip: float, smear: float) -> None:
+    """
+    Zwei Spitzen als Arme.
+
+    Dieselbe Regel wie unten: kein Oberarm, kein Ellbogen, keine Hand -
+    zwei duenne Nadeln, die aus der Flamme herauswachsen und spitz enden.
+    Der vordere greift, der hintere zieht nach; im Lauf pendeln sie
+    gegenlaeufig zu den Beinen, sonst haengen sie fast still.
+    """
+    S = HERO_SCALE
+    schulter_t = 0.56
+    sy = base - schulter_t * height
+    laenge = height * 0.30
+
+    schritt = (leg_phase or 0.0) + math.pi
+    ader = mix(P.TRIM, P.BONE, 0.55)
+    schale = mix(P.CLOAK, P.STONE, 0.22)
+
+    for seite in (-1, 1):
+        vorn = seite > 0
+        takt = math.sin(schritt + (0 if vorn else math.pi))
+        # Ruhe: leicht nach hinten unten. Schlag: nach vorn gerissen.
+        winkel = (0.95 - takt * 0.38
+                  - (arm_front if vorn else arm_back) * 1.3
+                  - whip * 0.9)
+        sx = cx + seite * (1.4 * S) + lean * 0.6
+
+        n = max(3, int(laenge))
+        for i in range(n + 1):
+            v = i / n
+            x = sx + seite * math.cos(winkel) * laenge * v - smear * 2.4 * v
+            y = sy + math.sin(winkel) * laenge * v
+            w = 1.2 - 1.15 * v ** 0.6
+            for dx in range(-int(w) - 1, int(w) + 2):
+                if abs(dx) > w + 0.35:
+                    continue
+                col = (mix(schale, ader, 0.45 - 0.22 * v) if dx * seite > 0
+                       else shade(schale, -0.28))
+                c.set(int(x) + dx, int(y), col)
+        c.set(int(sx + seite * math.cos(winkel) * laenge),
+              int(sy + math.sin(winkel) * laenge), mix(schale, ader, 0.35))
+
+
+def _draw_klinge(c: Canvas, *, cx: int, base: float, height: float, phase: float,
+                 lean: float, sway: float) -> None:
+    """
+    Die Schallklinge auf ihrem Ruecken.
+
+    Sie ist das einzige Rosa an ihr - und das mit Absicht: alles andere ist
+    kalt und blass, also traegt genau ein Gegenstand die Gegenfarbe, und
+    man sieht schon an der Silhouette, dass sie bewaffnet ist. Kristall,
+    nicht Metall: die Klinge ist gewachsen wie die Nadeln, an denen sie
+    geht.
+    """
+    S = HERO_SCALE
+    rosa = hexc("#ff7ad0")
+    rosa_hi = mix(rosa, P.BONE, 0.55)
+    rosa_lo = mix(rosa, P.CLOAK, 0.55)
+
+    # Schraeg ueber den Ruecken: Griff unten rechts, Spitze oben links.
+    # Die Stimmgabel steht nach oben rechts - die Klinge muss in die
+    # Gegenrichtung, sonst kreuzen sich beide zu einem Gestruepp.
+    a = -(math.pi - 1.00)
+    mx = cx + 0.8 * S + lean * 0.3
+    my = base - 0.42 * height
+    ax, ay = math.cos(a), math.sin(a)
+    laenge = height * 0.62
+
+    # Griff und Parierstueck
+    for i in range(int(3 * S)):
+        c.set(int(mx - ax * (i + 2)), int(my - ay * (i + 2)), mix(rosa_lo, P.CLOAK, 0.4))
+    for k in (-1, 1):
+        c.set(int(mx - ax * 1.5 - ay * k), int(my - ay * 1.5 + ax * k), rosa_lo)
+
+    # Das Blatt: zum Ende hin schmaler, mit heller Schneide vorn.
+    for i in range(int(laenge)):
+        v = i / laenge
+        w = (1.9 - 1.5 * v ** 0.8) * S
+        px = mx + ax * i
+        py = my + ay * i
+        for dq in range(-int(w), int(w) + 1):
+            qx = px - ay * dq
+            qy = py + ax * dq
+            if dq > 0:
+                col = rosa_hi if dq >= int(w) else rosa
+            else:
+                col = rosa_lo
+            c.set(int(qx), int(qy), col)
+        # Ein Glanz laeuft die Schneide hinauf.
+        if abs(v - (0.5 + 0.5 * math.sin(phase * 1.4 + sway))) < 0.10:
+            c.set(int(px - ay * w), int(py + ax * w), mix(rosa_hi, P.BONE, 0.6))
+
+    c.set(int(mx + ax * laenge), int(my + ay * laenge), mix(rosa_hi, P.BONE, 0.4))
+    c.glow(mx + ax * laenge * 0.6, my + ay * laenge * 0.6, 6 * S,
+           (rosa[0], rosa[1], rosa[2], 40))
+
+
 def _draw_beine(c: Canvas, *, cx: int, base: float, height: float, phase: float,
                 lean: float, leg_phase: float | None, leg_spread: float,
                 crouch: float, settle: float, smear: float) -> None:
@@ -629,6 +729,10 @@ def draw_heroine(
                       height=height, phase=phase, lean=lean, smear=smear,
                       split=split, sway=sway, hinter=True)
 
+    # Die Klinge liegt auf ihrem Ruecken, also hinter allem anderen.
+    _draw_klinge(c, cx=cx, base=base, height=height, phase=phase,
+                 lean=lean, sway=sway)
+
     # --- Die Beine --------------------------------------------------------
     #
     # Unten ist sie nicht formlos. Der Klang hat sich dort zu Kristall
@@ -638,6 +742,10 @@ def draw_heroine(
     _draw_beine(c, cx=cx, base=base, height=height, phase=phase, lean=lean,
                 leg_phase=leg_phase, leg_spread=leg_spread, crouch=crouch,
                 settle=settle, smear=smear)
+
+    _draw_arme(c, cx=cx, base=base, height=height, phase=phase, lean=lean,
+               leg_phase=leg_phase, arm_front=arm_front, arm_back=arm_back,
+               whip=whip, smear=smear)
 
     # Der Mantel ist die Grundform, nicht die Verzierung: er wird zuerst
     # gesetzt, geschlossen und undurchsichtig. Die Flamme sitzt darauf.

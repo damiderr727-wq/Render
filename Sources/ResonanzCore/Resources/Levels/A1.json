@@ -77,6 +77,12 @@
    "id": "leier",
    "x": 30,
    "y": 18
+  },
+  {
+   "kind": "equipment",
+   "id": "mantel",
+   "x": 15,
+   "y": 14
   }
  ],
  "decor": [

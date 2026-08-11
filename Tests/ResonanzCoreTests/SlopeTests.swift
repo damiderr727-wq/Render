@@ -58,7 +58,7 @@ final class SlopeTests: XCTestCase {
         ]
         let r = room(rows)
         let player = Player(position: Vec2(3 * tileSize + 8, 6 * tileSize),
-                            progression: Progression(), instrument: .leier)
+                            progression: Progression(), kern: .leier)
         player.placeAt(Vec2(3 * tileSize + 8, 6 * tileSize), facing: 1)
 
         let start = player.position.y
@@ -83,7 +83,7 @@ final class SlopeTests: XCTestCase {
         ]
         let r = room(rows)
         let player = Player(position: Vec2(1 * tileSize + 8, 2 * tileSize),
-                            progression: Progression(), instrument: .leier)
+                            progression: Progression(), kern: .leier)
         player.placeAt(Vec2(1 * tileSize + 8, 2 * tileSize), facing: 1)
 
         simulate(player, in: r, seconds: 2.0, input: PlayerInput(moveX: 1))

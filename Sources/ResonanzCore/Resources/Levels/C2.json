@@ -110,6 +110,12 @@
  ],
  "pickups": [
   {
+   "kind": "klinge",
+   "id": "glas",
+   "x": 38,
+   "y": 8
+  },
+  {
    "kind": "ability",
    "id": "basston",
    "x": 26,

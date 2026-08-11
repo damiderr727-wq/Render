@@ -71,7 +71,14 @@
    "y": 7
   }
  ],
- "pickups": [],
+ "pickups": [
+  {
+   "kind": "kern",
+   "id": "leier",
+   "x": 30,
+   "y": 18
+  }
+ ],
  "decor": [
   {
    "kind": "crystal",

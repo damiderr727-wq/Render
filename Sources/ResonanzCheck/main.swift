@@ -72,7 +72,7 @@ func run() throws -> Int32 {
 
         let held = arrival[id] ?? []
         let progression = Progression(abilities: held,
-                                      instruments: Set(Instrument.allCases))
+                                      kerne: Set(Kern.allCases))
 
         // Gesperrte Tueren gehoeren nicht in den ersten Durchgang - sie sind
         // beim Ankommen ohnehin zu.
@@ -99,7 +99,7 @@ func run() throws -> Int32 {
         var lost: [String] = []
         if !deferredNames.isEmpty {
             let full = Progression(abilities: abilities,
-                                   instruments: Set(Instrument.allCases))
+                                   kerne: Set(Kern.allCases))
             let revisit = ReachabilityProbe(room: room, progression: full)
                 .run(from: ReachabilityProbe.origins(for: room),
                      targets: all.filter { deferredNames.contains($0.name) })
@@ -147,7 +147,7 @@ func drawMap(roomID: String, abilities: Set<Ability>) throws -> Int32 {
     let catalog = try WorldCatalog()
     let room = try catalog.room(roomID)
     let progression = Progression(abilities: abilities,
-                                  instruments: Set(Instrument.allCases))
+                                  kerne: Set(Kern.allCases))
     let targets = ReachabilityProbe.targets(for: room)
     let probe = ReachabilityProbe(room: room, progression: progression)
     let result = probe.run(from: ReachabilityProbe.origins(for: room), targets: targets)
@@ -196,7 +196,7 @@ func trace(roomID: String, tx: Int, ty: Int, abilities: Set<Ability>) throws -> 
     let room = try catalog.room(roomID)
     let probe = ReachabilityProbe(room: room,
                                   progression: Progression(abilities: abilities,
-                                                           instruments: Set(Instrument.allCases)))
+                                                           kerne: Set(Kern.allCases)))
     print("\(roomID) von Kachel (\(tx),\(ty)):")
     for entry in probe.trace(fromTile: tx, ty) {
         let where_ = entry.landing.map { "(\($0.0),\($0.1))" } ?? "-"

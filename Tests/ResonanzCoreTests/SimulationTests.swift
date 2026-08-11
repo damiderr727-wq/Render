@@ -23,8 +23,8 @@ final class SimulationTests: XCTestCase {
     func testSpielStartetImErstenRaum() throws {
         let sim = try neuesSpiel()
         XCTAssertEqual(sim.room.id, "A1")
-        XCTAssertEqual(sim.player.health, sim.save.progression.maxHealth)
-        XCTAssertTrue(sim.save.progression.has(.leier), "Die Leier ist von Anfang an dabei")
+        XCTAssertEqual(sim.player.health, sim.player.maxHealth)
+        XCTAssertTrue(sim.save.progression.has(.stimmgabel), "Die Stimmgabel steckt von Anfang an in ihr")
         XCTAssertFalse(sim.save.progression.has(.trommel))
         XCTAssertTrue(sim.save.progression.abilities.isEmpty)
     }

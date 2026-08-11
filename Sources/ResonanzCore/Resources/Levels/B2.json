@@ -95,6 +95,12 @@
    "id": "enge_fassung",
    "x": 41,
    "y": 6
+  },
+  {
+   "kind": "siegel",
+   "id": "stille",
+   "x": 6,
+   "y": 26
   }
  ],
  "decor": [

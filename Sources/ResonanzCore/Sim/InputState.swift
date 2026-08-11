@@ -17,11 +17,13 @@ public struct PlayerInput: Sendable, Equatable {
     public var interactPressed: Bool
 
     /// Direktwahl eines Instruments, sonst `nil`.
-    public var selectInstrument: Instrument?
+    public var selectKern: Kern?
     /// Durchschalten: -1 zurueck, +1 vor.
-    public var cycleInstrument: Int
+    public var cycleKern: Int
     /// Fassung wechseln - wirkt nur an der Stimmgabel.
     public var cycleEquipment: Int
+    /// Siegel an dieser Stelle der Fundliste umschalten - nur an der Stimmgabel.
+    public var toggleSiegel: Int?
 
     public init(moveX: Double = 0,
                 aimY: Double = 0,
@@ -32,9 +34,10 @@ public struct PlayerInput: Sendable, Equatable {
                 dashPressed: Bool = false,
                 slamPressed: Bool = false,
                 interactPressed: Bool = false,
-                selectInstrument: Instrument? = nil,
-                cycleInstrument: Int = 0,
-                cycleEquipment: Int = 0) {
+                selectKern: Kern? = nil,
+                cycleKern: Int = 0,
+                cycleEquipment: Int = 0,
+                toggleSiegel: Int? = nil) {
         self.moveX = moveX
         self.aimY = aimY
         self.jumpHeld = jumpHeld
@@ -44,9 +47,10 @@ public struct PlayerInput: Sendable, Equatable {
         self.dashPressed = dashPressed
         self.slamPressed = slamPressed
         self.interactPressed = interactPressed
-        self.selectInstrument = selectInstrument
-        self.cycleInstrument = cycleInstrument
+        self.selectKern = selectKern
+        self.cycleKern = cycleKern
         self.cycleEquipment = cycleEquipment
+        self.toggleSiegel = toggleSiegel
     }
 
     public static let neutral = PlayerInput()

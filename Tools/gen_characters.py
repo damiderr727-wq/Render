@@ -52,8 +52,10 @@ def _profile(t: float, instrument: str) -> float:
         a, low, high = 12.0, 0.30, 0.85    # schwer, breiter Bauch tief unten
     elif instrument == "floete":
         a, low, high = 7.2, 0.55, 0.40     # schmal, hoch, spitz
-    else:
+    elif instrument == "leier":
         a, low, high = 9.4, 0.38, 0.60     # ausgewogen
+    else:
+        a, low, high = 8.6, 0.42, 0.55     # Stimmgabel: schlank, unauffaellig
     return a * ((t * 1.1 + 0.06) ** low) * ((1 - t) ** high)
 
 
@@ -117,6 +119,95 @@ def _garment_slits(openings: int) -> list[tuple[float, int, float]]:
         out.append((u, seite, laenge))
     return out
 
+
+
+
+# ------------------------------------------------------------------- Kerne
+#
+# Der Kern ist das Ding, das in ihr steckt - der einzige harte Gegenstand an
+# ihr und der Grund, warum sie ueberhaupt eine Gestalt hat. Er ist
+# austauschbar: die Stimmgabel ist nur der erste, den sie findet.
+#
+# Gezeichnet wird er immer nach derselben Regel: der Fuss verliert sich
+# unten in der Masse, der Koerper liegt in ihr, und nur das obere Ende steht
+# frei heraus. So sitzt er *in* ihr und nicht *auf* ihr - egal welcher.
+
+def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
+               phase: float, lean: float, glow: float, mid) -> None:
+    t = 0.52
+    fy = base - t * height
+    fx = cx + lean * t + math.sin(t * 2.6 + phase) * 1.2
+    tilt = 0.16 + lean * 0.02
+
+    # Der Stiel nach unten ist bei allen gleich: er verschwindet in ihr.
+    for i in range(8):
+        col = P.BONE_SH if i < 3 else mix(P.BONE_LO, mid, min(1.0, (i - 3) / 5))
+        c.set(int(fx + tilt * i), int(fy + i), col)
+
+    if kern == "trommel":
+        # Ein schwerer Ring, der quer in ihr liegt. Er steht kaum heraus -
+        # dafuer drueckt er die Gestalt breit.
+        # Er liegt tief, damit die Kerbe darueber frei bleibt - sonst sieht
+        # es aus, als traege sie den Ring als Kopf.
+        c.ellipse(fx, fy - 1, 4.6, 2.9, mix(P.BONE_LO, P.CLOAK, 0.35))
+        c.ring(fx, fy - 1, 4.1, 1.3, P.BONE_SH)
+        c.ring(fx, fy - 1, 4.1, 0.7, P.BONE)
+        c.rect(int(fx) - 4, int(fy) - 1, 9, 1, mix(P.BONE, P.GOLD, 0.45))
+        for side in (-1, 1):
+            c.set(int(fx + side * 4), int(fy - 2), P.GOLD)
+        if glow > 0:
+            c.glow(fx, fy - 1, 7, (P.GOLD[0], P.GOLD[1], P.GOLD[2], int(80 * glow)))
+        return
+
+    if kern == "floete":
+        # Ein einzelner schmaler Stab, weit oben heraus. Er spitzt sie zu.
+        for i in range(13):
+            x = int(fx + tilt * -i * 0.5)
+            c.set(x, int(fy - 1 - i), P.BONE if i % 4 else P.BONE_SH)
+            if i > 2 and i % 4 == 2:
+                c.set(x + 1, int(fy - 1 - i), P.EYE)
+        tipx, tipy = int(fx - tilt * 6.5), int(fy - 14)
+        c.set(tipx, tipy, P.AMBER)
+        c.set(tipx, tipy + 1, mix(P.AMBER, P.BONE, 0.5))
+        if glow > 0:
+            c.glow(tipx, tipy, 6, (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(105 * glow)))
+        return
+
+    if kern == "leier":
+        # Ein Rahmen mit Saiten. Drei Toene zugleich - also drei Faeden, die
+        # zwischen zwei Armen stehen und im Takt mitschwingen.
+        for side in (-1, 1):
+            for i in range(10):
+                bx = int(fx + side * (2.4 + i * 0.30))
+                c.set(bx, int(fy - 1 - i), P.BONE)
+                if i > 6:
+                    c.set(bx, int(fy - 1 - i), mix(P.BONE, P.AMBER, (i - 6) / 3 * 0.7))
+        c.rect(int(fx) - 3, int(fy - 1), 7, 1, P.BONE_SH)
+        for k in range(3):
+            sxx = int(fx) - 1 + k
+            for i in range(9):
+                fade = 0.25 + 0.55 * (0.5 + 0.5 * math.sin(phase * 2 + k * 1.9 + i * 0.4))
+                c.set(sxx, int(fy - 2 - i), mix(P.BONE_LO, P.TRIM, fade))
+        if glow > 0:
+            c.glow(fx, fy - 7, 7, (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(85 * glow)))
+        return
+
+    # Stimmgabel: zwei Zinken, der Steg liegt tief genug, dass die Masse ihn
+    # umschliesst, und die Gestalt franst oberhalb weiter aus.
+    c.rect(int(fx) - 2, int(fy - 1), 5, 2, P.BONE_SH)
+    c.rect(int(fx) - 2, int(fy - 1), 5, 1, P.BONE)
+    for side in (-1, 1):
+        bx = fx + side * 1.5
+        for i in range(9):
+            c.set(int(bx + side * i * 0.34), int(fy - 2 - i), P.BONE)
+            if i > 1:
+                c.set(int(bx + side * i * 0.34) + side, int(fy - 2 - i), P.BONE_SH)
+        tipx, tipy = int(bx + side * 8 * 0.34), int(fy - 11)
+        c.set(tipx, tipy, P.AMBER)
+        c.set(tipx, tipy + 1, mix(P.AMBER, P.BONE, 0.5))
+        if glow > 0:
+            c.glow(tipx, tipy, 5,
+                   (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(95 * glow)), power=2.0)
 
 
 def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
@@ -400,39 +491,9 @@ def draw_heroine(
     c.set(slot_x - 1, slot_y - 2, P.EYE)
     c.set(slot_x + 2, slot_y + 2, P.EYE)
 
-    # --- Die Stimmgabel ---------------------------------------------------
-    #
-    # Sie steckt in ihr, sie sitzt nicht obenauf. Der Steg liegt tief genug,
-    # dass die Masse ihn umschliesst; nach unten laeuft der Stiel weiter und
-    # verliert sich in ihr. Nur die beiden Zinken stehen frei - und die
-    # Gestalt franst oberhalb davon weiter aus, sodass sie hinter den Zinken
-    # noch weitergeht.
-    fork_t = 0.52
-    fy = base - fork_t * height
-    fx = cx + lean * fork_t + math.sin(fork_t * 2.6 + phase) * 1.2
-    tilt = 0.16 + lean * 0.02
-
-    # Stiel nach unten, verschwindet in der Masse.
-    for i in range(8):
-        col = P.BONE_SH if i < 3 else mix(P.BONE_LO, mid, min(1.0, (i - 3) / 5))
-        c.set(int(fx + tilt * i), int(fy + i), col)
-
-    # Steg - er liegt in der Gestalt, deshalb schmal und gedeckt.
-    c.rect(int(fx) - 2, int(fy - 1), 5, 2, P.BONE_SH)
-    c.rect(int(fx) - 2, int(fy - 1), 5, 1, P.BONE)
-
-    for side in (-1, 1):
-        bx = fx + side * 1.5
-        for i in range(9):
-            c.set(int(bx + side * i * 0.34), int(fy - 2 - i), P.BONE)
-            if i > 1:
-                c.set(int(bx + side * i * 0.34) + side, int(fy - 2 - i), P.BONE_SH)
-        tipx, tipy = int(bx + side * 8 * 0.34), int(fy - 11)
-        c.set(tipx, tipy, P.AMBER)
-        c.set(tipx, tipy + 1, mix(P.AMBER, P.BONE, 0.5))
-        if glow > 0:
-            c.glow(tipx, tipy, 5,
-                   (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(95 * glow)), power=2.0)
+    # --- Der Kern ---------------------------------------------------------
+    _draw_kern(c, kern=kind, cx=cx, base=base, height=height,
+               phase=phase, lean=lean, glow=glow, mid=mid)
 
     if glow > 0:
         c.glow(cx, base - height * 0.45, 11,
@@ -716,7 +777,7 @@ def draw_kantor(phase: float, enraged: bool = False) -> Canvas:
 def build() -> None:
     atlas = Atlas("characters", padding=1, max_width=512)
 
-    for instrument in ("leier", "trommel", "floete"):
+    for instrument in ("stimmgabel", "leier", "trommel", "floete"):
         for garment in GARMENTS:
             for name, frames in hero_animations(instrument, garment).items():
                 atlas.add_sequence(f"cadence_{instrument}_{garment}_{name}", frames,

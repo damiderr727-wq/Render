@@ -418,6 +418,10 @@ def room_A1() -> Room:
     r.spawn_on("start", 8, 7, 1)
     r.bench_on(11, 7)
 
+    # Der erste Fund ueberhaupt: ein zweiter Kern. Er liegt in der Mulde,
+    # also sichtbar, aber unterhalb des Weges - man muss hinunter.
+    r.pickup("kern", "leier", 30, 18)
+
     r.enemy("klangmotte", 30, 10)
     r.enemy("klangmotte", 48, 7)
 
@@ -459,8 +463,9 @@ def room_A2() -> Room:
     r.shaft_door("U", 53, 5, "up", "B1", "N", requires="fluegelschlag")
     r.spawn_on("U", 55, 4, 1)
 
-    r.pickup("instrument", "trommel", 30, 21)
+    r.pickup("kern", "trommel", 30, 21)
     r.pickup("equipment", "offene_fassung", 20, 19)
+    r.pickup("equipment", "cape", 10, 22)
 
     r.enemy("klangmotte", 16, 19)
     r.enemy_on("stilleschreiter", 27, 17, patrol=6)
@@ -500,8 +505,10 @@ def room_A3() -> Room:
 
     r.side_door("L", "left", "A2", "R")
 
-    r.pickup("instrument", "floete", 34, 15)
+    r.pickup("kern", "floete", 34, 15)
     r.pickup("ability", "fluegelschlag", 56, 13)
+    r.pickup("siegel", "federstaub", 14, 16)
+    r.pickup("klinge", "gezackt", 26, 18)
 
     r.enemy("klangmotte", 20, 11)
     r.enemy_on("dissonanzknospe", 32, 8)
@@ -548,6 +555,8 @@ def room_B1() -> Room:
     r.side_door("R", "right", "B3", "L", hint=42)
     r.bench_on(9, 42)
 
+    r.pickup("siegel", "nachhall", 34, 31)
+
     r.enemy("klangmotte", 22, 34)
     r.enemy("klangmotte", 20, 20)
     r.enemy_on("dissonanzknospe", 24, 42)
@@ -586,6 +595,7 @@ def room_B2() -> Room:
 
     r.pickup("ability", "klangschritt", 42, 9)
     r.pickup("equipment", "enge_fassung", 41, 6)
+    r.pickup("siegel", "stille", 6, 26)
 
     r.enemy("echoscherbe", 16, 22)
     r.enemy("echoscherbe", 33, 14)
@@ -629,6 +639,8 @@ def room_B3() -> Room:
     r.shaft_door("N", 36, 5, "down", "C1", "U", requires="herzschlag")
     r.spawn_on("N", 42, 20, 1)
 
+    r.pickup("siegel", "bruchstein", 74, 15)
+
     r.enemy_on("stilleschreiter", 12, 20, patrol=7)
     r.enemy("echoscherbe", 26, 18)
     r.enemy("klangmotte", 38, 6)
@@ -657,6 +669,7 @@ def room_B4() -> Room:
     r.bench_on(6, 6)
 
     r.pickup("ability", "herzschlag", 30, 14)
+    r.pickup("siegel", "dauerton", 12, 17)
 
     r.enemy_on("stilleschreiter", 24, 6, patrol=5)
     r.enemy("echoscherbe", 32, 12)
@@ -703,6 +716,7 @@ def room_C1() -> Room:
     r.bench_on(16, 8)
 
     r.pickup("equipment", "schlagfassung", 48, 10)
+    r.pickup("siegel", "hohlklang", 6, 11)
 
     r.enemy("echoscherbe", 26, 14)
     r.enemy("klangmotte", 36, 10)
@@ -737,6 +751,8 @@ def room_C2() -> Room:
             r.platform(22, y, 8)
 
     r.spikes(21, 35, 10)
+
+    r.pickup("klinge", "glas", 38, 8)
 
     r.side_door("L", "left", "C1", "R", hint=34)
     r.side_door("R", "right", "C3", "L", hint=6)
@@ -777,6 +793,7 @@ def room_C3() -> Room:
     r.side_door("R", "right", "D0", "L", hint=7, requires="basston")
 
     r.pickup("equipment", "gerissenes_gewand", 55, 17)
+    r.pickup("siegel", "windschliff", 46, 10)
 
     r.enemy_on("stilleschreiter", 18, 7, patrol=5)
     r.enemy_on("dissonanzknospe", 34, 7)

@@ -173,7 +173,7 @@ public struct ReachabilityProbe {
         -> (landing: Surface?, touched: Set<String>) {
         let player = Player(position: standPosition(start),
                             progression: progression,
-                            instrument: .leier)
+                            kern: .leier)
         player.placeAt(standPosition(start), facing: 1)
 
         var touched: Set<String> = []
@@ -273,7 +273,7 @@ public struct ReachabilityProbe {
             let (landing, _) = fly(from: start, program: program, targets: [])
             // Denselben Lauf noch einmal, um den Endzustand zu beschreiben.
             let player = Player(position: standPosition(start), progression: progression,
-                                instrument: .leier)
+                                kern: .leier)
             player.placeAt(standPosition(start), facing: 1)
             var events: [GameEvent] = []
             var t = 0.0

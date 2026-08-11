@@ -479,6 +479,53 @@ def fx_ring(frame: int, frames: int, tint, max_r: float, thickness: float = 2) -
     return c
 
 
+
+def fx_klinge(frame: int, frames: int, art: str) -> Canvas:
+    """
+    Der Schlagbogen einer Schallklinge.
+
+    Alle Klingen schlagen gleich - der Bogen ist das Einzige, woran man
+    sieht, welche man fuehrt. Deshalb steckt hier die ganze Vielfalt und
+    sonst nirgends: dieselbe Bewegung, drei Handschriften.
+    """
+    dim = 40
+    c = Canvas(dim, dim)
+    cx = cy = dim / 2
+    t = frame / max(1, frames - 1)
+    r = 8 + t * 10
+    a = int(240 * (1 - t) ** 1.3)
+    # Der Bogen laeuft von oben nach unten durch und wird dabei duenner.
+    spann = math.pi * (0.62 + t * 0.22)
+    mitte = -math.pi / 2 + math.pi * (0.10 + t * 0.55)
+    tint = {"schlicht": P.GLOW, "gezackt": P.GOLD, "glas": P.BLOOM}[art]
+
+    schritte = 44
+    for i in range(schritte + 1):
+        u = i / schritte
+        winkel = mitte - spann / 2 + spann * u
+        dicke = (1 - abs(u - 0.5) * 1.7) * (2.4 - t * 1.4)
+        if art == "gezackt":
+            # Der Bogen bricht in Zacken, statt sauber durchzulaufen.
+            dicke *= 0.55 + 0.75 * ((i // 4) % 2)
+        if art == "glas":
+            # Zwei duenne Bahnen statt einer breiten.
+            dicke *= 0.5
+        if dicke <= 0:
+            continue
+        for k in range(int(dicke) + 1):
+            rr = r + k - dicke / 2
+            x = cx + math.cos(winkel) * rr
+            y = cy + math.sin(winkel) * rr
+            fade = int(a * (1 - abs(u - 0.5) * 0.8))
+            c.blend(int(x), int(y), (tint[0], tint[1], tint[2], max(0, fade)))
+        if art == "glas":
+            for versatz in (-3, 3):
+                x = cx + math.cos(winkel) * (r + versatz)
+                y = cy + math.sin(winkel) * (r + versatz)
+                c.blend(int(x), int(y), (tint[0], tint[1], tint[2], int(a * 0.5)))
+    return c
+
+
 def fx_note(kind: int, tint) -> Canvas:
     """Notenkopf als Geschoss - der sichtbare Ton."""
     c = Canvas(12, 14)
@@ -656,6 +703,92 @@ def fx_equipment_sigil(openings: int, tint, frame: int) -> Canvas:
     return c
 
 
+
+# Siegel. Die Kerben am Rand sind die Kosten - man sieht dem Fundstueck
+# also an, was es belegt, bevor man es aufhebt.
+SIEGEL_SIGILS = {
+    "nachhall":   (1, P.GLOW),
+    "dauerton":   (2, P.TRIM),
+    "bruchstein": (2, P.STONE_HI),
+    "federstaub": (1, P.BLOOM),
+    "windschliff": (3, hexc("#9fe8ff")),
+    "hohlklang":  (2, P.WARM),
+    "stille":     (1, P.BONE_SH),
+}
+
+
+
+# Die Klingen. Sie unterscheiden sich nur im Bild - deshalb steht hier auch
+# nur ein Umriss und kein Wert.
+KLINGEN_SIGILS = {
+    "schlicht": P.GLOW,
+    "gezackt": P.GOLD,
+    "glas": P.BLOOM,
+}
+
+
+def fx_klingen_sigil(art: str, tint, frame: int) -> Canvas:
+    """Das Siegel einer Schallklinge: die Klinge selbst, senkrecht stehend."""
+    c = Canvas(28, 28)
+    cx, cy = 14, 15
+    p = 0.5 + 0.5 * math.sin(frame / 6 * math.tau)
+    kante = mix(tint, P.BONE, 0.55)
+
+    # Griff
+    c.rect(cx - 1, cy + 5, 3, 5, mix(P.BONE_LO, P.CLOAK, 0.4))
+    c.rect(cx - 3, cy + 4, 7, 1, mix(tint, P.BONE_SH, 0.4))
+
+    # Blatt: nach oben schmaler werdend.
+    for i in range(15):
+        t = i / 14
+        w = max(1, int(3.2 * (1 - t) ** 0.6))
+        y = cy + 3 - i
+        if art == "gezackt" and i % 3 == 2:
+            w += 1
+        for dx in range(-w, w + 1):
+            rand = abs(dx) >= w
+            if art == "glas" and abs(dx) < w - 1 and i % 2:
+                continue                       # durchscheinend
+            c.set(cx + dx, y, kante if rand else mix(tint, P.INK, 0.45))
+    c.set(cx, cy - 12, mix(tint, P.BONE, 0.8))
+    c.glow(cx, cy - 4, 11, (tint[0], tint[1], tint[2], int(40 + 45 * p)))
+    return c
+
+
+def fx_siegel(kerben: int, tint, frame: int) -> Canvas:
+    """
+    Das Siegel eines Splitters: eine Scheibe mit so vielen Kerben am Rand,
+    wie sie belegt. Innen ein Zeichen, das mit dem Takt aufleuchtet.
+    """
+    c = Canvas(28, 28)
+    cx = cy = 14
+    p = 0.5 + 0.5 * math.sin(frame / 6 * math.tau)
+    ink = mix(tint, P.INK, 0.62)
+
+    kerbwinkel = [(-math.pi / 2 + i * math.tau / max(1, kerben)) % math.tau
+                  for i in range(kerben)]
+    for i in range(240):
+        a = i / 240 * math.tau
+        gekerbt = any(min(abs(a - k), math.tau - abs(a - k)) < 0.22 for k in kerbwinkel)
+        r = 8.2 - (2.6 if gekerbt else 0)
+        x, y = cx + math.cos(a) * r, cy + math.sin(a) * r
+        c.set(int(round(x)), int(round(y)), tint if not gekerbt else mix(tint, P.INK, 0.4))
+
+    # Fuellung
+    for y in range(28):
+        for x in range(28):
+            d = math.hypot(x - cx, y - cy)
+            if d < 7.0:
+                c.blend(x, y, (ink[0], ink[1], ink[2], 205))
+
+    # Das Zeichen: ein liegender Ton, der im Takt heller wird.
+    c.rect(cx - 3, cy - 1, 7, 1, mix(tint, P.BONE, 0.3 + 0.5 * p))
+    c.set(cx - 4, cy, tint)
+    c.set(cx + 4, cy - 2, tint)
+    c.glow(cx, cy, 11, (tint[0], tint[1], tint[2], int(45 + 35 * p)))
+    return c
+
+
 def fx_sigil(kind: str, frame: int) -> Canvas:
     """Siegel: das schwebende Zeichen eines Fundstuecks vor dem Aufnehmen."""
     tint = SIGIL_TINTS[kind]
@@ -742,6 +875,14 @@ def build() -> None:
     for kind in SIGIL_TINTS:
         props.add_sequence(f"sigil_{kind}", [fx_sigil(kind, f) for f in range(6)],
                            pivot=(0.5, 0.5), fps=8)
+    for kid, tint in KLINGEN_SIGILS.items():
+        props.add_sequence(f"sigil_klinge_{kid}",
+                           [fx_klingen_sigil(kid, tint, f) for f in range(6)],
+                           pivot=(0.5, 0.5), fps=8)
+    for sid, (kerben, tint) in SIEGEL_SIGILS.items():
+        props.add_sequence(f"sigil_{sid}",
+                           [fx_siegel(kerben, tint, f) for f in range(6)],
+                           pivot=(0.5, 0.5), fps=8)
     for eid, (openings, tint) in EQUIPMENT_SIGILS.items():
         props.add_sequence(f"sigil_{eid}",
                            [fx_equipment_sigil(openings, tint, f) for f in range(6)],
@@ -750,10 +891,18 @@ def build() -> None:
     print(f"props      -> {png.name} ({len(props.frames)} Frames)")
 
     fx = Atlas("fx", padding=1, max_width=512)
-    for name, tint, r in (("ring_leier", P.GLOW, 22), ("ring_trommel", P.GOLD, 30), ("ring_floete", P.BLOOM, 16)):
+    # Klangringe nach Groesse - sie gehoeren keiner Waffe.
+    for name, tint, r in (("ring_mittel", P.GLOW, 22), ("ring_gross", P.GOLD, 30),
+                          ("ring_klein", P.BLOOM, 16)):
         fx.add_sequence(name, [fx_ring(f, 5, tint, r) for f in range(5)], pivot=(0.5, 0.5), fps=24)
-    for i, (name, tint) in enumerate((("note_leier", P.GLOW), ("note_trommel", P.GOLD), ("note_floete", P.BLOOM))):
+    # Die Schlagboegen der Klingen.
+    for art in ("schlicht", "gezackt", "glas"):
+        fx.add_sequence(f"klinge_{art}", [fx_klinge(f, 5, art) for f in range(5)],
+                        pivot=(0.5, 0.5), fps=26)
+    for i, (name, tint) in enumerate((("note_leier", P.GLOW), ("note_trommel", P.GOLD),
+                                      ("note_floete", P.BLOOM))):
         fx.add(name, fx_note(i, tint), pivot=(0.5, 0.5))
+    fx.add("note_stimmgabel", fx_note(1, P.TRIM), pivot=(0.5, 0.5))
     fx.add("note_dissonanz", fx_note(2, P.ROT), pivot=(0.5, 0.5))
     fx.add_sequence("feather", [fx_feather(f) for f in range(4)], pivot=(0.5, 0.5), fps=18)
     fx.add_sequence("heartbeat", [fx_heart(f) for f in range(4)], pivot=(0.5, 0.5), fps=18)

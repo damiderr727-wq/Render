@@ -78,7 +78,7 @@
  ],
  "pickups": [
   {
-   "kind": "instrument",
+   "kind": "kern",
    "id": "floete",
    "x": 34,
    "y": 15
@@ -88,6 +88,18 @@
    "id": "fluegelschlag",
    "x": 56,
    "y": 13
+  },
+  {
+   "kind": "siegel",
+   "id": "federstaub",
+   "x": 14,
+   "y": 16
+  },
+  {
+   "kind": "klinge",
+   "id": "gezackt",
+   "x": 26,
+   "y": 18
   }
  ],
  "decor": [

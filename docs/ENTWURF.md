@@ -130,6 +130,113 @@ des Fundstücks zeigt denselben Querschnitt: so viele Lücken wie
 Strahlen. Ein Test prüft, dass es zu jeder Fassung im Katalog auch Bilder
 gibt, sonst driften Zahlen und Zeichnung auseinander.
 
+## Was sie traegt
+
+Vier Steckplaetze, und jeder beantwortet genau eine Frage. Das ist die
+ganze Ordnung — sobald zwei Dinge dasselbe beeinflussen, weiss niemand
+mehr, warum sich etwas anders anfuehlt.
+
+| Steckplatz | Beantwortet | Wechselbar |
+| --- | --- | --- |
+| **Kern** | Wie ihre Magie aussieht — und wie sie gebaut ist | ja, im Lauf des Spiels |
+| **Fassung** | Wie sie zuschlaegt, und was sie aushaelt | ja, an der Stimmgabel |
+| **Klinge** | Wie der Schlag aussieht. Sonst nichts | ja, jederzeit |
+| **Siegel** | Alles, was man selbst dazuwaehlt | ja, an der Stimmgabel |
+
+Dazu kommen die **Faehigkeiten** — Fluegelschlag, Klangschritt, Herzschlag,
+Basston. Die stehen ausserhalb dieser Ordnung: sie werden nie getauscht,
+nur gefunden, und sie liegen abseits des Wegs. Wer sie hat, hat sie.
+
+### Der Kern — das Ding, das in ihr steckt
+
+Cadence ist formlos. Der Kern ist der einzige harte Gegenstand an ihr und
+der Grund, warum sie ueberhaupt eine Gestalt hat. Er ist **austauschbar** —
+die Stimmgabel ist nur der erste, den sie findet.
+
+| Kern | Magiestil | Anlage |
+| --- | --- | --- |
+| Stimmgabel | zwei saubere Toene | keine Verschiebung |
+| Leier | Dreiklang, weit gestreut | traegt weiter, klingt schneller nach |
+| Trommel | Druckkugel, durchschlaegt | schwer: zaeher, aber langsamer |
+| Floete | Stich, schnell und schmal | spitz: schneller, aber duenner |
+
+Er verformt auch ihre Silhouette: die Trommel drueckt sie breit, die
+Floete spitzt sie zu. Man sieht ihr also an, welche Magie sie fuehrt, ohne
+dass sie etwas in der Hand haelt.
+
+Gezeichnet wird jeder Kern nach derselben Regel: der Fuss verliert sich
+unten in ihrer Masse, der Koerper liegt in ihr, und nur das obere Ende
+steht frei heraus. So sitzt er *in* ihr und nicht *auf* ihr.
+
+### Die Klinge — die Waffe, die nie staerker wird
+
+Die Schallklinge ist die Standardwaffe und bleibt es. Alle Klingen
+funktionieren **gleich**; was sich unterscheidet, ist allein der
+Schlagbogen. Damit ist eine gefundene Klinge nie ein Machtzuwachs, sondern
+eine Entscheidung darueber, wie man aussehen will — und der Kampf bleibt
+dort, wo er hingehoert: bei der Fassung und beim Kern.
+
+### Der Kampfstil kommt aus der Ruestung
+
+Nicht die Waffe entscheidet, wie sie zuschlaegt, sondern das, was ihr
+Platz laesst. Ein Harnisch mit einer einzigen Oeffnung erlaubt nur einen
+Stich; ein offenes Gewand einen Wirbel um sie herum.
+
+| Fassung | Stil | Schlag |
+| --- | --- | --- |
+| Schlichter Mantel | Bogen | weit, ausgewogen |
+| Wehendes Cape | Hetze | zwei schnelle statt einem grossen |
+| Enge Fassung | Stich | lang und schmal, trifft nur nach vorn |
+| Offene Fassung | Wirbel | rundum, auch nach hinten |
+| Schlagfassung | Sturz | schwer und langsam, dafuer reisst es |
+| Gerissenes Gewand | Hetze | schnell, kaum Wucht |
+
+Man wechselt also nicht die Waffe, um anders zu kaempfen, sondern das, was
+man traegt. Das ist derselbe Gedanke wie bei den Oeffnungen: die Ruestung
+ist kein Zahlenaufschlag, sie ist eine Form, aus der alles Weitere folgt.
+
+### Siegel — Kerben statt Sammlung
+
+Sieben Siegel, drei Kerben. Alle zusammen kosten zwoelf, man kann also nie
+mehr als ein Viertel davon tragen. Der Reiz liegt nicht im Sammeln,
+sondern im Weglassen — und ein Test haelt das fest: waeren die Kerben je
+gross genug fuer alles, waere die Auswahl keine Entscheidung mehr.
+
+Angelegt wird nur an der Stimmgabel. Ein Siegel sitzt nicht in der
+Tasche, es steckt in ihr.
+
+### Wie sich das zusammenrechnet
+
+Fassung, Kern und Siegel liefern jeweils eine Handvoll Faktoren um 1.0,
+und die **multiplizieren** sich. Keine Quelle kann eine andere
+ueberschreiben; jede bleibt fuer sich lesbar. Am Ende steht eine einzige
+Tabelle — `Stats` —, und der Spieler fragt nie mehr direkt `Tuning`.
+Dadurch wirkt ein neuer Kern, eine neue Fassung, ein neues Siegel ueberall
+zugleich: Lauf, Sprung, Sprint, Reichweite, Wucht, Zusammenhalt.
+
+## Leben in halben Kristallen
+
+Gerechnet wird intern in Haelften, gezeigt werden Kristalle: jeder besteht
+aus zwei Dreiecken, und jedes davon kann leer sein. Fuenf Kristalle sind
+also zehn Haelften.
+
+Das ist kein Zierat. Es macht einen Schlag von **anderthalb** moeglich —
+und damit eine Sorte Gegner, gegen die man anders rechnet:
+
+- Klangmotte, Knospe, Scherbe nehmen einen ganzen Kristall (zwei Haelften)
+- Der Stilleschreiter nimmt anderthalb (drei)
+- Der Verstimmte Kantor nimmt anderthalb
+
+Daraus folgt von selbst die Regel, um die es eigentlich geht: **auf einem
+halben Kristall ueberlebt sie nichts mehr.** Der kleinstmoegliche Treffer
+ist dort der letzte. Ein halber Kristall ist keine Reserve, er ist eine
+Warnung.
+
+Der Zusammenhalt der Fassung rechnet ebenfalls auf Haelften — sonst waere
+jede kleine Verschiebung gleich ein ganzes Herz. Das gerissene Gewand
+(Faktor 0,6) laesst von fuenf Kristallen drei uebrig, die Schlagfassung
+(1,2) macht sechs daraus.
+
 ## Die Werteordnung
 
 Der zweite große Fehler des ersten Entwurfs: alles lag im selben
@@ -279,12 +386,10 @@ flach, und das soll er auch sein.
 
 ## Der Kampf
 
-Die Waffe ist der Schall. Das Instrument gibt ihm nur die Form. Deshalb
-gibt es keine Waffenliste, die länger wird, sondern drei Handschriften:
-
-- **Leier** — ausgewogen. Weiter Bogen, drei Töne in die Ferne.
-- **Trommel** — Wucht und Rückstoß, kurze Reichweite, lange Erholung.
-- **Flöte** — schnell und spitz, wenig Schaden, wenig Kosten.
+Die Waffe ist der Schall. Deshalb gibt es keine Waffenliste, die länger
+wird — die Schallklinge bleibt, was sie ist, und der Kampf ändert sich
+woanders: **die Fassung bestimmt den Schlag, der Kern den Fernklang.**
+Beides steht oben unter „Was sie trägt“.
 
 Der Kreislauf hält die Figur in Bewegung: Fernkampf kostet Resonanz,
 Nahkampftreffer geben sie zurück. Wer auf Abstand bleibt, verhungert. Wer

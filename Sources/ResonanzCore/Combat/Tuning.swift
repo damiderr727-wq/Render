@@ -52,7 +52,9 @@ public enum Tuning {
     public static let hurtKnockbackX: Double = 175
     public static let hurtKnockbackY: Double = -215
     public static let hurtControlLock: Double = 0.22
-    public static let spikeDamage: Int = 1
+    /// Schaden an der Figur wird in halben Kristallen gerechnet: ein
+    /// voller Kristall sind zwei. Dornen nehmen einen ganzen.
+    public static let spikeDamage: Int = 2
 
     // MARK: Resonanz
     public static let resonanceRegen: Double = 2.5
@@ -67,26 +69,16 @@ public enum Tuning {
     public static let cameraSmoothing: Double = 0.11
     public static let cameraVerticalDeadzone: Double = 18
 
-    // MARK: Kampfwerte je Instrument
-    public static func melee(_ instrument: Instrument) -> MeleeProfile {
-        switch instrument {
-        case .leier:
-            return MeleeProfile(reach: 30, halfHeight: 15, damage: 2,
-                                cooldown: 0.30, knockback: 130, shape: .arc,
-                                windup: 0.045, active: 0.10)
-        case .trommel:
-            return MeleeProfile(reach: 24, halfHeight: 24, damage: 4,
-                                cooldown: 0.52, knockback: 290, shape: .radial,
-                                windup: 0.085, active: 0.13)
-        case .floete:
-            return MeleeProfile(reach: 34, halfHeight: 9, damage: 1,
-                                cooldown: 0.17, knockback: 70, shape: .thrust,
-                                windup: 0.02, active: 0.07)
-        }
-    }
-
-    public static func ranged(_ instrument: Instrument) -> RangedProfile {
-        switch instrument {
+    // MARK: Fernklang je Kern
+    //
+    // Der Nahkampf steht nicht hier, sondern beim Kampfstil: er haengt an
+    // der Fassung, nicht am Kern. Hier steht nur, was in die Ferne geht.
+    public static func ranged(_ kern: Kern) -> RangedProfile {
+        switch kern {
+        case .stimmgabel:
+            return RangedProfile(damage: 1, speed: 320, cost: 12, cooldown: 0.26,
+                                 count: 2, spread: 0.13, radius: 4,
+                                 pierces: 0, lifetime: 1.0, gravity: 60)
         case .leier:
             return RangedProfile(damage: 1, speed: 300, cost: 14, cooldown: 0.28,
                                  count: 3, spread: 0.20, radius: 5,

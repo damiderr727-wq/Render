@@ -30,7 +30,7 @@ final class PhysicsTests: XCTestCase {
                             abilities: Set<Ability> = []) -> Player {
         let progression = Progression(abilities: abilities)
         let player = Player(position: Vec2.tiles(tile.x, tile.y),
-                            progression: progression, instrument: .leier)
+                            progression: progression, kern: .leier)
         player.placeAt(Vec2.tiles(tile.x, tile.y), facing: 1)
         return player
     }

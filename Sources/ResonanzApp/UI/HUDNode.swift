@@ -3,14 +3,14 @@ import Foundation
 import SpriteKit
 import ResonanzCore
 
-/// Die Anzeige: Notenherzen, Resonanzbogen, aktives Instrument, Hinweise.
+/// Die Anzeige: Notenherzen, Resonanzbogen, aktives Kern, Hinweise.
 /// Sie haengt an der Kamera und bewegt sich deshalb nicht mit der Welt.
 public final class HUDNode: SKNode {
 
     private let hearts = SKNode()
     private let resonanceBar = SKShapeNode()
     private let resonanceFill = SKShapeNode()
-    private let instrumentLabel = SKLabelNode()
+    private let kernLabel = SKLabelNode()
     private let equipmentLabel = SKLabelNode()
     private let promptLabel = SKLabelNode()
     private let hintLabel = SKLabelNode()
@@ -22,7 +22,11 @@ public final class HUDNode: SKNode {
     private let bossFill = SKShapeNode()
     private let bossLabel = SKLabelNode()
 
+    private let kerben = SKNode()
+    private let siegelLabel = SKLabelNode()
     private var heartNodes: [SKShapeNode] = []
+    private var lastKerbenBelegt = -1
+    private var lastKerbenTotal = -1
     private var lastHealth = -1
     private var lastMaxHealth = -1
 
@@ -53,15 +57,23 @@ public final class HUDNode: SKNode {
         resonanceFill.position = resonanceBar.position
         addChild(resonanceFill)
 
-        style(instrumentLabel, size: 8, color: glow)
-        instrumentLabel.horizontalAlignmentMode = .left
-        instrumentLabel.position = CGPoint(x: left + 10, y: top - 42)
-        addChild(instrumentLabel)
+        style(kernLabel, size: 8, color: glow)
+        kernLabel.horizontalAlignmentMode = .left
+        kernLabel.position = CGPoint(x: left + 10, y: top - 42)
+        addChild(kernLabel)
 
         style(equipmentLabel, size: 6, color: SKColor(white: 0.62, alpha: 1))
         equipmentLabel.horizontalAlignmentMode = .left
         equipmentLabel.position = CGPoint(x: left + 10, y: top - 52)
         addChild(equipmentLabel)
+
+        kerben.position = CGPoint(x: left + 10, y: top - 62)
+        addChild(kerben)
+
+        style(siegelLabel, size: 5, color: bloom)
+        siegelLabel.horizontalAlignmentMode = .left
+        siegelLabel.position = CGPoint(x: left + 10, y: top - 72)
+        addChild(siegelLabel)
 
         style(promptLabel, size: 7, color: SKColor(white: 0.85, alpha: 1))
         promptLabel.position = CGPoint(x: 0, y: -size.height / 2 + 28)
@@ -139,15 +151,21 @@ public final class HUDNode: SKNode {
                                     cornerWidth: 1, cornerHeight: 1, transform: nil)
         resonanceFill.fillColor = fraction < 0.2 ? rot : glow
 
-        instrumentLabel.text = sim.player.instrument.displayName
+        updateKerben(progression: sim.save.progression)
+        kernLabel.text = "\(sim.player.kern.displayName)   \(sim.save.progression.equipment.stil.displayName)"
         let fassung = sim.save.progression.equipment
         equipmentLabel.text = "\(fassung.name)  \(fassung.openings) OEFFNUNGEN"
 
         // An der Stimmgabel darf sie sich neu fassen - nur dort.
         if sim.player.isResting {
-            promptLabel.text = sim.save.progression.ownedEquipment.count > 1
-                ? "[F] AUFBRECHEN     [,] [.] FASSUNG WECHSELN"
-                : "[F] AUFBRECHEN"
+            var teile = ["[F] AUFBRECHEN"]
+            if sim.save.progression.ownedEquipment.count > 1 {
+                teile.append("[,] [.] FASSUNG")
+            }
+            if !sim.save.progression.ownedSiegel.isEmpty {
+                teile.append("[4]-[9] SIEGEL")
+            }
+            promptLabel.text = teile.joined(separator: "     ")
         } else {
             switch sim.prompt {
             case .none:
@@ -177,18 +195,38 @@ public final class HUDNode: SKNode {
         }
     }
 
+    /// Lebenskristalle. Gerechnet wird in Haelften, gezeigt werden ganze
+    /// Kristalle - jeder kann voll, halb oder leer sein. Ein halber ist
+    /// nicht bloss Zierde: mancher Schlag nimmt anderthalb, und auf einem
+    /// halben Kristall ueberlebt sie nichts mehr.
     private func updateHearts(health: Int, max maxHealth: Int) {
         guard health != lastHealth || maxHealth != lastMaxHealth else { return }
         let verloren = health < lastHealth
         lastHealth = health
         lastMaxHealth = maxHealth
 
-        if heartNodes.count != maxHealth {
+        let kristalle = (maxHealth + 1) / 2
+        if heartNodes.count != kristalle * 2 {
             hearts.removeAllChildren()
-            heartNodes = (0..<maxHealth).map { index in
-                // Ein Notenkopf als Lebenszeichen.
-                let node = SKShapeNode(ellipseOf: CGSize(width: 7, height: 5))
-                node.position = CGPoint(x: CGFloat(index) * 10, y: 0)
+            heartNodes = (0..<(kristalle * 2)).map { index in
+                // Jeder Kristall besteht aus zwei Haelften, die nebeneinander
+                // liegen - so ist der halbe Stand ohne Zahl ablesbar.
+                let links = index % 2 == 0
+                let path = CGMutablePath()
+                let w: CGFloat = 3.4, h: CGFloat = 5.5
+                if links {
+                    path.move(to: CGPoint(x: w, y: h))
+                    path.addLine(to: CGPoint(x: 0, y: 0))
+                    path.addLine(to: CGPoint(x: w, y: -h))
+                } else {
+                    path.move(to: CGPoint(x: 0, y: h))
+                    path.addLine(to: CGPoint(x: w, y: 0))
+                    path.addLine(to: CGPoint(x: 0, y: -h))
+                }
+                path.closeSubpath()
+                let node = SKShapeNode(path: path)
+                node.position = CGPoint(x: CGFloat(index / 2) * 11
+                                          + (links ? 0 : 3.9), y: 0)
                 node.lineWidth = 1
                 hearts.addChild(node)
                 return node
@@ -197,13 +235,34 @@ public final class HUDNode: SKNode {
 
         for (index, node) in heartNodes.enumerated() {
             let voll = index < health
-            node.fillColor = voll ? SKColor(white: 0.95, alpha: 1) : SKColor(white: 1, alpha: 0.08)
-            node.strokeColor = voll ? glow : SKColor(white: 1, alpha: 0.25)
-            if verloren && index == health {
-                node.run(.sequence([.scale(to: 1.8, duration: 0.08),
+            node.fillColor = voll ? SKColor(white: 0.95, alpha: 1) : SKColor(white: 1, alpha: 0.07)
+            node.strokeColor = voll ? glow : SKColor(white: 1, alpha: 0.22)
+            if verloren && index >= health && index < lastHealth + 3 {
+                node.run(.sequence([.scale(to: 1.7, duration: 0.08),
                                     .scale(to: 1.0, duration: 0.18)]))
             }
         }
+    }
+
+    /// Die Kerbenleiste: belegte und freie Kerben, dahinter die angelegten
+    /// Siegel. Man sieht auf einen Blick, was man traegt und was noch ginge.
+    private func updateKerben(progression: Progression) {
+        let belegt = progression.kerbenBelegt
+        let gesamt = progression.kerbenTotal
+        guard belegt != lastKerbenBelegt || gesamt != lastKerbenTotal else { return }
+        lastKerbenBelegt = belegt
+        lastKerbenTotal = gesamt
+
+        kerben.removeAllChildren()
+        for i in 0..<gesamt {
+            let node = SKShapeNode(circleOfRadius: 2.2)
+            node.position = CGPoint(x: CGFloat(i) * 7, y: 0)
+            node.lineWidth = 1
+            node.fillColor = i < belegt ? bloom : SKColor(white: 1, alpha: 0.06)
+            node.strokeColor = i < belegt ? bloom : SKColor(white: 1, alpha: 0.22)
+            kerben.addChild(node)
+        }
+        siegelLabel.text = progression.siegel.map(\.name).joined(separator: "  ")
     }
 
     // MARK: - Einblendungen
@@ -261,9 +320,9 @@ public final class HUDNode: SKNode {
         ]))
     }
 
-    public func flashInstrument() {
-        instrumentLabel.removeAllActions()
-        instrumentLabel.run(.sequence([
+    public func flashKern() {
+        kernLabel.removeAllActions()
+        kernLabel.run(.sequence([
             .scale(to: 1.4, duration: 0.07),
             .scale(to: 1.0, duration: 0.14),
         ]))

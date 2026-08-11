@@ -84,6 +84,12 @@
    "id": "herzschlag",
    "x": 30,
    "y": 14
+  },
+  {
+   "kind": "siegel",
+   "id": "dauerton",
+   "x": 12,
+   "y": 17
   }
  ],
  "decor": [

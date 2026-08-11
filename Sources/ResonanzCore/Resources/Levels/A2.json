@@ -121,7 +121,7 @@
  ],
  "pickups": [
   {
-   "kind": "instrument",
+   "kind": "kern",
    "id": "trommel",
    "x": 30,
    "y": 21
@@ -131,6 +131,12 @@
    "id": "offene_fassung",
    "x": 20,
    "y": 19
+  },
+  {
+   "kind": "equipment",
+   "id": "cape",
+   "x": 10,
+   "y": 22
   }
  ],
  "decor": [

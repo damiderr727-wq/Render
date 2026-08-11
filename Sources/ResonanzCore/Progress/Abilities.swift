@@ -44,79 +44,126 @@ public enum Ability: String, Codable, Sendable, CaseIterable {
     }
 }
 
-/// Die drei Startinstrumente. Die Waffe ist immer der Schall selbst -
-/// das Instrument bestimmt nur seine Form.
-public enum Instrument: String, Codable, Sendable, CaseIterable {
-    /// Ausgewogen: weiter Bogen im Nahkampf, Dreiklang in die Ferne.
-    case leier
-    /// Schwer: kurze Reichweite, dafuer Wucht und Rueckstoss.
-    case trommel
-    /// Schnell und spitz: sticht, durchschlaegt, kostet wenig.
-    case floete
-
-    public var displayName: String {
-        switch self {
-        case .leier: return "LEIER"
-        case .trommel: return "TROMMEL"
-        case .floete: return "FLOETE"
-        }
-    }
-
-    public var summary: String {
-        switch self {
-        case .leier: return "AUSGEWOGEN - BOGEN UND DREIKLANG"
-        case .trommel: return "WUCHT - STOSSWELLE UND DRUCKKUGEL"
-        case .floete: return "SCHNELL - STICH UND DURCHSCHLAG"
-        }
-    }
-}
-
 /// Alles, was dauerhaft am Fortschritt haengt.
 public struct Progression: Codable, Sendable, Equatable {
+    /// Was sie kann. Faehigkeiten sind dauerhaft und liegen abseits des Wegs -
+    /// sie werden nie getauscht, nur gefunden.
     public var abilities: Set<Ability>
-    public var instruments: Set<Instrument>
-    public var maxHealth: Int
+    /// Gefundene Kerne und der eingesetzte.
+    public var kerne: Set<Kern>
+    public var kernWorn: Kern
+    /// Lebenskristalle. Gerechnet wird intern in Haelften.
+    public var crystals: Int
     public var maxResonance: Double
     /// Gelesene Inschriften, damit sie nicht erneut aufpoppen.
     public var readLore: Set<String>
-    /// Gefundene Fassungen und die gerade getragene.
+    /// Gefundene Fassungen und die getragene.
     public var equipmentOwned: Set<String>
     public var equipmentWorn: String
+    /// Gefundene Klingen und die gefuehrte. Rein aeusserlich.
+    public var klingenOwned: Set<String>
+    public var klingeWorn: String
+    /// Siegel: gefunden, angelegt, und wie viele Kerben zur Verfuegung stehen.
+    public var siegelOwned: Set<String>
+    public var siegelWorn: [String]
+    public var kerbenTotal: Int
 
     public init(abilities: Set<Ability> = [],
-                instruments: Set<Instrument> = [.leier],
-                maxHealth: Int = 5,
+                kerne: Set<Kern> = [.stimmgabel],
+                kernWorn: Kern = .stimmgabel,
+                crystals: Int = 5,
                 maxResonance: Double = 100,
                 readLore: Set<String> = [],
                 equipmentOwned: Set<String> = [EquipmentCatalog.mantel.id],
-                equipmentWorn: String = EquipmentCatalog.mantel.id) {
-        self.equipmentOwned = equipmentOwned
-        self.equipmentWorn = equipmentWorn
+                equipmentWorn: String = EquipmentCatalog.mantel.id,
+                klingenOwned: Set<String> = [KlingenKatalog.schlicht.id],
+                klingeWorn: String = KlingenKatalog.schlicht.id,
+                siegelOwned: Set<String> = [],
+                siegelWorn: [String] = [],
+                kerbenTotal: Int = 3) {
         self.abilities = abilities
-        self.instruments = instruments
-        self.maxHealth = maxHealth
+        self.kerne = kerne
+        self.kernWorn = kernWorn
+        self.crystals = crystals
         self.maxResonance = maxResonance
         self.readLore = readLore
+        self.equipmentOwned = equipmentOwned
+        self.equipmentWorn = equipmentWorn
+        self.klingenOwned = klingenOwned
+        self.klingeWorn = klingeWorn
+        self.siegelOwned = siegelOwned
+        self.siegelWorn = siegelWorn
+        self.kerbenTotal = kerbenTotal
     }
 
     /// Die getragene Fassung. Ohne eine gueltige faellt sie auf den Mantel
     /// zurueck - ganz ohne Gefaess wuerde sich Cadence aufloesen.
     public var equipment: Equipment {
-        EquipmentCatalog.find(equipmentWorn) ?? EquipmentCatalog.mantel
+        guard equipmentOwned.contains(equipmentWorn),
+              let found = EquipmentCatalog.find(equipmentWorn) else {
+            return EquipmentCatalog.mantel
+        }
+        return found
     }
 
-    public var stats: Stats { Stats(equipment: equipment) }
+    /// Die gefuehrte Klinge. Rein aeusserlich - alle schlagen gleich.
+    public var klinge: Klinge {
+        guard klingenOwned.contains(klingeWorn),
+              let found = KlingenKatalog.find(klingeWorn) else {
+            return KlingenKatalog.schlicht
+        }
+        return found
+    }
+
+    /// Die angelegten Siegel, in der Reihenfolge, in der sie stecken.
+    public var siegel: [Siegel] {
+        siegelWorn.compactMap(SiegelKatalog.find)
+    }
+
+    public var kerbenBelegt: Int { siegel.reduce(0) { $0 + $1.kerben } }
+    public var kerbenFrei: Int { kerbenTotal - kerbenBelegt }
+
+    public var stats: Stats {
+        Stats(equipment: equipment, kern: kernWorn, siegel: siegel)
+    }
 
     public var ownedEquipment: [Equipment] {
         EquipmentCatalog.all.filter { equipmentOwned.contains($0.id) }
     }
 
-    public func has(_ ability: Ability) -> Bool { abilities.contains(ability) }
-    public func has(_ instrument: Instrument) -> Bool { instruments.contains(instrument) }
+    public var ownedKlingen: [Klinge] {
+        KlingenKatalog.all.filter { klingenOwned.contains($0.id) }
+    }
 
-    /// Reihenfolge fuer den Instrumentenwechsel - immer stabil sortiert.
-    public var orderedInstruments: [Instrument] {
-        Instrument.allCases.filter { instruments.contains($0) }
+    public var ownedSiegel: [Siegel] {
+        SiegelKatalog.all.filter { siegelOwned.contains($0.id) }
+    }
+
+    public func has(_ ability: Ability) -> Bool { abilities.contains(ability) }
+    public func has(_ kern: Kern) -> Bool { kerne.contains(kern) }
+
+    /// Reihenfolge fuer den Kernwechsel - immer stabil sortiert.
+    public var orderedKerne: [Kern] {
+        Kern.allCases.filter { kerne.contains($0) }
+    }
+
+    /// Legt ein Siegel an, wenn noch Kerben frei sind. Meldet den Erfolg.
+    @discardableResult
+    public mutating func anlegen(_ siegelID: String) -> Bool {
+        guard siegelOwned.contains(siegelID),
+              !siegelWorn.contains(siegelID),
+              let s = SiegelKatalog.find(siegelID),
+              s.kerben <= kerbenFrei
+        else { return false }
+        siegelWorn.append(siegelID)
+        return true
+    }
+
+    @discardableResult
+    public mutating func ablegen(_ siegelID: String) -> Bool {
+        guard let index = siegelWorn.firstIndex(of: siegelID) else { return false }
+        siegelWorn.remove(at: index)
+        return true
     }
 }
 
@@ -128,7 +175,7 @@ public struct SaveState: Codable, Sendable, Equatable {
     public var roomID: String
     public var spawnName: String
     public var progression: Progression
-    public var instrument: Instrument
+    public var kern: Kern
     /// Zerschlagene Sperren, damit sie zerschlagen bleiben.
     public var brokenWalls: [String: [Int]]
     /// Bereits eingesammelte Fundstuecke ("A3/fluegelschlag").
@@ -138,7 +185,7 @@ public struct SaveState: Codable, Sendable, Equatable {
     public init(roomID: String = "A1",
                 spawnName: String = "start",
                 progression: Progression = Progression(),
-                instrument: Instrument = .leier,
+                kern: Kern = .leier,
                 brokenWalls: [String: [Int]] = [:],
                 collected: Set<String> = [],
                 playTime: Double = 0) {
@@ -146,7 +193,7 @@ public struct SaveState: Codable, Sendable, Equatable {
         self.roomID = roomID
         self.spawnName = spawnName
         self.progression = progression
-        self.instrument = instrument
+        self.kern = kern
         self.brokenWalls = brokenWalls
         self.collected = collected
         self.playTime = playTime

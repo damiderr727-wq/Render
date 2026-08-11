@@ -18,7 +18,8 @@ public struct BossHazard: Sendable {
     /// 0..1 waehrend der Vorwarnung - fuer das Aufleuchten.
     public var warningProgress: Double { warmup <= 0 ? 1 : clamp(age / warmup, 0, 1) }
 
-    public init(rect: Rect, warmup: Double, active: Double, damage: Int = 1, kind: String) {
+    /// `damage` in halben Kristallen: der Kantor nimmt anderthalb.
+    public init(rect: Rect, warmup: Double, active: Double, damage: Int = 3, kind: String) {
         self.rect = rect
         self.warmup = warmup
         self.active = active
@@ -183,7 +184,7 @@ public final class Boss {
                                                direction: Vec2(cos(angle), sin(angle)),
                                                speed: phase == .toccata ? 190 : 155))
             }
-            events.append(.effect(.ringFloete, center, .zero))
+            events.append(.effect(.ringKlein, center, .zero))
         }
         if actionTime > interval * Double(shots) + 0.3 { begin(.hover) }
     }
@@ -201,7 +202,7 @@ public final class Boss {
                                                speed: 128))
             }
             events.append(.sound(.bossPhase))
-            events.append(.effect(.ringTrommel, center, .zero))
+            events.append(.effect(.ringGross, center, .zero))
             events.append(.shake(4))
         }
         if actionTime > 1.0 { begin(.hover) }
@@ -242,7 +243,7 @@ public final class Boss {
                 pendingSummons.append((.klangmotte, Vec2(clamp(x, arena.minX + 16, arena.maxX - 16),
                                                          arena.minY + 46)))
             }
-            events.append(.effect(.ringLeier, center, .zero))
+            events.append(.effect(.ringMittel, center, .zero))
         }
         if actionTime > 1.2 { begin(.hover) }
     }

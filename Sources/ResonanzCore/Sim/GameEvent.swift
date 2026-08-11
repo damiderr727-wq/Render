@@ -11,8 +11,8 @@ public enum SoundCue: Sendable, Equatable {
     case slamStart
     case slamLand
     case wallBreak
-    case meleeSwing(Instrument)
-    case rangedShot(Instrument)
+    case meleeSwing
+    case rangedShot(Kern)
     case hit(strong: Bool)
     case enemyDeath
     case playerHurt
@@ -34,9 +34,14 @@ public enum EffectKind: String, Sendable {
     case heartbeat
     case burstGlow
     case burstRot
-    case ringLeier
-    case ringTrommel
-    case ringFloete
+    /// Klangringe nach Groesse. Sie gehoeren keiner Waffe - sie sind das,
+    /// was ein Stoss in der Luft hinterlaesst.
+    case ringKlein
+    case ringMittel
+    case ringGross
+    /// Der Schlagbogen. Wie er aussieht, entscheidet die gefuehrte Klinge -
+    /// die Darstellung schlaegt den Namen im Fortschritt nach.
+    case klingenschlag
     case mote
 }
 
@@ -46,7 +51,7 @@ public enum GameEvent: Sendable {
     case effect(EffectKind, Vec2, Vec2)
     case shake(Double)
 
-    case fireProjectiles(instrument: Instrument, origin: Vec2, direction: Vec2)
+    case fireProjectiles(kern: Kern, origin: Vec2, direction: Vec2)
     case slamShockwave(origin: Vec2, radius: Double)
     case wallsBroken(roomID: String, tiles: [(Int, Int)])
 
@@ -59,9 +64,12 @@ public enum GameEvent: Sendable {
 
     case equipmentFound(Equipment)
     case equipmentWorn(Equipment)
-    case instrumentPicked(Instrument)
+    case siegelFound(Siegel)
+    case siegelWorn(Siegel, angelegt: Bool)
+    case klingeFound(Klinge)
+    case kernPicked(Kern)
     case abilityPicked(Ability)
-    case instrumentSwitched(Instrument)
+    case kernSwitched(Kern)
 
     case loreRead(text: String)
     case benchRested

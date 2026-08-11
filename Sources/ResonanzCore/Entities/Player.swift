@@ -5,7 +5,7 @@ public enum PlayerState: String, Sendable {
     case idle, run, jump, fall, wallSlide, dash, melee, cast, hurt, slam, rest, dead
 }
 
-/// Cadence. Ihre Waffe ist der Schall; das Instrument gibt ihm nur die Form.
+/// Cadence. Ihre Waffe ist der Schall; das Kern gibt ihm nur die Form.
 public final class Player {
     // MARK: Lage
     public var position: Vec2
@@ -38,7 +38,7 @@ public final class Player {
     private var slamRecovery: Double = 0
 
     // MARK: Kampf
-    public private(set) var instrument: Instrument = .leier
+    public private(set) var kern: Kern = .leier
     public private(set) var attackTimer: Double = 0
     public private(set) var attackIsMelee = false
     private var attackCooldown: Double = 0
@@ -61,12 +61,14 @@ public final class Player {
     /// Grundwerte mal getragene Fassung. Wird bei jedem Wechsel neu gebildet.
     public private(set) var stats: Stats
 
-    public init(position: Vec2, progression: Progression, instrument: Instrument) {
+    public init(position: Vec2, progression: Progression, kern: Kern) {
         self.position = position
         self.progression = progression
-        self.stats = progression.stats
-        self.instrument = instrument
-        self.health = stats.maxHealth(base: progression.maxHealth)
+        self.kern = kern
+        var p = progression
+        p.kernWorn = kern
+        self.stats = p.stats
+        self.health = stats.maxHealth(crystals: progression.crystals)
         self.resonance = progression.maxResonance
     }
 
@@ -80,17 +82,25 @@ public final class Player {
 
     public func sync(progression: Progression) {
         self.progression = progression
+        self.kern = progression.kernWorn
         self.stats = progression.stats
-        let cap = stats.maxHealth(base: progression.maxHealth)
+        let cap = stats.maxHealth(crystals: progression.crystals)
         if health > cap { health = cap }
     }
 
     /// Hoechstwert der Lebenspunkte unter der getragenen Fassung.
-    public var maxHealth: Int { stats.maxHealth(base: progression.maxHealth) }
+    /// Hoechstwert in halben Kristallen, unter allem, was sie traegt.
+    public var maxHealth: Int { stats.maxHealth(crystals: progression.crystals) }
 
-    public func equip(_ instrument: Instrument) {
-        guard progression.has(instrument) else { return }
-        self.instrument = instrument
+    /// Volle Kristalle und ob noch ein halber dranhaengt - fuer die Anzeige.
+    public var crystalsFull: Int { health / 2 }
+    public var hasHalfCrystal: Bool { health % 2 == 1 }
+
+    public func equip(_ kern: Kern) {
+        guard progression.has(kern) else { return }
+        self.kern = kern
+        progression.kernWorn = kern
+        self.stats = progression.stats
     }
 
     /// Volle Kraft - nach dem Ausruhen an der Stimmgabel.
@@ -298,7 +308,7 @@ public final class Player {
                         width: reach * 1.3, height: 26)
         let broken = room.breakWalls(in: area)
         events.append(.sound(broken.isEmpty ? .slamLand : .wallBreak))
-        events.append(.effect(.ringTrommel, position, .zero))
+        events.append(.effect(.ringGross, position, .zero))
         events.append(.shake(broken.isEmpty ? 3.0 : 6.0))
         if !broken.isEmpty {
             events.append(.wallsBroken(roomID: room.id, tiles: broken))
@@ -312,18 +322,18 @@ public final class Player {
         guard attackCooldown <= 0, controlLock <= 0, !isSlamming else { return }
 
         if input.meleePressed {
-            let profile = stats.melee(instrument)
+            let profile = stats.melee
             attackIsMelee = true
             attackTimer = profile.duration
             attackCooldown = profile.cooldown
             attackHasHit = false
             stateTime = 0
-            events.append(.sound(.meleeSwing(instrument)))
+            events.append(.sound(.meleeSwing))
             return
         }
 
         if input.rangedPressed {
-            let profile = stats.ranged(instrument)
+            let profile = stats.ranged
             guard resonance >= profile.cost else {
                 events.append(.sound(.outOfResonance))
                 return
@@ -333,8 +343,8 @@ public final class Player {
             attackTimer = 0.18
             attackCooldown = profile.cooldown
             stateTime = 0
-            events.append(.sound(.rangedShot(instrument)))
-            events.append(.fireProjectiles(instrument: instrument,
+            events.append(.sound(.rangedShot(kern)))
+            events.append(.fireProjectiles(kern: kern,
                                            origin: muzzle(),
                                            direction: aimDirection()))
         }
@@ -355,7 +365,7 @@ public final class Player {
     /// Aktive Trefferflaeche des Nahkampfs, sonst `nil`.
     public func activeMeleeHitbox() -> Rect? {
         guard attackIsMelee, attackTimer > 0 else { return nil }
-        let profile = stats.melee(instrument)
+        let profile = stats.melee
         let elapsed = profile.duration - attackTimer
         guard elapsed >= profile.windup else { return nil }
         return profile.hitbox(origin: position, facing: facing, aimY: aimY)
@@ -582,6 +592,12 @@ public final class Player {
             events.append(.shake(5))
         }
         return true
+    }
+
+    /// Hebt die Unverwundbarkeit nach einem Treffer sofort auf. Nur fuer
+    /// Pruefungen - im Spiel laeuft sie von selbst ab.
+    public func dropInvulnerability() {
+        invulnerable = 0
     }
 
     public func beginRest() {

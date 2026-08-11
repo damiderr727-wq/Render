@@ -21,7 +21,16 @@ public enum EnemyKind: String, Sendable, CaseIterable {
         }
     }
 
-    public var contactDamage: Int { 1 }
+    /// Schaden an der Figur, in halben Kristallen. Ein voller Kristall
+    /// sind zwei - der Stilleschreiter nimmt anderthalb.
+    public var contactDamage: Int {
+        switch self {
+        case .klangmotte: return 2
+        case .stilleschreiter: return 3
+        case .dissonanzknospe: return 2
+        case .echoscherbe: return 2
+        }
+    }
 
     public var size: (width: Double, height: Double) {
         switch self {

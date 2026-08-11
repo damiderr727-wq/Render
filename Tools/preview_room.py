@@ -164,7 +164,9 @@ def render(room_id: str) -> Image.Image:
         place(*props.frame("bench_1"), bench["x"], bench["y"])
 
     for pickup in room["pickups"]:
-        place(*props.frame(f"sigil_{pickup['id']}_2"), pickup["x"], pickup["y"] + 0.5)
+        name = (f"sigil_klinge_{pickup['id']}" if pickup["kind"] == "klinge"
+                else f"sigil_{pickup['id']}")
+        place(*props.frame(f"{name}_2"), pickup["x"], pickup["y"] + 0.5)
 
     # Kreaturen
     sprite_for = {
@@ -185,7 +187,7 @@ def render(room_id: str) -> Image.Image:
     spawns = room["spawns"]
     start = spawns.get("start") or next(iter(spawns.values()), None)
     if start:
-        place(*chars.frame("cadence_leier_mantel_idle_0"), start["x"], start["y"])
+        place(*chars.frame("cadence_stimmgabel_mantel_idle_0"), start["x"], start["y"])
 
     # Inschriften als Funke
     for lore in room["lore"]:

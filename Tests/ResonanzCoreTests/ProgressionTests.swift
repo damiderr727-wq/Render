@@ -78,7 +78,7 @@ final class ProgressionTests: XCTestCase {
             guard let room = rooms[id] else { continue }
             let koennen = ankunft[id] ?? []
             let progression = Progression(abilities: koennen,
-                                          instruments: Set(Instrument.allCases))
+                                          kerne: Set(Kern.allCases))
 
             // Gesperrte Tueren zaehlen erst, wenn das Koennen dafuer da ist.
             let ziele = ReachabilityProbe.targets(for: room).filter { ziel in
@@ -104,8 +104,8 @@ final class ProgressionTests: XCTestCase {
     func testSpielstandUeberlebtEinenSpeicherdurchlauf() throws {
         var save = SaveState(roomID: "B4", spawnName: "L")
         save.progression.abilities = [.fluegelschlag, .klangschritt]
-        save.progression.instruments = [.leier, .trommel]
-        save.instrument = .trommel
+        save.progression.kerne = [.leier, .trommel]
+        save.kern = .trommel
         save.collected = ["A3/fluegelschlag", "A2/trommel"]
         save.brokenWalls = ["C3": [28, 14, 28, 15]]
         save.playTime = 1234.5
@@ -116,9 +116,9 @@ final class ProgressionTests: XCTestCase {
     }
 
     func testInstrumentenreihenfolgeIstStabil() {
-        var progression = Progression(instruments: [.floete, .leier])
-        XCTAssertEqual(progression.orderedInstruments, [.leier, .floete])
-        progression.instruments.insert(.trommel)
-        XCTAssertEqual(progression.orderedInstruments, [.leier, .trommel, .floete])
+        var progression = Progression(kerne: [.floete, .leier])
+        XCTAssertEqual(progression.orderedKerne, [.leier, .floete])
+        progression.kerne.insert(.trommel)
+        XCTAssertEqual(progression.orderedKerne, [.leier, .trommel, .floete])
     }
 }

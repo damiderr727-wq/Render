@@ -105,6 +105,12 @@
    "id": "gerissenes_gewand",
    "x": 55,
    "y": 17
+  },
+  {
+   "kind": "siegel",
+   "id": "windschliff",
+   "x": 46,
+   "y": 10
   }
  ],
  "decor": [

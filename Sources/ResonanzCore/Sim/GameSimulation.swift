@@ -3,9 +3,11 @@ import Foundation
 /// Ein aufsammelbares Fundstueck im Raum.
 public struct PickupInstance: Sendable {
     public enum Payload: Sendable {
-        case instrument(Instrument)
+        case kern(Kern)
         case ability(Ability)
         case equipment(Equipment)
+        case siegel(Siegel)
+        case klinge(Klinge)
     }
     public let key: String
     public let payload: Payload
@@ -76,7 +78,7 @@ public final class GameSimulation {
             ?? RoomData.SpawnPoint(x: 4, y: 4, facing: 1)
         self.player = Player(position: Vec2.entity(spawn.x, spawn.y),
                              progression: save.progression,
-                             instrument: save.instrument)
+                             kern: save.kern)
         applyBrokenWalls(to: startRoom)
         populate(room: startRoom, spawn: spawn)
         cameraTarget = player.position
@@ -120,9 +122,11 @@ public final class GameSimulation {
             guard !save.collected.contains(key) else { continue }
             let payload: PickupInstance.Payload?
             switch p.kind {
-            case "instrument": payload = Instrument(rawValue: p.id).map { .instrument($0) }
+            case "kern": payload = Kern(rawValue: p.id).map { .kern($0) }
             case "ability": payload = Ability(rawValue: p.id).map { .ability($0) }
             case "equipment": payload = EquipmentCatalog.find(p.id).map { .equipment($0) }
+            case "siegel": payload = SiegelKatalog.find(p.id).map { .siegel($0) }
+            case "klinge": payload = KlingenKatalog.find(p.id).map { .klinge($0) }
             default: payload = nil
             }
             guard let payload else { continue }
@@ -172,7 +176,7 @@ public final class GameSimulation {
         save.playTime += dt
         transitionCooldown = max(0, transitionCooldown - dt)
 
-        handleInstrumentSwitch(input: input, events: &events)
+        handleKernSwitch(input: input, events: &events)
 
         if player.isDead {
             deathTimer += dt
@@ -188,6 +192,15 @@ public final class GameSimulation {
             restTimer += dt
             if input.cycleEquipment != 0 {
                 cycleEquipment(by: input.cycleEquipment, events: &events)
+            }
+            if let index = input.toggleSiegel {
+                let owned = save.progression.ownedSiegel
+                if index >= 0, index < owned.count, toggleSiegel(owned[index].id) {
+                    events.append(.sound(.pickup))
+                    events.append(.siegelWorn(owned[index],
+                                              angelegt: save.progression.siegelWorn
+                                                  .contains(owned[index].id)))
+                }
             }
             if input.interactPressed && restTimer > 0.35 {
                 player.endRest()
@@ -225,10 +238,10 @@ public final class GameSimulation {
         var nachtrag: [GameEvent] = []
         for event in events {
             switch event {
-            case .fireProjectiles(let instrument, let origin, let direction):
+            case .fireProjectiles(let kern, let origin, let direction):
                 projectiles.append(contentsOf:
-                    Projectile.volley(profile: player.stats.ranged(instrument),
-                                      instrument: instrument,
+                    Projectile.volley(profile: player.stats.ranged,
+                                      kern: kern,
                                       origin: origin, direction: direction))
             case .slamShockwave(let origin, let radius):
                 applySlam(origin: origin, radius: radius, events: &nachtrag)
@@ -258,25 +271,25 @@ public final class GameSimulation {
 
     // MARK: - Instrumente
 
-    private func handleInstrumentSwitch(input: PlayerInput, events: inout [GameEvent]) {
-        let owned = save.progression.orderedInstruments
+    private func handleKernSwitch(input: PlayerInput, events: inout [GameEvent]) {
+        let owned = save.progression.orderedKerne
         guard owned.count > 1 else { return }
 
-        if let wanted = input.selectInstrument, save.progression.has(wanted),
-           wanted != player.instrument {
+        if let wanted = input.selectKern, save.progression.has(wanted),
+           wanted != player.kern {
             player.equip(wanted)
-            save.instrument = wanted
-            events.append(.instrumentSwitched(wanted))
+            save.kern = wanted
+            events.append(.kernSwitched(wanted))
             return
         }
 
-        guard input.cycleInstrument != 0,
-              let current = owned.firstIndex(of: player.instrument) else { return }
+        guard input.cycleKern != 0,
+              let current = owned.firstIndex(of: player.kern) else { return }
         let count = owned.count
-        let next = owned[((current + input.cycleInstrument) % count + count) % count]
+        let next = owned[((current + input.cycleKern) % count + count) % count]
         player.equip(next)
-        save.instrument = next
-        events.append(.instrumentSwitched(next))
+        save.kern = next
+        events.append(.kernSwitched(next))
     }
 
     // MARK: - Kreaturen
@@ -353,7 +366,7 @@ public final class GameSimulation {
 
     private func resolveMeleeHits(events: inout [GameEvent]) {
         guard let hitbox = player.activeMeleeHitbox() else { return }
-        let profile = player.stats.melee(player.instrument)
+        let profile = player.stats.melee
         let downward = player.aimY > 0.5 && !player.onGround
         var hits = 0
 
@@ -379,16 +392,8 @@ public final class GameSimulation {
         if hits > 0 {
             player.registerMeleeHit(count: hits)
             events.append(.shake(profile.shape == .radial ? 4 : 2))
-            events.append(.effect(ringEffect(for: player.instrument), hitbox.center, .zero))
+            events.append(.effect(.klingenschlag, hitbox.center, .zero))
             if downward { player.pogo() }
-        }
-    }
-
-    private func ringEffect(for instrument: Instrument) -> EffectKind {
-        switch instrument {
-        case .leier: return .ringLeier
-        case .trommel: return .ringTrommel
-        case .floete: return .ringFloete
         }
     }
 
@@ -401,7 +406,8 @@ public final class GameSimulation {
             break
         }
         if let boss, boss.alive, boss.action != .entrance, boss.rect.intersects(body) {
-            player.takeDamage(1, from: boss.center, events: &events)
+            // Der Kantor nimmt anderthalb Kristalle - drei Haelften.
+            player.takeDamage(3, from: boss.center, events: &events)
         }
     }
 
@@ -456,13 +462,13 @@ public final class GameSimulation {
             save.collected.insert(pickup.key)
 
             switch pickup.payload {
-            case .instrument(let instrument):
-                save.progression.instruments.insert(instrument)
+            case .kern(let kern):
+                save.progression.kerne.insert(kern)
                 player.sync(progression: save.progression)
-                player.equip(instrument)
-                save.instrument = instrument
+                player.equip(kern)
+                save.kern = kern
                 events.append(.sound(.pickup))
-                events.append(.instrumentPicked(instrument))
+                events.append(.kernPicked(kern))
             case .ability(let ability):
                 save.progression.abilities.insert(ability)
                 player.sync(progression: save.progression)
@@ -473,6 +479,14 @@ public final class GameSimulation {
                 save.progression.equipmentOwned.insert(equipment.id)
                 events.append(.sound(.abilityGained))
                 events.append(.equipmentFound(equipment))
+            case .siegel(let siegel):
+                save.progression.siegelOwned.insert(siegel.id)
+                events.append(.sound(.abilityGained))
+                events.append(.siegelFound(siegel))
+            case .klinge(let klinge):
+                save.progression.klingenOwned.insert(klinge.id)
+                events.append(.sound(.pickup))
+                events.append(.klingeFound(klinge))
             }
             events.append(.effect(.mote, pickup.position, .zero))
         }
@@ -580,7 +594,7 @@ public final class GameSimulation {
             populate(room: target, spawn: spawn)
             player.sync(progression: save.progression)
             player.restore()
-            player.equip(save.instrument)
+            player.equip(save.kern)
             events.append(.roomChanged(from: room.id, to: target.id, door: "respawn"))
         } catch {
             player.restore()
@@ -613,7 +627,7 @@ public final class GameSimulation {
             intensityTarget = 0
         } else {
             let threats = enemies.filter { $0.alive && $0.center.distance(to: player.chest) < 180 }
-            let hurt = 1 - Double(player.health) / Double(max(1, save.progression.maxHealth))
+            let hurt = 1 - Double(player.health) / Double(max(1, player.maxHealth))
             intensityTarget = clamp(Double(threats.count) * 0.22 + hurt * 0.3, 0, 1)
         }
 
@@ -639,6 +653,23 @@ public final class GameSimulation {
         events.append(.equipmentWorn(next))
     }
 
+    /// Legt ein Siegel an oder ab. Nur an der Stimmgabel - ein Siegel sitzt
+    /// nicht in der Tasche, es steckt in ihr.
+    @discardableResult
+    public func toggleSiegel(_ siegelID: String) -> Bool {
+        guard player.isResting || player.isDead else { return false }
+        let vorher = save.progression.siegelWorn
+        if save.progression.siegelWorn.contains(siegelID) {
+            save.progression.ablegen(siegelID)
+        } else {
+            save.progression.anlegen(siegelID)
+        }
+        guard save.progression.siegelWorn != vorher else { return false }
+        player.sync(progression: save.progression)
+        player.restore()
+        return true
+    }
+
     // MARK: - Speichern
 
     /// Legt eine gefundene Fassung an. Nur an der Stimmgabel - sich mitten
@@ -655,11 +686,22 @@ public final class GameSimulation {
         return true
     }
 
+    /// Wechselt die gefuehrte Klinge. Sie aendert nur das Aussehen des
+    /// Schlags, also darf das jederzeit passieren.
+    @discardableResult
+    public func fuehre(_ klingeID: String) -> Bool {
+        guard save.progression.klingenOwned.contains(klingeID),
+              KlingenKatalog.find(klingeID) != nil else { return false }
+        save.progression.klingeWorn = klingeID
+        player.sync(progression: save.progression)
+        return true
+    }
+
     /// Erzeugt den aktuellen Speicherstand (Aufruf an der Stimmgabel).
     public func snapshotSave() -> SaveState {
         var out = save
         out.progression = save.progression
-        out.instrument = player.instrument
+        out.kern = player.kern
         var walls: [String: [Int]] = save.brokenWalls
         var flat: [Int] = []
         for ty in 0..<room.height {

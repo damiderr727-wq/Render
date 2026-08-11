@@ -39,6 +39,23 @@ public struct Modifiers: Codable, Sendable, Equatable {
     }
 
     public static let neutral = Modifiers()
+
+    /// Zwei Quellen zusammenlegen. Faktoren multiplizieren sich - so bleibt
+    /// jede Quelle fuer sich verstaendlich, und keine kann eine andere
+    /// aufheben, indem sie einen Wert einfach ueberschreibt.
+    public static func * (a: Modifiers, b: Modifiers) -> Modifiers {
+        Modifiers(moveSpeed: a.moveSpeed * b.moveSpeed,
+                  jumpPower: a.jumpPower * b.jumpPower,
+                  dashDistance: a.dashDistance * b.dashDistance,
+                  meleeReach: a.meleeReach * b.meleeReach,
+                  meleeDamage: a.meleeDamage * b.meleeDamage,
+                  rangedRange: a.rangedRange * b.rangedRange,
+                  rangedDamage: a.rangedDamage * b.rangedDamage,
+                  rangedCost: a.rangedCost * b.rangedCost,
+                  resonanceRegen: a.resonanceRegen * b.resonanceRegen,
+                  cohesion: a.cohesion * b.cohesion,
+                  blastForce: a.blastForce * b.blastForce)
+    }
 }
 
 /// Ein Kleidungsstueck oder Harnisch.
@@ -55,15 +72,19 @@ public struct Equipment: Codable, Sendable, Equatable, Identifiable {
     /// Wie viele Oeffnungen das Gefaess hat. 0 gibt es nicht - dann klingt
     /// sie gar nicht mehr.
     public let openings: Int
+    /// Wie sie in dieser Fassung zuschlaegt. Nicht die Klinge entscheidet
+    /// das, sondern das, was ihr Platz laesst.
+    public let stil: Kampfstil
     public let summary: String
     public let flavour: String
     public let modifiers: Modifiers
 
-    public init(id: String, name: String, openings: Int,
+    public init(id: String, name: String, openings: Int, stil: Kampfstil,
                 summary: String, flavour: String, modifiers: Modifiers) {
         self.id = id
         self.name = name
         self.openings = openings
+        self.stil = stil
         self.summary = summary
         self.flavour = flavour
         self.modifiers = modifiers
@@ -79,6 +100,7 @@ public enum EquipmentCatalog {
         id: "mantel",
         name: "SCHLICHTER MANTEL",
         openings: 4,
+        stil: .bogen,
         summary: "HAELT SIE ZUSAMMEN. SONST NICHTS.",
         flavour: "OHNE IHN ZERSTREUT SIE SICH IM ERSTEN WIND. "
                + "ER GIBT IHR NICHTS - ER NIMMT IHR NUR DAS VERGEHEN.",
@@ -89,11 +111,12 @@ public enum EquipmentCatalog {
         id: "enge_fassung",
         name: "ENGE FASSUNG",
         openings: 1,
+        stil: .stich,
         summary: "FERNKLANG TRAEGT WEIT UND HART - DAFUER IST SIE TRAEGE",
         flavour: "EIN HARNISCH MIT EINER EINZIGEN OEFFNUNG. "
                + "WAS DA HERAUSKOMMT, KOMMT MIT ALLEM HERAUS.",
         modifiers: Modifiers(moveSpeed: 0.82, jumpPower: 0.94, dashDistance: 0.85,
-                             meleeReach: 0.75, rangedRange: 1.75, rangedDamage: 1.4,
+                             rangedRange: 1.75, rangedDamage: 1.4,
                              rangedCost: 1.25, resonanceRegen: 0.8))
 
     /// Viele Oeffnungen: sie klingt ueberall, aber nirgends weit.
@@ -101,10 +124,11 @@ public enum EquipmentCatalog {
         id: "offene_fassung",
         name: "OFFENE FASSUNG",
         openings: 9,
+        stil: .wirbel,
         summary: "NAHKLANG WEIT UND BILLIG - FERNKLANG VERPUFFT",
         flavour: "NEUN OEFFNUNGEN. SIE KLINGT NACH ALLEN SEITEN ZUGLEICH, "
                + "UND NICHTS DAVON KOMMT WEIT.",
-        modifiers: Modifiers(moveSpeed: 1.08, meleeReach: 1.45, meleeDamage: 1.2,
+        modifiers: Modifiers(moveSpeed: 1.08, meleeDamage: 1.2,
                              rangedRange: 0.6, rangedDamage: 0.75, rangedCost: 0.7,
                              resonanceRegen: 1.5))
 
@@ -113,6 +137,7 @@ public enum EquipmentCatalog {
         id: "schlagfassung",
         name: "SCHLAGFASSUNG",
         openings: 2,
+        stil: .sturz,
         summary: "BASSTON UND TROMMEL REISSEN - DAFUER SPRINGT SIE NIEDRIG",
         flavour: "WIE EIN KESSEL, DER NUR NACH UNTEN ATMET. "
                + "MAN HOERT SIE DURCH DEN BODEN, BEVOR MAN SIE SIEHT.",
@@ -125,14 +150,28 @@ public enum EquipmentCatalog {
         id: "gerissenes_gewand",
         name: "GERISSENES GEWAND",
         openings: 14,
+        stil: .hetze,
         summary: "SCHNELL UND WEIT - ABER SIE HAELT FAST NICHTS AUS",
         flavour: "MEHR RISS ALS STOFF. WER SO WENIG BEISAMMEN IST, "
                + "KOMMT SCHNELLER VORAN - UND VERGEHT SCHNELLER.",
         modifiers: Modifiers(moveSpeed: 1.28, jumpPower: 1.10, dashDistance: 1.35,
                              rangedCost: 0.85, resonanceRegen: 1.25, cohesion: 0.6))
 
+    /// Nur ein Tuch an der Schulter. Es haelt kaum etwas zusammen, aber es
+    /// haengt ihr auch nirgends im Weg.
+    public static let cape = Equipment(
+        id: "cape",
+        name: "WEHENDES CAPE",
+        openings: 6,
+        stil: .hetze,
+        summary: "SPRINGT HOEHER UND SETZT SCHNELLER NACH",
+        flavour: "ES DECKT NICHTS. ES FAENGT NUR DIE BEWEGUNG - "
+               + "UND GIBT SIE EINEN LIDSCHLAG SPAETER ZURUECK.",
+        modifiers: Modifiers(moveSpeed: 1.06, jumpPower: 1.16, dashDistance: 1.18,
+                             meleeReach: 0.9, cohesion: 0.9))
+
     public static let all: [Equipment] = [
-        mantel, engeFassung, offeneFassung, schlagfassung, gerissenesGewand,
+        mantel, cape, engeFassung, offeneFassung, schlagfassung, gerissenesGewand,
     ]
 
     public static func find(_ id: String) -> Equipment? {
@@ -140,19 +179,37 @@ public enum EquipmentCatalog {
     }
 }
 
-/// Die abgeleiteten Werte der Figur: Grundwert mal Ausruestung.
+/// Die abgeleiteten Werte der Figur.
 ///
-/// Der Spieler fragt nie mehr direkt `Tuning`, sondern immer diese Tabelle.
-/// Dadurch wirkt eine neue Fassung ueberall, ohne dass man die Stellen
+/// Drei Quellen verschieben die Grundwerte aus `Tuning`, und sie
+/// multiplizieren sich: die getragene **Fassung**, der **Kern** in ihr und
+/// die angelegten **Siegel**. Der Spieler fragt nie mehr direkt `Tuning`,
+/// sondern immer diese Tabelle - dadurch wirkt jede neue Fassung, jeder
+/// neue Kern und jedes Siegel ueberall zugleich, ohne dass man die Stellen
 /// einzeln nachziehen muesste.
+///
+/// Was aus welcher Quelle kommt, ist bewusst getrennt:
+///
+///   Fassung  - der Kampfstil und der Zusammenhalt
+///   Kern     - der Magiestil und ihre Anlage
+///   Siegel   - alles, was man selbst dazuwaehlt
 public struct Stats: Sendable {
     public let equipment: Equipment
+    public let kern: Kern
+    public let siegel: [Siegel]
+    private let m: Modifiers
 
-    public init(equipment: Equipment = EquipmentCatalog.mantel) {
+    public init(equipment: Equipment = EquipmentCatalog.mantel,
+                kern: Kern = .stimmgabel,
+                siegel: [Siegel] = []) {
         self.equipment = equipment
+        self.kern = kern
+        self.siegel = siegel
+        self.m = siegel.reduce(equipment.modifiers * kern.modifiers) { $0 * $1.modifiers }
     }
 
-    private var m: Modifiers { equipment.modifiers }
+    /// Alle Faktoren zusammen - fuer Anzeige und Pruefung.
+    public var modifiers: Modifiers { m }
 
     /// Schaden ist ganzzahlig, und beim Runden verschwindet jeder kleine
     /// Aufschlag: ein Ton mit Schaden 1 bleibt auch mit vierzig Prozent
@@ -175,13 +232,15 @@ public struct Stats: Sendable {
     public var slamRadius: Double { 34 * m.blastForce }
     public var slamDamage: Int { scaledDamage(3, m.blastForce) }
 
-    /// Zusammenhalt bestimmt, wie viele Treffer sie vertraegt.
-    public func maxHealth(base: Int) -> Int {
-        max(1, Int((Double(base) * m.cohesion).rounded()))
+    /// Der Zusammenhalt bestimmt, wie viel sie vertraegt - gerechnet in
+    /// halben Kristallen. Ein Kristall sind zwei.
+    public func maxHealth(crystals: Int) -> Int {
+        Swift.max(1, Int((Double(crystals * 2) * m.cohesion).rounded()))
     }
 
-    public func melee(_ instrument: Instrument) -> MeleeProfile {
-        let p = Tuning.melee(instrument)
+    /// Der Schlag: Stil aus der Fassung, Feinschliff aus allen Quellen.
+    public var melee: MeleeProfile {
+        let p = equipment.stil.melee
         return MeleeProfile(reach: p.reach * m.meleeReach,
                             halfHeight: p.halfHeight * (0.6 + 0.4 * m.meleeReach),
                             damage: scaledDamage(p.damage, m.meleeDamage),
@@ -192,18 +251,19 @@ public struct Stats: Sendable {
                             active: p.active)
     }
 
-    public func ranged(_ instrument: Instrument) -> RangedProfile {
-        let p = Tuning.ranged(instrument)
+    /// Der Fernklang: Stil aus dem Kern.
+    public var ranged: RangedProfile {
+        let p = Tuning.ranged(kern)
         return RangedProfile(damage: scaledDamage(p.damage, m.rangedDamage),
                              // Reichweite steckt in Tempo und Lebensdauer.
                              speed: p.speed * (0.7 + 0.3 * m.rangedRange),
                              cost: p.cost * m.rangedCost,
                              cooldown: p.cooldown,
                              count: p.count,
-                             spread: p.spread / max(0.5, m.rangedRange),
+                             spread: p.spread / Swift.max(0.5, m.rangedRange),
                              radius: p.radius * (0.8 + 0.2 * m.rangedDamage),
                              pierces: p.pierces + (m.rangedDamage >= 1.35 ? 1 : 0),
                              lifetime: p.lifetime * m.rangedRange,
-                             gravity: p.gravity / max(0.5, m.rangedRange))
+                             gravity: p.gravity / Swift.max(0.5, m.rangedRange))
     }
 }

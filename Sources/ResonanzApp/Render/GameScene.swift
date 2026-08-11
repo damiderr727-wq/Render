@@ -25,7 +25,7 @@ public final class GameScene: SKScene {
     private var shake: Double = 0
     private var currentRoomID = ""
     private var playerState: PlayerState = .idle
-    private var playerInstrument: Instrument = .leier
+    private var playerKern: Kern = .stimmgabel
     private var playerGarment = EquipmentCatalog.mantel.id
 
     private var playerNode = SKSpriteNode()
@@ -63,7 +63,7 @@ public final class GameScene: SKScene {
         cameraNode.addChild(hud)
         hud.build(in: Self.designSize)
 
-        playerNode = atlas.sprite("cadence_leier_mantel_idle_0")
+        playerNode = atlas.sprite("cadence_stimmgabel_mantel_idle_0")
         playerNode.zPosition = 5
         renderer.layers.entities.addChild(playerNode)
 
@@ -111,9 +111,11 @@ public final class GameScene: SKScene {
         for pickup in sim.pickups {
             let name: String
             switch pickup.payload {
-            case .instrument(let instrument): name = "sigil_\(instrument.rawValue)"
+            case .kern(let kern): name = "sigil_\(kern.rawValue)"
             case .ability(let ability): name = "sigil_\(ability.rawValue)"
             case .equipment(let equipment): name = "sigil_\(equipment.id)"
+            case .siegel(let siegel): name = "sigil_\(siegel.id)"
+            case .klinge(let klinge): name = "sigil_klinge_\(klinge.id)"
             }
             let node = atlas.sprite(name)
             node.position = WorldSpace.scenePoint(pickup.position)
@@ -185,8 +187,9 @@ public final class GameScene: SKScene {
             case .musicChanged(let track, _):
                 music.play(track, now: synth.currentTime)
 
-            case .instrumentPicked(let instrument):
-                hud.announce(instrument.displayName, subtitle: instrument.summary)
+            case .kernPicked(let kern):
+                hud.announce(kern.displayName, subtitle: kern.summary,
+                             lore: kern.loreLine)
 
             case .abilityPicked(let ability):
                 hud.announce(ability.displayName, subtitle: ability.summary,
@@ -199,8 +202,20 @@ public final class GameScene: SKScene {
             case .equipmentWorn(let equipment):
                 hud.showHint("\(equipment.name) - \(equipment.summary)")
 
-            case .instrumentSwitched:
-                hud.flashInstrument()
+            case .siegelFound(let siegel):
+                hud.announce(siegel.name,
+                             subtitle: "\(siegel.kerben) KERBEN - \(siegel.summary)",
+                             lore: siegel.flavour)
+
+            case .siegelWorn(let siegel, let angelegt):
+                hud.showHint(angelegt ? "\(siegel.name) ANGELEGT" : "\(siegel.name) ABGELEGT")
+
+            case .klingeFound(let klinge):
+                hud.announce(klinge.name, subtitle: "SIE SCHLAEGT WIE JEDE ANDERE",
+                             lore: klinge.flavour)
+
+            case .kernSwitched:
+                hud.flashKern()
 
             case .loreRead(let text):
                 hud.showLore(text)
@@ -236,12 +251,12 @@ public final class GameScene: SKScene {
         playerNode.xScale = player.facing >= 0 ? 1 : -1
 
         let garment = sim.save.progression.equipment.id
-        if player.state != playerState || player.instrument != playerInstrument
+        if player.state != playerState || player.kern != playerKern
             || garment != playerGarment {
             playerState = player.state
-            playerInstrument = player.instrument
+            playerKern = player.kern
             playerGarment = garment
-            let name = "cadence_\(player.instrument.rawValue)_\(garment)_"
+            let name = "cadence_\(player.kern.rawValue)_\(garment)_"
                      + animationName(for: player.state)
             playerNode.removeAllActions()
             if let info = atlas.frame(name) {
@@ -397,9 +412,12 @@ public final class GameScene: SKScene {
         case .heartbeat: name = "heartbeat"
         case .burstGlow: name = "burst_glow"
         case .burstRot: name = "burst_rot"
-        case .ringLeier: name = "ring_leier"
-        case .ringTrommel: name = "ring_trommel"
-        case .ringFloete: name = "ring_floete"
+        case .ringMittel: name = "ring_mittel"
+        case .ringGross: name = "ring_gross"
+        case .ringKlein: name = "ring_klein"
+        // Wie der Schlagbogen aussieht, haengt an der gefuehrten Klinge -
+        // nicht am Ereignis. Deshalb wird er hier erst nachgeschlagen.
+        case .klingenschlag: name = sim.save.progression.klinge.effect
         case .mote: name = "mote"
         }
         let node = atlas.sprite("\(name)_0")

@@ -123,7 +123,14 @@
    "patrol": 4
   }
  ],
- "pickups": [],
+ "pickups": [
+  {
+   "kind": "siegel",
+   "id": "bruchstein",
+   "x": 74,
+   "y": 15
+  }
+ ],
  "decor": [
   {
    "kind": "crystal",

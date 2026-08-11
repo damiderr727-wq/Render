@@ -79,7 +79,7 @@ public struct Projectile: Sendable {
     // MARK: - Erzeugung
 
     /// Baut die Geschosse eines Fernkampfangriffs.
-    public static func volley(profile: RangedProfile, instrument: Instrument,
+    public static func volley(profile: RangedProfile, kern: Kern,
                               origin: Vec2, direction: Vec2) -> [Projectile] {
         let base = direction.normalized
         let baseAngle = atan2(base.y, base.x)
@@ -98,14 +98,17 @@ public struct Projectile: Sendable {
                                      lifetime: profile.lifetime,
                                      gravity: profile.gravity,
                                      owner: .player,
-                                     kind: "note_\(instrument.rawValue)"))
+                                     kind: "note_\(kern.rawValue)"))
         }
         return result
     }
 
     /// Der schiefe Ton, den die Dissonanz zurueckwirft.
+    ///
+    /// Der Schaden zaehlt hier in halben Kristallen - das Geschoss trifft
+    /// die Figur, nicht eine Kreatur.
     public static func dissonantNote(origin: Vec2, direction: Vec2,
-                                     speed: Double = 135, damage: Int = 1) -> Projectile {
+                                     speed: Double = 135, damage: Int = 2) -> Projectile {
         Projectile(position: origin,
                    velocity: direction.normalized * speed,
                    radius: 5,

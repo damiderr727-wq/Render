@@ -21,7 +21,7 @@ public final class InputRouter {
     ///   Fernklang      K, C
     ///   Herzschlag     Umschalt, L
     ///   Basston        runter + Nahklang in der Luft
-    ///   Instrument     1 2 3, Q E
+    ///   Kern     1 2 3, Q E
     ///   Ansprechen     F, Eingabe
     private struct Held {
         var left = false
@@ -37,9 +37,10 @@ public final class InputRouter {
 
     private var held = Held()
     private var pressed = Held()
-    private var pendingInstrument: Instrument?
+    private var pendingKern: Kern?
     private var pendingCycle = 0
     private var pendingEquipmentCycle = 0
+    private var pendingSiegel: Int?
 
     #if os(macOS)
     private var keyMonitor: Any?
@@ -78,17 +79,19 @@ public final class InputRouter {
             dashPressed: pressed.dash,
             slamPressed: slam,
             interactPressed: pressed.interact,
-            selectInstrument: pendingInstrument,
-            cycleInstrument: pendingCycle,
-            cycleEquipment: pendingEquipmentCycle)
+            selectKern: pendingKern,
+            cycleKern: pendingCycle,
+            cycleEquipment: pendingEquipmentCycle,
+            toggleSiegel: pendingSiegel)
     }
 
     /// Nach dem Auswerten die Flanken loeschen.
     public func endFrame() {
         pressed = Held()
-        pendingInstrument = nil
+        pendingKern = nil
         pendingCycle = 0
         pendingEquipmentCycle = 0
+        pendingSiegel = nil
     }
 
     private func set(_ keyPath: WritableKeyPath<Held, Bool>, _ value: Bool) {
@@ -139,14 +142,17 @@ public final class InputRouter {
 
     private func handleCharacter(_ characters: String?) {
         switch characters {
-        case "1": pendingInstrument = .leier
-        case "2": pendingInstrument = .trommel
-        case "3": pendingInstrument = .floete
+        case "1": pendingKern = .leier
+        case "2": pendingKern = .trommel
+        case "3": pendingKern = .floete
         case "q": pendingCycle = -1
         case "e": pendingCycle = 1
         // Fassung wechseln - wirkt nur an der Stimmgabel.
         case ",": pendingEquipmentCycle = -1
         case ".": pendingEquipmentCycle = 1
+        // Siegel an- und ablegen, ebenfalls nur an der Stimmgabel.
+        case "4", "5", "6", "7", "8", "9":
+            pendingSiegel = Int(characters ?? "") .map { $0 - 4 }
         default: break
         }
     }

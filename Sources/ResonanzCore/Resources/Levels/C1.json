@@ -115,6 +115,12 @@
    "id": "schlagfassung",
    "x": 48,
    "y": 10
+  },
+  {
+   "kind": "siegel",
+   "id": "hohlklang",
+   "x": 6,
+   "y": 11
   }
  ],
  "decor": [

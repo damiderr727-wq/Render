@@ -137,7 +137,14 @@
    "patrol": 4
   }
  ],
- "pickups": [],
+ "pickups": [
+  {
+   "kind": "siegel",
+   "id": "nachhall",
+   "x": 34,
+   "y": 31
+  }
+ ],
  "decor": [
   {
    "kind": "crystal",

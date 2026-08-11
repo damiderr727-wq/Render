@@ -72,8 +72,8 @@ public final class SoundBoard {
                            gain: 0.08, delaySeconds: Double(i) * 0.05)
             }
 
-        case .meleeSwing(let instrument):
-            switch instrument {
+        case .meleeSwing(let kern):
+            switch kern {
             case .leier:
                 let base = nextComboNote()
                 for (i, interval) in [0.0, 4, 7, 12].enumerated() {
@@ -89,8 +89,8 @@ public final class SoundBoard {
                 synth.noise(duration: 0.07, gain: 0.05, cutoff: 5000)
             }
 
-        case .rangedShot(let instrument):
-            switch instrument {
+        case .rangedShot(let kern):
+            switch kern {
             case .leier:
                 let base = nextComboNote(octave: 1)
                 for (i, interval) in [0.0, 3, 7].enumerated() {

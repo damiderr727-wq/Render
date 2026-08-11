@@ -185,7 +185,7 @@ def render(room_id: str) -> Image.Image:
     spawns = room["spawns"]
     start = spawns.get("start") or next(iter(spawns.values()), None)
     if start:
-        place(*chars.frame("cadence_leier_idle_0"), start["x"], start["y"])
+        place(*chars.frame("cadence_leier_mantel_idle_0"), start["x"], start["y"])
 
     # Inschriften als Funke
     for lore in room["lore"]:

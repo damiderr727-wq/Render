@@ -181,6 +181,23 @@ final class EquipmentTests: XCTestCase {
 
     // MARK: - In der Welt
 
+    /// Die Fassung wird gezeichnet, nicht nur gerechnet: zu jeder muss es
+    /// auch Bilder geben, sonst greift die Darstellung ins Leere.
+    func testZuJederFassungGibtEsBilder() throws {
+        struct Sheet: Decodable { let frames: [String: [String: Double]] }
+        let sheet = try Resources.decode(Sheet.self, subdirectory: "Atlas", name: "characters")
+        let zustaende = ["idle", "run", "jump", "fall", "land", "dash",
+                         "wall", "melee", "cast", "hurt", "rest"]
+        for equipment in EquipmentCatalog.all {
+            for instrument in Instrument.allCases {
+                for zustand in zustaende {
+                    let key = "cadence_\(instrument.rawValue)_\(equipment.id)_\(zustand)_0"
+                    XCTAssertNotNil(sheet.frames[key], "Es fehlt das Bild \(key)")
+                }
+            }
+        }
+    }
+
     func testJedeFassungLiegtGenauEinmalInDerWelt() throws {
         let catalog = try WorldCatalog()
         var gefunden: [String: Int] = [:]

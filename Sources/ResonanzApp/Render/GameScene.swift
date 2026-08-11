@@ -26,6 +26,7 @@ public final class GameScene: SKScene {
     private var currentRoomID = ""
     private var playerState: PlayerState = .idle
     private var playerInstrument: Instrument = .leier
+    private var playerGarment = EquipmentCatalog.mantel.id
 
     private var playerNode = SKSpriteNode()
     private var bossNode: SKSpriteNode?
@@ -62,7 +63,7 @@ public final class GameScene: SKScene {
         cameraNode.addChild(hud)
         hud.build(in: Self.designSize)
 
-        playerNode = atlas.sprite("cadence_leier_idle_0")
+        playerNode = atlas.sprite("cadence_leier_mantel_idle_0")
         playerNode.zPosition = 5
         renderer.layers.entities.addChild(playerNode)
 
@@ -234,10 +235,14 @@ public final class GameScene: SKScene {
         playerNode.position = WorldSpace.scenePoint(player.position)
         playerNode.xScale = player.facing >= 0 ? 1 : -1
 
-        if player.state != playerState || player.instrument != playerInstrument {
+        let garment = sim.save.progression.equipment.id
+        if player.state != playerState || player.instrument != playerInstrument
+            || garment != playerGarment {
             playerState = player.state
             playerInstrument = player.instrument
-            let name = "cadence_\(player.instrument.rawValue)_\(animationName(for: player.state))"
+            playerGarment = garment
+            let name = "cadence_\(player.instrument.rawValue)_\(garment)_"
+                     + animationName(for: player.state)
             playerNode.removeAllActions()
             if let info = atlas.frame(name) {
                 playerNode.texture = info.texture

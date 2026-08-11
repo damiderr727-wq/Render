@@ -55,9 +55,56 @@ def _profile(t: float, instrument: str) -> float:
     return a * ((t * 1.1 + 0.06) ** low) * ((1 - t) ** high)
 
 
+# --------------------------------------------------------------- Fassungen
+#
+# Die Kleidung ist kein Kostuem, sie ist ein Gefaess.
+#
+# Cadence wuerde sich ohne sie zerstreuen - der Mantel ist das, was sie
+# beisammenhaelt. Deshalb darf er nicht steif auf ihr liegen: er hat keine
+# eigene Form, er nimmt ihre an. Gezeichnet wird er darum aus demselben
+# Profil wie die Gestalt, nur eine Spur weiter - und mit Verzoegerung. Der
+# Saum folgt der Neigung eine Spur spaeter als der Koerper, weht beim Lauf
+# nach hinten aus und schwingt nach, wenn sie stehenbleibt.
+#
+# Die Oeffnungen sind dieselben wie im Spielwert: wo der Stoff eine Luecke
+# hat, tritt ihr Licht heraus. Eine Fassung mit einer einzigen Oeffnung ist
+# fast geschlossen; ein gerissenes Gewand ist mehr Schlitz als Stoff.
+
+GARMENTS = {
+    # id: (Oeffnungen, Stoffton, Saumlicht, Deckung 0..1)
+    "mantel":            (4,  mix(P.CLOAK, P.STONE, 0.55),                 P.TRIM,  0.62),
+    "enge_fassung":      (1,  mix(mix(P.CLOAK, P.STONE, 0.5), P.GOLD, 0.20), P.GOLD,  0.68),
+    "offene_fassung":    (9,  mix(mix(P.CLOAK, P.STONE, 0.6), P.TRIM, 0.16), P.TRIM,  0.58),
+    "schlagfassung":     (2,  mix(mix(P.CLOAK, P.STONE, 0.5), P.ROT, 0.20),  P.ROT,   0.65),
+    "gerissenes_gewand": (14, mix(mix(P.CLOAK, P.STONE, 0.6), P.WARM, 0.14), P.AMBER, 0.52),
+}
+
+
+def _garment_slits(openings: int) -> list[tuple[float, int, float]]:
+    """
+    Verteilt die Oeffnungen ueber die Hoehe des Stoffs.
+
+    Rueckgabe je Oeffnung: Hoehe (0 Saum .. 1 Kragen), Seite (-1/1), Laenge.
+    Die erste zeigt immer nach vorn - dorthin, wohin auch der Fernklang
+    geht. Danach wechseln sie die Seite, damit das Gewand nicht auf einer
+    Seite ausfranst und auf der anderen zu bleibt.
+    """
+    out = []
+    for i in range(openings):
+        u = 0.10 + (i + 0.5) / openings * 0.80
+        seite = 1 if i % 2 == 0 else -1
+        # Wenige Oeffnungen: lange Schlitze. Viele: kurze Risse.
+        laenge = min(0.24, 0.07 + 0.22 / openings)
+        out.append((u, seite, laenge))
+    return out
+
+
 def draw_heroine(
     *,
     instrument: str | None = "leier",
+    garment: str = "mantel",
+    sway: float = 0.0,        # Nachschwingen des Stoffs
+
     phase: float = 0.0,       # Flackern
     lean: float = 0.0,        # Neigung nach vorn
     stretch: float = 1.0,     # senkrechte Dehnung (Sprung)
@@ -134,6 +181,83 @@ def draw_heroine(
         fx = cx + lean * 0.8 + math.sin(u * 7 + phase * 3) * (3 + u * 5)
         if hash01(k, int(phase * 8)) > 0.35:
             c.set(int(fx), int(fy), mix(mid, P.AMBER, 0.35))
+
+    # --- Die Fassung ------------------------------------------------------
+    #
+    # Der Stoff bekommt kein eigenes Skelett. Er laeuft ueber dasselbe
+    # Rueckgrat wie die Gestalt, nur verzoegert: unten am Saum haengt er am
+    # weitesten hinterher, oben am Kragen sitzt er fast auf. Dadurch folgt
+    # er jeder Bewegung, ohne dass eine einzige Pose von Hand gesetzt waere.
+    openings, stoff, saum_licht, coverage = GARMENTS.get(garment, GARMENTS["mantel"])
+    stoff_hi = shade(stoff, 0.42)
+    stoff_lo = shade(stoff, -0.40)
+    slits = _garment_slits(openings)
+    rows = max(2, int(height * coverage))
+
+    for i in range(rows + 1):
+        u = i / rows                      # 0 Saum, 1 Kragen
+        t = u * coverage                  # in den Einheiten der Gestalt
+        y = base - t * height
+        hang = (1 - u) ** 2               # wie frei der Stoff haengt
+
+        # Dasselbe Rueckgrat, eine Spur spaeter.
+        sx = cx + lean * t * (1 - 0.30 * hang)
+        sx += math.sin(t * 2.6 + phase - 0.9 * hang) * (0.9 + t * 1.7) * 0.85
+        # Der Saum bleibt zurueck: beim Lauf weht er nach hinten aus.
+        sx += (-lean * 0.5 - smear * 4.5) * hang
+        sx += math.sin(phase * 1.3 + sway * 3.0 + u * 2.2) * hang * (1.1 + sway * 2.2)
+        if split > 0:
+            sx += math.sin(t * 9.0 + phase * 2) * split * 3.0
+
+        # Breite: das Profil der Gestalt, eine Spur weiter, unten glockig.
+        # Sie faellt von der Schulter zum Saum hin auf - eine Glocke, kein
+        # Rohr. Der Bauch der Gestalt drueckt sie dabei von innen auf.
+        w = _profile(t, kind) * 0.88 + 1.0 + 3.2 * hang
+        w *= 1 + smear * 0.20
+
+        # Eine Oeffnung ist eine Kerbe im Rand, kein fehlendes Stueck: der
+        # Stoff weicht dort zurueck, und in der Kerbe steht ihr Licht.
+        def kerbe(seite: int) -> float:
+            for su, s_, laenge in slits:
+                if s_ == seite and abs(u - su) < laenge / 2:
+                    tief = 1 - abs(u - su) / (laenge / 2)
+                    return (1.8 + 1.8 * tief) * min(1.0, w / 4)
+            return 0.0
+
+        links = int(sx - w + kerbe(-1))
+        rechts = int(sx + w - kerbe(1))
+        for x in range(links, rechts + 1):
+            rand = x <= links or x >= rechts
+            # Der Saum franst aus, statt gerade abzuschneiden.
+            if u < 0.14 and hash01(x, int(y) + int(phase * 4)) < 0.45:
+                continue
+            # Innen glimmt sie durch den Stoff, aussen bleibt er hart -
+            # so behaelt die Gestalt bei zwanzig Pixeln ihre Silhouette.
+            if rand:
+                # Ihr Licht sitzt hinter dem Stoff, also glueht der Rand -
+                # ein dunkler Umriss wuerde vor dem dunklen Grund verschwinden.
+                col = mix(stoff, saum_licht, 0.42)
+            elif abs(x - int(sx)) <= 1:
+                col = mix(stoff, saum_licht, 0.18)
+            else:
+                col = stoff
+            # Eine stehende Falte, die mit dem Saum mitwandert.
+            falte = int(sx) + int(math.sin(u * 2.4 + phase * 0.6 + sway) * 2) - 2
+            if x == falte and not rand:
+                col = shade(stoff, -0.35)
+            c.set(x, int(y), col)
+
+        for seite, kante in ((-1, links), (1, rechts)):
+            if kerbe(seite) > 0:
+                c.set(kante, int(y),
+                      (saum_licht[0], saum_licht[1], saum_licht[2], 225))
+                c.blend(kante + seite, int(y),
+                        (saum_licht[0], saum_licht[1], saum_licht[2], 60))
+
+        # Der Kragen haelt sie zusammen - dort liegt der Stoff eng an.
+        if u > 0.90:
+            c.set(links, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 170))
+            c.set(rechts, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 170))
 
     # --- Der Resonanzschlitz ----------------------------------------------
     # Kein Gesicht - nur eine dunkle Kerbe, dort wo die Gestalt am dichtesten
@@ -221,7 +345,7 @@ def draw_instrument(c: Canvas, kind: str, hx: int, hy: int, glow: float) -> None
 
 # ------------------------------------------------------ Animations-Sequenzen
 
-def hero_animations(instrument: str) -> dict[str, list[Canvas]]:
+def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[Canvas]]:
     """
     Weil die Gestalt formlos ist, braucht sie keine Gliedmassen, die
     zueinander passen muessen - jede Bewegung ist eine Verformung der
@@ -233,73 +357,76 @@ def hero_animations(instrument: str) -> dict[str, list[Canvas]]:
         out = []
         for i in range(count):
             p = i / count * math.tau
-            out.append(draw_heroine(instrument=instrument, phase=p, **kw))
+            out.append(draw_heroine(instrument=instrument, garment=garment,
+                                    phase=p, sway=math.sin(p) * 0.6, **kw))
         return out
 
     # Ruhe: sie flackert und atmet.
     anims["idle"] = [
-        draw_heroine(instrument=instrument, phase=i / 8 * math.tau,
+        draw_heroine(instrument=instrument, garment=garment, phase=i / 8 * math.tau,
                      stretch=1.0 + math.sin(i / 8 * math.tau) * 0.04,
+                     sway=math.sin(i / 8 * math.tau) * 0.5,
                      glow=0.85 + 0.25 * (0.5 + 0.5 * math.sin(i / 8 * math.tau)))
         for i in range(8)
     ]
 
     # Lauf: sie neigt sich und zieht einen Schweif hinter sich her.
     anims["run"] = [
-        draw_heroine(instrument=instrument, phase=i / 8 * math.tau * 2,
+        draw_heroine(instrument=instrument, garment=garment, phase=i / 8 * math.tau * 2,
                      lean=2.4 + math.sin(i / 8 * math.tau) * 0.8,
                      stretch=0.94 + abs(math.sin(i / 8 * math.tau)) * 0.10,
-                     smear=0.16)
+                     smear=0.16, sway=math.sin(i / 8 * math.tau + 1.1) * 1.3)
         for i in range(8)
     ]
 
-    anims["jump"] = [draw_heroine(instrument=instrument, phase=0.6,
-                                  lean=1.4, stretch=1.24, smear=0.05)]
-    anims["fall"] = [draw_heroine(instrument=instrument, phase=2.2,
-                                  lean=0.6, stretch=0.88, smear=0.18)]
-    anims["land"] = [draw_heroine(instrument=instrument, phase=1.1,
-                                  stretch=0.72, settle=2, smear=0.34)]
+    anims["jump"] = [draw_heroine(instrument=instrument, garment=garment, phase=0.6,
+                                  lean=1.4, stretch=1.24, smear=0.05, sway=-0.9)]
+    anims["fall"] = [draw_heroine(instrument=instrument, garment=garment, phase=2.2,
+                                  lean=0.6, stretch=0.88, smear=0.18, sway=1.4)]
+    anims["land"] = [draw_heroine(instrument=instrument, garment=garment, phase=1.1,
+                                  stretch=0.72, settle=2, smear=0.34, sway=1.8)]
 
     # Herzschlag: die Gestalt zerreisst waagerecht und zieht nach.
     anims["dash"] = [
-        draw_heroine(instrument=instrument, phase=i * 1.7, lean=4.0 - i,
+        draw_heroine(instrument=instrument, garment=garment, phase=i * 1.7, lean=4.0 - i,
                      stretch=0.82, smear=0.9 - i * 0.2, split=0.5 - i * 0.15,
                      glow=1.4, alpha_body=235 - i * 30)
         for i in range(3)
     ]
 
-    anims["wall"] = [draw_heroine(instrument=instrument, phase=0.4,
+    anims["wall"] = [draw_heroine(instrument=instrument, garment=garment, phase=0.4,
                                   lean=-1.8, stretch=1.10, smear=0.1)]
 
     # Nahkampf: eine Welle laeuft durch sie hindurch.
     anims["melee"] = [
-        draw_heroine(instrument=instrument, phase=0.2, lean=-1.2, whip=-0.35,
+        draw_heroine(instrument=instrument, garment=garment, phase=0.2, lean=-1.2, whip=-0.35,
                      stretch=1.06, glow=1.1),
-        draw_heroine(instrument=instrument, phase=1.4, lean=3.4, whip=0.85,
+        draw_heroine(instrument=instrument, garment=garment, phase=1.4, lean=3.4, whip=0.85,
                      stretch=0.92, smear=0.3, glow=1.6),
-        draw_heroine(instrument=instrument, phase=2.6, lean=1.6, whip=0.30,
+        draw_heroine(instrument=instrument, garment=garment, phase=2.6, lean=1.6, whip=0.30,
                      stretch=1.0, glow=1.2),
     ]
 
     # Fernkampf: sie zieht sich zusammen und stoesst den Ton aus.
     anims["cast"] = [
-        draw_heroine(instrument=instrument, phase=0.3, stretch=0.90,
+        draw_heroine(instrument=instrument, garment=garment, phase=0.3, stretch=0.90,
                      lean=-0.8, glow=1.0),
-        draw_heroine(instrument=instrument, phase=1.6, stretch=1.16,
+        draw_heroine(instrument=instrument, garment=garment, phase=1.6, stretch=1.16,
                      lean=1.2, split=0.28, glow=1.8),
-        draw_heroine(instrument=instrument, phase=2.8, stretch=1.04,
+        draw_heroine(instrument=instrument, garment=garment, phase=2.8, stretch=1.04,
                      lean=0.4, glow=1.3),
     ]
 
     # Treffer: sie zerfaellt fast.
-    anims["hurt"] = [draw_heroine(instrument=instrument, phase=1.9, lean=-3.0,
+    anims["hurt"] = [draw_heroine(instrument=instrument, garment=garment, phase=1.9, lean=-3.0,
                                   stretch=0.86, split=0.7, smear=0.4,
                                   glow=0.5, alpha_body=210)]
 
     # Rast: sie sinkt zu einer Lache zusammen.
     anims["rest"] = [
-        draw_heroine(instrument=instrument, phase=i / 5 * math.tau,
-                     stretch=0.58, settle=4, glow=1.2)
+        draw_heroine(instrument=instrument, garment=garment, phase=i / 5 * math.tau,
+                     stretch=0.58, settle=4, glow=1.2,
+                     sway=math.sin(i / 5 * math.tau) * 0.35)
         for i in range(5)
     ]
 
@@ -459,9 +586,10 @@ def build() -> None:
     atlas = Atlas("characters", padding=1, max_width=512)
 
     for instrument in ("leier", "trommel", "floete"):
-        for name, frames in hero_animations(instrument).items():
-            atlas.add_sequence(f"cadence_{instrument}_{name}", frames,
-                               pivot=(0.5, 1.0), fps=_fps_for(name))
+        for garment in GARMENTS:
+            for name, frames in hero_animations(instrument, garment).items():
+                atlas.add_sequence(f"cadence_{instrument}_{garment}_{name}", frames,
+                                   pivot=(0.5, 1.0), fps=_fps_for(name))
 
     atlas.add_sequence("klangmotte_fly",
                        [draw_klangmotte(i / 4 * math.tau) for i in range(4)],

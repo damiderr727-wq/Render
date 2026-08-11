@@ -66,6 +66,70 @@ Bänder, ein Treffer lässt sie fast zerfallen. Die späteren
 Resonanz-Fähigkeiten ziehen sie im Kampf kurz auseinander — dafür ist der
 Parameter schon da.
 
+## Die Fassungen
+
+Cadence würde sich ohne Kleidung zerstreuen. Deshalb ist ihre Ausrüstung
+kein Kostüm, sondern ein **Gefäß** — und daraus fällt die ganze Mechanik
+von selbst heraus, statt aus einer Liste von Zahlen:
+
+> Sie ist Klang unter Druck. Wo die Fassung Öffnungen hat, entweicht der
+> Ton — und je weniger Öffnungen, desto höher der Druck an den
+> verbliebenen.
+
+| Fassung | Öffnungen | was sie tut |
+| --- | --- | --- |
+| Schlichter Mantel | 4 | hält sie zusammen, sonst nichts |
+| Enge Fassung | 1 | Fernklang trägt weit und hart, sie wird träge |
+| Offene Fassung | 9 | Nahklang weit und billig, Fernklang verpufft |
+| Schlagfassung | 2 | Basston und Trommel reißen, sie springt niedrig |
+| Gerissenes Gewand | 14 | schnell und weit, hält aber fast nichts aus |
+
+Der Mantel ist die Standardausrüstung und verschiebt nichts. Er gibt ihr
+nichts — er nimmt ihr nur das Vergehen. Ohne gültige Fassung fällt sie
+auf ihn zurück.
+
+Technisch hängt alles an einer Stelle: `Stats` multipliziert die
+Grundwerte aus `Tuning` mit den Faktoren der getragenen Fassung, und der
+Spieler fragt nur noch `Stats` — nie mehr `Tuning` direkt. Eine neue
+Fassung wirkt dadurch überall zugleich: Lauf, Sprung, Sprint,
+Reichweite, Wucht, Zusammenhalt. Reichweite steckt dabei nicht in einem
+eigenen Feld, sondern in Tempo und Lebensdauer des Geschosses — sonst
+gäbe es zwei Wahrheiten über dasselbe.
+
+Eine Feinheit, die beim Testen auffiel: ganzzahliger Schaden verschluckt
+kleine Aufschläge beim Runden. Ein Ton mit Schaden 1 blieb auch mit
+vierzig Prozent mehr Druck bei 1 — die Fassung versprach etwas, das man
+nie zu spüren bekam. Ab einem deutlichen Aufschlag kommt jetzt mindestens
+ein Punkt an.
+
+Gewechselt wird nur an der Stimmgabel. Sich mitten im Kampf neu zu fassen
+wäre kein Kleiderwechsel, sondern ein Umbau.
+
+### Der Stoff darf nicht steif sein
+
+Die Kleidung bekommt kein eigenes Skelett. Sie läuft über dasselbe
+Rückgrat wie die Gestalt, nur **verzögert**: unten am Saum hängt sie am
+weitesten hinterher, oben am Kragen sitzt sie fast auf. Dadurch folgt sie
+jeder Bewegung, ohne dass eine einzige Pose von Hand gesetzt wäre — beim
+Lauf weht der Saum nach hinten aus, beim Stehenbleiben schwingt er nach,
+bei der Landung schlägt er hoch.
+
+Zwei Entscheidungen halten sie bei zweiundzwanzig Pixeln lesbar:
+
+- **Die Öffnungen sind Kerben im Rand, kein fehlendes Stück.** Ein echtes
+  Loch im Stoff gab die helle Masse dahinter frei, und die Silhouette
+  zerfiel. Jetzt weicht der Stoff an der Öffnung zurück, und in der Kerbe
+  steht ihr Licht.
+- **Der Rand glüht, statt dunkel zu sein.** Ihr Licht sitzt hinter dem
+  Stoff — ein dunkler Umriss verschwindet vor dem dunklen Grund, ein
+  hinterleuchteter Rand nicht.
+
+Die Zahl der Öffnungen im Bild ist dieselbe wie im Spielwert. Das Siegel
+des Fundstücks zeigt denselben Querschnitt: so viele Lücken wie
+Öffnungen, und aus jeder fährt der Druck heraus — wenige Lücken, lange
+Strahlen. Ein Test prüft, dass es zu jeder Fassung im Katalog auch Bilder
+gibt, sonst driften Zahlen und Zeichnung auseinander.
+
 ## Die Werteordnung
 
 Der zweite große Fehler des ersten Entwurfs: alles lag im selben
@@ -298,6 +362,9 @@ Gefunden hat sie unter anderem:
   Gelände danach gezeichnet wurde.
 - Mehrere Aufstiege hatten Sprossen außerhalb der Sprungweite.
 - Der Fernkampf meldete den Schuss, erzeugte aber nie Geschosse.
+- Gesperrte Ziele wurden von der Prüfung gar nicht geprüft, sondern nur
+  übersprungen. Ein zweiter Durchgang mit allem Können läuft jetzt darüber,
+  und der Bericht unterscheidet "später erreichbar" von "nie erreichbar".
 
 ## Was fehlt
 

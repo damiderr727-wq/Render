@@ -286,10 +286,11 @@ def room_A1() -> Room:
     r.ground(1, 59, lambda x: 16 - 2 * math.sin(x * 0.09) - (1 if 20 < x < 34 else 0))
     r.ceiling(1, 59, lambda x: 3 + 1.5 * math.sin(x * 0.13 + 1))
 
-    r.platform(14, 12, 5)
-    r.platform(24, 10, 6)
-    r.ledge(34, 12, 6, 2)
-    r.platform(44, 11, 5)
+    # Plattformen sitzen dort, wo sie einen Weg oeffnen - nicht zwei
+    # Kacheln ueber ebenem Boden, wo man ohnehin laufen kann.
+    r.platform(22, 11, 6)
+    r.ledge(32, 12, 8, 2)
+    r.platform(44, 8, 5)
 
     r.side_door("R", "right", "A2", "L")
     r.spawn_on("start", 8, 7, 1)

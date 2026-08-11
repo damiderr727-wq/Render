@@ -117,10 +117,14 @@ Licht wird es sofort dunkel, Wurzeln laufen von der Kante in die Masse
 hinein, und je nach Kachelvariante wächst viel, wenig oder gar nichts. Die
 Kollision merkt davon nichts — sie kennt weiter nur das Raster.
 
-Dasselbe gilt für die durchsteigbaren Plattformen — und sie bekommen
-**Enden**. Eine Plattform, die an beiden Seiten abgeschnitten ist, liest
-sich als hingelegtes Brett; mit auslaufenden Enden wird sie ein Stück der
-Landschaft, durch die man reist.
+**Plattformen brauchen einen Grund.** Ein dünnes Brett, das zwei Kacheln
+über ebenem Boden schwebt, sieht aus wie eine Spielmechanik — nicht wie
+Landschaft. Sie haben deshalb Substanz und Herkunft bekommen: im Hain eine
+gestürzte Wurzel mit Rinde, Moos und herabhängendem Wurzelwerk, in der
+Kathedrale ein gebrochener Steinbalken, in den Grotten ein Kristallsims,
+in der Dissonanz eine gesprungene Platte. Dazu auslaufende Enden statt
+abgeschnittener Kacheln — und im Level stehen sie nur noch dort, wo sie
+einen Weg öffnen.
 
 **Sichtbare Kachelkanten.** Der Kamm variierte frei in der Höhe — und
 sprang deshalb an jeder Kachelgrenze. Der Trick dagegen ist billig und

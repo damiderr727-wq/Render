@@ -127,6 +127,71 @@ class Room:
                 self.fill(tx, ty + 1, 1, self.h - ty - 1, SOLID)
         return self
 
+    def soften(self, min_run: int = 2) -> "Room":
+        """
+        Wandelt einzelne Bodenstufen in sanfte Haenge.
+
+        Ein Hoehenprofil aus `ground()` wird beim Runden zur Treppe: jede
+        Kachel liegt ganz oben oder ganz unten, und die Karte bekommt genau
+        die harten Absaetze, an denen man ein Kachelspiel erkennt. Statt in
+        jedem Raum von Hand Rampen zu setzen, laeuft dieser Durchgang am
+        Ende ueber den fertigen Boden und ersetzt jede Stufe von genau
+        einer Kachel durch ein Rampenpaar (zwei Kacheln Laenge, eine hoch).
+
+        Angefasst wird nur gewachsener Boden - eine Saeule, die bis zum
+        unteren Rand durchsteht. Schwebende Simse behalten ihre Kante,
+        sonst zerfliesst der Unterschied zwischen "Boden" und "Vorsprung".
+        Stufen von zwei oder mehr Kacheln bleiben ebenfalls stehen: eine
+        Klippe ist eine Absicht, keine Panne.
+        """
+        surf: list[int | None] = [None] * self.w
+
+        for x in range(1, self.w - 1):
+            for y in range(1, self.h):
+                # Freiliegende Oberkante gesucht. Deckenkacheln und alles,
+                # worueber Dornen oder eine Sperre sitzen, fallen durch.
+                if self.grid[y][x] != SOLID or self.grid[y - 1][x] != AIR:
+                    continue
+                # Nur gewachsener Boden: die Saeule steht bis nach unten durch.
+                # Ein schwebender Sims wird uebersprungen, nicht abgebrochen -
+                # darunter liegt ja noch der eigentliche Boden.
+                if not all(self.grid[j][x] == SOLID for j in range(y, self.h)):
+                    continue
+                # Kopffreiheit, sonst schiebt die Rampe die Figur in den Fels.
+                if all(self.grid[y - k][x] == AIR for k in range(1, 4)):
+                    surf[x] = y
+                break
+
+        # Laeufe gleicher Hoehe. Nur zwischen zwei ausreichend langen
+        # Laeufen darf eine Rampe stehen - sonst frisst sie einen schmalen
+        # Absatz ganz auf.
+        laeufe: list[tuple[int, int, int]] = []   # (start, ende, hoehe)
+        x = 1
+        while x < self.w - 1:
+            if surf[x] is None:
+                x += 1
+                continue
+            start, hoehe = x, surf[x]
+            while x + 1 < self.w - 1 and surf[x + 1] == hoehe:
+                x += 1
+            laeufe.append((start, x, hoehe))
+            x += 1
+
+        for (a0, a1, ha), (b0, b1, hb) in zip(laeufe, laeufe[1:]):
+            if b0 != a1 + 1 or abs(ha - hb) != 1:
+                continue
+            if a1 - a0 + 1 < min_run or b1 - b0 + 1 < min_run:
+                continue
+            if hb < ha:                                   # steigt nach rechts
+                ty, pair = hb, (UP_LOW, UP_HIGH)
+            else:                                         # faellt nach rechts
+                ty, pair = ha, (DOWN_HIGH, DOWN_LOW)
+            for k, ch in enumerate(pair):
+                tx = a1 + k
+                self.set(tx, ty, ch)
+                self.fill(tx, ty + 1, 1, self.h - ty - 1, SOLID)
+        return self
+
     def stairs(self, x: int, y: int, steps: int, dx: int = 1, dy: int = -1, w: int = 3) -> "Room":
         for i in range(steps):
             self.ledge(x + i * dx * w, y + i * dy, w, 2)
@@ -887,6 +952,9 @@ def build() -> None:
     rooms = {}
     for factory in ROOMS:
         r = factory()
+        # Zum Schluss, wenn Tueren, Simse und Deko stehen: der Boden wird
+        # von seinen Treppenstufen befreit.
+        r.soften()
         rooms[r.id] = r
 
     problems = validate(rooms) + check_progression(rooms)

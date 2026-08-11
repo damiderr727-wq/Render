@@ -255,6 +255,28 @@ das Kachelbild verrät das Raster, sondern die ununterbrochene Fuge. Steine,
 Wurzelknäuel und Reisig werden deshalb gezielt über die Kachelgrenzen
 gesetzt, nicht in die Kachelmitte — dort, wo die Linie sonst sichtbar wäre.
 
+### Stufen werden Hänge
+
+Ein Höhenprofil aus `ground()` wird beim Runden zur Treppe: jede Kachel
+liegt ganz oben oder ganz unten. Statt in jedem Raum von Hand Rampen zu
+setzen, läuft am Ende ein Durchgang über den fertigen Boden und ersetzt
+jede Stufe von genau einer Kachel durch ein Rampenpaar — zwei Kacheln
+lang, eine hoch.
+
+Drei Regeln halten den Durchgang davon ab, die Karte einzuebnen:
+
+- **Nur gewachsener Boden.** Eine Säule, die bis zum unteren Rand
+  durchsteht. Schwebende Simse behalten ihre Kante, sonst verschwimmt der
+  Unterschied zwischen Boden und Vorsprung.
+- **Nur einzelne Stufen.** Zwei Kacheln Unterschied bleiben stehen: eine
+  Klippe ist eine Absicht, keine Panne.
+- **Nur zwischen langen Läufen.** Ein Absatz von einer Kachel Breite wird
+  nicht zur Rampe umgebaut, sondern bleibt Absatz.
+
+Das Ergebnis: siebzig Rampenkacheln in fünf Räumen, ohne eine einzige von
+Hand gesetzt. Die Kathedrale bleibt unberührt — gemauerter Boden ist
+flach, und das soll er auch sein.
+
 ## Der Kampf
 
 Die Waffe ist der Schall. Das Instrument gibt ihm nur die Form. Deshalb

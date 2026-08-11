@@ -16,7 +16,9 @@ from pixelkit import Atlas, Canvas, Palette as P, Rng, hash01, hexc, mix, shade
 
 OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Resources" / "Atlas"
 
-HERO_W, HERO_H = 22, 30
+# Die Leinwand ist breiter als die Gestalt: ein Cape braucht Platz
+# neben ihr, sonst schneidet der Rahmen es ab.
+HERO_W, HERO_H = 28, 30
 GROUND = HERO_H - 1  # unterste Pixelzeile = Fussboden
 
 
@@ -71,12 +73,29 @@ def _profile(t: float, instrument: str) -> float:
 # fast geschlossen; ein gerissenes Gewand ist mehr Schlitz als Stoff.
 
 GARMENTS = {
-    # id: (Oeffnungen, Stoffton, Saumlicht, Deckung 0..1)
-    "mantel":            (4,  mix(P.CLOAK, P.STONE, 0.55),                 P.TRIM,  0.62),
-    "enge_fassung":      (1,  mix(mix(P.CLOAK, P.STONE, 0.5), P.GOLD, 0.20), P.GOLD,  0.68),
-    "offene_fassung":    (9,  mix(mix(P.CLOAK, P.STONE, 0.6), P.TRIM, 0.16), P.TRIM,  0.58),
-    "schlagfassung":     (2,  mix(mix(P.CLOAK, P.STONE, 0.5), P.ROT, 0.20),  P.ROT,   0.65),
-    "gerissenes_gewand": (14, mix(mix(P.CLOAK, P.STONE, 0.6), P.WARM, 0.14), P.AMBER, 0.52),
+    # Der Schnitt bestimmt die Silhouette, die Oeffnungen den Spielwert.
+    #
+    #   mantel   - lose, faellt weit, laeuft dem Koerper hinterher
+    #   harnisch - starr, geschlossen, laesst nur den Kopf frei
+    #   cape     - haengt nur an der Schulter und schwirrt umher
+    "mantel": dict(
+        openings=4, cut="mantel", deckung=0.64,
+        stoff=mix(P.CLOAK, P.STONE, 0.55), licht=P.TRIM),
+    "cape": dict(
+        openings=6, cut="cape", deckung=0.72,
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.BLOOM, 0.16), licht=P.BLOOM),
+    "enge_fassung": dict(
+        openings=1, cut="harnisch", deckung=0.70,
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.GOLD, 0.20), licht=P.GOLD),
+    "offene_fassung": dict(
+        openings=9, cut="mantel", deckung=0.58,
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.6), P.TRIM, 0.16), licht=P.TRIM),
+    "schlagfassung": dict(
+        openings=2, cut="harnisch", deckung=0.66,
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.ROT, 0.20), licht=P.ROT),
+    "gerissenes_gewand": dict(
+        openings=14, cut="cape", deckung=0.60,
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.6), P.WARM, 0.14), licht=P.AMBER),
 }
 
 
@@ -97,6 +116,186 @@ def _garment_slits(openings: int) -> list[tuple[float, int, float]]:
         laenge = min(0.24, 0.07 + 0.22 / openings)
         out.append((u, seite, laenge))
     return out
+
+
+
+def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
+                  height: float, phase: float, lean: float, smear: float,
+                  split: float, sway: float, hinter: bool) -> None:
+    """
+    Zeichnet die getragene Fassung ueber die Gestalt.
+
+    Der Stoff bekommt kein eigenes Skelett: er laeuft ueber dasselbe
+    Rueckgrat wie die Gestalt, nur verzoegert. Unten haengt er am weitesten
+    hinterher, oben sitzt er fast auf - dadurch folgt er jeder Bewegung,
+    ohne dass eine Pose von Hand gesetzt waere.
+
+    Drei Schnitte, und der Schnitt entscheidet ueber alles Weitere:
+
+      mantel    Lose. Faellt weit ueber den Bauch der Gestalt hinaus,
+                schwingt nach und weht beim Lauf hinter ihr her.
+      harnisch  Starr. Liegt eng an, in waagerechten Schienen, und laesst
+                nur den Kopf frei. Er schwingt nicht - er ist Metall.
+      cape      Haengt nur an der Schulter. Der Koerper bleibt frei, das
+                Tuch schwirrt hinter ihr umher und faengt jeden Sprung.
+    """
+    g = GARMENTS.get(garment, GARMENTS["mantel"])
+    openings, cut, coverage = g["openings"], g["cut"], g["deckung"]
+    stoff, saum_licht = g["stoff"], g["licht"]
+    stoff_hi = shade(stoff, 0.42)
+    slits = _garment_slits(openings)
+
+    # Ein Cape haengt hinter ihr, ein Mantel liegt auf ihr. Deshalb wird das
+    # eine vor der Gestalt gezeichnet und das andere danach.
+    if (cut == "cape") != hinter:
+        return
+
+    if cut == "cape":
+        _draw_cape(c, kind=kind, cx=cx, base=base, height=height, phase=phase,
+                   lean=lean, smear=smear, sway=sway, coverage=coverage,
+                   slits=slits, stoff=stoff, stoff_hi=stoff_hi, licht=saum_licht)
+        return
+
+    starr = cut == "harnisch"
+    rows = max(2, int(height * coverage))
+
+    for i in range(rows + 1):
+        u = i / rows                      # 0 Saum, 1 Kragen
+        t = u * coverage                  # in den Einheiten der Gestalt
+        y = base - t * height
+        hang = (1 - u) ** 2               # wie frei der Stoff haengt
+
+        if starr:
+            # Metall haengt nicht. Es sitzt auf ihr und folgt nur der Neigung.
+            sx = cx + lean * t
+            sx += math.sin(t * 2.6 + phase) * (0.6 + t * 0.9) * 0.5
+            # Enger Sitz: die Schienen liegen dicht ueber der Gestalt, unten
+            # laeuft der Beintaschen-Rand ein Stueck aus.
+            w = _profile(t, kind) * 0.98 + 0.9 + 0.9 * hang
+        else:
+            # Lose: der Saum haengt weit hinterher und schwingt nach.
+            sx = cx + lean * t * (1 - 0.42 * hang)
+            sx += math.sin(t * 2.6 + phase - 1.1 * hang) * (0.9 + t * 1.7) * 0.85
+            sx += (-lean * 0.75 - smear * 5.5) * hang
+            sx += math.sin(phase * 1.3 + sway * 3.0 + u * 2.2) * hang * (1.5 + sway * 2.8)
+            # Weit geschnitten: er faellt ueber den Bauch der Gestalt hinaus.
+            w = _profile(t, kind) * 0.88 + 1.4 + 4.2 * hang
+        w *= 1 + smear * 0.20
+        if split > 0:
+            sx += math.sin(t * 9.0 + phase * 2) * split * 3.0
+
+        # Eine Oeffnung ist eine Kerbe im Rand, kein fehlendes Stueck: der
+        # Stoff weicht dort zurueck, und in der Kerbe steht ihr Licht.
+        def kerbe(seite: int) -> float:
+            for su, s_, laenge in slits:
+                if s_ == seite and abs(u - su) < laenge / 2:
+                    tief = 1 - abs(u - su) / (laenge / 2)
+                    return (1.8 + 1.8 * tief) * min(1.0, w / 4)
+            return 0.0
+
+        links = int(sx - w + kerbe(-1))
+        rechts = int(sx + w - kerbe(1))
+        # Waagerechte Schienen: alle drei Reihen eine Fuge, darueber ein
+        # heller Grat. Daran erkennt man Metall auf den ersten Blick.
+        schiene = starr and i % 3 == 0
+        for x in range(links, rechts + 1):
+            rand = x <= links or x >= rechts
+            if not starr and u < 0.14 and hash01(x, int(y) + int(phase * 4)) < 0.45:
+                continue
+            # Ihr Licht sitzt hinter dem Stoff, also glueht der Rand - ein
+            # dunkler Umriss verschwaende vor dem dunklen Grund.
+            if rand:
+                col = mix(stoff, saum_licht, 0.42)
+            elif schiene:
+                col = shade(stoff, -0.42)
+            elif starr and i % 3 == 1:
+                col = stoff_hi
+            elif abs(x - int(sx)) <= 1:
+                col = mix(stoff, saum_licht, 0.18)
+            else:
+                col = stoff
+            if not starr:
+                falte = int(sx) + int(math.sin(u * 2.4 + phase * 0.6 + sway) * 2) - 2
+                if x == falte and not rand:
+                    col = shade(stoff, -0.35)
+            c.set(x, int(y), col)
+
+        for seite, kante in ((-1, links), (1, rechts)):
+            if kerbe(seite) > 0:
+                c.set(kante, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 225))
+                c.blend(kante + seite, int(y),
+                        (saum_licht[0], saum_licht[1], saum_licht[2], 60))
+
+        # Der Kragen haelt sie zusammen. Beim Harnisch steht er als Kehle
+        # hoch und laesst genau den Kopf frei.
+        if u > 0.90:
+            c.set(links, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 170))
+            c.set(rechts, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 170))
+            if starr:
+                for x in range(links + 1, rechts):
+                    c.set(x, int(y - 1), stoff_hi)
+                c.set(links, int(y - 1), mix(stoff, saum_licht, 0.5))
+                c.set(rechts, int(y - 1), mix(stoff, saum_licht, 0.5))
+
+
+def _draw_cape(c: Canvas, *, kind: str, cx: int, base: float, height: float,
+               phase: float, lean: float, smear: float, sway: float,
+               coverage: float, slits, stoff, stoff_hi, licht) -> None:
+    """
+    Ein Cape haengt an der Schulter und sonst nirgends.
+
+    Es traegt nichts und deckt nichts - es faengt nur die Bewegung. Beim
+    Sprung schwirrt es weit hinter ihr her, beim Stehen sinkt es zurueck.
+    Gezeichnet wird es als Bahn, die von der Schulter nach hinten unten
+    laeuft: eine Mittellinie mit Breite, keine Kontur um einen Koerper.
+    """
+    hinten = -1 if lean >= 0 else 1        # es haengt der Bewegung entgegen
+    sy = base - coverage * height
+    sx = cx + lean * coverage * 0.6
+
+    # Wie weit es aussteht. Schon im Stand haengt es ein Stueck hinter ihr,
+    # sonst waere es hinter der Gestalt gar nicht zu sehen.
+    wurf = 4.2 + abs(lean) * 1.4 + smear * 8.0 + abs(sway) * 3.4
+    laenge = height * (0.86 + smear * 0.16)
+
+    punkte = []
+    schritte = int(laenge) + 1
+    for i in range(schritte + 1):
+        v = i / schritte                                  # 0 Schulter .. 1 Zipfel
+        # Die Bahn faellt und weht dabei nach hinten aus.
+        x = sx + hinten * (2.0 + wurf * v ** 1.15)
+        x += math.sin(v * 3.2 + phase * 1.6 + sway * 2.4) * (0.5 + v * 2.2)
+        y = sy + laenge * v * (0.92 - 0.34 * abs(sway))
+        punkte.append((x, y))
+
+    for i, (x, y) in enumerate(punkte):
+        v = i / schritte
+        # Am Kragen schmal, dann breit, am Zipfel wieder spitz.
+        w = 1.0 + 4.6 * math.sin(min(1.0, v * 1.15) * math.pi) ** 0.55
+        offen = any(abs(v - (1 - su)) < laenge_ / 2 for su, _, laenge_ in slits)
+        for dx in range(-int(w) - 1, int(w) + 2):
+            d = abs(dx) / max(0.8, w)
+            if d > 1:
+                continue
+            if offen and d > 0.5:
+                if d > 0.78:
+                    c.blend(int(x) + dx, int(y), (licht[0], licht[1], licht[2], 150))
+                continue
+            # Der Zipfel franst aus.
+            if v > 0.82 and hash01(int(x) + dx, int(y) + int(phase * 4)) < (v - 0.82) * 3.4:
+                continue
+            if d > 0.74:
+                col = mix(stoff, licht, 0.38)
+            elif d < 0.24:
+                col = stoff_hi
+            else:
+                col = stoff
+            c.set(int(x) + dx, int(y), col)
+
+    # Die Spange an der Schulter - das Einzige daran, das eine Kante hat.
+    c.set(int(sx), int(sy), (licht[0], licht[1], licht[2], 235))
+    c.set(int(sx) + hinten, int(sy), mix(stoff, licht, 0.55))
+    c.set(int(sx), int(sy) + 1, mix(stoff, licht, 0.35))
 
 
 def draw_heroine(
@@ -132,6 +331,11 @@ def draw_heroine(
     core = mix(P.BONE, hexc("#dffaf2"), 0.55)
     mid = mix(P.TRIM, P.BONE, 0.35)
     rim = mix(P.TRIM, P.CLOAK, 0.45)
+
+    # Was hinter ihr haengt, kommt zuerst - sonst laege das Cape vor ihr.
+    _draw_garment(c, garment=garment, kind=kind, cx=cx, base=base, height=height,
+                  phase=phase, lean=lean, smear=smear, split=split, sway=sway,
+                  hinter=True)
 
     # --- Die Gestalt ------------------------------------------------------
     steps = int(height) + 1
@@ -182,82 +386,9 @@ def draw_heroine(
         if hash01(k, int(phase * 8)) > 0.35:
             c.set(int(fx), int(fy), mix(mid, P.AMBER, 0.35))
 
-    # --- Die Fassung ------------------------------------------------------
-    #
-    # Der Stoff bekommt kein eigenes Skelett. Er laeuft ueber dasselbe
-    # Rueckgrat wie die Gestalt, nur verzoegert: unten am Saum haengt er am
-    # weitesten hinterher, oben am Kragen sitzt er fast auf. Dadurch folgt
-    # er jeder Bewegung, ohne dass eine einzige Pose von Hand gesetzt waere.
-    openings, stoff, saum_licht, coverage = GARMENTS.get(garment, GARMENTS["mantel"])
-    stoff_hi = shade(stoff, 0.42)
-    stoff_lo = shade(stoff, -0.40)
-    slits = _garment_slits(openings)
-    rows = max(2, int(height * coverage))
-
-    for i in range(rows + 1):
-        u = i / rows                      # 0 Saum, 1 Kragen
-        t = u * coverage                  # in den Einheiten der Gestalt
-        y = base - t * height
-        hang = (1 - u) ** 2               # wie frei der Stoff haengt
-
-        # Dasselbe Rueckgrat, eine Spur spaeter.
-        sx = cx + lean * t * (1 - 0.30 * hang)
-        sx += math.sin(t * 2.6 + phase - 0.9 * hang) * (0.9 + t * 1.7) * 0.85
-        # Der Saum bleibt zurueck: beim Lauf weht er nach hinten aus.
-        sx += (-lean * 0.5 - smear * 4.5) * hang
-        sx += math.sin(phase * 1.3 + sway * 3.0 + u * 2.2) * hang * (1.1 + sway * 2.2)
-        if split > 0:
-            sx += math.sin(t * 9.0 + phase * 2) * split * 3.0
-
-        # Breite: das Profil der Gestalt, eine Spur weiter, unten glockig.
-        # Sie faellt von der Schulter zum Saum hin auf - eine Glocke, kein
-        # Rohr. Der Bauch der Gestalt drueckt sie dabei von innen auf.
-        w = _profile(t, kind) * 0.88 + 1.0 + 3.2 * hang
-        w *= 1 + smear * 0.20
-
-        # Eine Oeffnung ist eine Kerbe im Rand, kein fehlendes Stueck: der
-        # Stoff weicht dort zurueck, und in der Kerbe steht ihr Licht.
-        def kerbe(seite: int) -> float:
-            for su, s_, laenge in slits:
-                if s_ == seite and abs(u - su) < laenge / 2:
-                    tief = 1 - abs(u - su) / (laenge / 2)
-                    return (1.8 + 1.8 * tief) * min(1.0, w / 4)
-            return 0.0
-
-        links = int(sx - w + kerbe(-1))
-        rechts = int(sx + w - kerbe(1))
-        for x in range(links, rechts + 1):
-            rand = x <= links or x >= rechts
-            # Der Saum franst aus, statt gerade abzuschneiden.
-            if u < 0.14 and hash01(x, int(y) + int(phase * 4)) < 0.45:
-                continue
-            # Innen glimmt sie durch den Stoff, aussen bleibt er hart -
-            # so behaelt die Gestalt bei zwanzig Pixeln ihre Silhouette.
-            if rand:
-                # Ihr Licht sitzt hinter dem Stoff, also glueht der Rand -
-                # ein dunkler Umriss wuerde vor dem dunklen Grund verschwinden.
-                col = mix(stoff, saum_licht, 0.42)
-            elif abs(x - int(sx)) <= 1:
-                col = mix(stoff, saum_licht, 0.18)
-            else:
-                col = stoff
-            # Eine stehende Falte, die mit dem Saum mitwandert.
-            falte = int(sx) + int(math.sin(u * 2.4 + phase * 0.6 + sway) * 2) - 2
-            if x == falte and not rand:
-                col = shade(stoff, -0.35)
-            c.set(x, int(y), col)
-
-        for seite, kante in ((-1, links), (1, rechts)):
-            if kerbe(seite) > 0:
-                c.set(kante, int(y),
-                      (saum_licht[0], saum_licht[1], saum_licht[2], 225))
-                c.blend(kante + seite, int(y),
-                        (saum_licht[0], saum_licht[1], saum_licht[2], 60))
-
-        # Der Kragen haelt sie zusammen - dort liegt der Stoff eng an.
-        if u > 0.90:
-            c.set(links, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 170))
-            c.set(rechts, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 170))
+    _draw_garment(c, garment=garment, kind=kind, cx=cx, base=base, height=height,
+                  phase=phase, lean=lean, smear=smear, split=split, sway=sway,
+                  hinter=False)
 
     # --- Der Resonanzschlitz ----------------------------------------------
     # Kein Gesicht - nur eine dunkle Kerbe, dort wo die Gestalt am dichtesten

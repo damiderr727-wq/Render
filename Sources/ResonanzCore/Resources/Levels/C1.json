@@ -109,7 +109,14 @@
    "y": 12
   }
  ],
- "pickups": [],
+ "pickups": [
+  {
+   "kind": "equipment",
+   "id": "schlagfassung",
+   "x": 48,
+   "y": 10
+  }
+ ],
  "decor": [
   {
    "kind": "crystal",

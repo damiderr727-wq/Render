@@ -125,6 +125,12 @@
    "id": "trommel",
    "x": 30,
    "y": 21
+  },
+  {
+   "kind": "equipment",
+   "id": "offene_fassung",
+   "x": 20,
+   "y": 19
   }
  ],
  "decor": [
@@ -272,6 +278,11 @@
   }
  ],
  "lore": [
+  {
+   "x": 14,
+   "y": 25,
+   "text": "WER SICH WEIT OEFFNET, KLINGT NACH ALLEN SEITEN - UND NICHTS DAVON KOMMT AN."
+  },
   {
    "x": 24,
    "y": 24,

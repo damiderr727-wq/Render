@@ -5,6 +5,7 @@ public struct PickupInstance: Sendable {
     public enum Payload: Sendable {
         case instrument(Instrument)
         case ability(Ability)
+        case equipment(Equipment)
     }
     public let key: String
     public let payload: Payload
@@ -121,6 +122,7 @@ public final class GameSimulation {
             switch p.kind {
             case "instrument": payload = Instrument(rawValue: p.id).map { .instrument($0) }
             case "ability": payload = Ability(rawValue: p.id).map { .ability($0) }
+            case "equipment": payload = EquipmentCatalog.find(p.id).map { .equipment($0) }
             default: payload = nil
             }
             guard let payload else { continue }
@@ -184,6 +186,9 @@ public final class GameSimulation {
 
         if player.isResting {
             restTimer += dt
+            if input.cycleEquipment != 0 {
+                cycleEquipment(by: input.cycleEquipment, events: &events)
+            }
             if input.interactPressed && restTimer > 0.35 {
                 player.endRest()
                 restTimer = 0
@@ -221,9 +226,10 @@ public final class GameSimulation {
         for event in events {
             switch event {
             case .fireProjectiles(let instrument, let origin, let direction):
-                projectiles.append(contentsOf: Projectile.volley(instrument: instrument,
-                                                                 origin: origin,
-                                                                 direction: direction))
+                projectiles.append(contentsOf:
+                    Projectile.volley(profile: player.stats.ranged(instrument),
+                                      instrument: instrument,
+                                      origin: origin, direction: direction))
             case .slamShockwave(let origin, let radius):
                 applySlam(origin: origin, radius: radius, events: &nachtrag)
             default:
@@ -239,12 +245,12 @@ public final class GameSimulation {
         var getroffen = 0
         for enemy in enemies where enemy.alive && enemy.rect.intersects(area) {
             let away = Vec2(sign(enemy.center.x - origin.x), -0.6).normalized
-            enemy.takeDamage(3, knockback: away * 260, events: &events)
+            enemy.takeDamage(player.stats.slamDamage, knockback: away * 260, events: &events)
             if !enemy.alive { player.gainResonance(enemy.kind.resonanceReward) }
             getroffen += 1
         }
         if let boss, boss.alive, boss.rect.intersects(area) {
-            boss.takeDamage(3, events: &events)
+            boss.takeDamage(player.stats.slamDamage, events: &events)
             getroffen += 1
         }
         if getroffen > 0 { player.registerMeleeHit(count: getroffen) }
@@ -347,7 +353,7 @@ public final class GameSimulation {
 
     private func resolveMeleeHits(events: inout [GameEvent]) {
         guard let hitbox = player.activeMeleeHitbox() else { return }
-        let profile = Tuning.melee(player.instrument)
+        let profile = player.stats.melee(player.instrument)
         let downward = player.aimY > 0.5 && !player.onGround
         var hits = 0
 
@@ -463,6 +469,10 @@ public final class GameSimulation {
                 events.append(.sound(.abilityGained))
                 events.append(.abilityPicked(ability))
                 events.append(.shake(6))
+            case .equipment(let equipment):
+                save.progression.equipmentOwned.insert(equipment.id)
+                events.append(.sound(.abilityGained))
+                events.append(.equipmentFound(equipment))
             }
             events.append(.effect(.mote, pickup.position, .zero))
         }
@@ -614,7 +624,36 @@ public final class GameSimulation {
         }
     }
 
+    // MARK: - Fassungen
+
+    /// Schaltet an der Stimmgabel durch die gefundenen Fassungen.
+    private func cycleEquipment(by step: Int, events: inout [GameEvent]) {
+        let owned = save.progression.ownedEquipment
+        guard owned.count > 1,
+              let current = owned.firstIndex(where: { $0.id == save.progression.equipmentWorn })
+        else { return }
+        let count = owned.count
+        let next = owned[((current + step) % count + count) % count]
+        guard next.id != save.progression.equipmentWorn, wear(next.id) else { return }
+        events.append(.sound(.pickup))
+        events.append(.equipmentWorn(next))
+    }
+
     // MARK: - Speichern
+
+    /// Legt eine gefundene Fassung an. Nur an der Stimmgabel - sich mitten
+    /// im Kampf neu zu fassen waere kein Kleiderwechsel, sondern ein Umbau.
+    @discardableResult
+    public func wear(_ equipmentID: String) -> Bool {
+        guard save.progression.equipmentOwned.contains(equipmentID),
+              EquipmentCatalog.find(equipmentID) != nil,
+              player.isResting || player.isDead
+        else { return false }
+        save.progression.equipmentWorn = equipmentID
+        player.sync(progression: save.progression)
+        player.restore()
+        return true
+    }
 
     /// Erzeugt den aktuellen Speicherstand (Aufruf an der Stimmgabel).
     public func snapshotSave() -> SaveState {

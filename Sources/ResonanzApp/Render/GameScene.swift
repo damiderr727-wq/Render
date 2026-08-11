@@ -112,6 +112,7 @@ public final class GameScene: SKScene {
             switch pickup.payload {
             case .instrument(let instrument): name = "sigil_\(instrument.rawValue)"
             case .ability(let ability): name = "sigil_\(ability.rawValue)"
+            case .equipment(let equipment): name = "sigil_\(equipment.id)"
             }
             let node = atlas.sprite(name)
             node.position = WorldSpace.scenePoint(pickup.position)
@@ -189,6 +190,13 @@ public final class GameScene: SKScene {
             case .abilityPicked(let ability):
                 hud.announce(ability.displayName, subtitle: ability.summary,
                              lore: ability.loreLine)
+
+            case .equipmentFound(let equipment):
+                hud.announce(equipment.name, subtitle: equipment.summary,
+                             lore: equipment.flavour)
+
+            case .equipmentWorn(let equipment):
+                hud.showHint("\(equipment.name) - \(equipment.summary)")
 
             case .instrumentSwitched:
                 hud.flashInstrument()

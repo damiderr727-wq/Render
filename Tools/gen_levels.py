@@ -395,6 +395,7 @@ def room_A2() -> Room:
     r.spawn_on("U", 55, 4, 1)
 
     r.pickup("instrument", "trommel", 30, 21)
+    r.pickup("equipment", "offene_fassung", 20, 19)
 
     r.enemy("klangmotte", 16, 19)
     r.enemy_on("stilleschreiter", 27, 17, patrol=6)
@@ -407,6 +408,8 @@ def room_A2() -> Room:
     r.crystal_on(58, 17, 2)
     r.scatter_decor(22, 22)
 
+    r.note_on(14, 17, "WER SICH WEIT OEFFNET, KLINGT NACH ALLEN SEITEN - "
+                      "UND NICHTS DAVON KOMMT AN.")
     r.note_on(24, 17, "DIE TROMMEL SCHLAEGT DEN GRUNDTON. "
                       "WAS DEN GRUNDTON HAELT, HAELT DIE WELT.")
     r.note(50, 22, "OBEN LIEGT DIE KATHEDRALE. "
@@ -507,6 +510,8 @@ def room_B2() -> Room:
     # Aufstieg: vier Kacheln Luecke, drei bis vier Kacheln Hoehe.
     for x, y in [(4, 27), (12, 24), (20, 20), (28, 17), (36, 13), (44, 10)]:
         r.platform(x, y, 5)
+    # Ganz oben kehrt der Aufstieg um: eine Stufe zurueck unter die Pfeifen.
+    r.platform(40, 7, 4)
 
     r.spikes(15, 29, 5)
     r.spikes(31, 29, 5)
@@ -515,6 +520,7 @@ def room_B2() -> Room:
     r.spawn_on("N", 9, 26, 1)
 
     r.pickup("ability", "klangschritt", 42, 9)
+    r.pickup("equipment", "enge_fassung", 41, 6)
 
     r.enemy("echoscherbe", 16, 22)
     r.enemy("echoscherbe", 33, 14)
@@ -526,6 +532,8 @@ def room_B2() -> Room:
                       "ZUSAMMEN KENNEN SIE ALLE.")
     r.note(42, 12, "WER DEN KLANG IN DER WAND HOERT, "
                    "KANN AUF IHM STEHEN.")
+    r.note(43, 6, "EINE PFEIFE MIT EINER EINZIGEN OEFFNUNG "
+                  "TRAEGT WEITER ALS EIN GANZER CHOR.")
     return r
 
 
@@ -629,6 +637,8 @@ def room_C1() -> Room:
     r.side_door("R", "right", "C2", "L", hint=8)
     r.bench_on(16, 8)
 
+    r.pickup("equipment", "schlagfassung", 48, 10)
+
     r.enemy("echoscherbe", 26, 14)
     r.enemy("klangmotte", 36, 10)
     r.enemy_on("stilleschreiter", 35, 8, patrol=5)
@@ -701,6 +711,8 @@ def room_C3() -> Room:
     r.side_door("L", "left", "C2", "R", hint=7)
     r.side_door("R", "right", "D0", "L", hint=7, requires="basston")
 
+    r.pickup("equipment", "gerissenes_gewand", 55, 17)
+
     r.enemy_on("stilleschreiter", 18, 7, patrol=5)
     r.enemy_on("dissonanzknospe", 34, 7)
     r.enemy("echoscherbe", 42, 12)
@@ -712,6 +724,8 @@ def room_C3() -> Room:
     r.scatter_decor(111, 16)
     r.note_on(22, 7, "DIE SPERREN SIND KEIN STEIN. SIE SIND EIN AKKORD, "
                      "DER SICH WEIGERT AUFZULOESEN.")
+    r.note_on(58, 7, "WER NUR NOCH IN FETZEN ZUSAMMENHAENGT, "
+                     "IST SCHNELL. UND KURZ.")
     return r
 
 

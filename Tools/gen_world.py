@@ -582,6 +582,80 @@ SIGIL_TINTS = {
 }
 
 
+# Die Fassungen. Der Wert ist die Zahl der Oeffnungen - genau die, die auch
+# im Spiel steht, denn das Siegel ist nichts als ihr Querschnitt.
+EQUIPMENT_SIGILS = {
+    "mantel": (4, P.BONE_SH),
+    "enge_fassung": (1, P.GOLD),
+    "offene_fassung": (9, P.GLOW),
+    "schlagfassung": (2, P.ROT),
+    "gerissenes_gewand": (14, P.WARM),
+}
+
+
+def fx_equipment_sigil(openings: int, tint, frame: int) -> Canvas:
+    """
+    Das Siegel einer Fassung: der Querschnitt eines Gefaesses.
+
+    Die Kontur ist geschlossen, bis auf genau so viele Luecken, wie die
+    Fassung Oeffnungen hat - und aus jeder Luecke faehrt der Druck heraus.
+    Je weniger Luecken, desto laenger die Strahlen. Man sieht der Rueckseite
+    des Bildes also an, was sie im Kampf tut.
+    """
+    c = Canvas(28, 28)
+    cx, cy = 14, 14
+    p = 0.5 + 0.5 * math.sin(frame / 6 * math.tau)
+    ink = mix(tint, P.INK, 0.55)
+
+    # Gefaessform: unten bauchig, oben verjuengt - eine Urne, kein Ring.
+    def radius(a: float) -> float:
+        return 6.5 + 1.9 * math.sin(a) + 0.5 * math.sin(a * 2)
+
+    # Wo die Oeffnungen sitzen. Die erste zeigt immer nach vorn - dorthin,
+    # wohin auch der Fernklang geht.
+    gaps = [(i * math.tau / openings) % math.tau for i in range(openings)]
+    half = min(0.30, 1.1 / openings + 0.06)
+
+    def offen(a: float) -> bool:
+        return any(min(abs(a - g), math.tau - abs(a - g)) < half for g in gaps)
+
+    # Der Koerper: dunkel gefuellt, damit das Zeichen einen Bauch hat.
+    for y in range(28):
+        for x in range(28):
+            dx, dy = x - cx, (y - cy) / 0.96
+            d = math.hypot(dx, dy)
+            if d < 0.6:
+                continue
+            if d <= radius(math.atan2(dy, dx) % math.tau) - 1.2:
+                c.blend(x, y, (ink[0], ink[1], ink[2], 190))
+
+    steps = 260
+    for i in range(steps):
+        a = i / steps * math.tau
+        if offen(a):
+            continue
+        r = radius(a)
+        c.set(int(round(cx + math.cos(a) * r)),
+              int(round(cy + math.sin(a) * r * 0.96)), tint)
+
+    # Der Druck faehrt aus den Luecken. Wenige Luecken, langer Strahl.
+    laenge = min(6.0, 1.8 + 6.0 / openings) * (0.78 + 0.3 * p)
+    for g in gaps:
+        r = radius(g) - 0.5
+        c.line(cx + math.cos(g) * r, cy + math.sin(g) * r * 0.96,
+               cx + math.cos(g) * (r + laenge), cy + math.sin(g) * (r + laenge) * 0.96,
+               (tint[0], tint[1], tint[2], 220))
+        c.set(int(round(cx + math.cos(g) * (r + laenge + 1))),
+              int(round(cy + math.sin(g) * (r + laenge + 1) * 0.96)),
+              (tint[0], tint[1], tint[2], 110))
+
+    # Der Klang darin.
+    c.ellipse(cx, cy + 1, 3.2 + p * 0.8, 3.0 + p * 0.8,
+              (tint[0], tint[1], tint[2], int(60 + 50 * p)), blend=True)
+    c.glow(cx, cy, 12, (tint[0], tint[1], tint[2], int(40 + 30 * p)))
+    return c
+
+
 def fx_sigil(kind: str, frame: int) -> Canvas:
     """Siegel: das schwebende Zeichen eines Fundstuecks vor dem Aufnehmen."""
     tint = SIGIL_TINTS[kind]
@@ -667,6 +741,10 @@ def build() -> None:
     props.add_sequence("bench", [tile_bench(f) for f in range(4)], pivot=(0.5, 1.0), fps=4)
     for kind in SIGIL_TINTS:
         props.add_sequence(f"sigil_{kind}", [fx_sigil(kind, f) for f in range(6)],
+                           pivot=(0.5, 0.5), fps=8)
+    for eid, (openings, tint) in EQUIPMENT_SIGILS.items():
+        props.add_sequence(f"sigil_{eid}",
+                           [fx_equipment_sigil(openings, tint, f) for f in range(6)],
                            pivot=(0.5, 0.5), fps=8)
     png, js = props.write(OUT)
     print(f"props      -> {png.name} ({len(props.frames)} Frames)")

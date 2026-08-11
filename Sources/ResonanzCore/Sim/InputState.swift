@@ -20,6 +20,8 @@ public struct PlayerInput: Sendable, Equatable {
     public var selectInstrument: Instrument?
     /// Durchschalten: -1 zurueck, +1 vor.
     public var cycleInstrument: Int
+    /// Fassung wechseln - wirkt nur an der Stimmgabel.
+    public var cycleEquipment: Int
 
     public init(moveX: Double = 0,
                 aimY: Double = 0,
@@ -31,7 +33,8 @@ public struct PlayerInput: Sendable, Equatable {
                 slamPressed: Bool = false,
                 interactPressed: Bool = false,
                 selectInstrument: Instrument? = nil,
-                cycleInstrument: Int = 0) {
+                cycleInstrument: Int = 0,
+                cycleEquipment: Int = 0) {
         self.moveX = moveX
         self.aimY = aimY
         self.jumpHeld = jumpHeld
@@ -43,6 +46,7 @@ public struct PlayerInput: Sendable, Equatable {
         self.interactPressed = interactPressed
         self.selectInstrument = selectInstrument
         self.cycleInstrument = cycleInstrument
+        self.cycleEquipment = cycleEquipment
     }
 
     public static let neutral = PlayerInput()

@@ -79,8 +79,8 @@ public struct Projectile: Sendable {
     // MARK: - Erzeugung
 
     /// Baut die Geschosse eines Fernkampfangriffs.
-    public static func volley(instrument: Instrument, origin: Vec2, direction: Vec2) -> [Projectile] {
-        let profile = Tuning.ranged(instrument)
+    public static func volley(profile: RangedProfile, instrument: Instrument,
+                              origin: Vec2, direction: Vec2) -> [Projectile] {
         let base = direction.normalized
         let baseAngle = atan2(base.y, base.x)
         var result: [Projectile] = []

@@ -39,6 +39,7 @@ public final class InputRouter {
     private var pressed = Held()
     private var pendingInstrument: Instrument?
     private var pendingCycle = 0
+    private var pendingEquipmentCycle = 0
 
     #if os(macOS)
     private var keyMonitor: Any?
@@ -78,7 +79,8 @@ public final class InputRouter {
             slamPressed: slam,
             interactPressed: pressed.interact,
             selectInstrument: pendingInstrument,
-            cycleInstrument: pendingCycle)
+            cycleInstrument: pendingCycle,
+            cycleEquipment: pendingEquipmentCycle)
     }
 
     /// Nach dem Auswerten die Flanken loeschen.
@@ -86,6 +88,7 @@ public final class InputRouter {
         pressed = Held()
         pendingInstrument = nil
         pendingCycle = 0
+        pendingEquipmentCycle = 0
     }
 
     private func set(_ keyPath: WritableKeyPath<Held, Bool>, _ value: Bool) {
@@ -141,6 +144,9 @@ public final class InputRouter {
         case "3": pendingInstrument = .floete
         case "q": pendingCycle = -1
         case "e": pendingCycle = 1
+        // Fassung wechseln - wirkt nur an der Stimmgabel.
+        case ",": pendingEquipmentCycle = -1
+        case ".": pendingEquipmentCycle = 1
         default: break
         }
     }

@@ -58,12 +58,15 @@ public final class Player {
     public private(set) var stateTime: Double = 0
 
     private var progression: Progression
+    /// Grundwerte mal getragene Fassung. Wird bei jedem Wechsel neu gebildet.
+    public private(set) var stats: Stats
 
     public init(position: Vec2, progression: Progression, instrument: Instrument) {
         self.position = position
         self.progression = progression
+        self.stats = progression.stats
         self.instrument = instrument
-        self.health = progression.maxHealth
+        self.health = stats.maxHealth(base: progression.maxHealth)
         self.resonance = progression.maxResonance
     }
 
@@ -77,8 +80,13 @@ public final class Player {
 
     public func sync(progression: Progression) {
         self.progression = progression
-        if health > progression.maxHealth { health = progression.maxHealth }
+        self.stats = progression.stats
+        let cap = stats.maxHealth(base: progression.maxHealth)
+        if health > cap { health = cap }
     }
+
+    /// Hoechstwert der Lebenspunkte unter der getragenen Fassung.
+    public var maxHealth: Int { stats.maxHealth(base: progression.maxHealth) }
 
     public func equip(_ instrument: Instrument) {
         guard progression.has(instrument) else { return }
@@ -87,7 +95,7 @@ public final class Player {
 
     /// Volle Kraft - nach dem Ausruhen an der Stimmgabel.
     public func restore() {
-        health = progression.maxHealth
+        health = maxHealth
         resonance = progression.maxResonance
         isDead = false
         invulnerable = 0
@@ -162,7 +170,7 @@ public final class Player {
         let wanted = wallJumpLock > 0 ? 0 : input.moveX
         if abs(wanted) > 0.01 {
             let accel = onGround ? Tuning.groundAccel : Tuning.airAccel
-            velocity.x = approach(velocity.x, wanted * Tuning.runSpeed, accel * dt)
+            velocity.x = approach(velocity.x, wanted * stats.runSpeed, accel * dt)
             if wallJumpLock <= 0 { facing = sign(wanted) }
         } else {
             let friction = onGround ? Tuning.groundFriction : Tuning.airFriction
@@ -196,7 +204,7 @@ public final class Player {
         guard jumpBufferTimer > 0, controlLock <= 0 else { return }
 
         if coyoteTimer > 0 {
-            velocity.y = Tuning.jumpVelocity
+            velocity.y = stats.jumpVelocity
             coyoteTimer = 0
             jumpBufferTimer = 0
             events.append(.sound(.jump))
@@ -220,7 +228,7 @@ public final class Player {
 
         if airJumpsLeft > 0 {
             airJumpsLeft -= 1
-            velocity.y = Tuning.doubleJumpVelocity
+            velocity.y = stats.doubleJumpVelocity
             jumpBufferTimer = 0
             events.append(.sound(.doubleJump))
             events.append(.effect(.feather, Vec2(position.x, position.y - 8), .zero))
@@ -232,10 +240,10 @@ public final class Player {
     private func handleDash(dt: Double, input: PlayerInput, room: Room, events: inout [GameEvent]) {
         if isDashing {
             dashTimer -= dt
-            velocity = dashDirection * Tuning.dashSpeed
+            velocity = dashDirection * stats.dashSpeed
             if dashTimer <= 0 {
                 isDashing = false
-                velocity = dashDirection * Tuning.dashExitSpeed
+                velocity = dashDirection * stats.dashExitSpeed
             }
             return
         }
@@ -285,7 +293,9 @@ public final class Player {
         slamRecovery = Tuning.slamRecovery
         velocity.x = 0
 
-        let area = Rect(x: position.x - 22, y: position.y - 6, width: 44, height: 26)
+        let reach = stats.slamRadius
+        let area = Rect(x: position.x - reach * 0.65, y: position.y - 6,
+                        width: reach * 1.3, height: 26)
         let broken = room.breakWalls(in: area)
         events.append(.sound(broken.isEmpty ? .slamLand : .wallBreak))
         events.append(.effect(.ringTrommel, position, .zero))
@@ -293,7 +303,7 @@ public final class Player {
         if !broken.isEmpty {
             events.append(.wallsBroken(roomID: room.id, tiles: broken))
         }
-        events.append(.slamShockwave(origin: position, radius: 34))
+        events.append(.slamShockwave(origin: position, radius: stats.slamRadius))
     }
 
     // MARK: - Angriffe
@@ -302,7 +312,7 @@ public final class Player {
         guard attackCooldown <= 0, controlLock <= 0, !isSlamming else { return }
 
         if input.meleePressed {
-            let profile = Tuning.melee(instrument)
+            let profile = stats.melee(instrument)
             attackIsMelee = true
             attackTimer = profile.duration
             attackCooldown = profile.cooldown
@@ -313,7 +323,7 @@ public final class Player {
         }
 
         if input.rangedPressed {
-            let profile = Tuning.ranged(instrument)
+            let profile = stats.ranged(instrument)
             guard resonance >= profile.cost else {
                 events.append(.sound(.outOfResonance))
                 return
@@ -345,7 +355,7 @@ public final class Player {
     /// Aktive Trefferflaeche des Nahkampfs, sonst `nil`.
     public func activeMeleeHitbox() -> Rect? {
         guard attackIsMelee, attackTimer > 0 else { return nil }
-        let profile = Tuning.melee(instrument)
+        let profile = stats.melee(instrument)
         let elapsed = profile.duration - attackTimer
         guard elapsed >= profile.windup else { return nil }
         return profile.hitbox(origin: position, facing: facing, aimY: aimY)
@@ -542,7 +552,7 @@ public final class Player {
     }
 
     private func regenerateResonance(dt: Double) {
-        resonance = min(progression.maxResonance, resonance + Tuning.resonanceRegen * dt)
+        resonance = min(progression.maxResonance, resonance + stats.resonanceRegen * dt)
     }
 
     // MARK: - Schaden

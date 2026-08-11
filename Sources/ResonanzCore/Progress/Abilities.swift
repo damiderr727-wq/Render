@@ -79,17 +79,36 @@ public struct Progression: Codable, Sendable, Equatable {
     public var maxResonance: Double
     /// Gelesene Inschriften, damit sie nicht erneut aufpoppen.
     public var readLore: Set<String>
+    /// Gefundene Fassungen und die gerade getragene.
+    public var equipmentOwned: Set<String>
+    public var equipmentWorn: String
 
     public init(abilities: Set<Ability> = [],
                 instruments: Set<Instrument> = [.leier],
                 maxHealth: Int = 5,
                 maxResonance: Double = 100,
-                readLore: Set<String> = []) {
+                readLore: Set<String> = [],
+                equipmentOwned: Set<String> = [EquipmentCatalog.mantel.id],
+                equipmentWorn: String = EquipmentCatalog.mantel.id) {
+        self.equipmentOwned = equipmentOwned
+        self.equipmentWorn = equipmentWorn
         self.abilities = abilities
         self.instruments = instruments
         self.maxHealth = maxHealth
         self.maxResonance = maxResonance
         self.readLore = readLore
+    }
+
+    /// Die getragene Fassung. Ohne eine gueltige faellt sie auf den Mantel
+    /// zurueck - ganz ohne Gefaess wuerde sich Cadence aufloesen.
+    public var equipment: Equipment {
+        EquipmentCatalog.find(equipmentWorn) ?? EquipmentCatalog.mantel
+    }
+
+    public var stats: Stats { Stats(equipment: equipment) }
+
+    public var ownedEquipment: [Equipment] {
+        EquipmentCatalog.all.filter { equipmentOwned.contains($0.id) }
     }
 
     public func has(_ ability: Ability) -> Bool { abilities.contains(ability) }

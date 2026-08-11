@@ -74,8 +74,10 @@ func run() throws -> Int32 {
         let progression = Progression(abilities: held,
                                       instruments: Set(Instrument.allCases))
 
-        // Gesperrte Tueren nur pruefen, wenn das Koennen dafuer da ist.
-        let targets = ReachabilityProbe.targets(for: room).filter { target in
+        // Gesperrte Tueren gehoeren nicht in den ersten Durchgang - sie sind
+        // beim Ankommen ohnehin zu.
+        let all = ReachabilityProbe.targets(for: room)
+        let atArrival = all.filter { target in
             guard target.kind == .door else { return true }
             guard let door = room.data.doors.first(where: {
                 target.name == "door:\($0.id)->\($0.target)"
@@ -86,24 +88,48 @@ func run() throws -> Int32 {
         }
 
         let probe = ReachabilityProbe(room: room, progression: progression)
-        let result = probe.run(from: ReachabilityProbe.origins(for: room), targets: targets)
+        let result = probe.run(from: ReachabilityProbe.origins(for: room), targets: atArrival)
+
+        // Zweiter Durchgang: alles, was beim Ankommen fehlte oder gar nicht
+        // erst geprueft wurde, muss spaeter erreichbar sein - sonst liegt es
+        // fuer immer hinter Glas.
+        let deferredNames = Set(result.unreached.map(\.name))
+            .union(all.filter { t in !atArrival.contains(where: { $0.name == t.name }) }.map(\.name))
+        var laterOnly: [String] = []
+        var lost: [String] = []
+        if !deferredNames.isEmpty {
+            let full = Progression(abilities: abilities,
+                                   instruments: Set(Instrument.allCases))
+            let revisit = ReachabilityProbe(room: room, progression: full)
+                .run(from: ReachabilityProbe.origins(for: room),
+                     targets: all.filter { deferredNames.contains($0.name) })
+            let stillOut = Set(revisit.unreached.map(\.name))
+            lost = deferredNames.filter(stillOut.contains).sorted()
+            laterOnly = deferredNames.subtracting(stillOut).sorted()
+        }
 
         let abilityList = held.isEmpty
             ? "-"
             : Ability.allCases.filter(held.contains).map(\.rawValue).joined(separator: ",")
-        let mark = result.ok ? "\(green)ok \(reset)" : "\(red)!! \(reset)"
+        let mark = lost.isEmpty ? "\(green)ok \(reset)" : "\(red)!! \(reset)"
         let coverage = "\(result.reachableSurfaces)/\(result.totalSurfaces)"
         print("\(mark) \(id.padding(toLength: 4, withPad: " ", startingAt: 0)) "
             + "\(room.name.padding(toLength: 30, withPad: " ", startingAt: 0)) "
             + "\(dim)Flaechen \(coverage.padding(toLength: 10, withPad: " ", startingAt: 0)) "
             + "Koennen: \(abilityList)\(reset)")
 
-        for target in result.unreached {
-            report.failures.append("\(id): \(target.name) ist von keinem Eingang aus erreichbar")
+        for name in lost {
+            report.failures.append("\(id): \(name) ist von keinem Eingang aus erreichbar")
+        }
+        for name in laterOnly {
+            report.notes.append("\(id): \(name) erst bei spaeterer Rueckkehr erreichbar")
         }
     }
 
     print(String(repeating: "-", count: 62))
+    for note in report.notes {
+        print("\(dim)spaeter\(reset) \(note)")
+    }
     if report.failures.isEmpty {
         print("\(green)Alles erreichbar.\(reset) \(catalog.roomIDs.count) Raeume geprueft.")
         return 0

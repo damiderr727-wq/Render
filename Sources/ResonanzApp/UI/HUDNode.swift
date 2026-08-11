@@ -11,6 +11,7 @@ public final class HUDNode: SKNode {
     private let resonanceBar = SKShapeNode()
     private let resonanceFill = SKShapeNode()
     private let instrumentLabel = SKLabelNode()
+    private let equipmentLabel = SKLabelNode()
     private let promptLabel = SKLabelNode()
     private let hintLabel = SKLabelNode()
     private let loreBox = SKNode()
@@ -56,6 +57,11 @@ public final class HUDNode: SKNode {
         instrumentLabel.horizontalAlignmentMode = .left
         instrumentLabel.position = CGPoint(x: left + 10, y: top - 42)
         addChild(instrumentLabel)
+
+        style(equipmentLabel, size: 6, color: SKColor(white: 0.62, alpha: 1))
+        equipmentLabel.horizontalAlignmentMode = .left
+        equipmentLabel.position = CGPoint(x: left + 10, y: top - 52)
+        addChild(equipmentLabel)
 
         style(promptLabel, size: 7, color: SKColor(white: 0.85, alpha: 1))
         promptLabel.position = CGPoint(x: 0, y: -size.height / 2 + 28)
@@ -124,7 +130,8 @@ public final class HUDNode: SKNode {
     // MARK: - Bild pro Bild
 
     public func update(sim: GameSimulation, dt: Double) {
-        updateHearts(health: sim.player.health, max: sim.save.progression.maxHealth)
+        // Der Zusammenhalt der Fassung bestimmt die Herzen, nicht der Grundwert.
+        updateHearts(health: sim.player.health, max: sim.player.maxHealth)
 
         let fraction = sim.player.resonance / max(1, sim.save.progression.maxResonance)
         resonanceFill.path = CGPath(roundedRect: CGRect(x: 1, y: 1,
@@ -133,16 +140,25 @@ public final class HUDNode: SKNode {
         resonanceFill.fillColor = fraction < 0.2 ? rot : glow
 
         instrumentLabel.text = sim.player.instrument.displayName
+        let fassung = sim.save.progression.equipment
+        equipmentLabel.text = "\(fassung.name)  \(fassung.openings) OEFFNUNGEN"
 
-        switch sim.prompt {
-        case .none:
-            promptLabel.text = ""
-        case .bench:
-            promptLabel.text = "[F] AUSRUHEN UND STIMMEN"
-        case .lore:
-            promptLabel.text = "[F] LESEN"
-        case .gate(let ability):
-            promptLabel.text = "HIER FEHLT: \(ability.displayName)"
+        // An der Stimmgabel darf sie sich neu fassen - nur dort.
+        if sim.player.isResting {
+            promptLabel.text = sim.save.progression.ownedEquipment.count > 1
+                ? "[F] AUFBRECHEN     [,] [.] FASSUNG WECHSELN"
+                : "[F] AUFBRECHEN"
+        } else {
+            switch sim.prompt {
+            case .none:
+                promptLabel.text = ""
+            case .bench:
+                promptLabel.text = "[F] AUSRUHEN UND STIMMEN"
+            case .lore:
+                promptLabel.text = "[F] LESEN"
+            case .gate(let ability):
+                promptLabel.text = "HIER FEHLT: \(ability.displayName)"
+            }
         }
 
         if let boss = sim.boss, boss.alive, boss.action != .entrance {

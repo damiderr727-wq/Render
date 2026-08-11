@@ -57,6 +57,8 @@ public enum GameEvent: Sendable {
     case musicChanged(track: String, intensity: Double)
     case intensityChanged(Double)
 
+    case equipmentFound(Equipment)
+    case equipmentWorn(Equipment)
     case instrumentPicked(Instrument)
     case abilityPicked(Ability)
     case instrumentSwitched(Instrument)

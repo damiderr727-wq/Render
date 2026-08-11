@@ -170,6 +170,27 @@ Normalen an jedem Kurvenpunkt entsteht die Fläche; die Zacken kommen
 hinterher an den Rand. Dieselbe Funktion zeichnet jetzt auch die Farne im
 Vordergrund.
 
+## Warum Kachelkarten nach Kacheln aussehen
+
+Die Vorbilder — Hollow Knight, Silksong, Blasphemous, Rain World, Celeste,
+Dead Cells — zeigen alle kein Raster, obwohl mehrere davon eines benutzen.
+Drei Gründe, in der Reihenfolge ihrer Wirkung:
+
+**Die Bodenlinie hat keine Wiederholungseinheit.** Ein Kamm, der innerhalb
+einer Kachel variiert und an ihren Rändern festgenagelt ist, ergibt über
+zehn Kacheln trotzdem eine gerade Linie. Die Unruhe muss aus der
+Geländeform selbst kommen, nicht aus der Kachel.
+
+**Schrägen sind flach.** 45 Grad wirken wie eine Rutsche. Zwei zu eins —
+also zwei Kacheln Länge je Kachel Höhe — sieht nach gewachsenem Hang aus.
+Deshalb gibt es die Schrägen in beiden Fassungen, und im Gelände steht fast
+immer die sanfte.
+
+**Requisiten liegen auf den Nähten.** Das ist der eigentliche Griff. Nicht
+das Kachelbild verrät das Raster, sondern die ununterbrochene Fuge. Steine,
+Wurzelknäuel und Reisig werden deshalb gezielt über die Kachelgrenzen
+gesetzt, nicht in die Kachelmitte — dort, wo die Linie sonst sichtbar wäre.
+
 ## Der Kampf
 
 Die Waffe ist der Schall. Das Instrument gibt ihm nur die Form. Deshalb

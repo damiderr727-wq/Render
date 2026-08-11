@@ -21,6 +21,7 @@ OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Res
 
 AIR, SOLID, PLATFORM, SPIKE, DWALL = ".", "#", "=", "^", "D"
 SLOPE_UP, SLOPE_DOWN = "/", "\\"
+UP_LOW, UP_HIGH, DOWN_HIGH, DOWN_LOW = "1", "2", "3", "4"
 
 
 class Room:
@@ -107,6 +108,23 @@ class Room:
             ty = y - i * direction
             self.set(tx, ty, SLOPE_UP if direction > 0 else SLOPE_DOWN)
             self.fill(tx, ty + 1, 1, self.h - ty - 1, SOLID)
+        return self
+
+    def ramp(self, x: int, y: int, steps: int, direction: int = 1) -> "Room":
+        """
+        Ein sanfter Hang: je Hoehenkachel zwei Kacheln Laenge.
+
+        45 Grad wirken im Gelaende wie eine Rutsche. Zwei zu eins sieht nach
+        gewachsenem Boden aus - und ist der Grund, warum die Kachelsaetze der
+        Vorbilder fast nie steiler werden.
+        """
+        pair = (UP_LOW, UP_HIGH) if direction > 0 else (DOWN_HIGH, DOWN_LOW)
+        for i in range(steps):
+            ty = y - i * direction
+            for k, ch in enumerate(pair):
+                tx = x + i * 2 + k
+                self.set(tx, ty, ch)
+                self.fill(tx, ty + 1, 1, self.h - ty - 1, SOLID)
         return self
 
     def stairs(self, x: int, y: int, steps: int, dx: int = 1, dy: int = -1, w: int = 3) -> "Room":
@@ -310,16 +328,16 @@ def room_A1() -> Room:
     # nicht rauf, und damit haben sie einen Grund, dort zu liegen.
     def gelaende(x: float) -> float:
         if x < 18:
-            return 15            # Terrasse
-        if x < 22:
-            return 15 + (x - 17)  # Rampe hinunter
-        if x < 35:
-            return 19            # Muldenboden
-        if x < 38:
-            return 19 - (x - 34)  # Rampe herauf
+            return 15                       # Terrasse
+        if x < 26:
+            return 16 + (x - 18) // 2       # sanft hinunter
+        if x < 33:
+            return 19                       # Muldenboden
+        if x < 39:
+            return 18 - (x - 33) // 2       # sanft herauf
         if x < 42:
-            return 16            # Absatz
-        return 12                # Kanzel zur Tuer
+            return 16                       # Absatz
+        return 12                           # Kanzel zur Tuer
 
     r.ground(1, 59, gelaende)
     r.ceiling(1, 59, lambda x: 3 + 1.5 * math.sin(x * 0.13 + 1))
@@ -327,8 +345,8 @@ def room_A1() -> Room:
     # Die beiden Uebergaenge sind Rampen, keine Stufen. Nur der letzte
     # Aufstieg zur Tuer bleibt eine Kante - vier Kacheln, also genau das,
     # wofuer die Plattform da ist.
-    r.slope(18, 15, 4, -1)
-    r.slope(35, 18, 3, 1)
+    r.ramp(18, 15, 4, -1)
+    r.ramp(33, 18, 3, 1)
     r.platform(38, 14, 4)
 
     r.side_door("R", "right", "A2", "L")

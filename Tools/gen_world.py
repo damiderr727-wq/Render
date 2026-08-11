@@ -14,7 +14,8 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from pixelkit import Atlas, Canvas, Palette as P, Rng, hash01, hexc, mix, shade
+from pixelkit import (Atlas, Canvas, Palette as P, Rng, bezier, hash01,
+                      hexc, mix, shade)
 
 OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Resources" / "Atlas"
 TS = 16  # Kachelgroesse
@@ -258,29 +259,33 @@ def tile_platform(region: str, variant: int = 0, cap: str = "") -> Canvas:
     return c
 
 
-def tile_slope(region: str, variant: int, rising: bool) -> Canvas:
+def tile_slope(region: str, variant: int, rise_start: float, rise_end: float) -> Canvas:
     """
-    Eine 45-Grad-Schraege.
+    Eine Schraege. `rise_start`/`rise_end` geben die Oberflaeche an linker und
+    rechter Kante an, 0 oben und 1 unten.
 
-    Nur aus Stufen gebaute Welten wirken gestanzt. Eine Schraege ist die
-    einfachste Form, die sich sauber ins Raster fuegt und trotzdem einen
-    weichen Weg ergibt - die Kollision rechnet ihre Hoehe linear aus.
+    45 Grad wirken im Gelaende wie eine Rutsche. Die sanfte Fassung verteilt
+    dieselbe Steigung auf zwei Kacheln - das sieht nach gewachsenem Hang aus.
+    Zusaetzlich wird die Kante gerundet: an den Enden laeuft sie weicher aus,
+    damit der Uebergang zum flachen Boden keinen Knick hat.
     """
     body, edge, accent = P.REGIONS[region][:3]
     c = Canvas(TS, TS + TILE_OVERHANG)
     top = TILE_OVERHANG
 
     for x in range(TS):
-        # Oberflaeche: links unten und rechts oben, oder umgekehrt.
-        rise = (TS - 1 - x) if rising else x
-        surface = top + rise
-        jitter = int(hash01(x * 9 + variant * 41, 3) * 2)
-        surface = max(top, surface - jitter)
+        u = x / (TS - 1)
+        rise = rise_start + (rise_end - rise_start) * u
+        # Weiche Enden: die Kante wird an den Kachelraendern leicht gerundet.
+        bow = math.sin(u * math.pi) * 0.06 * (1 if rise_end < rise_start else -1)
+        surface = top + int(round((rise + bow) * TS))
+        surface = max(top, min(top + TS - 1, surface))
+        surface -= int(hash01(x * 9 + variant * 41, 3) * 2)
+        surface = max(top, surface)
 
         for y in range(surface, top + TS):
             d = (y - surface) / TS
-            col = mix(body, shade(body, -0.30), 0.22 + d * 0.35)
-            c.set(x, y, col)
+            c.set(x, y, mix(body, shade(body, -0.30), 0.22 + d * 0.35))
 
         c.set(x, surface, mix(edge, accent, 0.28))
         c.set(x, surface + 1, edge)
@@ -299,6 +304,63 @@ def tile_slope(region: str, variant: int, rising: bool) -> Canvas:
         elif region == "grotten":
             if hash01(x * 5, variant) > 0.82:
                 c.set(x, surface - 1, mix(accent, edge, 0.5))
+    return c
+
+
+SLOPE_KINDS = {
+    "up": (1.0, 0.0), "down": (0.0, 1.0),
+    "uplow": (1.0, 0.5), "uphigh": (0.5, 0.0),
+    "downhigh": (0.0, 0.5), "downlow": (0.5, 1.0),
+}
+
+
+def edge_prop(region: str, variant: int) -> Canvas:
+    """
+    Eine Requisite fuer die Bodenkante: Stein, Wurzelknaeuel, Reisig.
+
+    Der eigentliche Grund, warum handgezeichnete Karten kein Raster zeigen,
+    ist nicht das Kachelbild - es sind die Dinge, die auf den Naehten liegen.
+    Diese Requisiten werden genau ueber die Kachelgrenze gesetzt und brechen
+    die Linie dort, wo sie sonst sichtbar waere.
+    """
+    body, edge, accent = P.REGIONS[region][:3]
+    c = Canvas(22, 16)
+    rng = Rng(700 + variant * 131 + sum(map(ord, region)))
+    kind = variant % 4
+    cx, base = 11, 15
+    dark = shade(body, -0.16)
+
+    if kind == 0:
+        # Stein, halb im Boden.
+        w = rng.range(5, 9)
+        c.blob(cx, base - w * 0.35, w, dark, rng, lumps=6, squash=0.62)
+        c.blob(cx - w * 0.3, base - w * 0.55, w * 0.45, shade(body, 0.06), rng, lumps=4)
+    elif kind == 1:
+        # Wurzelknaeuel, das ueber die Kante quillt.
+        for i in range(4):
+            a = -2.2 + i * 0.6
+            x0, y0 = cx + math.cos(a) * 6, base - 2
+            pts = bezier((x0, y0), (x0 + math.cos(a) * 5, y0 - 5),
+                         (cx + math.cos(a) * 9, base - 8),
+                         (cx + math.cos(a) * 11, base - 6), 14)
+            c.stroke(pts, 3.0, 1.0, dark)
+        c.blob(cx, base - 2, 7, dark, rng, lumps=5, squash=0.5)
+    elif kind == 2:
+        # Reisig und Halme.
+        for i in range(5):
+            lean = rng.range(-0.5, 0.5)
+            h = rng.range(5, 12)
+            x = cx + rng.range(-7, 7)
+            c.stroke([(x + lean * k, base - k) for k in range(int(h))], 2.0, 1.0, dark)
+            c.set(int(x + lean * h), int(base - h), mix(edge, body, 0.5))
+    else:
+        # Ein Bueschel niedriger Polster.
+        for i in range(3):
+            c.blob(cx + rng.range(-7, 7), base - rng.range(1, 3),
+                   rng.range(3, 6), dark, rng, lumps=5, squash=0.55)
+
+    if region == "grotten":
+        c.set(cx + rng.int(-4, 4), base - rng.int(3, 7), mix(accent, edge, 0.5))
     return c
 
 
@@ -579,9 +641,8 @@ def build() -> None:
                           tile_solid(region, v, edges),
                           pivot=(0, TILE_OVERHANG / (TS + TILE_OVERHANG)))
         for v in range(4):
-            for rising in (True, False):
-                tiles.add(f"{region}_slope_{'up' if rising else 'down'}_{v}",
-                          tile_slope(region, v, rising),
+            for name, (a, b) in SLOPE_KINDS.items():
+                tiles.add(f"{region}_slope_{name}_{v}", tile_slope(region, v, a, b),
                           pivot=(0, TILE_OVERHANG / (TS + TILE_OVERHANG)))
         for cap in ("mid", "l", "r", "lr"):
             for v in range(4):
@@ -589,6 +650,9 @@ def build() -> None:
                           tile_platform(region, v, "" if cap == "mid" else cap),
                           pivot=(0, TILE_OVERHANG / (10 + TILE_OVERHANG)))
         tiles.add(f"{region}_spike", tile_spike(region), pivot=(0, 0))
+    for region in REGIONS:
+        for v in range(6):
+            tiles.add(f"edge_{region}_{v}", edge_prop(region, v), pivot=(0.5, 1.0))
     for f in range(4):
         tiles.add(f"dissowall_{f}", tile_dissowall(f), pivot=(0, 0), fps=6)
     png, js = tiles.write(OUT)

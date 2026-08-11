@@ -59,6 +59,7 @@ public final class RoomRenderer {
 
         buildBackdrop(room: room)
         buildTerrain(room: room)
+        scatterEdgeProps(room: room)
         buildDecor(room: room)
         buildAtmosphere(room: room)
     }
@@ -136,9 +137,18 @@ public final class RoomRenderer {
                                         + "\((tx &* 13 &+ ty &* 7) % 4)")
                 case .spike:
                     node = atlas.sprite("\(region)_spike")
-                case .slopeUp, .slopeDown:
-                    let dir = tile == .slopeUp ? "up" : "down"
-                    node = atlas.sprite("\(region)_slope_\(dir)_\((tx &* 17 &+ ty &* 5) % 4)")
+                case .slopeUp, .slopeDown, .slopeUpLow, .slopeUpHigh,
+                     .slopeDownHigh, .slopeDownLow:
+                    let kind: String
+                    switch tile {
+                    case .slopeUp: kind = "up"
+                    case .slopeDown: kind = "down"
+                    case .slopeUpLow: kind = "uplow"
+                    case .slopeUpHigh: kind = "uphigh"
+                    case .slopeDownHigh: kind = "downhigh"
+                    default: kind = "downlow"
+                    }
+                    node = atlas.sprite("\(region)_slope_\(kind)_\((tx &* 17 &+ ty &* 5) % 4)")
                 case .dissoWall:
                     node = atlas.sprite("dissowall_0")
                     if let loop = atlas.loop("dissowall") { node.run(loop) }
@@ -158,6 +168,30 @@ public final class RoomRenderer {
                 if tile == .dissoWall {
                     breakableNodes[ty * room.width + tx] = node
                 }
+            }
+        }
+    }
+
+    /// Requisiten auf die Kachelnaehte setzen: Steine, Wurzeln, Reisig.
+    ///
+    /// Das ist der Griff, der handgezeichnete Karten von Kachelkarten
+    /// unterscheidet - nicht das Kachelbild selbst, sondern die Dinge, die
+    /// quer ueber den Fugen liegen.
+    private func scatterEdgeProps(room: Room) {
+        let region = room.region.rawValue
+        func isSurface(_ tx: Int, _ ty: Int) -> Bool {
+            ty > 0 && room.tile(tx, ty) == .solid && room.tile(tx, ty - 1) == .air
+        }
+        for ty in 1..<room.height {
+            for tx in 1..<room.width {
+                guard isSurface(tx, ty), isSurface(tx - 1, ty) else { continue }
+                let roll = abs((tx &* 2654435761) &+ (ty &* 40503)) % 100
+                guard roll < 34 else { continue }
+                let node = atlas.sprite("edge_\(region)_\((tx &* 7 &+ ty &* 3) % 6)")
+                node.position = CGPoint(x: Double(tx) * tileSize,
+                                        y: -Double(ty) * tileSize + 2)
+                node.zPosition = 2
+                layers.decor.addChild(node)
             }
         }
     }

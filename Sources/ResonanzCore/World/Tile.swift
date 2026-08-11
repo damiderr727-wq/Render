@@ -11,10 +11,18 @@ public enum Tile: UInt8, Sendable, CaseIterable {
     case spike
     /// Verstimmte Sperre. Nur der Basston bricht sie.
     case dissoWall
-    /// Schraege, die nach rechts ansteigt.
+    /// Schraege, die nach rechts ansteigt (45 Grad).
     case slopeUp
-    /// Schraege, die nach rechts abfaellt.
+    /// Schraege, die nach rechts abfaellt (45 Grad).
     case slopeDown
+    /// Sanfte Steigung, untere Haelfte (zwei Kacheln je Hoehenkachel).
+    case slopeUpLow
+    /// Sanfte Steigung, obere Haelfte.
+    case slopeUpHigh
+    /// Sanftes Gefaelle, obere Haelfte.
+    case slopeDownHigh
+    /// Sanftes Gefaelle, untere Haelfte.
+    case slopeDownLow
 
     public init(character: Character) {
         switch character {
@@ -24,6 +32,10 @@ public enum Tile: UInt8, Sendable, CaseIterable {
         case "D": self = .dissoWall
         case "/": self = .slopeUp
         case "\\": self = .slopeDown
+        case "1": self = .slopeUpLow
+        case "2": self = .slopeUpHigh
+        case "3": self = .slopeDownHigh
+        case "4": self = .slopeDownLow
         default: self = .air
         }
     }
@@ -38,7 +50,26 @@ public enum Tile: UInt8, Sendable, CaseIterable {
     }
 
     public var isSlope: Bool {
-        self == .slopeUp || self == .slopeDown
+        slopeRise != nil
+    }
+
+    /// Hoehe der Oberflaeche an linker und rechter Kachelkante, gemessen von
+    /// der Oberkante nach unten (0 = oben, 1 = unten).
+    ///
+    /// Eine 45-Grad-Rampe laeuft von 1 auf 0. Die sanfte Variante teilt
+    /// dieselbe Steigung auf zwei Kacheln auf - und genau die braucht es
+    /// meistens: 45 Grad wirken im Gelaende wie eine Rutsche, nicht wie ein
+    /// gewachsener Hang.
+    public var slopeRise: (start: Double, end: Double)? {
+        switch self {
+        case .slopeUp: return (1.0, 0.0)
+        case .slopeDown: return (0.0, 1.0)
+        case .slopeUpLow: return (1.0, 0.5)
+        case .slopeUpHigh: return (0.5, 0.0)
+        case .slopeDownHigh: return (0.0, 0.5)
+        case .slopeDownLow: return (0.5, 1.0)
+        default: return nil
+        }
     }
 
     /// Blockiert nur von oben, wenn die Figur faellt.

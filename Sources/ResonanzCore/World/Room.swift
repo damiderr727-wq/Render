@@ -111,12 +111,10 @@ public final class Room {
     /// Kachelraster fuegt: an einer Kante liegt die Oberflaeche oben, an der
     /// anderen unten, dazwischen linear.
     public func slopeSurfaceY(_ tx: Int, _ ty: Int, worldX: Double) -> Double? {
-        let tile = tile(tx, ty)
-        guard tile.isSlope else { return nil }
+        guard let rise = tile(tx, ty).slopeRise else { return nil }
         let localX = clamp((worldX - Double(tx) * tileSize) / tileSize, 0, 1)
         let top = Double(ty) * tileSize
-        let rise = tile == .slopeUp ? (1 - localX) : localX
-        return top + rise * tileSize
+        return top + (rise.start + (rise.end - rise.start) * localX) * tileSize
     }
 
     /// Sucht an der Fusslinie nach einer Schraege und meldet deren Hoehe.

@@ -25,7 +25,9 @@ TS = 16
 
 KNOWN_EDGES = ['', 't', 'l', 'r', 'b', 'tl', 'tr', 'tb', 'lr', 'lb', 'rb', 'tlr', 'tlb', 'trb', 'lrb', 'tlrb']
 BLOCKING = {"#", "D"}
-SLOPES = {"/": "up", "\\": "down"}
+SLOPES = {"/": "up", "\\": "down", "1": "uplow", "2": "uphigh",
+          "3": "downhigh", "4": "downlow"}
+BLOCKING |= set(SLOPES)
 
 
 class Atlas:
@@ -102,7 +104,9 @@ def render(room_id: str) -> Image.Image:
             ch = tiles[y][x]
             if ch == ".":
                 continue
-            if ch == "#":
+            if ch in SLOPES:
+                name = f"{region}_slope_{SLOPES[ch]}_{(x * 17 + y * 5) % 4}"
+            elif ch == "#":
                 name = f"{region}_solid_{edge_key(tiles, x, y, w, h)}_{(x * 31 + y * 17) % 6}"
             elif ch == "=":
                 cap = ""
@@ -113,8 +117,6 @@ def render(room_id: str) -> Image.Image:
                 name = f"{region}_platform_{cap or 'mid'}_{(x * 13 + y * 7) % 4}"
             elif ch == "^":
                 name = f"{region}_spike"
-            elif ch in SLOPES:
-                name = f"{region}_slope_{SLOPES[ch]}_{(x * 17 + y * 5) % 4}"
             elif ch == "D":
                 name = "dissowall_0"
             else:
@@ -123,6 +125,25 @@ def render(room_id: str) -> Image.Image:
             if img is not None:
                 # Der Ueberhang der Bodenkacheln steht ueber dem Raster.
                 canvas.alpha_composite(img, (x * TS, int(y * TS - img.height * pivot[1])))
+
+    # Requisiten auf den Kachelnaehten. Sie sind der eigentliche Grund,
+    # warum handgezeichnete Karten kein Raster zeigen.
+    def is_surface(x: int, y: int) -> bool:
+        return (0 <= x < w and 0 < y < h
+                and tiles[y][x] == "#" and tiles[y - 1][x] == ".")
+
+    for y in range(1, h):
+        for x in range(1, w):
+            if not (is_surface(x, y) and is_surface(x - 1, y)):
+                continue
+            if (x * 2654435761 + y * 40503) % 100 >= 34:
+                continue
+            img, pivot = tile_atlas.frame(f"{region}_edge_{(x * 7 + y * 3) % 6}")
+            if img is None:
+                img, pivot = tile_atlas.frame(f"edge_{region}_{(x * 7 + y * 3) % 6}")
+            if img is not None:
+                canvas.alpha_composite(
+                    img, (x * TS - img.width // 2, y * TS - int(img.height * pivot[1]) + 2))
 
     def place(img, pivot, tx: float, ty: float) -> None:
         if img is None:

@@ -343,17 +343,30 @@ final class EquipmentTests: XCTestCase {
                              "Sonst ist die Auswahl keine Entscheidung")
     }
 
+    /// Fuer das Inventar muss es sie ohne alles geben: nur die Nadeln, die
+    /// Flamme und der Kern, der gerade in ihr steckt. Daran sieht man beim
+    /// Anlegen, was von ihr selbst kommt und was von der Fassung.
+    func testEsGibtSieAuchOhneAlles() throws {
+        struct Sheet: Decodable { let frames: [String: [String: Double]] }
+        let sheet = try Resources.decode(Sheet.self, subdirectory: "Atlas", name: "characters")
+        for kern in Kern.allCases {
+            for zustand in Bildnis.zustaende {
+                let key = Bildnis.nackt(kern: kern, zustand: zustand) + "_0"
+                XCTAssertNotNil(sheet.frames[key], "Es fehlt das Bild \(key)")
+            }
+        }
+    }
+
     /// Die Fassung wird gezeichnet, nicht nur gerechnet: zu jeder muss es
     /// auch Bilder geben, sonst greift die Darstellung ins Leere.
     func testZuJederFassungGibtEsBilder() throws {
         struct Sheet: Decodable { let frames: [String: [String: Double]] }
         let sheet = try Resources.decode(Sheet.self, subdirectory: "Atlas", name: "characters")
-        let zustaende = ["idle", "run", "jump", "fall", "land", "dash",
-                         "wall", "melee", "cast", "hurt", "rest"]
         for equipment in EquipmentCatalog.all {
             for kern in Kern.allCases {
-                for zustand in zustaende {
-                    let key = "cadence_\(kern.rawValue)_\(equipment.id)_\(zustand)_0"
+                for zustand in Bildnis.zustaende {
+                    let key = Bildnis.sprite(kern: kern, fassung: equipment.id,
+                                             zustand: zustand) + "_0"
                     XCTAssertNotNil(sheet.frames[key], "Es fehlt das Bild \(key)")
                 }
             }

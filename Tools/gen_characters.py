@@ -85,6 +85,10 @@ def _profile(t: float, instrument: str) -> float:
 # fast geschlossen; ein gerissenes Gewand ist mehr Schlitz als Stoff.
 
 GARMENTS = {
+    # Ohne alles. Das ist sie selbst - und genau das zeigt das Inventar,
+    # damit man sieht, wie weit sie schon ist.
+    "ohne": dict(openings=0, cut="keins", deckung=0.0,
+                 stoff=P.CLOAK, licht=P.TRIM),
     # Der Schnitt bestimmt die Silhouette, die Oeffnungen den Spielwert.
     #
     #   mantel   - lose, faellt weit, laeuft dem Koerper hinterher
@@ -92,22 +96,22 @@ GARMENTS = {
     #   cape     - haengt nur an der Schulter und schwirrt umher
     "mantel": dict(
         openings=4, cut="mantel", deckung=0.66,
-        stoff=hexc("#313d5c"), licht=P.TRIM),
+        stoff=mix(P.CLOAK, P.STONE, 0.55), licht=P.TRIM),
     "cape": dict(
         openings=6, cut="cape", deckung=0.72,
-        stoff=mix(hexc("#333050"), P.BLOOM, 0.18), licht=P.BLOOM),
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.BLOOM, 0.16), licht=P.BLOOM),
     "enge_fassung": dict(
         openings=1, cut="harnisch", deckung=0.70,
         stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.GOLD, 0.20), licht=P.GOLD),
     "offene_fassung": dict(
         openings=9, cut="mantel", deckung=0.58,
-        stoff=mix(hexc("#2c3a52"), P.TRIM, 0.14), licht=P.TRIM),
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.6), P.TRIM, 0.16), licht=P.TRIM),
     "schlagfassung": dict(
         openings=2, cut="harnisch", deckung=0.66,
         stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.ROT, 0.20), licht=P.ROT),
     "gerissenes_gewand": dict(
         openings=14, cut="cape", deckung=0.60,
-        stoff=mix(hexc("#33344e"), P.WARM, 0.16), licht=P.AMBER),
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.6), P.WARM, 0.14), licht=P.AMBER),
     # Der Bruch: kein Gefaess mehr, nur noch Fetzen an ihr. Was bleibt,
     # traegt nichts - es haengt nur noch dran.
     "bruch": dict(
@@ -152,15 +156,14 @@ def _draw_beine(c: Canvas, *, cx: int, base: float, height: float, phase: float,
                 lean: float, leg_phase: float | None, leg_spread: float,
                 crouch: float, settle: float, smear: float) -> None:
     """
-    Zwei kurze Beine aus Kristall.
+    Zwei Spitzen, keine Beine.
 
-    Sie sind das einzige Feste an ihr. Der Klang hat sich unten abgesetzt
-    und ist erstarrt - deshalb sind sie kantig, wo alles andere fliesst,
-    und tragen eine helle Ader, die im Takt mitleuchtet. Kurz und gedrungen
-    ist Absicht: lange Beine machen aus ihr eine Gestalt mit Anatomie, und
-    genau das soll sie nicht sein.
+    Der Klang hat sich unten abgesetzt und ist zu Kristall erstarrt - und
+    zwar zu zwei duennen, spitz zulaufenden Nadeln, auf denen sie steht.
+    Kein Oberschenkel, keine Wade, kein Fuss: das waere Anatomie, und
+    Anatomie hat sie nicht. Sie beruehrt den Boden an genau zwei Punkten.
 
-    `leg_phase` treibt den Schritt. Ohne sie stehen beide Beine still.
+    `leg_phase` treibt den Schritt. Ohne sie stehen beide still.
     """
     S = HERO_SCALE
     laenge = height * LEG_T - settle * 0.4
@@ -168,59 +171,48 @@ def _draw_beine(c: Canvas, *, cx: int, base: float, height: float, phase: float,
         return
 
     schritt = leg_phase or 0.0
-    ader = mix(P.TRIM, P.BONE, 0.45)
-    schale = mix(P.CLOAK, P.STONE, 0.42)
-    kante = mix(P.TRIM, P.CLOAK, 0.62)
-
+    ader = mix(P.TRIM, P.BONE, 0.55)
+    schale = mix(P.CLOAK, P.STONE, 0.22)
     hueft_y = base - laenge
-    for seite in (-1, 1):
-        # Der Schritt: ein Bein hebt, waehrend das andere traegt.
-        takt = math.sin(schritt + (0 if seite > 0 else math.pi))
-        heben = max(0.0, takt) * laenge * 0.34
-        vor = takt * (1.6 + abs(lean) * 0.5) * S
 
-        hx = cx + seite * (1.5 * S + leg_spread * 1.4) + lean * 0.35
-        fx = hx + vor
-        fy = base - heben - crouch * 2
+    for seite in (-1, 1):
+        takt = math.sin(schritt + (0 if seite > 0 else math.pi))
+        heben = max(0.0, takt) * laenge * 0.40
+        vor = takt * (1.8 + abs(lean) * 0.6) * S
+
+        hx = cx + seite * (1.3 * S + leg_spread * 1.3) + lean * 0.35
+        sx = hx + vor
+        sy = base - heben - crouch * 2
 
         n = max(3, int(laenge))
         for i in range(n + 1):
-            v = i / n                                   # 0 Huefte .. 1 Fuss
-            x = hx + (fx - hx) * v ** 1.3 - smear * 3.0 * v
-            y = hueft_y + (fy - hueft_y) * v
-            # Unten schmaler, aber nie spitz - sonst kriecht sie wieder.
-            w = (2.3 - 0.9 * v) * S
-
+            v = i / n                                   # 0 oben .. 1 Spitze
+            x = hx + (sx - hx) * v ** 1.25 - smear * 3.0 * v
+            y = hueft_y + (sy - hueft_y) * v
+            # Sie laeuft wirklich spitz aus: oben zwei Pixel, unten einer.
+            w = 1.4 - 1.35 * v ** 0.55
             for dx in range(-int(w) - 1, int(w) + 2):
-                d = abs(dx) / max(0.9, w)
-                if d > 1:
+                if abs(dx) > w + 0.35:
                     continue
-                if d > 0.72:
-                    col = kante if dx > 0 else shade(schale, -0.35)
-                elif abs(dx) <= 0:
-                    # Die Ader in der Mitte pulst mit dem Takt.
-                    puls = 0.45 + 0.55 * (0.5 + 0.5 * math.sin(phase * 2.2 - v * 3.0))
-                    col = mix(schale, ader, puls)
+                # Die Nadel ist dunkel, ihre Vorderkante faengt Licht.
+                if dx * seite > 0:
+                    col = mix(schale, ader, 0.35 - 0.20 * v)
                 else:
-                    col = schale
-                # Kristall bricht das Licht in Facetten: einzelne Flaechen
-                # sitzen heller, und zwar in Streifen, nicht zufaellig.
-                if (i + dx) % 4 == 0 and d < 0.7:
-                    col = mix(col, ader, 0.30)
+                    col = shade(schale, -0.30)
                 c.set(int(x) + dx, int(y), col)
+            # Ein Glanzpunkt wandert die Nadel hinab - der Ton laeuft
+            # sichtbar durch den Kristall.
+            if abs(v - (0.5 + 0.5 * math.sin(phase * 1.8 - seite))) < 0.14:
+                c.set(int(x), int(y), ader)
 
-        # Der Fuss: eine kurze Platte, damit sie auf dem Boden steht statt
-        # ihn zu beruehren.
-        fw = int(2.6 * S)
-        c.rect(int(fx) - fw // 2, int(fy) - 1, fw + 1, 1, kante)
-        c.rect(int(fx) - fw // 2, int(fy), fw + 1, 1, mix(schale, P.CLOAK_LO, 0.4))
-        c.set(int(fx) + fw // 2, int(fy) - 1, mix(ader, P.BONE, 0.4))
+        # Die Spitze laeuft aus. Ein heller Punkt am Ende sieht aus wie ein
+        # Fuss, und einen Fuss hat sie nicht.
+        c.set(int(sx), int(sy), mix(schale, ader, 0.30))
 
     # Wo die Flamme in den Kristall uebergeht, glimmt die Naht.
-    for dx in range(-int(3.2 * S), int(3.2 * S) + 1):
-        if hash01(cx + dx, int(hueft_y) + int(phase * 3)) > 0.45:
-            c.set(cx + dx + int(lean * 0.3), int(hueft_y),
-                  mix(ader, P.AMBER, 0.25))
+    for dx in range(-int(2.6 * S), int(2.6 * S) + 1):
+        if hash01(cx + dx, int(hueft_y) + int(phase * 3)) > 0.5:
+            c.set(cx + dx + int(lean * 0.3), int(hueft_y), mix(ader, P.AMBER, 0.2))
 
 
 def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
@@ -256,7 +248,7 @@ def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
             x = int(fx + tilt * -i * 0.5)
             c.set(x, int(fy - 1 - i), P.BONE if i % 4 else P.BONE_SH)
             if i > 2 and i % 4 == 2:
-                c.set(x + 1, int(fy - 1 - i), P.EYE)
+                c.set(x + 1, int(fy - 1 - i), shade(P.BONE_LO, -0.2))
         tipx, tipy = int(fx - tilt * laenge * 0.5), int(fy - 1 - laenge)
         c.set(tipx, tipy, P.AMBER)
         c.set(tipx, tipy + 1, mix(P.AMBER, P.BONE, 0.5))
@@ -382,6 +374,8 @@ def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
     # Ein Cape haengt hinter ihr, ein Mantel liegt auf ihr. Deshalb wird das
     # eine vor der Gestalt gezeichnet und das andere danach. Zurueck kommt
     # die Hoehe des Kragens - bis dorthin deckt der Stoff.
+    if cut == "keins":
+        return LEG_T           # nichts deckt, die Flamme faengt unten an
     if (cut == "cape") != hinter:
         return LEG_T if cut == "cape" else coverage
 
@@ -425,17 +419,13 @@ def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
             sx += math.sin(t * 2.6 + phase - 1.1 * hang) * (0.9 + t * 1.7) * 0.85
             sx += (-lean * 0.75 - smear * 5.5) * hang
             sx += math.sin(phase * 1.3 + sway * 3.0 + u * 2.2) * hang * (1.5 + sway * 2.8)
-            # Weit geschnitten und unten am weitesten - eine Glocke. Die
-            # Breite haengt am Bauch der Flamme, nicht an der Hoehe: sonst
-            # ist der Saum genau dort schmal, wo er fallen soll.
-            w = bauch * (1.05 + 0.55 * hang) + 0.8
-            # Der Saum rundet sich ab, statt gerade abzuschneiden - eine
-            # waagerechte Unterkante liest sich als Moebelstueck.
-            if u < 0.16:
-                w *= 0.72 + 1.75 * u
-            # Ein langsamer Faltenwurf, damit die Seiten nicht schnurgerade
-            # fallen.
-            w += math.sin(u * 3.1 + phase * 0.7 + sway * 0.6) * 0.7
+            # Schmal. Er legt sich an, statt sie einzupacken - eine
+            # Glockenform macht aus jeder Figur einen Kegel, und ein Kegel
+            # ist nicht schlank. Nur der Saum darf nach hinten ausschlagen,
+            # und zwar auf einer Seite, nicht rundum.
+            w = bauch * (0.62 + 0.10 * hang) + 0.6
+            if u < 0.20:
+                w *= 0.55 + 2.2 * u
         w *= 1 + smear * 0.20
         if split > 0:
             sx += math.sin(t * 9.0 + phase * 2) * split * 3.0
@@ -449,7 +439,10 @@ def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
                     return (1.6 + 1.6 * tief) * min(1.0, w / 4)
             return 0.0
 
-        links = int(sx - w + kerbe(-1))
+        # Der Schlag nach hinten liegt auf einer Seite. Beidseitig waere
+        # es ein Rock, einseitig ist es ein Mantel im Wind.
+        hinten_raus = 0.0 if starr else max(0.0, -(lean * 0.9 + smear * 4.0)) * hang
+        links = int(sx - w - hinten_raus + kerbe(-1))
         rechts = int(sx + w - kerbe(1))
         # Geschlossen fuellen. Jedes Loch im Stoff bricht die Silhouette,
         # und eine gebrochene Silhouette ist bei vierzig Pixeln nicht mehr
@@ -667,7 +660,7 @@ def draw_heroine(
             continue
         y = hueft - t * flamme
 
-        w = _profile(t, kind) * 0.72 * (1 + smear * 0.5)
+        w = _profile(t, kind) * (1 + smear * 0.5)
         # Der Schlag treibt eine Welle durch sie hindurch.
         w *= 1 + whip * math.sin(t * math.pi * 1.6) * 0.5
 
@@ -715,27 +708,26 @@ def draw_heroine(
         if u < 0.35:
             c.set(int(fx), int(fy) + 1, (hell[0], hell[1], hell[2], 90))
 
-    # --- Der Resonanzschlitz ----------------------------------------------
-    # Kein Gesicht - nur eine dunkle Kerbe, dort wo die Gestalt am dichtesten
-    # ist. Sie gibt dem Blick einen Halt, ohne Zuege zu behaupten.
-    slot_t = 0.70
+    # --- Der Ton in ihr ---------------------------------------------------
+    #
+    # Kein Gesicht, und vor allem kein dunkles Rechteck. Das las sich als
+    # Loch: Schwarz kommt sonst nirgends in ihr vor, also stanzte es sie
+    # aus. Stattdessen verdichtet sich der Klang an einer Stelle zu einem
+    # hellen Kern, der im Takt heller und dunkler wird. Der Blick haelt
+    # sich daran fest, ohne dass etwas behauptet wird.
+    slot_t = 0.62
     slot_y = int(base - slot_t * height)
     slot_x = int(cx + lean * slot_t + math.sin(slot_t * 2.6 + phase) * 1.6)
-    sw = max(2, int(round(2 * HERO_SCALE)))
-    sh = max(5, int(round(5 * HERO_SCALE)))
-    top = slot_y - int(round((3 if aim > 0.5 else 2) * HERO_SCALE))
-    # Kein Schwarz. Ein schwarzes Rechteck stanzt ein Loch in sie, weil
-    # sonst nirgends im Bild Schwarz vorkommt. Stattdessen ein tiefes
-    # Blau, das nach unten hin waermer wird - eine Tiefe, kein Loch.
-    for i in range(sh):
-        v = i / max(1, sh - 1)
-        col = mix(hexc("#161d33"), hexc("#2a2036"), v)
-        c.rect(slot_x, top + i, sw, 1, (col[0], col[1], col[2], int(232 - 40 * v)))
-    c.set(slot_x - 1, top + 1, (22, 29, 51, 150))
-    c.set(slot_x + sw, top + sh - 2, (22, 29, 51, 150))
-    # Ganz unten glimmt es: dort sitzt der Ton, den sie haelt.
-    c.set(slot_x + sw // 2, top + sh - 1,
-          mix(P.TRIM, P.BONE, 0.3 + 0.4 * (0.5 + 0.5 * math.sin(phase * 2))))
+    puls = 0.5 + 0.5 * math.sin(phase * 1.7)
+    kern_hell = mix(P.BONE, P.TRIM, 0.25 + 0.35 * puls)
+    for dy in range(-1, 2):
+        for dx in range(-1, 2):
+            if abs(dx) + abs(dy) > 1:
+                continue
+            c.set(slot_x + dx, slot_y + dy, kern_hell)
+    c.set(slot_x, slot_y - 2, mix(kern_hell, P.AMBER, 0.35))
+    c.glow(slot_x, slot_y, 5 * HERO_SCALE,
+           (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(60 + 60 * puls)))
 
     # --- Der Kern ---------------------------------------------------------
     _draw_kern(c, kern=kind, cx=cx, base=base, height=height,

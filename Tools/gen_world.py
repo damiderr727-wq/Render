@@ -450,25 +450,96 @@ def tile_reed(frame: int, tint) -> Canvas:
 
 
 def tile_bench(frame: int) -> Canvas:
-    """Stimmgabel - Rast- und Speicherpunkt."""
-    c = Canvas(24, 26)
-    pulse = 0.5 + 0.5 * math.sin(frame / 4 * math.tau)
-    # Sockel
-    c.rect(4, 22, 16, 4, P.STONE_LO)
-    c.rect(4, 22, 16, 1, P.STONE)
-    c.rect(6, 20, 12, 2, shade(P.STONE, -0.15))
-    # Gabel
-    c.rect(11, 12, 3, 9, mix(P.STONE_HI, P.WARM, 0.25))
-    c.rect(7, 2, 3, 12, mix(P.STONE_HI, P.WARM, 0.25))
-    c.rect(15, 2, 3, 12, mix(P.STONE_HI, P.WARM, 0.25))
-    c.rect(7, 12, 11, 2, mix(P.STONE_HI, P.WARM, 0.15))
-    c.rect(9, 12, 1, 9, shade(P.STONE_HI, -0.3))
-    # Klangkrone
-    for x in (8, 16):
-        c.set(x, 1, mix(P.TRIM, (255, 255, 255, 255), pulse * 0.6))
-    c.ring(12.5, 6, 6 + pulse * 3, 1, (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(70 * (1 - pulse))))
-    c.outline(hexc("#05060c", 200))
-    c.glow(12, 10, 14, (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(28 + 34 * pulse)))
+    """
+    Die Stimmgabel im Boden: Rast, Heilung, Speicherpunkt.
+
+    Sie ist der einzige Gegenstand, vor dem die Figur stehenbleibt, also
+    muss sie mehr sein als ein Symbol. Erzaehlt wird die ganze Geschichte
+    der Welt an einem Stueck: unten ein gewachsener Sockel, den der Hain
+    sich schon zurueckholt, darueber eine Gabel, die zu gross ist, um von
+    hier zu stammen, und dazwischen der Ton, der immer noch haengt.
+    """
+    c = Canvas(30, 34)
+    p = 0.5 + 0.5 * math.sin(frame / 6 * math.tau)
+    rng = Rng(4711)
+    cx, boden = 15, 33
+
+    stein = mix(P.STONE, P.INK2, 0.25)
+    stein_hi = shade(stein, 0.22)
+    metall = mix(P.STONE_HI, P.WARM, 0.30)
+    metall_hi = mix(metall, P.BONE, 0.45)
+    metall_lo = shade(metall, -0.42)
+
+    # --- Sockel: ein Findling, kein Quader ---------------------------------
+    c.blob(cx, boden - 3, 9.5, stein, rng, lumps=7, squash=0.42)
+    c.blob(cx - 2, boden - 5, 6.0, stein_hi, rng, lumps=5, squash=0.40)
+    for x in range(cx - 10, cx + 11):
+        h = 2 + int(hash01(x, 7) * 3)
+        for i in range(h):
+            if hash01(x, 30 + i) > 0.35:
+                c.set(x, boden - i, shade(stein, -0.30 + i * 0.05))
+    # Risse, aus denen die Gabel gewachsen ist.
+    for k in range(3):
+        rx = cx - 5 + k * 5
+        for i in range(rng.int(3, 6)):
+            c.set(rx + int(hash01(rx, i) * 2) - 1, boden - 4 - i, shade(stein, -0.45))
+
+    # --- Die Gabel ---------------------------------------------------------
+    stiel_oben = boden - 12
+    for y in range(stiel_oben, boden - 3):
+        w = 3 if y > stiel_oben + 2 else 2
+        c.rect(cx - w // 2, y, w, 1, metall)
+        c.set(cx - w // 2, y, metall_lo)
+        c.set(cx + w // 2 - (1 if w % 2 == 0 else 0), y, metall_hi)
+
+    # Der Steg, leicht gewoelbt statt als Balken.
+    for dx in range(-6, 7):
+        dy = int(abs(dx) * 0.28)
+        c.set(cx + dx, stiel_oben - 1 + dy, metall_hi)
+        c.set(cx + dx, stiel_oben + dy, metall)
+        c.set(cx + dx, stiel_oben + 1 + dy, metall_lo)
+
+    # Zwei Zinken, oben leicht nach aussen geneigt.
+    for seite in (-1, 1):
+        for i in range(14):
+            v = i / 13
+            x = cx + seite * (6 + v * 1.6)
+            y = stiel_oben - 1 - i
+            c.set(int(x), int(y), metall)
+            c.set(int(x) - seite, int(y), metall_lo)
+            c.set(int(x) + seite, int(y), metall_hi if i % 5 else metall)
+        spitze_y = stiel_oben - 15
+        c.set(int(cx + seite * 7.6), int(spitze_y), mix(P.TRIM, P.BONE, 0.5 + 0.4 * p))
+
+    # --- Der Ton, der noch haengt ------------------------------------------
+    # Zwischen den Zinken steht die Luft. Das ist der Grund, warum man hier
+    # ausruhen kann - nicht die Bank, sondern der gehaltene Ton.
+    for i in range(9):
+        y = stiel_oben - 3 - i
+        breite = 5.0 * math.sin((i / 9) * math.pi) ** 0.7
+        a = int((60 + 90 * p) * (1 - abs(i / 9 - 0.5)))
+        for dx in range(-int(breite), int(breite) + 1):
+            if hash01(cx + dx, y + int(frame)) > 0.55:
+                c.blend(cx + dx, y, (P.TRIM[0], P.TRIM[1], P.TRIM[2], a))
+
+    # Funken, die vom Steg aufsteigen.
+    for k in range(4):
+        u = (k / 4 + frame / 6) % 1.0
+        fy = stiel_oben - 2 - u * 14
+        fx = cx + math.sin(u * 5 + k * 2.1) * (2 + u * 4)
+        c.set(int(fx), int(fy), (P.WARM[0], P.WARM[1], P.WARM[2], int(220 * (1 - u))))
+
+    # --- Bewuchs: der Hain holt sie sich zurueck ---------------------------
+    for x in range(cx - 9, cx + 10):
+        if hash01(x, 3) > 0.55:
+            h = 1 + int(hash01(x, 11) * 3)
+            for i in range(h):
+                c.set(x, boden - 5 - i, mix(P.REGIONS["hain"][1], P.INK, 0.25))
+    for k, (bx, by, r) in enumerate(((cx - 7, boden - 7, 2.0), (cx + 8, boden - 6, 1.6))):
+        c.ellipse(bx, by, r, r * 0.8, mix(P.TRIM, P.INK2, 0.55))
+        c.set(int(bx), int(by - r), mix(P.TRIM, P.BONE, 0.4 * p))
+
+    c.glow(cx, stiel_oben - 4, 16, (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(26 + 30 * p)))
     return c
 
 
@@ -884,7 +955,7 @@ def build() -> None:
             props.add_sequence(f"crystal_{region}_{size}",
                                [tile_crystal(size, f, tint) for f in range(4)], pivot=(0.5, 1.0), fps=4)
         props.add_sequence(f"reed_{region}", [tile_reed(f, tint) for f in range(4)], pivot=(0.5, 1.0), fps=5)
-    props.add_sequence("bench", [tile_bench(f) for f in range(4)], pivot=(0.5, 1.0), fps=4)
+    props.add_sequence("bench", [tile_bench(f) for f in range(6)], pivot=(0.5, 1.0), fps=5)
     for kind in SIGIL_TINTS:
         props.add_sequence(f"sigil_{kind}", [fx_sigil(kind, f) for f in range(6)],
                            pivot=(0.5, 0.5), fps=8)

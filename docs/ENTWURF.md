@@ -44,16 +44,50 @@ jemand, der Klang *benutzt*. Falsch. **Sie ist selbst welcher.**
 Cadence hat keinen Körper, sie hat drei Zonen — und die Trennung ist das
 Interessanteste an ihr:
 
-- **Unten Kristall.** Zwei kurze, gedrungene Beine, in denen sich der
-  Klang abgesetzt und verfestigt hat, mit einer hellen Ader, die im Takt
-  pulst. Ohne sie lief die Gestalt nach unten spitz zu und schleifte über
-  den Boden — sie sah aus, als kröche sie.
-- **In der Mitte Stoff.** Die Fassung, geschlossen und undurchsichtig. Sie
-  ist die Grundform, nicht die Verzierung: sie wird zuerst gesetzt, und
-  die Flamme sitzt darauf. Andersherum franst die Flamme über den Rand
-  hinaus und die Silhouette zerfällt in Sprenkel.
-- **Oben Flamme.** Eine **durchscheinende** Masse, die ausfranst und
-  Funken abgibt.
+- **Unten zwei Spitzen.** Der Klang hat sich unten abgesetzt und ist zu
+  Kristall erstarrt: zwei dünne, spitz zulaufende Nadeln, auf denen sie
+  steht. Kein Oberschenkel, keine Wade, kein Fuß — das wäre Anatomie, und
+  Anatomie hat sie nicht. Sie berührt den Boden an genau zwei Punkten.
+  (Der erste Anlauf gab ihr richtige Beine mit Fußplatten; das machte aus
+  ihr sofort eine Gestalt mit Skelett.)
+- **In der Mitte Stoff.** Die Fassung, geschlossen und undurchsichtig, und
+  vor allem **schmal**: sie legt sich an, statt sie einzupacken. Eine
+  Glockenform macht aus jeder Figur einen Kegel, und ein Kegel ist nicht
+  schlank. Nur der Saum schlägt nach hinten aus, und zwar auf einer Seite
+  — beidseitig wäre es ein Rock, einseitig ist es ein Mantel im Wind.
+- **Oben Flamme.** Eine **durchscheinende**, flaumige Masse, die ausfranst
+  und Funken abgibt. Sie hat kein Gesicht und vor allem kein dunkles
+  Rechteck darin — das las sich als Loch, weil Schwarz sonst nirgends in
+  ihr vorkommt. Stattdessen verdichtet sich der Klang an einer Stelle zu
+  einem hellen Kern, der im Takt heller wird. Der Blick hält sich daran
+  fest, ohne dass etwas behauptet wird.
+
+### Warum die Schichten trotzdem zusammengebacken werden
+
+Gezeichnet wird sie in vier Lagen: **Nadeln → Fassung → Flamme → Kern.**
+Naheliegend wäre, sie auch so *auszuliefern* — ein Körper, und je Gegenstand
+ein kleines Bild, das die Darstellung an einem Gelenkpunkt dazusetzt. Das
+spart Atlasplatz und macht neue Gegenstände billig.
+
+Gemacht wird es trotzdem andersherum: gebacken zu fertigen Bildern, eine
+Reihe je Kombination. Der Grund ist der Gelenkpunkt. Die Gestalt verformt
+sich in jedem Bild — sie neigt sich, dehnt sich, wird beim Herzschlag in
+Bänder gezogen. Ein Aufsteckpunkt müsste all das mitmachen, also müsste
+für jedes Bild eine eigene Koordinate mitgeliefert und beim Zeichnen
+richtig gedreht werden. Das ist genau die Sorte Buchführung, die still
+kaputtgeht.
+
+Der Preis ist Platz im Atlas, und Platz ist das Billigste, was wir haben,
+solange die Bilder aus einem Programm fallen und nicht aus einer Hand:
+ein neuer Kern kostet einen `elif`-Zweig und einen Durchlauf des
+Generators, nicht einen Tag Zeichnen.
+
+### Sie ohne alles
+
+Eine Bildreihe fällt aus dem Schema: **`ohne`** — sie selbst, ohne Fassung,
+nur Nadeln, Flamme und der Kern, der gerade in ihr steckt. Das ist der
+Bogen fürs Inventar: dort soll man sehen, wie weit sie schon ist, und was
+von ihr selbst kommt statt von dem, was sie trägt.
 Der Grund scheint durch sie hindurch — dicht in der Mitte, dünner zum Rand
 und nach oben. Die Silhouette trägt trotzdem, weil der Mantel deckt: das
 Durchscheinende ist der Körper, nicht die Kleidung. Kein

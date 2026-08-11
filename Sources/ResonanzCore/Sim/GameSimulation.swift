@@ -62,6 +62,8 @@ public final class GameSimulation {
     private var nextEntityID = 1
     private var deathTimer: Double = 0
     private var restTimer: Double = 0
+    /// Angesammelter Zerfall im Bruch, in halben Kristallen.
+    private var zerfall: Double = 0
     private var transitionCooldown: Double = 0
     private var intensityTarget: Double = 0
     private var shownGateHints: Set<String> = []
@@ -212,6 +214,7 @@ public final class GameSimulation {
         }
 
         player.update(dt: dt, input: input, room: room, events: &events)
+        updateBruch(dt: dt, events: &events)
         applyPlayerActions(events: &events)
 
         updateEnemies(dt: dt, events: &events)
@@ -311,6 +314,13 @@ public final class GameSimulation {
 
         for (kind, position) in boss.drainSummons() {
             enemies.append(Enemy(id: takeID(), kind: kind, position: position, patrolTiles: 3))
+        }
+
+        // Der Bruch. Wenn der Kantor in den letzten Satz geht, haelt sie es
+        // nicht mehr aus - das ist der Punkt, an dem sie aus sich
+        // herausfaehrt. Ein festes Ereignis, kein Fundstueck.
+        if boss.phase == .toccata, !save.progression.gebrochen {
+            brich(events: &events)
         }
 
         if !boss.alive && !isComplete {
@@ -653,6 +663,36 @@ public final class GameSimulation {
         events.append(.equipmentWorn(next))
     }
 
+    // MARK: - Der Bruch
+
+    /// Loest den Bruch aus. Ein festes Ereignis der Geschichte, keine Wahl -
+    /// und es gibt kein Zurueck.
+    @discardableResult
+    public func brich(events: inout [GameEvent]) -> Bool {
+        guard !save.progression.gebrochen else { return false }
+        save.progression.gebrochen = true
+        player.sync(progression: save.progression)
+        // Sie faehrt aus der Fassung heraus: der Zusammenhalt aendert sich,
+        // also wird sie voll - was danach abgeht, geht von hier ab.
+        player.restore()
+        events.append(.sound(.bossPhase))
+        events.append(.shake(14))
+        events.append(.effect(.burstGlow, player.chest, .zero))
+        events.append(.bruch)
+        return true
+    }
+
+    /// Ohne Gefaess zerstreut sie sich. Der Bruch ist ein Wettlauf.
+    private func updateBruch(dt: Double, events: inout [GameEvent]) {
+        guard save.progression.gebrochen, !player.isDead, !player.isResting else { return }
+        zerfall += Bruch.lebensverlust * dt
+        guard zerfall >= 1 else { return }
+        let haelften = Int(zerfall)
+        zerfall -= Double(haelften)
+        // Er soll draengen, nicht toeten: der letzte halbe Kristall bleibt.
+        player.drain(haelften, floor: Bruch.untergrenze, events: &events)
+    }
+
     /// Legt ein Siegel an oder ab. Nur an der Stimmgabel - ein Siegel sitzt
     /// nicht in der Tasche, es steckt in ihr.
     @discardableResult
@@ -674,9 +714,12 @@ public final class GameSimulation {
 
     /// Legt eine gefundene Fassung an. Nur an der Stimmgabel - sich mitten
     /// im Kampf neu zu fassen waere kein Kleiderwechsel, sondern ein Umbau.
+    /// Nach dem Bruch gar nicht mehr: es gibt keine Fassung, in die sie
+    /// zurueckkoennte.
     @discardableResult
     public func wear(_ equipmentID: String) -> Bool {
-        guard save.progression.equipmentOwned.contains(equipmentID),
+        guard !save.progression.gebrochen,
+              save.progression.equipmentOwned.contains(equipmentID),
               EquipmentCatalog.find(equipmentID) != nil,
               player.isResting || player.isDead
         else { return false }

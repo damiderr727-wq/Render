@@ -67,6 +67,9 @@ public struct Progression: Codable, Sendable, Equatable {
     public var siegelOwned: Set<String>
     public var siegelWorn: [String]
     public var kerbenTotal: Int
+    /// Der Bruch. Ein festes Ereignis am Ende, keine Wahl - und nicht
+    /// rueckgaengig zu machen.
+    public var gebrochen: Bool
 
     public init(abilities: Set<Ability> = [],
                 kerne: Set<Kern> = [.stimmgabel],
@@ -80,7 +83,8 @@ public struct Progression: Codable, Sendable, Equatable {
                 klingeWorn: String = KlingenKatalog.schlicht.id,
                 siegelOwned: Set<String> = [],
                 siegelWorn: [String] = [],
-                kerbenTotal: Int = 3) {
+                kerbenTotal: Int = 3,
+                gebrochen: Bool = false) {
         self.abilities = abilities
         self.kerne = kerne
         self.kernWorn = kernWorn
@@ -94,11 +98,15 @@ public struct Progression: Codable, Sendable, Equatable {
         self.siegelOwned = siegelOwned
         self.siegelWorn = siegelWorn
         self.kerbenTotal = kerbenTotal
+        self.gebrochen = gebrochen
     }
 
     /// Die getragene Fassung. Ohne eine gueltige faellt sie auf den Mantel
     /// zurueck - ganz ohne Gefaess wuerde sich Cadence aufloesen.
     public var equipment: Equipment {
+        // Nach dem Bruch traegt sie nichts mehr. Es gibt kein Zurueck in
+        // die Fassung - das ist der Punkt des Ereignisses.
+        if gebrochen { return Bruch.entfesselt }
         guard equipmentOwned.contains(equipmentWorn),
               let found = EquipmentCatalog.find(equipmentWorn) else {
             return EquipmentCatalog.mantel
@@ -124,7 +132,8 @@ public struct Progression: Codable, Sendable, Equatable {
     public var kerbenFrei: Int { kerbenTotal - kerbenBelegt }
 
     public var stats: Stats {
-        Stats(equipment: equipment, kern: kernWorn, siegel: siegel)
+        Stats(equipment: equipment, kern: kernWorn, siegel: siegel,
+              gebrochen: gebrochen)
     }
 
     public var ownedEquipment: [Equipment] {

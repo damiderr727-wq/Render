@@ -103,6 +103,11 @@ GARMENTS = {
     "gerissenes_gewand": dict(
         openings=14, cut="cape", deckung=0.60,
         stoff=mix(mix(P.CLOAK, P.STONE, 0.6), P.WARM, 0.14), licht=P.AMBER),
+    # Der Bruch: kein Gefaess mehr, nur noch Fetzen an ihr. Was bleibt,
+    # traegt nichts - es haengt nur noch dran.
+    "bruch": dict(
+        openings=99, cut="bruch", deckung=0.42,
+        stoff=mix(mix(P.CLOAK, P.ROT, 0.30), P.AMBER, 0.10), licht=P.AMBER),
 }
 
 
@@ -199,6 +204,27 @@ def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
             c.glow(fx, fy - 7 * S, 7 * S, (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(85 * glow)))
         return
 
+    if kern == "bruch":
+        # Der zersprungene Kern. Beide Zinken sind ab; was bleibt, ist der
+        # Steg und ein Riss, aus dem es herausfaehrt.
+        c.rect(int(fx - 2 * S), int(fy - 1), int(5 * S), 2, P.BONE_SH)
+        for side in (-1, 1):
+            h = int((2 + (1 if side > 0 else 3)) * S)
+            for i in range(h):
+                c.set(int(fx + side * 1.6 * S), int(fy - 2 - i),
+                      P.BONE if i < h - 1 else mix(P.BONE_LO, P.ROT, 0.5))
+        for k in range(5):
+            a = -math.pi / 2 + (k - 2) * 0.42 + math.sin(phase * 2) * 0.12
+            laenge = (4 + (k % 2) * 3) * S
+            for i in range(int(laenge)):
+                c.set(int(fx + math.cos(a) * (2 * S + i)),
+                      int(fy - 3 * S + math.sin(a) * (2 * S + i)),
+                      mix(P.AMBER, P.ROT, i / max(1.0, laenge)))
+        if glow > 0:
+            c.glow(fx, fy - 2 * S, 10 * S,
+                   (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(150 * glow)))
+        return
+
     # Die Stimmgabel - und zwar eine mit abgebrochenem Zinken.
     #
     # Zwei gleich lange Zinken mit Leuchtspitze lesen sich bei dreissig
@@ -265,6 +291,12 @@ def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
         _draw_cape(c, kind=kind, cx=cx, base=base, height=height, phase=phase,
                    lean=lean, smear=smear, sway=sway, coverage=coverage,
                    slits=slits, stoff=stoff, stoff_hi=stoff_hi, licht=saum_licht)
+        return
+
+    if cut == "bruch":
+        _draw_fetzen(c, kind=kind, cx=cx, base=base, height=height, phase=phase,
+                     lean=lean, smear=smear, sway=sway, coverage=coverage,
+                     stoff=stoff, licht=saum_licht)
         return
 
     starr = cut == "harnisch"
@@ -347,6 +379,48 @@ def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
                     c.set(x, int(y - 1), stoff_hi)
                 c.set(links, int(y - 1), mix(stoff, saum_licht, 0.5))
                 c.set(rechts, int(y - 1), mix(stoff, saum_licht, 0.5))
+
+
+def _draw_fetzen(c: Canvas, *, kind: str, cx: int, base: float, height: float,
+                 phase: float, lean: float, smear: float, sway: float,
+                 coverage: float, stoff, licht) -> None:
+    """
+    Was nach dem Bruch von der Fassung uebrig ist.
+
+    Keine geschlossene Bahn mehr, sondern einzelne Fetzen, die an ihr
+    haengen und im eigenen Takt flattern. Sie decken nichts - man sieht
+    ueberall durch sie hindurch, und genau das ist der Punkt: das Gefaess
+    ist auf, sie klingt nach allen Seiten zugleich.
+    """
+    S = HERO_SCALE
+    # Zehn schmale Streifen, die an ihr haengen. Sie beginnen genau auf der
+    # Silhouette und fallen nach unten weg - Stoff, der reisst, faellt; er
+    # steht nicht ab. Dunkel bleiben sie auch: sonst verliert sie den Umriss
+    # ganz, und ohne Umriss ist sie im Kampf nicht mehr zu lesen.
+    for k in range(10):
+        u = 0.06 + (k / 10) * coverage
+        y = base - u * height
+        seite = 1 if k % 2 == 0 else -1
+        w = _profile(u, kind) * 0.92 + 0.6 * S
+        eigen = math.sin(phase * (1.2 + k * 0.23) + k * 2.1 + sway * 1.4)
+        laenge = (3.0 + (k % 4) * 2.0) * S
+        x = cx + lean * u + seite * w
+
+        for i in range(int(laenge)):
+            v = i / max(1.0, laenge)
+            # Er faellt, und weht dabei nach hinten - der Ausschlag waechst
+            # zum Zipfel hin, wie bei allem, was nur oben festhaengt.
+            fx = x + seite * v * 1.4 + eigen * v ** 1.5 * 3.2 - smear * 6.0 * v
+            fy = y + i * (1.05 + 0.25 * abs(eigen))
+            if fy > base:
+                break
+            col = shade(stoff, -0.18) if i % 3 else stoff
+            c.set(int(fx), int(fy), col)
+            # Nur die Aussenkante faengt Licht.
+            if i and hash01(int(fx), int(fy) + int(phase * 5)) > 0.62:
+                c.set(int(fx) + seite, int(fy), mix(stoff, licht, 0.55))
+        # Dort, wo er reisst, glimmt sie durch.
+        c.set(int(x), int(y), (licht[0], licht[1], licht[2], 230))
 
 
 def _draw_cape(c: Canvas, *, kind: str, cx: int, base: float, height: float,
@@ -850,9 +924,18 @@ def build() -> None:
 
     for instrument in ("stimmgabel", "leier", "trommel", "floete"):
         for garment in GARMENTS:
+            if garment == "bruch":
+                continue        # der Bruch kennt keinen heilen Kern mehr
             for name, frames in hero_animations(instrument, garment).items():
                 atlas.add_sequence(f"cadence_{instrument}_{garment}_{name}", frames,
                                    pivot=(0.5, 1.0), fps=_fps_for(name))
+
+    # Der Bruch gibt es nur als ein Paar: kein Gefaess, kein heiler Kern.
+    # Alle Verbindungen davon zu zeichnen waere Ausschuss - nach dem Bruch
+    # ist beides weg.
+    for name, frames in hero_animations("bruch", "bruch").items():
+        atlas.add_sequence(f"cadence_bruch_bruch_{name}", frames,
+                           pivot=(0.5, 1.0), fps=_fps_for(name))
 
     atlas.add_sequence("klangmotte_fly",
                        [draw_klangmotte(i / 4 * math.tau) for i in range(4)],

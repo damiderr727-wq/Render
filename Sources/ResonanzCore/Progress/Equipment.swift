@@ -197,15 +197,22 @@ public struct Stats: Sendable {
     public let equipment: Equipment
     public let kern: Kern
     public let siegel: [Siegel]
+    /// Nach dem Bruch ist der Kern zersprungen - er klingt lauter, weil ihn
+    /// nichts mehr haelt.
+    public let gebrochen: Bool
     private let m: Modifiers
 
     public init(equipment: Equipment = EquipmentCatalog.mantel,
                 kern: Kern = .stimmgabel,
-                siegel: [Siegel] = []) {
+                siegel: [Siegel] = [],
+                gebrochen: Bool = false) {
         self.equipment = equipment
         self.kern = kern
         self.siegel = siegel
-        self.m = siegel.reduce(equipment.modifiers * kern.modifiers) { $0 * $1.modifiers }
+        self.gebrochen = gebrochen
+        var alle = equipment.modifiers * kern.modifiers
+        if gebrochen { alle = alle * Bruch.bruchkern }
+        self.m = siegel.reduce(alle) { $0 * $1.modifiers }
     }
 
     /// Alle Faktoren zusammen - fuer Anzeige und Pruefung.

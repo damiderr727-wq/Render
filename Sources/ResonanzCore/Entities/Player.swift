@@ -594,6 +594,15 @@ public final class Player {
         return true
     }
 
+    /// Zerfall: sie verliert Leben, ohne getroffen worden zu sein. Kein
+    /// Rueckstoss, keine Unverwundbarkeit - es ist kein Treffer, es ist
+    /// das Vergehen selbst.
+    public func drain(_ halves: Int, floor: Int, events: inout [GameEvent]) {
+        guard !isDead, health > floor else { return }
+        health = Swift.max(floor, health - halves)
+        events.append(.effect(.mote, chest, .zero))
+    }
+
     /// Hebt die Unverwundbarkeit nach einem Treffer sofort auf. Nur fuer
     /// Pruefungen - im Spiel laeuft sie von selbst ab.
     public func dropInvulnerability() {

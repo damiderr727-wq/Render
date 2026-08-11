@@ -152,9 +152,18 @@ public final class HUDNode: SKNode {
         resonanceFill.fillColor = fraction < 0.2 ? rot : glow
 
         updateKerben(progression: sim.save.progression)
-        kernLabel.text = "\(sim.player.kern.displayName)   \(sim.save.progression.equipment.stil.displayName)"
+        if sim.save.progression.gebrochen {
+            // Im Bruch zaehlt nur noch eins: dass nichts mehr haelt.
+            kernLabel.text = "OHNE FASSUNG   ENTFESSELT"
+            kernLabel.fontColor = rot
+        } else {
+            kernLabel.text = "\(sim.player.kern.displayName)   "
+                           + sim.save.progression.equipment.stil.displayName
+        }
         let fassung = sim.save.progression.equipment
-        equipmentLabel.text = "\(fassung.name)  \(fassung.openings) OEFFNUNGEN"
+        equipmentLabel.text = sim.save.progression.gebrochen
+            ? "SIE ZERSTREUT SICH"
+            : "\(fassung.name)  \(fassung.openings) OEFFNUNGEN"
 
         // An der Stimmgabel darf sie sich neu fassen - nur dort.
         if sim.player.isResting {

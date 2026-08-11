@@ -75,6 +75,8 @@ public enum GameEvent: Sendable {
     case benchRested
     case gateHint(Ability)
 
+    /// Sie faehrt aus ihrer Fassung. Einmal, am Ende.
+    case bruch
     case bossPhaseChanged(Int)
     case bossDefeated
     case gameCompleted

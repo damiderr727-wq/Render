@@ -223,6 +223,13 @@ public final class GameScene: SKScene {
             case .gateHint(let ability):
                 hud.showHint("HIER FEHLT: \(ability.displayName)")
 
+            case .bruch:
+                hud.announce("DER BRUCH",
+                             subtitle: "SIE FAEHRT AUS IHRER FASSUNG",
+                             lore: "DAS GEFAESS HAELT NICHT MEHR, UND DER KERN "
+                                 + "AUCH NICHT. WAS JETZT KLINGT, KLINGT IN ALLE "
+                                 + "RICHTUNGEN - UND ES ZIEHT DICH AUS.")
+
             case .bossPhaseChanged(let phase):
                 bossNode?.removeAllActions()
                 let name = phase >= 3 ? "kantor_rage" : "kantor_idle"
@@ -250,13 +257,16 @@ public final class GameScene: SKScene {
         playerNode.position = WorldSpace.scenePoint(player.position)
         playerNode.xScale = player.facing >= 0 ? 1 : -1
 
-        let garment = sim.save.progression.equipment.id
+        // Nach dem Bruch gibt es nur noch ein Bild: kein Gefaess, kein
+        // heiler Kern. Deshalb faellt auch der Kernname darauf zurueck.
+        let gebrochen = sim.save.progression.gebrochen
+        let garment = gebrochen ? "bruch" : sim.save.progression.equipment.id
         if player.state != playerState || player.kern != playerKern
             || garment != playerGarment {
             playerState = player.state
             playerKern = player.kern
             playerGarment = garment
-            let name = "cadence_\(player.kern.rawValue)_\(garment)_"
+            let name = "cadence_\(gebrochen ? "bruch" : player.kern.rawValue)_\(garment)_"
                      + animationName(for: player.state)
             playerNode.removeAllActions()
             if let info = atlas.frame(name) {

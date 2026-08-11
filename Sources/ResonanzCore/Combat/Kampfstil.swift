@@ -18,6 +18,9 @@ public enum Kampfstil: String, Codable, Sendable, CaseIterable {
     case sturz
     /// Zwei schnelle Schlaege statt einem grossen.
     case hetze
+    /// Nach dem Bruch: alles zugleich. Weit, hart und schnell - sie hat
+    /// nichts mehr, was sie zurueckhaelt.
+    case entfesselt
 
     public var displayName: String {
         switch self {
@@ -26,6 +29,7 @@ public enum Kampfstil: String, Codable, Sendable, CaseIterable {
         case .wirbel: return "WIRBEL"
         case .sturz: return "STURZ"
         case .hetze: return "HETZE"
+        case .entfesselt: return "ENTFESSELT"
         }
     }
 
@@ -36,6 +40,7 @@ public enum Kampfstil: String, Codable, Sendable, CaseIterable {
         case .wirbel: return "RUNDUM - AUCH NACH HINTEN"
         case .sturz: return "SCHWER UND LANGSAM, DAFUER REISST ES"
         case .hetze: return "ZWEI SCHNELLE SCHLAEGE STATT EINEM"
+        case .entfesselt: return "ALLES ZUGLEICH - WEIT, HART UND SCHNELL"
         }
     }
 
@@ -62,6 +67,10 @@ public enum Kampfstil: String, Codable, Sendable, CaseIterable {
             return MeleeProfile(reach: 26, halfHeight: 12, damage: 1,
                                 cooldown: 0.15, knockback: 70, shape: .arc,
                                 windup: 0.02, active: 0.07)
+        case .entfesselt:
+            return MeleeProfile(reach: 34, halfHeight: 20, damage: 3,
+                                cooldown: 0.14, knockback: 210, shape: .radial,
+                                windup: 0.02, active: 0.09)
         }
     }
 }

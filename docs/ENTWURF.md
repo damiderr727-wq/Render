@@ -238,6 +238,35 @@ Tabelle — `Stats` —, und der Spieler fragt nie mehr direkt `Tuning`.
 Dadurch wirkt ein neuer Kern, eine neue Fassung, ein neues Siegel ueberall
 zugleich: Lauf, Sprung, Sprint, Reichweite, Wucht, Zusammenhalt.
 
+## Der Bruch
+
+Am Ende hält sie es nicht mehr aus. Wenn der Kantor in den letzten Satz
+geht, wird ihr Körper locker und sie **fährt aus ihrer Fassung** — und der
+Kern in ihr zerspringt dabei.
+
+Das ist kein Fundstück und keine Wahl. Es ist ein festes Ereignis der
+Geschichte, es lässt sich nicht rückgängig machen, und es steht deshalb
+auch nicht im Katalog der Fassungen: man kann es nicht anlegen, man kann
+nur hineingeraten. Ein Test hält beides fest.
+
+Was danach gilt:
+
+- **Alles wird aggressiver.** Schneller, weiter, härter — ein eigener
+  Kampfstil („Entfesselt"): rundum, mit 0,14 Sekunden Erholung. Der
+  zersprungene Kern klingt lauter als jeder heile, weil ihn nichts mehr
+  hält.
+- **Es zieht ihr das Leben.** Ohne Gefäß zerstreut sie sich: ein halber
+  Kristall alle zwei Sekunden. Der Bruch ist ein Wettlauf.
+- **Der letzte halbe Kristall bleibt.** Der Zerfall soll drängen, nicht
+  töten — sterben soll sie an der Dissonanz, nicht an der Uhr.
+- **Es gibt kein Zurück.** `wear()` ist danach gesperrt.
+
+Gezeichnet ist es als eigenes Bildpaar: keine Bahn Stoff mehr, sondern
+zehn schmale Fetzen, die an ihr hängen und im eigenen Takt fallen. Dunkel
+bleiben sie trotzdem — ohne Umriss wäre sie im Kampf nicht mehr zu lesen.
+Vom Kern stehen nur noch zwei Stümpfe und ein Riss, aus dem es
+herausfährt.
+
 ## Leben in halben Kristallen
 
 Gerechnet wird intern in Haelften, gezeigt werden Kristalle: jeder besteht

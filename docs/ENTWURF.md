@@ -42,7 +42,10 @@ Die Voraussetzung war: eine Heldin in einer Welt aus Klang sieht aus wie
 jemand, der Klang *benutzt*. Falsch. **Sie ist selbst welcher.**
 
 Cadence hat keinen Körper, sie hat eine Gestalt: eine flammenartige,
-traumhafte Masse, die oben ausfranst und den Boden kaum berührt. Kein
+**durchscheinende** Masse, die oben ausfranst und den Boden kaum berührt.
+Der Grund scheint durch sie hindurch — dicht in der Mitte, dünner zum Rand
+und nach oben. Die Silhouette trägt trotzdem, weil der Mantel deckt: das
+Durchscheinende ist der Körper, nicht die Kleidung. Kein
 Gesicht, keine Glieder — nur eine dunkle Kerbe dort, wo sie am dichtesten
 ist, damit der Blick einen Halt hat.
 
@@ -161,6 +164,14 @@ Basston. Die stehen ausserhalb dieser Ordnung: sie werden nie getauscht,
 nur gefunden, und sie liegen abseits des Wegs. Wer sie hat, hat sie.
 
 ### Der Kern — das Ding, das in ihr steckt
+
+**Regel für alles, was je ein Kern wird:** Es muss etwas mit Klang oder
+Frequenz sein. Kein Schmuckstück, kein Kristall, kein Symbol — ein
+Gegenstand, mit dem man Töne macht oder misst. Stimmgabel, Leier, Trommel,
+Flöte. Was später dazukommt, kommt aus derselben Familie: Metronom,
+Saitenrest, Pfeifenstück, Membran. Sobald der Kern etwas anderes wäre,
+wäre Cadence eine Figur *mit* Magie statt eine Figur *aus* Klang.
+
 
 Cadence ist formlos. Der Kern ist der einzige harte Gegenstand an ihr und
 der Grund, warum sie ueberhaupt eine Gestalt hat. Er ist **austauschbar** —

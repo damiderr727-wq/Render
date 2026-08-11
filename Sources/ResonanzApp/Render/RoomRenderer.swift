@@ -187,12 +187,62 @@ public final class RoomRenderer {
                 guard isSurface(tx, ty), isSurface(tx - 1, ty) else { continue }
                 let roll = abs((tx &* 2654435761) &+ (ty &* 40503)) % 100
                 guard roll < 34 else { continue }
-                let node = atlas.sprite("edge_\(region)_\((tx &* 7 &+ ty &* 3) % 6)")
+                let name = "edge_\(region)_\((tx &* 7 &+ ty &* 3) % 6)"
+                let node = atlas.sprite(name)
                 node.position = CGPoint(x: Double(tx) * tileSize,
                                         y: -Double(ty) * tileSize + 2)
                 node.zPosition = 2
+                // Jede Requisite wiegt sich, aber nicht im Gleichschritt -
+                // sonst atmet der ganze Boden wie ein einziges Wesen.
+                if let loop = atlas.loop(name) {
+                    let versatz = Double((tx &* 13 &+ ty &* 7) % 100) / 100.0
+                    node.run(.sequence([.wait(forDuration: versatz), loop]))
+                }
                 layers.decor.addChild(node)
             }
+        }
+    }
+
+    /// Staub, der durch den Raum treibt.
+    ///
+    /// Ein Raum, in dem sich nichts bewegt, wirkt tot - und zwar auch dann,
+    /// wenn jede Kachel liebevoll gezeichnet ist. Ein paar Funken, die
+    /// langsam quer durchs Bild ziehen, kosten fast nichts und aendern
+    /// alles. Sie fliegen nicht zufaellig: jede Region hat ihre Richtung.
+    private func buildAmbient(room: Room) {
+        let breite = Double(room.width) * tileSize
+        let hoehe = Double(room.height) * tileSize
+        // Im Hain sinkt der Staub, in den Grotten steigt er auf.
+        let steigt: Double
+        switch room.region {
+        case .hain: steigt = -1
+        case .kathedrale: steigt = -0.4
+        case .grotten: steigt = 1
+        case .dissonanz: steigt = 0.3
+        }
+
+        let anzahl = min(48, max(12, room.width * room.height / 90))
+        for i in 0..<anzahl {
+            let node = atlas.sprite("mote_0")
+            if let loop = atlas.loop("mote", speed: 0.5) { node.run(loop) }
+            let x = Double((i &* 7919) % 1000) / 1000 * breite
+            let y = -Double((i &* 4241) % 1000) / 1000 * hoehe
+            node.position = CGPoint(x: x, y: y)
+            node.alpha = 0.16 + Double((i &* 37) % 40) / 100
+            node.zPosition = 3
+            node.setScale(0.6 + Double((i &* 13) % 60) / 100)
+
+            // Eine lange, langsame Schleife. Sie muss nicht aufgehen -
+            // niemand schaut einem einzelnen Funken so lange zu.
+            let dauer = 9.0 + Double((i &* 29) % 70) / 10
+            let weite = 26.0 + Double((i &* 17) % 40)
+            node.run(.repeatForever(.sequence([
+                .group([.moveBy(x: weite, y: steigt * 34, duration: dauer),
+                        .fadeAlpha(to: 0.05, duration: dauer)]),
+                .group([.moveBy(x: -weite, y: -steigt * 34, duration: dauer),
+                        .fadeAlpha(to: 0.34, duration: dauer)]),
+            ])))
+            layers.decor.addChild(node)
         }
     }
 
@@ -242,6 +292,8 @@ public final class RoomRenderer {
                 break
             }
         }
+
+        buildAmbient(room: room)
 
         for bench in room.data.benches {
             let node = atlas.sprite("bench")

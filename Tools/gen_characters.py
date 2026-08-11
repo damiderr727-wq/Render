@@ -473,13 +473,21 @@ def draw_heroine(
             noise = hash01(int(sx) + dx, int(y) * 3 + int(phase * 6))
             if d > 0.55 and noise < (d - 0.55) / 0.45 * 0.85:
                 continue
+            # Sie ist Klang, kein Fleisch: der Grund scheint durch sie
+            # hindurch. Dicht in der Mitte, duenner zum Rand und nach oben,
+            # wo sie ohnehin ausfranst. Das macht sie traeumerisch, ohne
+            # dass die Silhouette verlorenginge - die traegt der Mantel.
             if d < 0.34:
                 col = core
+                deckung = 0.86 - 0.20 * t
             elif d < 0.68:
                 col = mid
+                deckung = 0.74 - 0.24 * t
             else:
                 col = rim
-            c.set(int(sx) + dx, int(y), col)
+                deckung = 0.58 - 0.26 * t
+            a = int(255 * max(0.18, deckung))
+            c.set(int(sx) + dx, int(y), (col[0], col[1], col[2], a))
 
     # Unten loest sie sich auf, statt auf dem Boden aufzusetzen.
     for k in range(3):
@@ -577,28 +585,57 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
 
     # Ruhe: sie flackert und atmet.
     anims["idle"] = [
-        draw_heroine(instrument=instrument, garment=garment, phase=i / 8 * math.tau,
-                     stretch=1.0 + math.sin(i / 8 * math.tau) * 0.04,
-                     sway=math.sin(i / 8 * math.tau) * 0.5,
-                     glow=0.85 + 0.25 * (0.5 + 0.5 * math.sin(i / 8 * math.tau)))
-        for i in range(8)
+        draw_heroine(instrument=instrument, garment=garment, phase=i / 10 * math.tau,
+                     # Ein Atemzug: sie hebt sich, sinkt zurueck, und der
+                     # Saum kommt eine Spur spaeter nach.
+                     stretch=1.0 + math.sin(i / 10 * math.tau) * 0.055,
+                     settle=0.5 - 0.5 * math.sin(i / 10 * math.tau),
+                     lean=math.sin(i / 10 * math.tau + 0.6) * 0.35,
+                     sway=math.sin(i / 10 * math.tau - 0.9) * 0.75,
+                     glow=0.85 + 0.25 * (0.5 + 0.5 * math.sin(i / 10 * math.tau)))
+        for i in range(10)
     ]
 
     # Lauf: sie neigt sich und zieht einen Schweif hinter sich her.
     anims["run"] = [
         draw_heroine(instrument=instrument, garment=garment, phase=i / 8 * math.tau * 2,
-                     lean=2.4 + math.sin(i / 8 * math.tau) * 0.8,
-                     stretch=0.94 + abs(math.sin(i / 8 * math.tau)) * 0.10,
-                     smear=0.16, sway=math.sin(i / 8 * math.tau + 1.1) * 1.3)
+                     lean=2.4 + math.sin(i / 8 * math.tau) * 0.9,
+                     # Zwei Schritte je Runde: der Koerper hebt sich zweimal.
+                     stretch=0.93 + abs(math.sin(i / 8 * math.tau)) * 0.12,
+                     settle=1.0 - abs(math.sin(i / 8 * math.tau)),
+                     smear=0.16, sway=math.sin(i / 8 * math.tau + 1.1) * 1.5)
         for i in range(8)
     ]
 
-    anims["jump"] = [draw_heroine(instrument=instrument, garment=garment, phase=0.6,
-                                  lean=1.4, stretch=1.24, smear=0.05, sway=-0.9)]
-    anims["fall"] = [draw_heroine(instrument=instrument, garment=garment, phase=2.2,
-                                  lean=0.6, stretch=0.88, smear=0.18, sway=1.4)]
-    anims["land"] = [draw_heroine(instrument=instrument, garment=garment, phase=1.1,
-                                  stretch=0.72, settle=2, smear=0.34, sway=1.8)]
+    # Sprung: Absprung streckt sie, dann traegt sie der Schwung, und im
+    # Scheitel sinkt der Mantel wieder auf sie herab. Drei Bilder reichen -
+    # aber ein einziges reicht eben nicht, dann steht sie in der Luft.
+    anims["jump"] = [
+        draw_heroine(instrument=instrument, garment=garment, phase=0.6,
+                     lean=1.6, stretch=1.30, smear=0.08, sway=-1.7),
+        draw_heroine(instrument=instrument, garment=garment, phase=1.5,
+                     lean=1.3, stretch=1.22, smear=0.04, sway=-1.1),
+        draw_heroine(instrument=instrument, garment=garment, phase=2.4,
+                     lean=1.0, stretch=1.12, sway=-0.5, glow=1.1),
+    ]
+
+    # Fall: sie zieht sich lang, das Tuch steht nach oben weg und flattert.
+    anims["fall"] = [
+        draw_heroine(instrument=instrument, garment=garment, phase=i * 1.4,
+                     lean=0.6, stretch=0.86 + i * 0.02, smear=0.18,
+                     sway=1.5 + math.sin(i * 1.9) * 0.5)
+        for i in range(4)
+    ]
+
+    # Landung: erst staucht es sie zusammen, dann federt sie zurueck.
+    anims["land"] = [
+        draw_heroine(instrument=instrument, garment=garment, phase=1.1,
+                     stretch=0.68, settle=3, smear=0.36, sway=2.1),
+        draw_heroine(instrument=instrument, garment=garment, phase=1.8,
+                     stretch=0.84, settle=1, smear=0.18, sway=1.2),
+        draw_heroine(instrument=instrument, garment=garment, phase=2.5,
+                     stretch=1.04, smear=0.05, sway=0.4),
+    ]
 
     # Herzschlag: die Gestalt zerreisst waagerecht und zieht nach.
     anims["dash"] = [
@@ -608,8 +645,12 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
         for i in range(3)
     ]
 
-    anims["wall"] = [draw_heroine(instrument=instrument, garment=garment, phase=0.4,
-                                  lean=-1.8, stretch=1.10, smear=0.1)]
+    anims["wall"] = [
+        draw_heroine(instrument=instrument, garment=garment, phase=i * 1.6,
+                     lean=-1.8, stretch=1.10 - i * 0.02, smear=0.1,
+                     sway=-0.7 - i * 0.25)
+        for i in range(3)
+    ]
 
     # Nahkampf: eine Welle laeuft durch sie hindurch.
     anims["melee"] = [
@@ -632,9 +673,17 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     ]
 
     # Treffer: sie zerfaellt fast.
-    anims["hurt"] = [draw_heroine(instrument=instrument, garment=garment, phase=1.9, lean=-3.0,
-                                  stretch=0.86, split=0.7, smear=0.4,
-                                  glow=0.5, alpha_body=210)]
+    anims["hurt"] = [
+        draw_heroine(instrument=instrument, garment=garment, phase=1.9, lean=-3.4,
+                     stretch=0.84, split=0.85, smear=0.45, sway=-2.2,
+                     glow=0.4, alpha_body=195),
+        draw_heroine(instrument=instrument, garment=garment, phase=2.9, lean=-2.2,
+                     stretch=0.90, split=0.45, smear=0.25, sway=-1.2,
+                     glow=0.6, alpha_body=220),
+        draw_heroine(instrument=instrument, garment=garment, phase=3.9, lean=-1.0,
+                     stretch=0.97, split=0.15, sway=-0.4,
+                     glow=0.85, alpha_body=240),
+    ]
 
     # Rast: sie sinkt zu einer Lache zusammen.
     anims["rest"] = [
@@ -830,8 +879,8 @@ def build() -> None:
 
 def _fps_for(name: str) -> int:
     return {
-        "idle": 7, "run": 13, "jump": 1, "fall": 1, "land": 1,
-        "dash": 18, "wall": 1, "melee": 20, "cast": 16, "hurt": 1, "rest": 5,
+        "idle": 6, "run": 13, "jump": 14, "fall": 9, "land": 16,
+        "dash": 18, "wall": 7, "melee": 20, "cast": 16, "hurt": 14, "rest": 5,
     }.get(name, 8)
 
 

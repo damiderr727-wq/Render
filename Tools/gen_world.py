@@ -314,7 +314,7 @@ SLOPE_KINDS = {
 }
 
 
-def edge_prop(region: str, variant: int) -> Canvas:
+def edge_prop(region: str, variant: int, frame: int = 0, frames: int = 1) -> Canvas:
     """
     Eine Requisite fuer die Bodenkante: Stein, Wurzelknaeuel, Reisig.
 
@@ -330,6 +330,14 @@ def edge_prop(region: str, variant: int) -> Canvas:
     cx, base = 11, 15
     dark = shade(body, -0.16)
 
+    # Alles, was aus dem Boden ragt, wiegt sich. Unten ist es festgewachsen,
+    # oben schwingt es am weitesten - deshalb haengt der Ausschlag an der
+    # Hoehe ueber dem Boden und nicht an einer festen Verschiebung.
+    schwung = math.sin(frame / max(1, frames) * math.tau + variant * 1.3)
+
+    def weht(h: float) -> float:
+        return schwung * (h / 12.0) ** 1.35 * 3.4
+
     if kind == 0:
         # Stein, halb im Boden.
         w = rng.range(5, 9)
@@ -341,8 +349,8 @@ def edge_prop(region: str, variant: int) -> Canvas:
             a = -2.2 + i * 0.6
             x0, y0 = cx + math.cos(a) * 6, base - 2
             pts = bezier((x0, y0), (x0 + math.cos(a) * 5, y0 - 5),
-                         (cx + math.cos(a) * 9, base - 8),
-                         (cx + math.cos(a) * 11, base - 6), 14)
+                         (cx + math.cos(a) * 9 + weht(7), base - 8),
+                         (cx + math.cos(a) * 11 + weht(9), base - 6), 14)
             c.stroke(pts, 3.0, 1.0, dark)
         c.blob(cx, base - 2, 7, dark, rng, lumps=5, squash=0.5)
     elif kind == 2:
@@ -351,8 +359,9 @@ def edge_prop(region: str, variant: int) -> Canvas:
             lean = rng.range(-0.5, 0.5)
             h = rng.range(5, 12)
             x = cx + rng.range(-7, 7)
-            c.stroke([(x + lean * k, base - k) for k in range(int(h))], 2.0, 1.0, dark)
-            c.set(int(x + lean * h), int(base - h), mix(edge, body, 0.5))
+            c.stroke([(x + lean * k + weht(k), base - k) for k in range(int(h))],
+                     2.0, 1.0, dark)
+            c.set(int(x + lean * h + weht(h)), int(base - h), mix(edge, body, 0.5))
     else:
         # Ein Bueschel niedriger Polster.
         for i in range(3):
@@ -859,7 +868,11 @@ def build() -> None:
         tiles.add(f"{region}_spike", tile_spike(region), pivot=(0, 0))
     for region in REGIONS:
         for v in range(6):
-            tiles.add(f"edge_{region}_{v}", edge_prop(region, v), pivot=(0.5, 1.0))
+            # Requisiten wiegen sich: eine starre Kante faellt sofort auf,
+            # sobald alles andere im Bild atmet.
+            tiles.add_sequence(f"edge_{region}_{v}",
+                               [edge_prop(region, v, f, 6) for f in range(6)],
+                               pivot=(0.5, 1.0), fps=4)
     for f in range(4):
         tiles.add(f"dissowall_{f}", tile_dissowall(f), pivot=(0, 0), fps=6)
     png, js = tiles.write(OUT)

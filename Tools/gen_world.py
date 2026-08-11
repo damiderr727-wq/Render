@@ -202,18 +202,19 @@ def tile_platform(region: str, variant: int = 0, cap: str = "") -> Canvas:
     """
     Eine durchsteigbare Plattform.
 
-    Ein duennes Brett, das zwei Kacheln ueber dem Boden schwebt, sieht aus
-    wie eine Spielmechanik - nicht wie Landschaft. Deshalb hat sie hier
-    Substanz und einen Grund, da zu sein: im Hain ist sie eine gestuerzte
-    Wurzel mit Rinde und herabhaengendem Wurzelwerk, in der Kathedrale ein
-    gebrochener Steinbalken, in den Grotten ein Kristallsims, in der
-    Dissonanz eine gesprungene Platte.
+    Sie bekommt dieselbe Behandlung wie der Boden: unregelmaessiger Kamm,
+    Licht nur auf der Oberkante, Bewuchs im Ueberhang, ausgefranste
+    Unterkante - und auslaufende Enden, damit sie nicht abgeschnitten wirkt.
+
+    Ein Zwischenstand hatte sie doppelt so dick und mit haengendem
+    Wurzelwerk. Das war zu viel: bei sieben Pixeln Hoehe wird jedes
+    zusaetzliche Detail zu Rauschen, und die klare Silhouette ging dabei
+    verloren. Weniger traegt hier weiter.
 
     `cap` sagt, ob links ('l') oder rechts ('r') das Ende liegt.
     """
     body, edge, accent = P.REGIONS[region][:3]
-    depth = 13
-    c = Canvas(TS, depth + 8 + TILE_OVERHANG)
+    c = Canvas(TS, 10 + TILE_OVERHANG)
     top = TILE_OVERHANG
     crest = _crest_profile(variant)
 
@@ -226,74 +227,34 @@ def tile_platform(region: str, variant: int = 0, cap: str = "") -> Canvas:
         if thin >= 5:
             continue
         k = crest[x]
-        h = depth - thin * 2
-        for i in range(h + k):
-            t = i / (h + k)
-            c.set(x, top - k + i, mix(shade(body, 0.14), shade(body, -0.42), t ** 0.55))
+        depth = 7 - thin
+        for i in range(depth + k):
+            t = i / (depth + k)
+            c.set(x, top - k + i, mix(shade(body, 0.12), shade(body, -0.38), t ** 0.65))
         c.set(x, top - k, mix(edge, accent, 0.20))
         c.set(x, top - k + 1, mix(edge, body, 0.28))
 
+        if hash01(x * 3, variant + 9) > 0.5:
+            c.set(x, top - k + depth + k, shade(body, -0.45))
+        if hash01(x * 5, variant + 19) > 0.8:
+            c.set(x, top - k + depth + k + 1, shade(body, -0.52))
+
     if region == "hain":
-        # Rinde laengs, dann Wurzeln, die unter der Kante haengen.
-        for x in range(TS):
-            if hash01(x, variant + 61) > 0.55:
-                y0 = top + 3
-                for i in range(hash01(x, variant) > 0.5 and 5 or 3):
-                    c.set(x, y0 + i, shade(body, -0.24))
-        for x in range(TS):
-            if hash01(x * 3, variant + 71) > 0.72:
-                if ("l" in cap and x < 5) or ("r" in cap and x > TS - 6):
-                    continue
-                rl = 3 + int(hash01(x, variant + 5) * 7)
-                rx = x
-                for i in range(rl):
-                    c.set(rx, top + depth - 3 + i, shade(body, -0.36))
-                    if hash01(rx, i) > 0.6:
-                        rx += 1 if hash01(rx, i + 3) > 0.5 else -1
         for x in range(TS):
             if hash01(x * 9 + variant * 23, 13) < 0.26:
                 if ("l" in cap and x < 4) or ("r" in cap and x > TS - 5):
                     continue
-                hh = 2 + int(hash01(x, variant + 5) * 4)
+                h = 2 + int(hash01(x, variant + 5) * 4)
                 lean = -1 if hash01(x, 11) > 0.5 else 1
-                for i in range(hh):
-                    t = i / max(1, hh)
+                for i in range(h):
+                    t = i / max(1, h)
                     c.set(x + int(lean * i * 0.3), top - crest[x] - 1 - i,
                           mix(mix(edge, body, 0.55), edge, t * 0.7))
-    elif region == "kathedrale":
-        # Gebrochener Balken: Fugen laengs, ausgebrochene Unterkante.
-        for row in range(2):
-            yy = top + 4 + row * 5
-            c.rect(0, yy, TS, 1, shade(body, -0.30))
-            c.rect(0, yy + 1, TS, 1, shade(body, 0.06))
-        for x in range(TS):
-            if hash01(x * 5, variant + 31) > 0.6:
-                c.set(x, top + depth - 2, None)
-                c.set(x, top + depth - 3, shade(body, -0.4))
     elif region == "grotten":
         for x in range(0, TS, 5):
             if hash01(x, variant) > 0.45:
                 c.set(x, top - crest[x] - 1, mix(accent, edge, 0.4))
                 c.set(x, top - crest[x] - 2, mix(accent, edge, 0.7))
-        # Kristallzacken unter dem Sims.
-        for x in range(TS):
-            if hash01(x * 7, variant + 41) > 0.78:
-                zl = 3 + int(hash01(x, variant) * 5)
-                for i in range(zl):
-                    w = 2 if i < zl // 2 else 1
-                    c.rect(x, top + depth - 2 + i, w, 1,
-                           mix(body, accent, 0.25 - i / zl * 0.2))
-    else:
-        for x in range(TS):
-            if hash01(x * 5, variant + 17) > 0.7:
-                c.set(x, top + 4 + int(hash01(x, 3) * 5), P.ROT_DIM)
-            if hash01(x * 3, variant + 29) > 0.62:
-                c.set(x, top + depth - 2, None)
-
-    # Ausgefranste Unterkante, damit die Plattform nicht gesaegt wirkt.
-    for x in range(TS):
-        if hash01(x * 3, variant + 9) > 0.5:
-            c.set(x, top + depth - 1, shade(body, -0.5))
     return c
 
 
@@ -577,7 +538,7 @@ def build() -> None:
             for v in range(4):
                 tiles.add(f"{region}_platform_{cap}_{v}",
                           tile_platform(region, v, "" if cap == "mid" else cap),
-                          pivot=(0, TILE_OVERHANG / (13 + 8 + TILE_OVERHANG)))
+                          pivot=(0, TILE_OVERHANG / (10 + TILE_OVERHANG)))
         tiles.add(f"{region}_spike", tile_spike(region), pivot=(0, 0))
     for f in range(4):
         tiles.add(f"dissowall_{f}", tile_dissowall(f), pivot=(0, 0), fps=6)

@@ -283,29 +283,39 @@ class _Rng:
 def room_A1() -> Room:
     r = Room("A1", "DER ERSTE TON", "hain", 60, 22)
     r.border()
-    r.ground(1, 59, lambda x: 16 - 2 * math.sin(x * 0.09) - (1 if 20 < x < 34 else 0))
+    # Der Raum hat eine Form, keine Streuung: eine Terrasse zum Ankommen,
+    # eine Mulde in der Mitte, und rechts eine Stufe hinauf zur Tuer. Der
+    # Aufstieg ist vier Kacheln hoch - ohne die Plattformen kommt man da
+    # nicht rauf, und damit haben sie einen Grund, dort zu liegen.
+    def gelaende(x: float) -> float:
+        if x < 20:
+            return 15 - 0.8 * math.sin(x * 0.13)          # Terrasse
+        if x < 42:
+            t = (x - 20) / 22
+            return 15 + 4 * math.sin(t * math.pi) ** 0.8  # Mulde
+        return 12                                         # Absatz zur Tuer
+
+    r.ground(1, 59, gelaende)
     r.ceiling(1, 59, lambda x: 3 + 1.5 * math.sin(x * 0.13 + 1))
 
-    # Plattformen sitzen dort, wo sie einen Weg oeffnen - nicht zwei
-    # Kacheln ueber ebenem Boden, wo man ohnehin laufen kann.
-    r.platform(22, 11, 6)
-    r.ledge(32, 12, 8, 2)
-    r.platform(44, 8, 5)
+    r.platform(29, 16, 5)
+    r.platform(35, 14, 5)
+    r.platform(38, 12, 4)
 
     r.side_door("R", "right", "A2", "L")
     r.spawn_on("start", 8, 7, 1)
     r.bench_on(11, 7)
 
-    r.enemy("klangmotte", 28, 8)
-    r.enemy("klangmotte", 46, 7)
+    r.enemy("klangmotte", 30, 10)
+    r.enemy("klangmotte", 48, 7)
 
-    r.crystal_on(20, 7, 2)
-    r.crystal_on(38, 7, 1)
+    r.crystal_on(24, 7, 2)
+    r.crystal_on(50, 7, 1)
     r.scatter_decor(11, 16)
 
     r.note_on(16, 7, "HIER SANG DIE WELT SICH SELBST. "
                      "JETZT HAELT SIE NUR NOCH DEN ATEM AN.")
-    r.note_on(50, 7, "DREI INSTRUMENTE LAGEN IM HAIN. "
+    r.note_on(46, 7, "DREI INSTRUMENTE LAGEN IM HAIN. "
                      "NUR EINES WAR NOCH GESTIMMT.")
     return r
 

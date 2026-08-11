@@ -117,14 +117,21 @@ Licht wird es sofort dunkel, Wurzeln laufen von der Kante in die Masse
 hinein, und je nach Kachelvariante wächst viel, wenig oder gar nichts. Die
 Kollision merkt davon nichts — sie kennt weiter nur das Raster.
 
-**Plattformen brauchen einen Grund.** Ein dünnes Brett, das zwei Kacheln
-über ebenem Boden schwebt, sieht aus wie eine Spielmechanik — nicht wie
-Landschaft. Sie haben deshalb Substanz und Herkunft bekommen: im Hain eine
-gestürzte Wurzel mit Rinde, Moos und herabhängendem Wurzelwerk, in der
-Kathedrale ein gebrochener Steinbalken, in den Grotten ein Kristallsims,
-in der Dissonanz eine gesprungene Platte. Dazu auslaufende Enden statt
-abgeschnittener Kacheln — und im Level stehen sie nur noch dort, wo sie
-einen Weg öffnen.
+**Plattformen brauchen einen Grund — aber keine Verzierung.** Ein dünnes
+Brett, das zwei Kacheln über ebenem Boden schwebt, sieht aus wie eine
+Spielmechanik. Der erste Reflex war, das mit Material zu beheben: doppelte
+Dicke, Rinde, herabhängendes Wurzelwerk. Das war der falsche Hebel. Bei
+sieben Pixeln Höhe wird jedes zusätzliche Detail zu Rauschen, und die
+klare Silhouette ging dabei verloren — die schlichtere Fassung mit Moos,
+unregelmäßigem Kamm und auslaufenden Enden trägt weiter.
+
+Das Problem lag ohnehin nicht am Material, sondern am **Ort**. Eine
+Plattform bekommt ihren Sinn aus dem, was sie erschließt. A1 hat deshalb
+jetzt eine Form statt einer Streuung: eine Terrasse zum Ankommen, eine
+Mulde in der Mitte, und rechts ein vier Kacheln hoher Absatz zur Tür. Ohne
+die drei Plattformen kommt man da nicht hinauf — damit haben sie einen
+Grund, dort zu liegen. Der frei schwebende Felsblock, den nichts hielt,
+ist weg.
 
 **Sichtbare Kachelkanten.** Der Kamm variierte frei in der Höhe — und
 sprang deshalb an jeder Kachelgrenze. Der Trick dagegen ist billig und

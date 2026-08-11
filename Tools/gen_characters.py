@@ -332,187 +332,210 @@ def _draw_beine(c: Canvas, *, cx: int, base: float, height: float, phase: float,
 
 def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
                phase: float, lean: float, glow: float, mid) -> None:
+    """
+    Der Kern in ihr - nach einer Regel, die fuer alle gilt.
+
+    Der erste Anlauf zeichnete jeden Kern als das, was er ist: eine Glocke
+    war eine Glocke, ein Metronom ein Metronom. Das sah aus wie Spielzeug,
+    das sie mit sich herumtraegt, und hatte keinen Gedanken dahinter.
+
+    Die Regel lautet jetzt:
+
+    1. **Es ist immer eine Scherbe, nie ein Gegenstand.** Nichts davon ist
+       heil. Ein Stueck Glockenrand, der Arm eines Metronoms ohne Kasten,
+       das Mundstueck einer Pfeife ohne Pfeife. Halb in ihr, an der
+       Bruchkante rau.
+    2. **Man sieht nicht die Form, sondern den Klang.** Ueber jeder Scherbe
+       steht ihre Signatur aus Licht: Ringe bei der Glocke, eine stehende
+       Luftsaeule bei der Orgelpfeife, die Bahn des Arms beim Metronom. Das
+       ist der eigentliche Gegenstand - die Scherbe ist nur, was davon
+       uebrig ist.
+    3. **Hart und dunkel unten, weich und hell oben.** Die Scherbe hat
+       Kanten, die Signatur hat keine.
+
+    Damit sieht man einem Kern an, wie er klingt, bevor man ihn benutzt -
+    und alle sieben gehoeren sichtbar zusammen.
+    """
     S = HERO_SCALE
     t = 0.52
     fy = base - t * height
     fx = cx + lean * t + math.sin(t * 2.6 + phase) * 1.2
-    tilt = 0.16 + lean * 0.02
 
-    # Der Stiel nach unten ist bei allen gleich: er verschwindet in ihr.
-    for i in range(int(8 * S)):
-        col = P.BONE_SH if i < 3 * S else mix(P.BONE_LO, mid, min(1.0, (i - 3 * S) / (5 * S)))
-        c.set(int(fx + tilt * i), int(fy + i), col)
+    # Die Scherbe muss sich gegen die Flamme durchsetzen, in der sie steckt.
+    # Deshalb hell mit dunkler Fuge darunter - nicht dunkel: dunkel geht in
+    # der hellen Masse unter.
+    scherbe = P.BONE_SH
+    scherbe_hi = mix(P.BONE, (255, 255, 255, 255), 0.35)
+    schatten = mix(P.CLOAK, P.INK, 0.5)
+    bruch = mix(P.BONE_LO, mid, 0.55)
+    licht = {"stimmgabel": P.AMBER, "leier": P.TRIM, "trommel": P.GOLD,
+             "floete": P.BLOOM, "metronom": P.WARM, "glocke": P.GOLD,
+             "orgelpfeife": P.TRIM}.get(kern, P.AMBER)
+    p = 0.5 + 0.5 * math.sin(phase * 1.8)
 
-    if kern == "trommel":
-        # Ein schwerer Ring, der quer in ihr liegt. Er liegt tief, damit die
-        # Kerbe darueber frei bleibt - sonst traegt sie ihn wie einen Kopf.
-        c.ellipse(fx, fy - 1, 4.6 * S, 2.9 * S, mix(P.BONE_LO, P.CLOAK, 0.35))
-        c.ring(fx, fy - 1, 4.1 * S, 1.3 * S, P.BONE_SH)
-        c.ring(fx, fy - 1, 4.1 * S, 0.7 * S, P.BONE)
-        c.rect(int(fx - 4 * S), int(fy) - 1, int(9 * S), 1, mix(P.BONE, P.GOLD, 0.45))
-        for side in (-1, 1):
-            c.set(int(fx + side * 4 * S), int(fy - 2), P.GOLD)
-        if glow > 0:
-            c.glow(fx, fy - 1, 7 * S, (P.GOLD[0], P.GOLD[1], P.GOLD[2], int(80 * glow)))
-        return
+    def strahl(x: float, y: float, a: int) -> None:
+        # Alles, was ueber den Rahmen hinausgeht, wird abgeschnitten - sonst
+        # klebt ein Strahl am oberen Bildrand fest und wandert beim
+        # Zeichnen in den Nachbarrahmen.
+        xi, yi = int(x), int(y)
+        if 0 <= xi < c.w and 1 <= yi < c.h - 1:
+            c.blend(xi, yi, (licht[0], licht[1], licht[2], max(0, min(255, a))))
 
-    if kern == "floete":
-        # Ein einzelner schmaler Stab, weit oben heraus. Er spitzt sie zu.
-        laenge = int(13 * S)
-        for i in range(laenge):
-            x = int(fx + tilt * -i * 0.5)
-            c.set(x, int(fy - 1 - i), P.BONE if i % 4 else P.BONE_SH)
-            if i > 2 and i % 4 == 2:
-                c.set(x + 1, int(fy - 1 - i), shade(P.BONE_LO, -0.2))
-        tipx, tipy = int(fx - tilt * laenge * 0.5), int(fy - 1 - laenge)
-        c.set(tipx, tipy, P.AMBER)
-        c.set(tipx, tipy + 1, mix(P.AMBER, P.BONE, 0.5))
-        if glow > 0:
-            c.glow(tipx, tipy, 6 * S, (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(105 * glow)))
-        return
+    def kante(x: float, y: float) -> None:
+        """Eine dunkle Fuge unter der Scherbe, damit sie sich abhebt."""
+        xi, yi = int(x), int(y) + 1
+        if 0 <= xi < c.w and 0 <= yi < c.h:
+            c.blend(xi, yi, (schatten[0], schatten[1], schatten[2], 190))
 
-    if kern == "metronom":
-        # Ein Keil mit einem Arm, der tickt. Der Arm steht nie still - er
-        # ist der einzige Teil von ihr, der einen festen Takt hat.
-        for i in range(int(10 * S)):
-            v = i / (10 * S)
-            w = int((3.4 - 2.2 * v) * S)
-            for dx in range(-w, w + 1):
-                c.set(int(fx + dx), int(fy - i), P.BONE if abs(dx) < w else P.BONE_SH)
-        # Die Skala.
-        for k in range(4):
-            c.set(int(fx + 1 * S), int(fy - (2 + k * 2) * S), P.BONE_LO)
-        # Der Arm mit dem Gewicht.
-        a = -math.pi / 2 + math.sin(phase * 2.2) * 0.55
-        for i in range(int(11 * S)):
-            c.set(int(fx + math.cos(a) * i), int(fy - 1 + math.sin(a) * i), P.BONE_SH)
-        gx = int(fx + math.cos(a) * 8 * S)
-        gy = int(fy - 1 + math.sin(a) * 8 * S)
-        c.rect(gx - 1, gy, 3, 2, mix(P.BONE, P.AMBER, 0.45))
-        if glow > 0:
-            c.glow(gx, gy, 5 * S, (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(90 * glow)))
-        return
+    # --- Die Scherbe ------------------------------------------------------
+    if kern == "stimmgabel":
+        # Zwei Zinken, einer abgebrochen, quer zur Koerperachse.
+        a = -1.16 + lean * 0.03
+        ax, ay = math.cos(a), math.sin(a)
+        nx, ny = -ay, ax
+        for i in range(int(4 * S)):
+            c.set(int(fx - ax * i), int(fy - ay * i), scherbe if i else scherbe_hi)
+        for k in range(-2, 3):
+            c.set(int(fx + nx * k), int(fy + ny * k),
+                  scherbe_hi if abs(k) < 2 else scherbe)
+        for seite, laenge in ((1, int(height * 0.34)), (-1, int(height * 0.17))):
+            for i in range(laenge):
+                px = fx + nx * seite * 1.7 * S + ax * i
+                py = fy + ny * seite * 1.7 * S + ay * i
+                c.set(int(px), int(py), scherbe_hi if i % 4 else scherbe)
+            if seite < 0:
+                c.set(int(fx + nx * seite * 1.7 * S + ax * laenge),
+                      int(fy + ny * seite * 1.7 * S + ay * laenge), bruch)
+        # Signatur: der Ton steht als schmales Band zwischen den Zinken.
+        for i in range(int(height * 0.30)):
+            v = i / (height * 0.30)
+            strahl(fx + ax * i + nx * 0.6, fy + ay * i + ny * 0.6,
+                   int(150 * (1 - v) * (0.5 + 0.5 * p)))
 
-    if kern == "glocke":
-        # Eine Glocke, kopfueber in ihr. Der Kloeppel schwingt nach - er
-        # laeuft dem Takt hinterher, weil die Glocke laenger nachhallt.
-        oben = fy - int(7 * S)
-        for i in range(int(7 * S)):
-            v = i / (7 * S)
-            w = (1.2 + 2.9 * v ** 1.4) * S
-            for dx in range(-int(w), int(w) + 1):
-                rand = abs(dx) >= int(w)
-                c.set(int(fx + dx), int(oben + i),
-                      mix(P.BONE_SH, P.GOLD, 0.35) if rand else P.BONE_LO)
-        c.rect(int(fx - 3.9 * S), int(fy - 1), int(7.8 * S), 1,
-               mix(P.BONE, P.GOLD, 0.5))
-        kx = int(fx + math.sin(phase * 1.4) * 2.6 * S)
-        c.set(kx, int(fy - 2), mix(P.BONE, P.AMBER, 0.6))
-        c.set(kx, int(fy - 3), P.BONE_SH)
-        if glow > 0:
-            c.glow(fx, fy - 4 * S, 9 * S, (P.GOLD[0], P.GOLD[1], P.GOLD[2], int(85 * glow)))
-        return
-
-    if kern == "orgelpfeife":
-        # Ein gerades Rohr mit Mundstueck. Sie kennt genau einen Ton, und
-        # der geht durch alles hindurch.
-        hoehe = int(11 * S)
-        for i in range(hoehe):
-            for dx in (-1, 0, 1):
-                col = P.BONE if dx == 0 else (P.BONE_SH if dx > 0 else P.BONE_LO)
-                c.set(int(fx + dx * S), int(fy - i), col)
-        # Das Labium: die Kerbe, an der der Ton entsteht.
-        c.rect(int(fx - 1.4 * S), int(fy - int(4 * S)), int(3 * S), 1, P.BONE_LO)
-        c.set(int(fx), int(fy - int(4 * S) - 1),
-              mix(P.TRIM, P.BONE, 0.4 + 0.4 * (0.5 + 0.5 * math.sin(phase * 2))))
-        c.rect(int(fx - 2 * S), int(fy - hoehe), int(4 * S), 1, mix(P.BONE, P.TRIM, 0.35))
-        if glow > 0:
-            c.glow(fx, fy - 4 * S, 7 * S, (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(90 * glow)))
-        return
-
-    if kern == "leier":
-        # Ein Rahmen mit Saiten. Drei Toene zugleich - also drei Faeden, die
-        # zwischen zwei Armen stehen und im Takt mitschwingen.
-        arm = int(10 * S)
-        for side in (-1, 1):
-            for i in range(arm):
-                bx = int(fx + side * (2.4 * S + i * 0.30))
-                c.set(bx, int(fy - 1 - i), P.BONE)
-                if i > arm * 0.6:
-                    c.set(bx, int(fy - 1 - i),
-                          mix(P.BONE, P.AMBER, (i - arm * 0.6) / (arm * 0.4) * 0.7))
-        c.rect(int(fx - 3 * S), int(fy - 1), int(7 * S), 1, P.BONE_SH)
+    elif kern == "leier":
+        # Ein Arm mit drei Saiten, am unteren Ende abgerissen.
+        bogen = int(9 * S)
+        for i in range(bogen):
+            v = i / bogen
+            x = fx - 2.6 * S + math.sin(v * 1.3) * 2.4 * S
+            c.set(int(x), int(fy - 1 - i), scherbe_hi if i % 3 else scherbe)
+        c.set(int(fx - 2.6 * S), int(fy), bruch)
+        c.rect(int(fx - 3 * S), int(fy - 1), int(5 * S), 1, scherbe)
+        # Signatur: drei Saiten, die im Takt schwingen.
         for k in range(3):
-            sxx = int(fx - 1 * S) + int(k * S)
-            for i in range(int(9 * S)):
-                fade = 0.25 + 0.55 * (0.5 + 0.5 * math.sin(phase * 2 + k * 1.9 + i * 0.4))
-                c.set(sxx, int(fy - 2 - i), mix(P.BONE_LO, P.TRIM, fade))
-        if glow > 0:
-            c.glow(fx, fy - 7 * S, 7 * S, (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(85 * glow)))
-        return
+            sx = fx - 1.0 * S + k * 1.5 * S
+            for i in range(int(8 * S)):
+                v = i / (8 * S)
+                aus = math.sin(phase * 3 + k * 2.1 + v * 6) * (1 - abs(v - 0.5) * 2) * 1.6
+                strahl(sx + aus, fy - 2 - i, int(210 * (1 - v * 0.5)))
 
-    if kern == "bruch":
-        # Der zersprungene Kern. Beide Zinken sind ab; was bleibt, ist der
-        # Steg und ein Riss, aus dem es herausfaehrt.
-        c.rect(int(fx - 2 * S), int(fy - 1), int(5 * S), 2, P.BONE_SH)
-        for side in (-1, 1):
-            h = int((2 + (1 if side > 0 else 3)) * S)
-            for i in range(h):
-                c.set(int(fx + side * 1.6 * S), int(fy - 2 - i),
-                      P.BONE if i < h - 1 else mix(P.BONE_LO, P.ROT, 0.5))
-        for k in range(5):
-            a = -math.pi / 2 + (k - 2) * 0.42 + math.sin(phase * 2) * 0.12
-            laenge = (4 + (k % 2) * 3) * S
-            for i in range(int(laenge)):
-                c.set(int(fx + math.cos(a) * (2 * S + i)),
-                      int(fy - 3 * S + math.sin(a) * (2 * S + i)),
-                      mix(P.AMBER, P.ROT, i / max(1.0, laenge)))
-        if glow > 0:
-            c.glow(fx, fy - 2 * S, 10 * S,
-                   (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(150 * glow)))
-        return
+    elif kern == "trommel":
+        # Ein Stueck Reifen, quer durch sie hindurch. Kein ganzer Ring.
+        for i in range(-int(5 * S), int(5 * S) + 1):
+            dy = int(abs(i) ** 1.7 / (5 * S) ** 1.7 * 3 * S)
+            c.set(int(fx + i), int(fy - 2 * S + dy), scherbe_hi)
+            c.set(int(fx + i), int(fy - 2 * S + dy + 1), scherbe)
+            kante(fx + i, fy - 2 * S + dy + 1)
+        c.set(int(fx - 5 * S), int(fy - 2 * S + int(3 * S)), bruch)
+        # Signatur: Druckringe, die sich waagerecht ausbreiten.
+        for k in range(3):
+            r = (2 + k * 2.6 + p * 2.4) * S
+            for i in range(20):
+                a = i / 20 * math.tau
+                strahl(fx + math.cos(a) * r * 1.5, fy - 2 * S + math.sin(a) * r * 0.55,
+                       int(120 * (1 - k / 3) * (1 - p * 0.4)))
 
-    # Die Stimmgabel - und zwar schraeg durch sie hindurch.
-    #
-    # Zwei Anlaeufe waren daneben. Senkrecht und symmetrisch las sie sich
-    # als Fuehlerpaar, also als Tier. Ein einzelner langer Zinken war zwar
-    # kein Tier mehr, aber auch keine Stimmgabel - nur ein Stock.
-    #
-    # Schraeg loest beides: die Gabel behaelt ihre zwei Zinken und den
-    # Steg, steht aber quer zur Koerperachse. Damit kann das Auge sie gar
-    # nicht als Koerperteil lesen - so waechst nichts. Sie steckt.
-    a = -1.16 + lean * 0.03
-    ax, ay = math.cos(a), math.sin(a)
-    nx, ny = -ay, ax                        # quer zur Gabelachse
-
-    # Der Stiel faehrt hinten unten wieder heraus.
-    for i in range(int(5 * S)):
-        c.set(int(fx - ax * i), int(fy - ay * i),
-              P.BONE_SH if i < 2 else mix(P.BONE_LO, mid, i / (5 * S)))
-
-    # Der Steg liegt in ihr - quer zur Achse, kurz und gedeckt.
-    for k in range(-2, 3):
-        c.set(int(fx + nx * k), int(fy + ny * k), P.BONE if abs(k) < 2 else P.BONE_SH)
-
-    # Die beiden Zinken, ungleich lang: der hintere ist angebrochen.
-    for seite, laenge in ((1, int(height * 0.38)), (-1, int(height * 0.21))):
+    elif kern == "floete":
+        # Ein Rohrstueck mit zwei Loechern, schraeg abgebrochen.
+        laenge = int(9 * S)
         for i in range(laenge):
-            v = i / max(1, laenge)
-            # Sie laufen leicht auseinander, wie bei einer echten Gabel.
-            px = fx + nx * seite * (1.6 * S + v * 1.4) + ax * i
-            py = fy + ny * seite * (1.6 * S + v * 1.4) + ay * i
-            c.set(int(px), int(py), P.BONE if i % 4 else P.BONE_SH)
-            if i > laenge * 0.5:
-                c.set(int(px - nx * seite), int(py - ny * seite), P.BONE_SH)
-        ex = fx + nx * seite * (1.6 * S + 1.4) + ax * laenge
-        ey = fy + ny * seite * (1.6 * S + 1.4) + ay * laenge
-        # Der kurze endet rau: dort ist er abgebrochen.
-        c.set(int(ex), int(ey),
-              mix(P.BONE, P.AMBER, 0.4) if seite > 0 else mix(P.BONE_LO, mid, 0.5))
+            x = int(fx + i * 0.16)
+            c.set(x, int(fy - 1 - i), scherbe_hi if i % 5 else scherbe)
+            c.set(x + 1, int(fy - 1 - i), scherbe)
+            kante(x + 1, fy - 1 - i)
+            if i in (int(3 * S), int(6 * S)):
+                c.set(x, int(fy - 1 - i), bruch)
+        c.set(int(fx), int(fy), bruch)
+        # Signatur: ein einziger gerader Strahl nach oben. Kurz genug, dass
+        # er im Rahmen bleibt - sonst haengt er oben fest.
+        strecke = min(height * 0.16, max(0.0, fy - laenge - 5))
+        for i in range(max(0, int(strecke))):
+            v = i / max(1.0, strecke)
+            if (i + int(phase * 6)) % 3:
+                strahl(fx + laenge * 0.16, fy - 2 - laenge - i, int(200 * (1 - v)))
+
+    elif kern == "metronom":
+        # Kein Kasten, kein Gehaeuse: nur der Arm mit dem Gewicht, der in
+        # ihr steckt. Der Kasten ist das, was fehlt.
+        a = -math.pi / 2 + math.sin(phase * 2.2) * 0.60
+        laenge = int(10 * S)
+        for i in range(laenge):
+            c.set(int(fx + math.cos(a) * i), int(fy - 1 + math.sin(a) * i),
+                  scherbe_hi if i % 4 else scherbe)
+        gx = int(fx + math.cos(a) * laenge * 0.78)
+        gy = int(fy - 1 + math.sin(a) * laenge * 0.78)
+        c.rect(gx - 1, gy, 3, 2, scherbe_hi)
+        c.set(int(fx), int(fy), bruch)
+        # Signatur: die Bahn, die er schon gegangen ist - ein Bogen aus
+        # Nachbildern. Man sieht den Takt, nicht das Geraet.
+        for k in range(9):
+            aa = -math.pi / 2 + (-0.60 + k * 0.15)
+            naehe = 1 - abs(aa - a) / 0.7
+            for i in range(int(4 * S), laenge):
+                strahl(fx + math.cos(aa) * i, fy - 1 + math.sin(aa) * i,
+                       int(90 * max(0.0, naehe) ** 2))
+
+    elif kern == "glocke":
+        # Nur der Rand einer Glocke - ein Bogen, mehr nicht. Der Kloeppel
+        # haengt frei darunter und schwingt nach.
+        for i in range(-int(5 * S), int(5 * S) + 1):
+            v = abs(i) / (5 * S)
+            y = fy - 4 * S + v ** 1.8 * 4 * S
+            c.set(int(fx + i), int(y), scherbe_hi)
+            c.set(int(fx + i), int(y + 1), scherbe)
+            kante(fx + i, y + 1)
+        for seite in (-1, 1):
+            c.set(int(fx + seite * 5 * S), int(fy), bruch)
+        kx = fx + math.sin(phase * 1.2) * 2.4 * S
+        c.set(int(kx), int(fy - 2 * S), scherbe)
+        c.set(int(kx), int(fy - 2 * S + 1), scherbe_hi)
+        # Signatur: Ringe, die weit ueber sie hinausgehen. Das ist die
+        # Aura - eine Glocke ist der Hall, nicht das Metall.
+        for k in range(4):
+            r = ((k * 3.2 + p * 3.2) % 12.8 + 2) * S
+            a0 = int(110 * (1 - r / (13 * S)))
+            for i in range(26):
+                a = i / 26 * math.tau
+                strahl(fx + math.cos(a) * r, fy - 4 * S + math.sin(a) * r * 0.82, a0)
+
+    elif kern == "orgelpfeife":
+        # Das Mundstueck einer Pfeife, kurz abgebrochen. Die Pfeife selbst
+        # ist nicht mehr da - sie steht als Luftsaeule darueber.
+        fuss = int(5 * S)
+        for i in range(fuss):
+            for dx in (-1, 0, 1):
+                c.set(int(fx + dx * S), int(fy - i),
+                      scherbe_hi if dx == 0 else scherbe)
+        for dx in range(-int(1.6 * S), int(1.8 * S)):
+            kante(fx + dx, fy - fuss)
+        c.rect(int(fx - 1.6 * S), int(fy - fuss), int(3.4 * S), 1, scherbe_hi)
+        c.rect(int(fx - 1.2 * S), int(fy - fuss + 1), int(2.6 * S), 1, bruch)
+        c.set(int(fx), int(fy + 1), bruch)
+        # Signatur: eine stehende Luftsaeule. Drei Baeuche, die wandern -
+        # das ist die Orgel, nicht das Rohr.
+        hoehe = height * 0.42
+        for i in range(int(hoehe)):
+            v = i / hoehe
+            bauch = abs(math.sin(v * math.pi * 3 - phase * 1.6))
+            breite = (0.6 + bauch * 2.6) * S
+            for dx in range(-int(breite), int(breite) + 1):
+                rand = abs(dx) >= int(breite) - 0
+                strahl(fx + dx, fy - fuss - 1 - i,
+                       int((150 if rand else 55) * (1 - v * 0.75)))
 
     if glow > 0:
-        c.glow(fx, fy, 7 * S, (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(120 * glow)))
-    c.set(int(fx), int(fy), P.AMBER)
+        c.glow(fx, fy - 2 * S, 9 * S,
+               (licht[0], licht[1], licht[2], int((70 + 60 * p) * glow)))
 
 
 def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,

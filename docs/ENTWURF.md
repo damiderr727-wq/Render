@@ -82,6 +82,42 @@ Dazu kommt der Maßstab: die Hintergründe sind so groß wie das Sichtfeld,
 Stämme spannen die volle Bildhöhe, und an Fäden hängen Zapfen, Rauchfässer
 und Kristalle. Erst an solchen Dingen sieht man, wie groß eine Halle ist.
 
+## Die Hintergründe
+
+Sie standen zuerst in `gen_world.py` und waren gestreut: Rechteck-Stämme an
+Zufallspositionen. Streuung ergibt Rauschen, kein Bild. Sie haben jetzt ein
+eigenes Modul, `gen_backdrops.py`, und jede Schicht ist gesetzt — was rahmt
+den Blick, was trägt den Maßstab, wo bleibt die Mitte frei für die Figur.
+Der Zufall darf nur noch die Rinde körnen und Kanten ausfransen.
+
+Drei Entscheidungen tragen das:
+
+**Warm gegen kalt.** Der Dunst ist kühl, das Holz warm. Dieser eine
+Gegensatz trägt mehr als jede zusätzliche Farbe. Die Nadeln nehmen die
+Kälte des Dunstes auf, das Holz bleibt warm — dadurch trennen sich die
+Schichten auch dort, wo ihre Helligkeiten sich nähern.
+
+**Ein Blickfang je Region.** Im Hain der bleiche Mond hinter einem Stamm,
+in der Kathedrale die Fensterrose, in den Grotten eine leuchtende
+Kristallgruppe. Nicht mehr als einer — sonst zieht nichts.
+
+**Gerasterte Verläufe.** Ein weicher Verlauf sieht in Pixelgrafik nach
+Weichzeichner aus. Eine geordnete Rasterung (Bayer-Matrix) hält die Kante
+hart und lässt dem Bild an, dass es aus Pixeln besteht.
+
+Das Zeichnen selbst brauchte erst Werkzeug: Bezierkurven, Striche mit
+Verjüngung, rekursive Äste, organische Massen aus überlappenden Beulen,
+Ketten aus einzelnen Gliedern, Spitzbögen.
+
+Der lehrreichste Fehler steckt in `frond()`. Nadelzweige waren zweimal
+falsch — erst als einzeln gesetzte Punkte (las sich als Fischgräte), dann
+als gezeichnete Striche (als Federkiel). Beide Male wurde **entlang** der
+Kurve gefüllt statt **quer** dazu. Aus der Entfernung sind Nadeln keine
+Striche, sondern eine geschlossene Masse mit gezackter Kante. Mit der
+Normalen an jedem Kurvenpunkt entsteht die Fläche; die Zacken kommen
+hinterher an den Rand. Dieselbe Funktion zeichnet jetzt auch die Farne im
+Vordergrund.
+
 ## Der Kampf
 
 Die Waffe ist der Schall. Das Instrument gibt ihm nur die Form. Deshalb

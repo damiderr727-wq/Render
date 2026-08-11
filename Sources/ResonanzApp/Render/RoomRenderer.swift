@@ -67,6 +67,18 @@ public final class RoomRenderer {
 
     private func buildBackdrop(room: Room) {
         let region = room.region.rawValue
+
+        // Eine Himmelsflaeche hinter allem. Die Schichten selbst sind genau
+        // bildschirmhoch und werden nur waagerecht gekachelt - senkrecht
+        // wiederholt gaebe der Verlauf eine sichtbare Naht.
+        let sky = SKSpriteNode(color: skyColor(for: room.region),
+                               size: CGSize(width: Double(room.width) * tileSize + 512,
+                                            height: Double(room.height) * tileSize + 512))
+        sky.anchorPoint = CGPoint(x: 0, y: 1)
+        sky.position = CGPoint(x: -256, y: 256)
+        sky.zPosition = -10
+        layers.backdrop.addChild(sky)
+
         for layer in 0..<3 {
             let name = "\(region)_bg\(layer)"
             guard let info = atlas.frame(name) else { continue }
@@ -76,26 +88,24 @@ public final class RoomRenderer {
             let container = SKNode()
             container.zPosition = CGFloat(layer)
             let columns = Int(ceil(Double(room.width) * tileSize / Double(info.size.width))) + 2
-            let rows = Int(ceil(Double(room.height) * tileSize / Double(info.size.height))) + 1
             for column in 0..<columns {
-                for row in 0..<rows {
-                    let sprite = SKSpriteNode(texture: info.texture, size: info.size)
-                    sprite.anchorPoint = CGPoint(x: 0, y: 0)
-                    sprite.position = CGPoint(
-                        x: CGFloat(column) * info.size.width,
-                        y: -Double(room.height) * tileSize + CGFloat(row) * info.size.height)
-                    sprite.alpha = [0.55, 0.7, 0.85][layer]
-                    container.addChild(sprite)
-                }
+                let sprite = SKSpriteNode(texture: info.texture, size: info.size)
+                sprite.anchorPoint = CGPoint(x: 0, y: 0)
+                sprite.position = CGPoint(x: CGFloat(column) * info.size.width,
+                                          y: -Double(room.height) * tileSize)
+                sprite.alpha = [0.55, 0.7, 0.85][layer]
+                container.addChild(sprite)
             }
             container.userData = ["parallax": factor]
             layers.backdrop.addChild(container)
         }
     }
 
-    /// Verschiebt die Hintergrundschichten gegenlaeufig zur Kamera.
+    /// Verschiebt Hinter- und Vordergrund gegenlaeufig zur Kamera.
+    /// Ein Faktor ueber 1 laesst die Schicht schneller laufen als die Welt -
+    /// so entsteht der Eindruck, dicht davor zu stehen.
     public func updateParallax(cameraPosition: CGPoint) {
-        for container in layers.backdrop.children {
+        for container in layers.backdrop.children + layers.foreground.children {
             guard let factor = container.userData?["parallax"] as? Double else { continue }
             container.position = CGPoint(x: cameraPosition.x * (1 - factor),
                                          y: cameraPosition.y * (1 - factor) * 0.5)
@@ -231,6 +241,23 @@ public final class RoomRenderer {
             layers.decor.addChild(mote)
         }
 
+        // Vorderste Schicht: fast schwarze Massen, laufen schneller als
+        // die Kamera und schliessen den Blick nach unten ab.
+        if let info = atlas.frame("\(room.region.rawValue)_fg") {
+            let container = SKNode()
+            container.zPosition = 1
+            let columns = Int(ceil(Double(room.width) * tileSize / Double(info.size.width))) + 2
+            for column in 0..<columns {
+                let sprite = SKSpriteNode(texture: info.texture, size: info.size)
+                sprite.anchorPoint = CGPoint(x: 0, y: 0)
+                sprite.position = CGPoint(x: CGFloat(column) * info.size.width,
+                                          y: -Double(room.height) * tileSize)
+                container.addChild(sprite)
+            }
+            container.userData = ["parallax": atlas.parallaxFactors["\(room.region.rawValue)_fg"] ?? 1.3]
+            layers.foreground.addChild(container)
+        }
+
         if room.data.darkness > 0.01 {
             let veil = SKSpriteNode(color: .black,
                                     size: CGSize(width: width + 64, height: height + 64))
@@ -240,6 +267,16 @@ public final class RoomRenderer {
             veil.zPosition = 5
             veil.blendMode = .alpha
             layers.foreground.addChild(veil)
+        }
+    }
+
+    /// Der hellste Wert der Region - er steht hinter allem.
+    private func skyColor(for region: Region) -> SKColor {
+        switch region {
+        case .hain: return SKColor(red: 0.49, green: 0.55, blue: 0.58, alpha: 1)
+        case .kathedrale: return SKColor(red: 0.56, green: 0.55, blue: 0.63, alpha: 1)
+        case .grotten: return SKColor(red: 0.56, green: 0.64, blue: 0.71, alpha: 1)
+        case .dissonanz: return SKColor(red: 0.43, green: 0.32, blue: 0.35, alpha: 1)
         }
     }
 

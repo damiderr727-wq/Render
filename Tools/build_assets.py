@@ -16,6 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import gen_backdrops
 import gen_characters
 import gen_levels
 import gen_score
@@ -27,6 +28,7 @@ def main() -> int:
     print("RESONANZ - Assets werden gebaut\n")
     gen_characters.build()
     gen_world.build()
+    gen_backdrops.build()
     gen_levels.build()
     gen_score.build()
 

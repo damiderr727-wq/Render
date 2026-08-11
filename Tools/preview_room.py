@@ -77,7 +77,14 @@ def render(room_id: str) -> Image.Image:
 
     canvas = Image.new("RGBA", (w * TS, h * TS), (5, 6, 12, 255))
 
-    # Hintergrundschichten
+    # Hintergrundschichten. Sie sind genau bildschirmhoch und werden nur
+    # waagerecht gekachelt - senkrecht wiederholt gaebe der Himmelsverlauf
+    # eine sichtbare Naht. Was darueber liegt, bekommt die Himmelsfarbe.
+    sky_img, _ = backdrops.frame(f"{region}_bg0")
+    if sky_img is not None:
+        top_row = sky_img.crop((0, 0, sky_img.width, 1)).resize((1, 1))
+        canvas.paste(top_row.resize((w * TS, h * TS)), (0, 0))
+
     for layer in range(3):
         img, _ = backdrops.frame(f"{region}_bg{layer}")
         if img is None:
@@ -85,9 +92,8 @@ def render(room_id: str) -> Image.Image:
         alpha = [0.55, 0.7, 0.85][layer]
         faded = img.copy()
         faded.putalpha(faded.getchannel("A").point(lambda v: int(v * alpha)))
-        for oy in range(h * TS - img.height, -img.height, -img.height):
-            for ox in range(0, w * TS, img.width):
-                canvas.alpha_composite(faded, (ox, oy))
+        for ox in range(0, w * TS, img.width):
+            canvas.alpha_composite(faded, (ox, h * TS - img.height))
 
     # Gelaende
     for y in range(h):

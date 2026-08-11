@@ -85,14 +85,17 @@ class Palette:
         # Der begehbare Fels ist dunkel; sichtbar wird er ueber seine
         # beleuchtete Oberkante. Das ist der Griff, der Vordergrund von
         # Hintergrund trennt, ohne dass Nebel noetig waere.
-        "hain": (hexc("#15211f"), hexc("#6ea78f"), hexc("#ffc46b"),
-                 hexc("#8d9c9a"), hexc("#3f5a56")),
-        "kathedrale": (hexc("#1a1826"), hexc("#7a6f9e"), hexc("#ffd08a"),
-                       hexc("#9a93a8"), hexc("#4b4468")),
-        "grotten": (hexc("#141d28"), hexc("#5f8bad"), hexc("#9ee0ff"),
-                    hexc("#8ea3b5"), hexc("#3d5a75")),
-        "dissonanz": (hexc("#1d1116"), hexc("#8a4352"), hexc("#ff8a5c"),
-                      hexc("#6b4b52"), hexc("#4d2b36")),
+        # Der Dunst ist kalt, das Holz ist warm. Dieser eine Gegensatz
+        # traegt mehr als jede zusaetzliche Farbe: kuehler Hintergrund,
+        # warme Masse davor - und ein einziger warmer Akzent im Licht.
+        "hain": (hexc("#16211d"), hexc("#79a78c"), hexc("#ffc46b"),
+                 hexc("#7d8d95"), hexc("#6b4f3c")),
+        "kathedrale": (hexc("#1b1824"), hexc("#8c7ba0"), hexc("#ffd08a"),
+                       hexc("#8f8ba0"), hexc("#5a4148")),
+        "grotten": (hexc("#141d28"), hexc("#6a9bc0"), hexc("#9ee0ff"),
+                    hexc("#8ea3b5"), hexc("#3c4a66")),
+        "dissonanz": (hexc("#1d1116"), hexc("#a04d5c"), hexc("#ff8a5c"),
+                      hexc("#6e5158"), hexc("#54303a")),
     }
 
     # Vordergrund - fast schwarz, in jeder Region gleich.
@@ -105,6 +108,39 @@ def hash01(x: int, y: int = 0) -> float:
     h = (h ^ (h >> 13)) & 0xFFFFFFFF
     h = (h * 1274126177) & 0xFFFFFFFF
     return ((h ^ (h >> 16)) & 0xFFFFFFFF) / 0xFFFFFFFF
+
+
+
+# --------------------------------------------------------- Zeichenwerkzeug
+#
+# Was hier steht, ist der Pinselkasten. Streuung allein macht noch kein Bild -
+# es braucht Striche, die sich verjuengen, Massen, die Beulen haben, und
+# Verlaeufe, die im Raster gerastert sind statt weichgezeichnet.
+
+BAYER8 = [
+    [0, 32, 8, 40, 2, 34, 10, 42],
+    [48, 16, 56, 24, 50, 18, 58, 26],
+    [12, 44, 4, 36, 14, 46, 6, 38],
+    [60, 28, 52, 20, 62, 30, 54, 22],
+    [3, 35, 11, 43, 1, 33, 9, 41],
+    [51, 19, 59, 27, 49, 17, 57, 25],
+    [15, 47, 7, 39, 13, 45, 5, 37],
+    [63, 31, 55, 23, 61, 29, 53, 21],
+]
+
+
+def bezier(p0, p1, p2, p3, steps: int = 24):
+    """Punkte einer kubischen Bezierkurve."""
+    out = []
+    for i in range(steps + 1):
+        t = i / steps
+        u = 1 - t
+        x = (u ** 3 * p0[0] + 3 * u * u * t * p1[0]
+             + 3 * u * t * t * p2[0] + t ** 3 * p3[0])
+        y = (u ** 3 * p0[1] + 3 * u * u * t * p1[1]
+             + 3 * u * t * t * p2[1] + t ** 3 * p3[1])
+        out.append((x, y))
+    return out
 
 
 # --------------------------------------------------------------- Leinwand
@@ -217,6 +253,126 @@ class Canvas:
                     continue
                 a = (1 - d) ** power
                 self.blend(i, j, (c[0], c[1], c[2], int(c[3] * a)))
+
+
+    # ---- Malerische Werkzeuge
+
+    def dither_v(self, x: int, y: int, w: int, h: int, top: RGBA, bottom: RGBA,
+                 levels: int = 6) -> None:
+        """
+        Senkrechter Verlauf, im Raster gerastert.
+
+        Ein weicher Verlauf sieht in Pixelgrafik nach Weichzeichner aus. Mit
+        einer geordneten Rasterung bleibt die Kante hart, und man sieht dem
+        Bild an, dass es aus Pixeln besteht - das ist der Punkt.
+        """
+        for j in range(int(y), int(y + h)):
+            t = (j - y) / max(1, h - 1)
+            step = t * (levels - 1)
+            low = int(math.floor(step))
+            frac = step - low
+            c_low = mix(top, bottom, low / max(1, levels - 1))
+            c_high = mix(top, bottom, min(levels - 1, low + 1) / max(1, levels - 1))
+            for i in range(int(x), int(x + w)):
+                threshold = BAYER8[j % 8][i % 8] / 64.0
+                self.set(i, j, c_high if frac > threshold else c_low)
+
+    def stroke(self, points, w0: float, w1: float, c: RGBA,
+               taper: float = 1.0) -> None:
+        """Ein Strich entlang einer Kurve, der sich verjuengt."""
+        n = max(1, len(points) - 1)
+        for i, (px, py) in enumerate(points):
+            t = (i / n) ** taper
+            w = w0 + (w1 - w0) * t
+            if w <= 0:
+                continue
+            self.ellipse(px, py, max(0.5, w / 2), max(0.5, w / 2), c)
+
+    def blob(self, cx: float, cy: float, r: float, c: RGBA, rng: "Rng",
+             lumps: int = 7, squash: float = 1.0) -> None:
+        """
+        Eine organische Masse aus ueberlappenden Beulen.
+
+        Ein Kreis wirkt gestanzt, ein Rechteck tot. Erst die unregelmaessige
+        Kante laesst etwas gewachsen aussehen.
+        """
+        self.ellipse(cx, cy, r, r * squash, c)
+        for i in range(lumps):
+            a = i / lumps * math.tau + rng.range(-0.3, 0.3)
+            d = r * rng.range(0.45, 0.85)
+            rr = r * rng.range(0.35, 0.62)
+            self.ellipse(cx + math.cos(a) * d, cy + math.sin(a) * d * squash,
+                         rr, rr * squash, c)
+
+    def branch(self, x: float, y: float, angle: float, length: float,
+               width: float, depth: int, c: RGBA, rng: "Rng",
+               leaf: RGBA | None = None, curve: float = 0.35) -> None:
+        """
+        Ein Ast, der sich verzweigt und dabei duenner wird.
+
+        Rekursiv, weil Baeume das auch sind. Die Kruemmung kommt aus einer
+        Bezierkurve - gerade Aeste sehen aus wie Streichhoelzer.
+        """
+        if depth <= 0 or length < 3:
+            if leaf is not None:
+                self.blob(x, y, max(2.0, width * 2.2), leaf, rng, lumps=5, squash=0.8)
+            return
+
+        bend = rng.range(-curve, curve)
+        ex = x + math.cos(angle) * length
+        ey = y + math.sin(angle) * length
+        cx1 = x + math.cos(angle + bend * 0.5) * length * 0.4
+        cy1 = y + math.sin(angle + bend * 0.5) * length * 0.4
+        cx2 = x + math.cos(angle + bend) * length * 0.75
+        cy2 = y + math.sin(angle + bend) * length * 0.75
+        pts = bezier((x, y), (cx1, cy1), (cx2, cy2), (ex, ey), max(6, int(length / 3)))
+        self.stroke(pts, width, width * 0.55, c)
+
+        tip_x, tip_y = pts[-1]
+        forks = 2 if depth > 1 else rng.int(1, 2)
+        for k in range(forks):
+            spread = rng.range(0.28, 0.72) * (1 if k % 2 == 0 else -1)
+            self.branch(tip_x, tip_y, angle + bend + spread,
+                        length * rng.range(0.55, 0.78), width * 0.62,
+                        depth - 1, c, rng, leaf, curve)
+
+    def chain(self, x: float, y0: float, y1: float, c: RGBA,
+              link: int = 4) -> None:
+        """Eine Kette aus einzelnen Gliedern, nicht aus einem Strich."""
+        y = y0
+        i = 0
+        while y < y1:
+            if i % 2 == 0:
+                self.rect(int(x), int(y), 1, min(link, int(y1 - y)), c)
+            else:
+                self.rect(int(x) - 1, int(y), 3, 1, c)
+                self.rect(int(x) - 1, int(y + link - 1), 3, 1, c)
+                self.set(int(x) - 1, int(y + 1), c)
+                self.set(int(x) + 1, int(y + 1), c)
+            y += link
+            i += 1
+
+    def gothic_arch(self, cx: float, top: float, w: float, h: float,
+                    c: RGBA, filled: bool = True) -> None:
+        """Ein Spitzbogen. Fuellt nach unten, wenn `filled`."""
+        half = w / 2
+        for j in range(int(h)):
+            t = j / max(1, h)
+            # Zwei Kreisboegen, die sich oben treffen: der Spitzbogen.
+            span = half * math.sqrt(max(0.0, 1 - (1 - t) ** 2))
+            if filled:
+                self.rect(int(cx - span), int(top + j), max(1, int(span * 2)), 1, c)
+            else:
+                self.set(int(cx - span), int(top + j), c)
+                self.set(int(cx + span), int(top + j), c)
+
+    def rough_edge(self, x: int, y: int, w: int, amount: int, c: RGBA | None,
+                   seed: int = 0) -> None:
+        """Franst eine waagerechte Kante aus, damit sie nicht gestanzt wirkt."""
+        for i in range(w):
+            d = int(hash01(x + i, seed) * amount)
+            for k in range(d):
+                self.set(x + i, y + k, c)
 
     # ---- Nachbearbeitung
 

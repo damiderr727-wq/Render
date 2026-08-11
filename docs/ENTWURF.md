@@ -46,8 +46,21 @@ traumhafte Masse, die oben ausfranst und den Boden kaum berührt. Kein
 Gesicht, keine Glieder — nur eine dunkle Kerbe dort, wo sie am dichtesten
 ist, damit der Blick einen Halt hat.
 
-Darin steckt der einzige harte Gegenstand an ihr: eine **Stimmgabel, halb
-im Körper versenkt**. Der Steg liegt tief genug, dass die Masse ihn
+Darin steckt der einzige harte Gegenstand an ihr: eine **Stimmgabel mit
+abgebrochenem Zinken, halb im Körper versenkt**.
+
+Der abgebrochene Zinken ist kein Detail, sondern die Lösung eines
+konkreten Problems. Vorher standen zwei gleich lange Zinken mit
+Leuchtspitze oben heraus — und bei dreißig Pixeln liest sich das als
+**Fühlerpaar**, damit die ganze Figur als Tier. Es lag nicht an der
+Größe: was oben paarweise und symmetrisch absteht, hält das Auge für
+Anatomie. Seit nur noch einer lang heraussteht und der zweite ein Stumpf
+ist, liest es sich als Gegenstand, der in ihr steckt. Dazu ist das Licht
+von den Spitzen an die Eintrittsstelle gewandert — er leuchtet, weil sie
+ihn treibt, nicht weil er glüht.
+
+Nebenbei entsteht daraus eine Beziehung, die vorher fehlte: die
+Stimmgabel im Boden, an der man rastet, ist heil. Ihre ist es nicht. Der Steg liegt tief genug, dass die Masse ihn
 umschließt, nach unten verliert sich der Stiel in ihr, und die Gestalt
 läuft oberhalb zwischen den Zinken weiter. Sie ist das, was Cadence
 zusammenhält — und das Einzige an ihr, das eine Kante hat.

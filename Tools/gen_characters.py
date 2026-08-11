@@ -18,7 +18,12 @@ OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Res
 
 # Die Leinwand ist breiter als die Gestalt: ein Cape braucht Platz
 # neben ihr, sonst schneidet der Rahmen es ab.
-HERO_W, HERO_H = 28, 30
+# Die Groesse der Figur an einer Stelle. Alles andere leitet sich davon ab,
+# damit man sie im Ganzen groesser oder kleiner ziehen kann, ohne dass die
+# Verhaeltnisse auseinanderlaufen.
+HERO_SCALE = 1.3
+HERO_W, HERO_H = int(round(28 * HERO_SCALE)), int(round(30 * HERO_SCALE))
+BODY_H = 20.0 * HERO_SCALE
 GROUND = HERO_H - 1  # unterste Pixelzeile = Fussboden
 
 
@@ -134,80 +139,95 @@ def _garment_slits(openings: int) -> list[tuple[float, int, float]]:
 
 def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
                phase: float, lean: float, glow: float, mid) -> None:
+    S = HERO_SCALE
     t = 0.52
     fy = base - t * height
     fx = cx + lean * t + math.sin(t * 2.6 + phase) * 1.2
     tilt = 0.16 + lean * 0.02
 
     # Der Stiel nach unten ist bei allen gleich: er verschwindet in ihr.
-    for i in range(8):
-        col = P.BONE_SH if i < 3 else mix(P.BONE_LO, mid, min(1.0, (i - 3) / 5))
+    for i in range(int(8 * S)):
+        col = P.BONE_SH if i < 3 * S else mix(P.BONE_LO, mid, min(1.0, (i - 3 * S) / (5 * S)))
         c.set(int(fx + tilt * i), int(fy + i), col)
 
     if kern == "trommel":
-        # Ein schwerer Ring, der quer in ihr liegt. Er steht kaum heraus -
-        # dafuer drueckt er die Gestalt breit.
-        # Er liegt tief, damit die Kerbe darueber frei bleibt - sonst sieht
-        # es aus, als traege sie den Ring als Kopf.
-        c.ellipse(fx, fy - 1, 4.6, 2.9, mix(P.BONE_LO, P.CLOAK, 0.35))
-        c.ring(fx, fy - 1, 4.1, 1.3, P.BONE_SH)
-        c.ring(fx, fy - 1, 4.1, 0.7, P.BONE)
-        c.rect(int(fx) - 4, int(fy) - 1, 9, 1, mix(P.BONE, P.GOLD, 0.45))
+        # Ein schwerer Ring, der quer in ihr liegt. Er liegt tief, damit die
+        # Kerbe darueber frei bleibt - sonst traegt sie ihn wie einen Kopf.
+        c.ellipse(fx, fy - 1, 4.6 * S, 2.9 * S, mix(P.BONE_LO, P.CLOAK, 0.35))
+        c.ring(fx, fy - 1, 4.1 * S, 1.3 * S, P.BONE_SH)
+        c.ring(fx, fy - 1, 4.1 * S, 0.7 * S, P.BONE)
+        c.rect(int(fx - 4 * S), int(fy) - 1, int(9 * S), 1, mix(P.BONE, P.GOLD, 0.45))
         for side in (-1, 1):
-            c.set(int(fx + side * 4), int(fy - 2), P.GOLD)
+            c.set(int(fx + side * 4 * S), int(fy - 2), P.GOLD)
         if glow > 0:
-            c.glow(fx, fy - 1, 7, (P.GOLD[0], P.GOLD[1], P.GOLD[2], int(80 * glow)))
+            c.glow(fx, fy - 1, 7 * S, (P.GOLD[0], P.GOLD[1], P.GOLD[2], int(80 * glow)))
         return
 
     if kern == "floete":
         # Ein einzelner schmaler Stab, weit oben heraus. Er spitzt sie zu.
-        for i in range(13):
+        laenge = int(13 * S)
+        for i in range(laenge):
             x = int(fx + tilt * -i * 0.5)
             c.set(x, int(fy - 1 - i), P.BONE if i % 4 else P.BONE_SH)
             if i > 2 and i % 4 == 2:
                 c.set(x + 1, int(fy - 1 - i), P.EYE)
-        tipx, tipy = int(fx - tilt * 6.5), int(fy - 14)
+        tipx, tipy = int(fx - tilt * laenge * 0.5), int(fy - 1 - laenge)
         c.set(tipx, tipy, P.AMBER)
         c.set(tipx, tipy + 1, mix(P.AMBER, P.BONE, 0.5))
         if glow > 0:
-            c.glow(tipx, tipy, 6, (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(105 * glow)))
+            c.glow(tipx, tipy, 6 * S, (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(105 * glow)))
         return
 
     if kern == "leier":
         # Ein Rahmen mit Saiten. Drei Toene zugleich - also drei Faeden, die
         # zwischen zwei Armen stehen und im Takt mitschwingen.
+        arm = int(10 * S)
         for side in (-1, 1):
-            for i in range(10):
-                bx = int(fx + side * (2.4 + i * 0.30))
+            for i in range(arm):
+                bx = int(fx + side * (2.4 * S + i * 0.30))
                 c.set(bx, int(fy - 1 - i), P.BONE)
-                if i > 6:
-                    c.set(bx, int(fy - 1 - i), mix(P.BONE, P.AMBER, (i - 6) / 3 * 0.7))
-        c.rect(int(fx) - 3, int(fy - 1), 7, 1, P.BONE_SH)
+                if i > arm * 0.6:
+                    c.set(bx, int(fy - 1 - i),
+                          mix(P.BONE, P.AMBER, (i - arm * 0.6) / (arm * 0.4) * 0.7))
+        c.rect(int(fx - 3 * S), int(fy - 1), int(7 * S), 1, P.BONE_SH)
         for k in range(3):
-            sxx = int(fx) - 1 + k
-            for i in range(9):
+            sxx = int(fx - 1 * S) + int(k * S)
+            for i in range(int(9 * S)):
                 fade = 0.25 + 0.55 * (0.5 + 0.5 * math.sin(phase * 2 + k * 1.9 + i * 0.4))
                 c.set(sxx, int(fy - 2 - i), mix(P.BONE_LO, P.TRIM, fade))
         if glow > 0:
-            c.glow(fx, fy - 7, 7, (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(85 * glow)))
+            c.glow(fx, fy - 7 * S, 7 * S, (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(85 * glow)))
         return
 
-    # Stimmgabel: zwei Zinken, der Steg liegt tief genug, dass die Masse ihn
-    # umschliesst, und die Gestalt franst oberhalb weiter aus.
-    c.rect(int(fx) - 2, int(fy - 1), 5, 2, P.BONE_SH)
-    c.rect(int(fx) - 2, int(fy - 1), 5, 1, P.BONE)
-    for side in (-1, 1):
-        bx = fx + side * 1.5
-        for i in range(9):
-            c.set(int(bx + side * i * 0.34), int(fy - 2 - i), P.BONE)
-            if i > 1:
-                c.set(int(bx + side * i * 0.34) + side, int(fy - 2 - i), P.BONE_SH)
-        tipx, tipy = int(bx + side * 8 * 0.34), int(fy - 11)
-        c.set(tipx, tipy, P.AMBER)
-        c.set(tipx, tipy + 1, mix(P.AMBER, P.BONE, 0.5))
-        if glow > 0:
-            c.glow(tipx, tipy, 5,
-                   (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(95 * glow)), power=2.0)
+    # Die Stimmgabel - und zwar eine mit abgebrochenem Zinken.
+    #
+    # Zwei gleich lange Zinken mit Leuchtspitze lesen sich bei dreissig
+    # Pixeln als Fuehler, und damit die ganze Figur als Tier. Es ist die
+    # Symmetrie, nicht die Groesse: was oben paarweise absteht, haelt das
+    # Auge fuer Anatomie. Also steht nur noch einer lang heraus, der zweite
+    # ist ein Stumpf - dann liest es sich als Gegenstand, der in ihr steckt.
+    #
+    # Das Licht sitzt jetzt dort, wo er eintritt, nicht an den Spitzen. Er
+    # leuchtet, weil sie ihn treibt.
+    c.rect(int(fx - 2 * S), int(fy - 1), int(5 * S), 2, P.BONE_SH)
+    c.rect(int(fx - 2 * S), int(fy - 1), int(5 * S), 1, P.BONE)
+
+    lang = int(height * 0.62)
+    for i in range(lang):
+        x = int(fx + 1 * S + i * 0.22)
+        c.set(x, int(fy - 2 - i), P.BONE)
+        c.set(x + 1, int(fy - 2 - i), P.BONE_SH if i % 3 else P.BONE)
+    c.set(int(fx + 1 * S + lang * 0.22), int(fy - 2 - lang), mix(P.BONE, P.AMBER, 0.35))
+
+    # Der abgebrochene Zinken. Die Bruchkante ist rau, nicht gerade.
+    kurz = int(lang * 0.34)
+    for i in range(kurz):
+        c.set(int(fx - 2 * S - i * 0.2), int(fy - 2 - i), P.BONE_SH if i else P.BONE)
+    c.set(int(fx - 2 * S - kurz * 0.2), int(fy - 2 - kurz), mix(P.BONE_LO, mid, 0.5))
+
+    if glow > 0:
+        c.glow(fx, fy, 7 * S, (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(120 * glow)))
+    c.set(int(fx), int(fy), P.AMBER)
 
 
 def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
@@ -416,7 +436,7 @@ def draw_heroine(
     base = GROUND - settle
 
     kind = instrument or "leier"
-    height = (20.0 + (2.0 if kind == "floete" else 0.0)) * stretch - settle * 0.6
+    height = (BODY_H + (BODY_H * 0.10 if kind == "floete" else 0.0)) * stretch - settle * 0.6
     top_y = base - height
 
     core = mix(P.BONE, hexc("#dffaf2"), 0.55)
@@ -487,9 +507,11 @@ def draw_heroine(
     slot_t = 0.70
     slot_y = int(base - slot_t * height)
     slot_x = int(cx + lean * slot_t + math.sin(slot_t * 2.6 + phase) * 1.6)
-    c.rect(slot_x, slot_y - (3 if aim > 0.5 else 2), 2, 5, P.EYE)
+    sw = max(2, int(round(2 * HERO_SCALE)))
+    sh = max(5, int(round(5 * HERO_SCALE)))
+    c.rect(slot_x, slot_y - int(round((3 if aim > 0.5 else 2) * HERO_SCALE)), sw, sh, P.EYE)
     c.set(slot_x - 1, slot_y - 2, P.EYE)
-    c.set(slot_x + 2, slot_y + 2, P.EYE)
+    c.set(slot_x + sw, slot_y + 2, P.EYE)
 
     # --- Der Kern ---------------------------------------------------------
     _draw_kern(c, kern=kind, cx=cx, base=base, height=height,

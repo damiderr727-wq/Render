@@ -31,31 +31,40 @@ kehrt wieder, nur kippt jede vierte Note einen Halbton weg.
 
 ## Cadence
 
-Der erste Entwurf war ein Mädchen im Umhang mit Gesicht, Haar und Hautton.
-Bei zwanzig Pixeln war das Matsch — und vor allem war es keine Marke. Man
-konnte es nicht in einem Bild wiedererkennen.
+Drei Anläufe waren daneben, und alle drei aus demselben Grund: Ich habe
+Formen variiert, ohne dass eine Idee dahinterstand. Ein Mädchen im Umhang
+wurde bei zwanzig Pixeln zu Matsch. Eine bleiche Maske mit einem Auge war
+zu nah an Bekanntem. Eine Glockenform mit Zinken las sich als Tierkopf.
+Danach ein Musterbogen mit zwanzig Silhouetten — der half auch nicht, weil
+alle zwanzig dieselbe falsche Voraussetzung teilten.
 
-Sie ist jetzt keine Person, sondern eine Form aus drei Teilen:
+Die Voraussetzung war: eine Heldin in einer Welt aus Klang sieht aus wie
+jemand, der Klang *benutzt*. Falsch. **Sie ist selbst welcher.**
 
-- eine bleiche **Maske** mit **einem** großen dunklen Auge
-- darüber die zwei nach außen geneigten Zinken einer **Stimmgabel**, mit
-  bernsteinfarbenen Spitzen
-- darunter ein fast schwarzer **Umhang** ohne sichtbare Beine, mit
-  zerfranstem Saum
+Cadence hat keinen Körper, sie hat eine Gestalt: eine flammenartige,
+traumhafte Masse, die oben ausfranst und den Boden kaum berührt. Kein
+Gesicht, keine Glieder — nur eine dunkle Kerbe dort, wo sie am dichtesten
+ist, damit der Blick einen Halt hat.
 
-Die Stimmgabel ist ohnehin schon das Zeichen dieser Welt — die Rastpunkte
-sind Stimmgabeln. Sie auf den Kopf zu setzen macht die Figur zur Trägerin
-des Symbols, statt ihr nur ein Instrument in die Hand zu geben.
+Darin steckt der einzige harte Gegenstand an ihr: eine **Stimmgabel, halb
+im Körper versenkt**. Der Steg liegt tief genug, dass die Masse ihn
+umschließt, nach unten verliert sich der Stiel in ihr, und die Gestalt
+läuft oberhalb zwischen den Zinken weiter. Sie ist das, was Cadence
+zusammenhält — und das Einzige an ihr, das eine Kante hat.
 
-Zwei Regeln haben den Entwurf getragen: **eine Silhouette, drei Elemente**,
-und **ein Akzent** (Bernstein an den Zinken, sonst nichts Warmes an ihr).
-Die Zinken standen zuerst senkrecht und dicht — da las sich die Figur als
-Hase. Nach außen geneigt und dünner lesen sie sich als Gabel.
+Zwei Dinge folgen daraus von selbst:
 
-Gezeichnet wird sie parametrisch: eine Pose ist eine Handvoll Zahlen. Das
-war keine Bequemlichkeit — 127 Bilder aus drei Instrumenten mal elf
-Bewegungen hätte niemand von Hand nachgezogen, als die Silhouette noch
-einmal komplett umgeworfen wurde.
+**Das Instrument verformt sie.** Die Leier zieht sie lang, die Trommel
+drückt sie breit und schwer, die Flöte spitzt sie zu. Man sieht an der
+Silhouette, womit sie gerade spielt — statt an einem Gegenstand in einer
+Hand.
+
+**Die Animation wird frei.** Weil keine Gliedmaßen zueinander passen
+müssen, ist jede Bewegung eine Verformung der ganzen Masse: der Sprung
+dehnt sie, der Herzschlag verwischt sie waagerecht und reißt sie in
+Bänder, ein Treffer lässt sie fast zerfallen. Die späteren
+Resonanz-Fähigkeiten ziehen sie im Kampf kurz auseinander — dafür ist der
+Parameter schon da.
 
 ## Die Werteordnung
 

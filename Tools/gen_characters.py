@@ -21,186 +21,167 @@ GROUND = HERO_H - 1  # unterste Pixelzeile = Fussboden
 
 
 # ------------------------------------------------------------------ Heldin
+#
+# Cadence hat keinen Koerper, sie hat eine Gestalt.
+#
+# Vorher stand hier eine Figur mit Maske, Umhang und Beinen - und jeder
+# Anlauf lief auf etwas Bekanntes hinaus. Der Grund lag nicht in den
+# Pixeln: eine Heldin in einer Welt aus Klang muss nicht aussehen wie
+# jemand, der Klang benutzt. Sie ist selbst welcher.
+#
+# Also: eine flammenartige Masse, die nach oben ausfranst und unten den
+# Boden kaum beruehrt. Kein Gesicht, keine Glieder - dafuer ein einziger
+# harter Gegenstand darin, eine Stimmgabel, die halb in ihr steckt. Sie
+# ist das, was die Gestalt zusammenhaelt, und das Einzige an ihr, das eine
+# Kante hat.
+#
+# Das Instrument verformt sie: die Leier zieht sie lang, die Trommel
+# druckt sie breit und schwer, die Floete spitzt sie zu. Man sieht also
+# an ihrer Silhouette, womit sie gerade spielt.
+
+def _profile(t: float, instrument: str) -> float:
+    """
+    Breite der Gestalt an der Stelle `t` (0 unten, 1 oben).
+
+    Eine Flamme ist unten schmal, hat tief unten ihren Bauch und laeuft
+    oben spitz aus. Das Instrument verschiebt diesen Bauch.
+    """
+    if instrument == "trommel":
+        a, low, high = 12.0, 0.30, 0.85    # schwer, breiter Bauch tief unten
+    elif instrument == "floete":
+        a, low, high = 7.2, 0.55, 0.40     # schmal, hoch, spitz
+    else:
+        a, low, high = 9.4, 0.38, 0.60     # ausgewogen
+    return a * ((t * 1.1 + 0.06) ** low) * ((1 - t) ** high)
+
 
 def draw_heroine(
     *,
-    lean: float = 0.0,        # Oberkoerperneigung in Pixeln
-    bob: float = 0.0,         # vertikales Wippen
-    leg_phase: float | None = None,   # None = Stand
-    leg_spread: float = 0.0,  # Sprung/Fall-Haltung
-    arm_front: float = 0.0,   # vorderer Arm: -1 unten .. +1 oben
-    arm_back: float = 0.0,
-    hair_sway: float = 0.0,   # Schwingen der Zinken
-    cloak_sway: float = 0.0,
-    cloak_lift: float = 0.0,
     instrument: str | None = "leier",
+    phase: float = 0.0,       # Flackern
+    lean: float = 0.0,        # Neigung nach vorn
+    stretch: float = 1.0,     # senkrechte Dehnung (Sprung)
+    smear: float = 0.0,       # waagerechtes Verwischen (Herzschlag)
+    split: float = 0.0,       # Resonanz zieht die Gestalt auseinander
+    whip: float = 0.0,        # Ausschlag beim Schlag
+    settle: float = 0.0,      # Absinken (Rast, Landung)
     aim: float = 0.0,
-    crouch: float = 0.0,
-    glow: float = 0.35,
+    glow: float = 1.0,
     alpha_body: int = 255,
+    # Von den Animationen weitergereicht, hier ohne Wirkung:
+    bob: float = 0.0, leg_phase=None, leg_spread: float = 0.0,
+    arm_front: float = 0.0, arm_back: float = 0.0,
+    hair_sway: float = 0.0, cloak_sway: float = 0.0, cloak_lift: float = 0.0,
+    crouch: float = 0.0,
 ) -> Canvas:
-    """
-    Zeichnet Cadence nach rechts blickend.
-
-    Sie ist bewusst keine Person. Bei zwanzig Pixeln verliert ein Gesicht
-    jede Wirkung - eine Form nicht.
-
-    Zwei Anlaeufe waren daneben. Eine runde bleiche Maske mit einem grossen
-    Auge ist woanders schon vergeben, und ein gleichschenkliger Umhang
-    darunter ergab eine Tuete mit Kopf. Deshalb jetzt: eine Maske in Form
-    eines Glockenkorpus mit einem Resonanzschlitz statt eines Auges, ein
-    asymmetrischer Umhang, der vorn geschlitzt ist und ein Bein zeigt, ein
-    kantiger Kragen - und ein wehendes Notenband, das in jedem Bild die
-    Dreiecksform aufbricht. Darueber die Zinken einer Stimmgabel.
-    """
     c = Canvas(HERO_W, HERO_H)
-
     cx = HERO_W // 2
-    base = GROUND - int(round(bob)) - int(round(crouch))
-    lean_i = int(round(lean))
-    sway = cloak_sway
+    base = GROUND - settle
 
-    hem_y = base
-    shoulder_y = base - 15
-    mask_cy = base - 20
-    fork_base = mask_cy - 5
+    kind = instrument or "leier"
+    height = (20.0 + (2.0 if kind == "floete" else 0.0)) * stretch - settle * 0.6
+    top_y = base - height
 
-    # --- Umhang -----------------------------------------------------------
+    core = mix(P.BONE, hexc("#dffaf2"), 0.55)
+    mid = mix(P.TRIM, P.BONE, 0.35)
+    rim = mix(P.TRIM, P.CLOAK, 0.45)
+
+    # --- Die Gestalt ------------------------------------------------------
+    steps = int(height) + 1
+    for i in range(steps):
+        t = i / max(1, steps - 1)
+        y = base - t * height
+
+        w = _profile(t, kind) * (1 + smear * 0.5)
+        # Der Schlag treibt eine Welle durch sie hindurch.
+        w *= 1 + whip * math.sin(t * math.pi * 1.6) * 0.5
+
+        # Rueckgrat: Neigung, plus ein langsames Wehen.
+        sx = cx + lean * t + math.sin(t * 2.6 + phase) * (0.9 + t * 1.7)
+        sx += smear * 3.0 * (1 - t) * -1
+        # Resonanz zieht die Gestalt in waagerechte Baender auseinander.
+        if split > 0:
+            sx += math.sin(t * 9.0 + phase * 2) * split * 4.0
+
+        for dx in range(-int(w) - 1, int(w) + 2):
+            d = abs(dx) / max(0.8, w)
+            if d > 1:
+                continue
+            # Der Rand franst aus und flackert.
+            noise = hash01(int(sx) + dx, int(y) * 3 + int(phase * 6))
+            if d > 0.55 and noise < (d - 0.55) / 0.45 * 0.85:
+                continue
+            if d < 0.34:
+                col = core
+            elif d < 0.68:
+                col = mid
+            else:
+                col = rim
+            c.set(int(sx) + dx, int(y), col)
+
+    # Unten loest sie sich auf, statt auf dem Boden aufzusetzen.
+    for k in range(3):
+        y = base - k
+        for dx in range(-4, 5):
+            if hash01(cx + dx, int(y) + int(phase * 5)) < 0.35 + k * 0.2:
+                c.set(cx + dx + int(lean * 0.2), int(y), None)
+    c.rect(cx - 3, GROUND, 7, 1, mix(P.TRIM, P.CLOAK_LO, 0.65))
+
+    # Funken steigen auf.
+    for k in range(5):
+        u = (k / 5 + phase * 0.35) % 1.0
+        fy = base - height * (0.75 + u * 0.5)
+        fx = cx + lean * 0.8 + math.sin(u * 7 + phase * 3) * (3 + u * 5)
+        if hash01(k, int(phase * 8)) > 0.35:
+            c.set(int(fx), int(fy), mix(mid, P.AMBER, 0.35))
+
+    # --- Der Resonanzschlitz ----------------------------------------------
+    # Kein Gesicht - nur eine dunkle Kerbe, dort wo die Gestalt am dichtesten
+    # ist. Sie gibt dem Blick einen Halt, ohne Zuege zu behaupten.
+    slot_t = 0.70
+    slot_y = int(base - slot_t * height)
+    slot_x = int(cx + lean * slot_t + math.sin(slot_t * 2.6 + phase) * 1.6)
+    c.rect(slot_x, slot_y - (3 if aim > 0.5 else 2), 2, 5, P.EYE)
+    c.set(slot_x - 1, slot_y - 2, P.EYE)
+    c.set(slot_x + 2, slot_y + 2, P.EYE)
+
+    # --- Die Stimmgabel ---------------------------------------------------
     #
-    # Der erste Entwurf war ein gleichschenkliges Dreieck - eine Tuete mit
-    # Kopf. Silhouetten leben von Asymmetrie: der Saum haengt hinten lang
-    # und ist vorn hochgeschlagen, sodass ein Bein sichtbar bleibt, und
-    # ueber der Schulter liegt ein kantiger Kragen statt einer Rundung.
-    for y in range(shoulder_y, hem_y + 1):
-        t = (y - shoulder_y) / max(1, hem_y - shoulder_y)
-        back = 2.4 + (t ** 1.15) * 5.4 + cloak_lift * t * 0.8
-        front = 2.2 + (t ** 1.9) * 3.0
-        off = lean_i * (1 - t) * 0.7 + sway * (t ** 1.4)
-        # Vorn frueher aufhoeren: der Saum ist geschlitzt.
-        if t > 0.72:
-            front *= 1 - (t - 0.72) / 0.28 * 0.75
-        col = mix(P.CLOAK_HI, P.CLOAK_LO, min(1.0, t * 1.3))
-        x0 = int(round(cx - back + off))
-        x1 = int(round(cx + front + off))
-        c.rect(x0, y, max(1, x1 - x0), 1, col)
+    # Sie steckt in ihr, sie sitzt nicht obenauf. Der Steg liegt tief genug,
+    # dass die Masse ihn umschliesst; nach unten laeuft der Stiel weiter und
+    # verliert sich in ihr. Nur die beiden Zinken stehen frei - und die
+    # Gestalt franst oberhalb davon weiter aus, sodass sie hinter den Zinken
+    # noch weitergeht.
+    fork_t = 0.52
+    fy = base - fork_t * height
+    fx = cx + lean * fork_t + math.sin(fork_t * 2.6 + phase) * 1.2
+    tilt = 0.16 + lean * 0.02
 
-    # Zerfranster Saum hinten.
-    hem_half = 2.4 + 5.4 + cloak_lift * 0.8
-    for i in range(int(hem_half)):
-        x = int(round(cx - hem_half + sway)) + i
-        notch = int(hash01(x * 7, 3) * 2.4)
-        for k in range(notch):
-            c.set(x, hem_y - k, None)
+    # Stiel nach unten, verschwindet in der Masse.
+    for i in range(8):
+        col = P.BONE_SH if i < 3 else mix(P.BONE_LO, mid, min(1.0, (i - 3) / 5))
+        c.set(int(fx + tilt * i), int(fy + i), col)
 
-    # --- Bein und Stiefel auf der Vorderseite -----------------------------
-    step = math.sin(leg_phase) if leg_phase is not None else 0.0
-    lx = cx + 2 + int(round(step * 2.2)) + lean_i // 2
-    ly = hem_y - max(0, int(round(step * 2.0)))
-    c.rect(lx, hem_y - 5, 2, 5 - max(0, int(round(step * 2.0))), shade(P.CLOAK_LO, -0.1))
-    c.rect(lx - 1, ly - 2, 4, 2, P.CLOAK_LO)
-    c.set(lx + 2, ly - 1, mix(P.AMBER, P.CLOAK_LO, 0.6))
-    if leg_phase is not None:
-        # Das hintere Bein blitzt gegenlaeufig unter dem Saum auf.
-        bx = cx - 3 - int(round(step * 2.0))
-        c.rect(bx, hem_y - 3, 2, 3 + int(round(step * 1.5)), P.CLOAK_LO)
+    # Steg - er liegt in der Gestalt, deshalb schmal und gedeckt.
+    c.rect(int(fx) - 2, int(fy - 1), 5, 2, P.BONE_SH)
+    c.rect(int(fx) - 2, int(fy - 1), 5, 1, P.BONE)
 
-    # --- Kragen -----------------------------------------------------------
-    c.rect(cx - 4 + lean_i, shoulder_y, 8, 2, P.CLOAK_HI)
-    c.rect(cx - 5 + lean_i, shoulder_y + 1, 10, 1, P.CLOAK_HI)
-    c.rect(cx - 5 + lean_i, shoulder_y + 2, 10, 1, shade(P.CLOAK, -0.1))
-    c.set(cx - 5 + lean_i, shoulder_y, None)      # Ecken kappen: kantig,
-    c.set(cx + 4 + lean_i, shoulder_y, None)      # nicht rund
-
-    # --- Notenband --------------------------------------------------------
-    #
-    # Ein langes Band weht hinter ihr her - eine einzelne Notenlinie. Es
-    # bricht in jedem Bild die Dreiecksform auf und traegt die Bewegung.
-    ribbon_len = 13 + int(abs(sway) * 1.6 + cloak_lift * 1.2)
-    rx, ry = cx - 4 + lean_i, shoulder_y + 1
-    for i in range(ribbon_len):
-        u = i / ribbon_len
-        wave = math.sin(u * 3.4 + sway * 0.7 + cloak_lift * 0.5) * (2.2 + u * 3.4)
-        px = rx - u * (7 + abs(sway) * 1.4) - abs(sway) * 0.6
-        py = ry + wave * 0.55 + u * 2.2 - cloak_lift * 0.7
-        c.set(int(px), int(py), mix(P.CLOAK_HI, P.BONE_LO, u * 0.5))
-        if i % 5 == 0:
-            c.set(int(px), int(py) + 1, P.CLOAK_LO)
-    c.set(int(rx - (7 + abs(sway) * 1.4)), int(ry + 2.2 - cloak_lift * 0.7), P.AMBER)
-
-    # --- Arme: zwei kurze dunkle Striche ----------------------------------
-    def arm(x: int, raise_amt: float, col) -> tuple[int, int]:
-        length = 5.0
-        ex = x + int(round(length * 0.5 * max(raise_amt, -0.3) + 1.5))
-        ey = shoulder_y + 3 + int(round(length * (1 - abs(raise_amt) * 0.8)))
-        c.line(x, shoulder_y + 3, ex, ey, col)
-        return ex, ey
-
-    arm(cx - 3 + lean_i, arm_back, P.CLOAK_LO)
-    fex, fey = arm(cx + 3 + lean_i, arm_front, P.CLOAK)
-
-    # --- Maske ------------------------------------------------------------
-    #
-    # Keine runde Scheibe mit zwei Augen - das ist woanders schon vergeben.
-    # Diese Maske hat die Form eines Glockenkorpus und statt eines Auges
-    # einen Resonanzschlitz, wie ihn Streichinstrumente tragen.
-    mx = cx + lean_i
-    mask_top = mask_cy - 3
-    mask_bot = mask_cy + 4
-    # Oben breit, zum Kinn hin schmal - ein Schild, keine Schnauze. Die
-    # umgekehrte Verjuengung las sich zusammen mit den Zinken als Tierkopf.
-    for y in range(mask_top, mask_bot + 1):
-        t = (y - mask_top) / max(1, mask_bot - mask_top)
-        half = 2.9 - (t ** 1.4) * 1.7
-        c.rect(int(round(mx - half)), y, max(1, int(round(half * 2))), 1,
-               mix(P.BONE, P.BONE_SH, t * 0.5))
-    # Schattenseite links.
-    for y in range(mask_top + 1, mask_bot + 1):
-        t = (y - mask_top) / max(1, mask_bot - mask_top)
-        c.set(int(round(mx - (2.9 - (t ** 1.4) * 1.7))), y, P.BONE_SH)
-    # Flache Stirnkante.
-    c.rect(mx - 3, mask_top, 6, 1, P.BONE)
-    c.rect(mx - 2, mask_bot, 4, 1, shade(P.BONE_SH, -0.2))
-
-    # Resonanzschlitz: senkrecht, mit Kerbe oben und unten.
-    sx = mx + 1
-    sy = mask_cy - 2 - (1 if aim > 0.5 else 0)
-    c.rect(sx, sy, 2, 4, P.EYE)
-    c.set(sx - 1, sy, P.EYE)          # Kerbe oben links
-    c.set(sx + 2, sy + 3, P.EYE)      # Kerbe unten rechts
-    c.set(sx + 2, sy, mix(P.EYE, P.BONE, 0.45))
-
-    # Feiner Riss ueber der Wange.
-    c.set(mx - 2, mask_cy - 1, P.BONE_LO)
-    c.set(mx - 2, mask_cy, P.BONE_LO)
-
-    # --- Stimmgabel-Krone -------------------------------------------------
-    #
-    # Das Zeichen der Welt sitzt ihr auf dem Kopf. Der Querbalken liegt auf
-    # der Stirn, die Zinken stehen leicht nach aussen - senkrecht und dicht
-    # beieinander lesen sie sich als Ohren.
-    swing = hair_sway * 0.5
-    # Ein schmaler Steg auf der Stirn, aus dem zwei duenne Zinken in einem
-    # V nach oben laufen. Kurz und dick sassen sie wie Ohren auf dem Kopf -
-    # lang, duenn und auseinanderlaufend lesen sie sich als Gabel.
-    c.rect(mx - 1, fork_base, 3, 2, P.BONE_SH)
-    c.rect(mx - 1, fork_base, 3, 1, P.BONE)
     for side in (-1, 1):
-        bx = mx + side
-        tip_x = bx + side * 3 + int(round(swing * (1 if side > 0 else 0.6)))
-        c.line(bx, fork_base, tip_x, 1, P.BONE_SH)
-        c.set(tip_x, 1, P.AMBER)
-        c.set(tip_x, 2, mix(P.AMBER, P.BONE_SH, 0.4))
-
-    if instrument:
-        draw_instrument(c, instrument, fex, fey, glow)
-
-    # Harte Kontur: die Figur muss sich gegen jeden Hintergrund abheben.
-    c.outline(hexc("#04050a", 255), diagonal=False)
+        bx = fx + side * 1.5
+        for i in range(9):
+            c.set(int(bx + side * i * 0.34), int(fy - 2 - i), P.BONE)
+            if i > 1:
+                c.set(int(bx + side * i * 0.34) + side, int(fy - 2 - i), P.BONE_SH)
+        tipx, tipy = int(bx + side * 8 * 0.34), int(fy - 11)
+        c.set(tipx, tipy, P.AMBER)
+        c.set(tipx, tipy + 1, mix(P.AMBER, P.BONE, 0.5))
+        if glow > 0:
+            c.glow(tipx, tipy, 5,
+                   (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(95 * glow)), power=2.0)
 
     if glow > 0:
-        for side in (-1, 1):
-            c.glow(mx + side * 4 + swing, 2, 5,
-                   (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(80 * glow)), power=2.0)
+        c.glow(cx, base - height * 0.45, 11,
+               (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(38 * glow)), power=2.2)
 
     if alpha_body < 255:
         for i in range(len(c.px)):
@@ -209,6 +190,8 @@ def draw_heroine(
 
 
 def draw_instrument(c: Canvas, kind: str, hx: int, hy: int, glow: float) -> None:
+    """Nicht mehr in Gebrauch: das Instrument verformt die Gestalt, statt
+    von ihr getragen zu werden. Bleibt als Vorlage fuer Anzeigesymbole."""
     """
     Das Instrument bleibt eine Andeutung. Es darf die Silhouette der Maske
     nicht schlagen - man soll die Figur erkennen, nicht ihr Werkzeug.
@@ -239,109 +222,89 @@ def draw_instrument(c: Canvas, kind: str, hx: int, hy: int, glow: float) -> None
 # ------------------------------------------------------ Animations-Sequenzen
 
 def hero_animations(instrument: str) -> dict[str, list[Canvas]]:
+    """
+    Weil die Gestalt formlos ist, braucht sie keine Gliedmassen, die
+    zueinander passen muessen - jede Bewegung ist eine Verformung der
+    ganzen Masse. Das macht die Animation freier als bei einer Figur.
+    """
     anims: dict[str, list[Canvas]] = {}
 
-    # Ruhe: Atem, Haar und Umhang schwingen leicht nach.
-    idle = []
-    for i in range(6):
-        p = i / 6 * math.tau
-        idle.append(draw_heroine(
-            bob=math.sin(p) * 0.9,
-            hair_sway=math.sin(p - 0.7) * 0.8,
-            cloak_sway=math.sin(p - 1.2) * 0.7,
-            arm_front=-0.15 + math.sin(p) * 0.08,
-            arm_back=-0.3,
-            instrument=instrument,
-            glow=0.3 + 0.12 * (0.5 + 0.5 * math.sin(p)),
-        ))
-    anims["idle"] = idle
+    def frames(count: int, **kw) -> list[Canvas]:
+        out = []
+        for i in range(count):
+            p = i / count * math.tau
+            out.append(draw_heroine(instrument=instrument, phase=p, **kw))
+        return out
 
-    # Lauf: acht Phasen, Oberkoerper nach vorn.
-    run = []
-    for i in range(8):
-        p = i / 8 * math.tau
-        run.append(draw_heroine(
-            lean=1.4,
-            bob=abs(math.sin(p * 2)) * 1.3,
-            leg_phase=p,
-            hair_sway=-1.4 - math.sin(p) * 0.7,
-            cloak_sway=-2.0 - math.sin(p * 2) * 0.8,
-            cloak_lift=0.7,
-            arm_front=-0.35 + math.sin(p) * 0.3,
-            arm_back=-0.35 + math.sin(p + math.pi) * 0.3,
-            instrument=instrument,
-        ))
-    anims["run"] = run
+    # Ruhe: sie flackert und atmet.
+    anims["idle"] = [
+        draw_heroine(instrument=instrument, phase=i / 8 * math.tau,
+                     stretch=1.0 + math.sin(i / 8 * math.tau) * 0.04,
+                     glow=0.85 + 0.25 * (0.5 + 0.5 * math.sin(i / 8 * math.tau)))
+        for i in range(8)
+    ]
 
-    anims["jump"] = [draw_heroine(
-        lean=1.0, leg_spread=1.6, cloak_lift=1.6, cloak_sway=-2.4,
-        hair_sway=-2.0, arm_front=0.35, arm_back=-0.5, instrument=instrument,
-    )]
-    anims["fall"] = [draw_heroine(
-        lean=0.4, leg_spread=0.8, cloak_lift=2.4, cloak_sway=-1.4,
-        hair_sway=-2.6, arm_front=0.15, arm_back=0.35, instrument=instrument,
-    )]
-    anims["land"] = [draw_heroine(
-        crouch=3, lean=0.6, leg_spread=2.2, cloak_lift=-0.6, cloak_sway=0.6,
-        hair_sway=0.9, arm_front=-0.6, arm_back=-0.6, instrument=instrument,
-    )]
+    # Lauf: sie neigt sich und zieht einen Schweif hinter sich her.
+    anims["run"] = [
+        draw_heroine(instrument=instrument, phase=i / 8 * math.tau * 2,
+                     lean=2.4 + math.sin(i / 8 * math.tau) * 0.8,
+                     stretch=0.94 + abs(math.sin(i / 8 * math.tau)) * 0.10,
+                     smear=0.16)
+        for i in range(8)
+    ]
 
-    # Dash: gestreckt, halbtransparent - der Herzschlag traegt sie.
-    dash = []
-    for i in range(2):
-        dash.append(draw_heroine(
-            lean=3.0 + i, bob=1.0, leg_spread=2.6 - i, cloak_lift=2.2,
-            cloak_sway=-4.0, hair_sway=-3.4, arm_front=0.6, arm_back=0.7,
-            instrument=instrument, glow=0.9, alpha_body=245 - i * 25,
-        ))
-    anims["dash"] = dash
+    anims["jump"] = [draw_heroine(instrument=instrument, phase=0.6,
+                                  lean=1.4, stretch=1.24, smear=0.05)]
+    anims["fall"] = [draw_heroine(instrument=instrument, phase=2.2,
+                                  lean=0.6, stretch=0.88, smear=0.18)]
+    anims["land"] = [draw_heroine(instrument=instrument, phase=1.1,
+                                  stretch=0.72, settle=2, smear=0.34)]
 
-    # Wandhaftung: an die Wand gedrueckt, Blick zurueck.
-    anims["wall"] = [draw_heroine(
-        lean=-1.6, leg_spread=0.6, cloak_sway=2.6, hair_sway=2.2,
-        arm_front=0.8, arm_back=0.2, instrument=instrument,
-    )]
+    # Herzschlag: die Gestalt zerreisst waagerecht und zieht nach.
+    anims["dash"] = [
+        draw_heroine(instrument=instrument, phase=i * 1.7, lean=4.0 - i,
+                     stretch=0.82, smear=0.9 - i * 0.2, split=0.5 - i * 0.15,
+                     glow=1.4, alpha_body=235 - i * 30)
+        for i in range(3)
+    ]
 
-    # Nahkampf: Ausholen, Schlag, Nachschwingen.
-    swing = []
-    for i, (af, ln, cr) in enumerate([(0.9, -1.0, 0), (-0.2, 2.6, 1), (-0.7, 1.4, 0)]):
-        swing.append(draw_heroine(
-            lean=ln, crouch=cr, arm_front=af, arm_back=-0.4 + i * 0.2,
-            hair_sway=-1.2 + i, cloak_sway=-1.6 + i * 1.2, cloak_lift=0.8,
-            instrument=instrument, glow=0.5 + i * 0.2,
-        ))
-    anims["melee"] = swing
+    anims["wall"] = [draw_heroine(instrument=instrument, phase=0.4,
+                                  lean=-1.8, stretch=1.10, smear=0.1)]
 
-    # Fernkampf: Standfest, Instrument vorgestreckt.
-    cast = []
-    for i, af in enumerate([0.25, 0.55, 0.35]):
-        cast.append(draw_heroine(
-            lean=-0.8 + i * 0.6, arm_front=af, arm_back=-0.5,
-            hair_sway=0.8 - i * 0.6, cloak_sway=1.2 - i * 0.8,
-            instrument=instrument, glow=0.55 + i * 0.25,
-        ))
-    anims["cast"] = cast
+    # Nahkampf: eine Welle laeuft durch sie hindurch.
+    anims["melee"] = [
+        draw_heroine(instrument=instrument, phase=0.2, lean=-1.2, whip=-0.35,
+                     stretch=1.06, glow=1.1),
+        draw_heroine(instrument=instrument, phase=1.4, lean=3.4, whip=0.85,
+                     stretch=0.92, smear=0.3, glow=1.6),
+        draw_heroine(instrument=instrument, phase=2.6, lean=1.6, whip=0.30,
+                     stretch=1.0, glow=1.2),
+    ]
 
-    anims["hurt"] = [draw_heroine(
-        lean=-2.6, crouch=1, leg_spread=1.2, arm_front=0.5, arm_back=0.6,
-        hair_sway=2.6, cloak_sway=3.0, instrument=instrument, glow=0.15,
-    )]
+    # Fernkampf: sie zieht sich zusammen und stoesst den Ton aus.
+    anims["cast"] = [
+        draw_heroine(instrument=instrument, phase=0.3, stretch=0.90,
+                     lean=-0.8, glow=1.0),
+        draw_heroine(instrument=instrument, phase=1.6, stretch=1.16,
+                     lean=1.2, split=0.28, glow=1.8),
+        draw_heroine(instrument=instrument, phase=2.8, stretch=1.04,
+                     lean=0.4, glow=1.3),
+    ]
 
-    # Ausatmen an der Stimmgabel (Rast).
-    rest = []
-    for i in range(4):
-        p = i / 4 * math.tau
-        rest.append(draw_heroine(
-            crouch=4, bob=math.sin(p) * 0.6, leg_spread=1.0,
-            arm_front=-0.75, arm_back=-0.75, hair_sway=math.sin(p) * 0.6,
-            cloak_sway=math.sin(p - 1) * 0.5, instrument=None, glow=0.6,
-        ))
-    anims["rest"] = rest
+    # Treffer: sie zerfaellt fast.
+    anims["hurt"] = [draw_heroine(instrument=instrument, phase=1.9, lean=-3.0,
+                                  stretch=0.86, split=0.7, smear=0.4,
+                                  glow=0.5, alpha_body=210)]
+
+    # Rast: sie sinkt zu einer Lache zusammen.
+    anims["rest"] = [
+        draw_heroine(instrument=instrument, phase=i / 5 * math.tau,
+                     stretch=0.58, settle=4, glow=1.2)
+        for i in range(5)
+    ]
 
     return anims
 
-
-# ---------------------------------------------------------------- Kreaturen
 
 def draw_klangmotte(phase: float) -> Canvas:
     """Klangmotte - taumelnder Falter aus verklungenen Toenen."""

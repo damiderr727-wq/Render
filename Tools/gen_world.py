@@ -95,7 +95,7 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
 
     if "t" in edges:
         # Der Kamm laeuft unregelmaessig - eine gerade Linie verraet das Raster.
-        crest = [int(hash01(x * 13 + variant * 71, 5) * 3) for x in range(TS)]
+        crest = _crest_profile(variant + 40, amplitude=3)
         for x in range(TS):
             k = crest[x]
             c.rect(x, top - k, 1, k, mix(body, shade(body, -0.2), 0.4))
@@ -109,7 +109,7 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
         if region == "hain":
             # Nicht jede Kachel traegt gleich viel: sonst laeuft ueber den
             # ganzen Boden ein gleichmaessiger Kamm.
-            density = (0.30, 0.62, 0.44, 0.10)[variant % 4]
+            density = (0.30, 0.62, 0.44, 0.10, 0.52, 0.22)[variant % 6]
             dark_blade = mix(edge, body, 0.55)
             for x in range(TS):
                 if hash01(x * 7 + variant * 31, 9) >= density:
@@ -162,48 +162,84 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
                 c.set(x, top + TS - 2, shade(body, -0.32))
                 if hash01(x, 51) > 0.7:
                     c.set(x, top + TS - 3, shade(body, -0.22))
+    # Seitenkanten nur angedeutet: eine durchgezogene Linie ueber mehrere
+    # Kacheln hinweg liest sich sofort als Raster.
     if "l" in edges:
-        c.rect(0, top, 1, TS, mix(edge, body, 0.40))
-        c.rect(1, top, 1, TS, mix(edge, body, 0.72))
+        for y in range(TS):
+            if hash01(y, variant + 3) > 0.25:
+                c.set(0, top + y, mix(edge, body, 0.55))
+            if hash01(y, variant + 13) > 0.55:
+                c.set(1, top + y, mix(edge, body, 0.78))
     if "r" in edges:
-        c.rect(TS - 1, top, 1, TS, shade(body, -0.38))
-        c.rect(TS - 2, top, 1, TS, shade(body, -0.20))
+        for y in range(TS):
+            if hash01(y, variant + 7) > 0.2:
+                c.set(TS - 1, top + y, shade(body, -0.36))
+            if hash01(y, variant + 23) > 0.6:
+                c.set(TS - 2, top + y, shade(body, -0.18))
 
     return c
 
 
-def tile_platform(region: str, variant: int = 0) -> Canvas:
+def _crest_profile(seed: int, amplitude: int = 2) -> list[int]:
+    """
+    Ein unregelmaessiger Kamm, dessen Enden auf null liegen.
+
+    Das ist der Trick gegen sichtbare Kachelkanten: variiert die Hoehe frei,
+    springt sie an jeder Kachelgrenze. Sind Anfang und Ende festgenagelt,
+    treffen sich zwei beliebige Kacheln immer bruchlos - und dazwischen darf
+    der Kamm trotzdem tun, was er will.
+    """
+    profile = []
+    for x in range(TS):
+        # Zu den Raendern hin auslaufen lassen.
+        fade = min(x, TS - 1 - x) / 3.0
+        k = hash01(x * 11 + seed * 53, 7) * amplitude
+        profile.append(int(min(k, k * fade)))
+    return profile
+
+
+def tile_platform(region: str, variant: int = 0, cap: str = "") -> Canvas:
     """
     Eine durchsteigbare Plattform.
 
-    Sie bekommt dieselbe Behandlung wie der Boden: unregelmaessiger Kamm,
-    Licht nur auf der Oberkante, Bewuchs im Ueberhang. Ein glatter heller
-    Balken faellt sonst aus dem ganzen Bild heraus.
+    `cap` sagt, ob links ('l') oder rechts ('r') das Ende der Plattform
+    liegt. Eine Plattform, die an beiden Seiten einfach abgeschnitten ist,
+    liest sich als hingelegtes Brett; mit auslaufenden Enden wird sie zu
+    einem Stueck der Landschaft.
     """
     body, edge, accent = P.REGIONS[region][:3]
-    c = Canvas(TS, 8 + TILE_OVERHANG)
+    c = Canvas(TS, 10 + TILE_OVERHANG)
     top = TILE_OVERHANG
+    crest = _crest_profile(variant)
 
-    crest = [int(hash01(x * 11 + variant * 53, 7) * 2) for x in range(TS)]
     for x in range(TS):
+        # An den Enden laeuft die Masse nach unten aus.
+        thin = 0
+        if "l" in cap:
+            thin = max(thin, max(0, 5 - x))
+        if "r" in cap:
+            thin = max(thin, max(0, x - (TS - 6)))
+        if thin >= 5:
+            continue
         k = crest[x]
-        # Der Koerper: nach unten schnell ins Dunkle.
-        for i in range(6 + k):
-            t = i / (6 + k)
-            c.set(x, top - k + i, mix(shade(body, 0.10), shade(body, -0.35), t ** 0.7))
-        c.set(x, top - k, mix(edge, accent, 0.22))
-        c.set(x, top - k + 1, mix(edge, body, 0.30))
+        depth = 7 - thin
+        for i in range(depth + k):
+            t = i / (depth + k)
+            c.set(x, top - k + i, mix(shade(body, 0.12), shade(body, -0.38), t ** 0.65))
+        c.set(x, top - k, mix(edge, accent, 0.20))
+        c.set(x, top - k + 1, mix(edge, body, 0.28))
 
-    # Unterkante ausgefranst, damit die Plattform nicht schwebt wie ein Brett.
-    for x in range(TS):
-        if hash01(x * 3, variant + 9) > 0.55:
-            c.set(x, top + 6, shade(body, -0.42))
-        if hash01(x * 5, variant + 19) > 0.78:
-            c.set(x, top + 7, shade(body, -0.5))
+        # Unterkante ausfransen, damit sie nicht wie gesaegt wirkt.
+        if hash01(x * 3, variant + 9) > 0.5:
+            c.set(x, top - k + depth + k, shade(body, -0.45))
+        if hash01(x * 5, variant + 19) > 0.8:
+            c.set(x, top - k + depth + k + 1, shade(body, -0.52))
 
     if region == "hain":
         for x in range(TS):
-            if hash01(x * 9 + variant * 23, 13) < 0.30:
+            if hash01(x * 9 + variant * 23, 13) < 0.26:
+                if ("l" in cap and x < 4) or ("r" in cap and x > TS - 5):
+                    continue
                 h = 2 + int(hash01(x, variant + 5) * 4)
                 lean = -1 if hash01(x, 11) > 0.5 else 1
                 for i in range(h):
@@ -212,7 +248,7 @@ def tile_platform(region: str, variant: int = 0) -> Canvas:
                           mix(mix(edge, body, 0.55), edge, t * 0.7))
     elif region == "grotten":
         for x in range(0, TS, 5):
-            if hash01(x, variant) > 0.4:
+            if hash01(x, variant) > 0.45:
                 c.set(x, top - crest[x] - 1, mix(accent, edge, 0.4))
                 c.set(x, top - crest[x] - 2, mix(accent, edge, 0.7))
     return c
@@ -484,16 +520,21 @@ def fx_sigil(kind: str, frame: int) -> Canvas:
 
 def build() -> None:
     tiles = Atlas("tiles", padding=1, max_width=512)
-    EDGE_SETS = ["", "t", "tl", "tr", "tlr", "l", "r", "lr", "b", "tb", "blr", "tblr"]
+    # Alle sechzehn Nachbarschaften. Vorher fehlten vier davon, und die
+    # betroffenen Kacheln fielen auf "Mitte" zurueck - genau dort blieb die
+    # Felswand dann schnurgerade, weil sie gar keine Kante bekam.
+    EDGE_SETS = ['', 't', 'l', 'r', 'b', 'tl', 'tr', 'tb', 'lr', 'lb', 'rb', 'tlr', 'tlb', 'trb', 'lrb', 'tlrb']
     for region in REGIONS:
         for edges in EDGE_SETS:
-            for v in range(4):
+            for v in range(6):
                 tiles.add(f"{region}_solid_{edges or 'mid'}_{v}",
                           tile_solid(region, v, edges),
                           pivot=(0, TILE_OVERHANG / (TS + TILE_OVERHANG)))
-        for v in range(3):
-            tiles.add(f"{region}_platform_{v}", tile_platform(region, v),
-                      pivot=(0, TILE_OVERHANG / (8 + TILE_OVERHANG)))
+        for cap in ("mid", "l", "r", "lr"):
+            for v in range(4):
+                tiles.add(f"{region}_platform_{cap}_{v}",
+                          tile_platform(region, v, "" if cap == "mid" else cap),
+                          pivot=(0, TILE_OVERHANG / (10 + TILE_OVERHANG)))
         tiles.add(f"{region}_spike", tile_spike(region), pivot=(0, 0))
     for f in range(4):
         tiles.add(f"dissowall_{f}", tile_dissowall(f), pivot=(0, 0), fps=6)

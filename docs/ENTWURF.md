@@ -117,8 +117,21 @@ Licht wird es sofort dunkel, Wurzeln laufen von der Kante in die Masse
 hinein, und je nach Kachelvariante wächst viel, wenig oder gar nichts. Die
 Kollision merkt davon nichts — sie kennt weiter nur das Raster.
 
-Dasselbe gilt für die durchsteigbaren Plattformen. Ein glatter heller
-Balken fällt sonst aus dem ganzen Bild heraus.
+Dasselbe gilt für die durchsteigbaren Plattformen — und sie bekommen
+**Enden**. Eine Plattform, die an beiden Seiten abgeschnitten ist, liest
+sich als hingelegtes Brett; mit auslaufenden Enden wird sie ein Stück der
+Landschaft, durch die man reist.
+
+**Sichtbare Kachelkanten.** Der Kamm variierte frei in der Höhe — und
+sprang deshalb an jeder Kachelgrenze. Der Trick dagegen ist billig und
+wirkt sofort: die Enden des Profils auf null festnageln. Dazwischen darf
+der Kamm tun, was er will, aber zwei beliebige Kacheln treffen sich immer
+bruchlos. Dasselbe Profil rauht jetzt auch die senkrechten Felswände auf.
+
+Dabei fiel ein älterer Fehler auf: der Kachelsatz kannte nur zwölf der
+sechzehn Nachbarschaften, und die vier fehlenden fielen auf „Mitte"
+zurück. Genau dort blieb jede Felswand schnurgerade — sie bekam gar keine
+Kante. Jetzt werden alle sechzehn erzeugt.
 
 **Die Rosette war ein Aufkleber.** Sie schwebte als Scheibe im Dunst, weil
 dahinter keine Wand stand. Eine Rose ist aber ein *Loch in einer Mauer*.

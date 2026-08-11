@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parent.parent
 RES = ROOT / "Sources" / "ResonanzCore" / "Resources"
 TS = 16
 
-KNOWN_EDGES = ["", "t", "tl", "tr", "tlr", "l", "r", "lr", "b", "tb", "blr", "tblr"]
+KNOWN_EDGES = ['', 't', 'l', 'r', 'b', 'tl', 'tr', 'tb', 'lr', 'lb', 'rb', 'tlr', 'tlb', 'trb', 'lrb', 'tlrb']
 BLOCKING = {"#", "D"}
 
 
@@ -102,9 +102,14 @@ def render(room_id: str) -> Image.Image:
             if ch == ".":
                 continue
             if ch == "#":
-                name = f"{region}_solid_{edge_key(tiles, x, y, w, h)}_{(x * 31 + y * 17) % 4}"
+                name = f"{region}_solid_{edge_key(tiles, x, y, w, h)}_{(x * 31 + y * 17) % 6}"
             elif ch == "=":
-                name = f"{region}_platform_{(x * 13 + y * 7) % 3}"
+                cap = ""
+                if x == 0 or tiles[y][x - 1] != "=":
+                    cap += "l"
+                if x == w - 1 or tiles[y][x + 1] != "=":
+                    cap += "r"
+                name = f"{region}_platform_{cap or 'mid'}_{(x * 13 + y * 7) % 4}"
             elif ch == "^":
                 name = f"{region}_spike"
             elif ch == "D":

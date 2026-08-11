@@ -125,9 +125,15 @@ public final class RoomRenderer {
                 switch tile {
                 case .solid:
                     node = atlas.sprite("\(region)_solid_\(edgeKey(room: room, tx: tx, ty: ty))_"
-                                        + "\((tx &* 31 &+ ty &* 17) % 4)")
+                                        + "\((tx &* 31 &+ ty &* 17) % 6)")
                 case .platform:
-                    node = atlas.sprite("\(region)_platform_\((tx &* 13 &+ ty &* 7) % 3)")
+                    // Enden einer Plattform laufen aus, statt abgeschnitten
+                    // zu sein - erst dadurch wird sie Teil der Landschaft.
+                    var cap = ""
+                    if room.tile(tx - 1, ty) != .platform { cap += "l" }
+                    if room.tile(tx + 1, ty) != .platform { cap += "r" }
+                    node = atlas.sprite("\(region)_platform_\(cap.isEmpty ? "mid" : cap)_"
+                                        + "\((tx &* 13 &+ ty &* 7) % 4)")
                 case .spike:
                     node = atlas.sprite("\(region)_spike")
                 case .dissoWall:
@@ -160,9 +166,9 @@ public final class RoomRenderer {
         if !room.tile(tx - 1, ty).isBlocking { key += "l" }
         if !room.tile(tx + 1, ty).isBlocking { key += "r" }
         if !room.tile(tx, ty + 1).isBlocking { key += "b" }
-        // Der Generator kennt nur eine Auswahl an Kombinationen.
-        let known = ["", "t", "tl", "tr", "tlr", "l", "r", "lr", "b", "tb", "blr", "tblr"]
-        return known.contains(key) ? (key.isEmpty ? "mid" : key) : "mid"
+        // Der Generator liefert alle sechzehn Nachbarschaften - ein
+        // Rueckfall auf "Mitte" liesse Felswaende ohne Kante stehen.
+        return key.isEmpty ? "mid" : key
     }
 
     /// Laesst eine zerschlagene Sperre zerspringen.

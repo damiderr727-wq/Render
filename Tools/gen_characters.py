@@ -24,6 +24,11 @@ OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Res
 HERO_SCALE = 1.3
 HERO_W, HERO_H = int(round(28 * HERO_SCALE)), int(round(30 * HERO_SCALE))
 BODY_H = 20.0 * HERO_SCALE
+
+# Wo die Flamme aufhoert und die Beine anfangen, als Anteil der Hoehe.
+# Darunter ist sie fest, darueber loest sie sich auf - der Uebergang ist
+# das Interessanteste an ihr.
+LEG_T = 0.32
 GROUND = HERO_H - 1  # unterste Pixelzeile = Fussboden
 
 
@@ -86,23 +91,23 @@ GARMENTS = {
     #   harnisch - starr, geschlossen, laesst nur den Kopf frei
     #   cape     - haengt nur an der Schulter und schwirrt umher
     "mantel": dict(
-        openings=4, cut="mantel", deckung=0.64,
-        stoff=mix(P.CLOAK, P.STONE, 0.55), licht=P.TRIM),
+        openings=4, cut="mantel", deckung=0.66,
+        stoff=hexc("#313d5c"), licht=P.TRIM),
     "cape": dict(
         openings=6, cut="cape", deckung=0.72,
-        stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.BLOOM, 0.16), licht=P.BLOOM),
+        stoff=mix(hexc("#333050"), P.BLOOM, 0.18), licht=P.BLOOM),
     "enge_fassung": dict(
         openings=1, cut="harnisch", deckung=0.70,
         stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.GOLD, 0.20), licht=P.GOLD),
     "offene_fassung": dict(
         openings=9, cut="mantel", deckung=0.58,
-        stoff=mix(mix(P.CLOAK, P.STONE, 0.6), P.TRIM, 0.16), licht=P.TRIM),
+        stoff=mix(hexc("#2c3a52"), P.TRIM, 0.14), licht=P.TRIM),
     "schlagfassung": dict(
         openings=2, cut="harnisch", deckung=0.66,
         stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.ROT, 0.20), licht=P.ROT),
     "gerissenes_gewand": dict(
         openings=14, cut="cape", deckung=0.60,
-        stoff=mix(mix(P.CLOAK, P.STONE, 0.6), P.WARM, 0.14), licht=P.AMBER),
+        stoff=mix(hexc("#33344e"), P.WARM, 0.16), licht=P.AMBER),
     # Der Bruch: kein Gefaess mehr, nur noch Fetzen an ihr. Was bleibt,
     # traegt nichts - es haengt nur noch dran.
     "bruch": dict(
@@ -141,6 +146,82 @@ def _garment_slits(openings: int) -> list[tuple[float, int, float]]:
 # Gezeichnet wird er immer nach derselben Regel: der Fuss verliert sich
 # unten in der Masse, der Koerper liegt in ihr, und nur das obere Ende steht
 # frei heraus. So sitzt er *in* ihr und nicht *auf* ihr - egal welcher.
+
+
+def _draw_beine(c: Canvas, *, cx: int, base: float, height: float, phase: float,
+                lean: float, leg_phase: float | None, leg_spread: float,
+                crouch: float, settle: float, smear: float) -> None:
+    """
+    Zwei kurze Beine aus Kristall.
+
+    Sie sind das einzige Feste an ihr. Der Klang hat sich unten abgesetzt
+    und ist erstarrt - deshalb sind sie kantig, wo alles andere fliesst,
+    und tragen eine helle Ader, die im Takt mitleuchtet. Kurz und gedrungen
+    ist Absicht: lange Beine machen aus ihr eine Gestalt mit Anatomie, und
+    genau das soll sie nicht sein.
+
+    `leg_phase` treibt den Schritt. Ohne sie stehen beide Beine still.
+    """
+    S = HERO_SCALE
+    laenge = height * LEG_T - settle * 0.4
+    if laenge < 3:
+        return
+
+    schritt = leg_phase or 0.0
+    ader = mix(P.TRIM, P.BONE, 0.45)
+    schale = mix(P.CLOAK, P.STONE, 0.42)
+    kante = mix(P.TRIM, P.CLOAK, 0.62)
+
+    hueft_y = base - laenge
+    for seite in (-1, 1):
+        # Der Schritt: ein Bein hebt, waehrend das andere traegt.
+        takt = math.sin(schritt + (0 if seite > 0 else math.pi))
+        heben = max(0.0, takt) * laenge * 0.34
+        vor = takt * (1.6 + abs(lean) * 0.5) * S
+
+        hx = cx + seite * (1.5 * S + leg_spread * 1.4) + lean * 0.35
+        fx = hx + vor
+        fy = base - heben - crouch * 2
+
+        n = max(3, int(laenge))
+        for i in range(n + 1):
+            v = i / n                                   # 0 Huefte .. 1 Fuss
+            x = hx + (fx - hx) * v ** 1.3 - smear * 3.0 * v
+            y = hueft_y + (fy - hueft_y) * v
+            # Unten schmaler, aber nie spitz - sonst kriecht sie wieder.
+            w = (2.3 - 0.9 * v) * S
+
+            for dx in range(-int(w) - 1, int(w) + 2):
+                d = abs(dx) / max(0.9, w)
+                if d > 1:
+                    continue
+                if d > 0.72:
+                    col = kante if dx > 0 else shade(schale, -0.35)
+                elif abs(dx) <= 0:
+                    # Die Ader in der Mitte pulst mit dem Takt.
+                    puls = 0.45 + 0.55 * (0.5 + 0.5 * math.sin(phase * 2.2 - v * 3.0))
+                    col = mix(schale, ader, puls)
+                else:
+                    col = schale
+                # Kristall bricht das Licht in Facetten: einzelne Flaechen
+                # sitzen heller, und zwar in Streifen, nicht zufaellig.
+                if (i + dx) % 4 == 0 and d < 0.7:
+                    col = mix(col, ader, 0.30)
+                c.set(int(x) + dx, int(y), col)
+
+        # Der Fuss: eine kurze Platte, damit sie auf dem Boden steht statt
+        # ihn zu beruehren.
+        fw = int(2.6 * S)
+        c.rect(int(fx) - fw // 2, int(fy) - 1, fw + 1, 1, kante)
+        c.rect(int(fx) - fw // 2, int(fy), fw + 1, 1, mix(schale, P.CLOAK_LO, 0.4))
+        c.set(int(fx) + fw // 2, int(fy) - 1, mix(ader, P.BONE, 0.4))
+
+    # Wo die Flamme in den Kristall uebergeht, glimmt die Naht.
+    for dx in range(-int(3.2 * S), int(3.2 * S) + 1):
+        if hash01(cx + dx, int(hueft_y) + int(phase * 3)) > 0.45:
+            c.set(cx + dx + int(lean * 0.3), int(hueft_y),
+                  mix(ader, P.AMBER, 0.25))
+
 
 def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
                phase: float, lean: float, glow: float, mid) -> None:
@@ -225,31 +306,43 @@ def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
                    (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(150 * glow)))
         return
 
-    # Die Stimmgabel - und zwar eine mit abgebrochenem Zinken.
+    # Die Stimmgabel - und zwar schraeg durch sie hindurch.
     #
-    # Zwei gleich lange Zinken mit Leuchtspitze lesen sich bei dreissig
-    # Pixeln als Fuehler, und damit die ganze Figur als Tier. Es ist die
-    # Symmetrie, nicht die Groesse: was oben paarweise absteht, haelt das
-    # Auge fuer Anatomie. Also steht nur noch einer lang heraus, der zweite
-    # ist ein Stumpf - dann liest es sich als Gegenstand, der in ihr steckt.
+    # Zwei Anlaeufe waren daneben. Senkrecht und symmetrisch las sie sich
+    # als Fuehlerpaar, also als Tier. Ein einzelner langer Zinken war zwar
+    # kein Tier mehr, aber auch keine Stimmgabel - nur ein Stock.
     #
-    # Das Licht sitzt jetzt dort, wo er eintritt, nicht an den Spitzen. Er
-    # leuchtet, weil sie ihn treibt.
-    c.rect(int(fx - 2 * S), int(fy - 1), int(5 * S), 2, P.BONE_SH)
-    c.rect(int(fx - 2 * S), int(fy - 1), int(5 * S), 1, P.BONE)
+    # Schraeg loest beides: die Gabel behaelt ihre zwei Zinken und den
+    # Steg, steht aber quer zur Koerperachse. Damit kann das Auge sie gar
+    # nicht als Koerperteil lesen - so waechst nichts. Sie steckt.
+    a = -1.16 + lean * 0.03
+    ax, ay = math.cos(a), math.sin(a)
+    nx, ny = -ay, ax                        # quer zur Gabelachse
 
-    lang = int(height * 0.62)
-    for i in range(lang):
-        x = int(fx + 1 * S + i * 0.22)
-        c.set(x, int(fy - 2 - i), P.BONE)
-        c.set(x + 1, int(fy - 2 - i), P.BONE_SH if i % 3 else P.BONE)
-    c.set(int(fx + 1 * S + lang * 0.22), int(fy - 2 - lang), mix(P.BONE, P.AMBER, 0.35))
+    # Der Stiel faehrt hinten unten wieder heraus.
+    for i in range(int(5 * S)):
+        c.set(int(fx - ax * i), int(fy - ay * i),
+              P.BONE_SH if i < 2 else mix(P.BONE_LO, mid, i / (5 * S)))
 
-    # Der abgebrochene Zinken. Die Bruchkante ist rau, nicht gerade.
-    kurz = int(lang * 0.34)
-    for i in range(kurz):
-        c.set(int(fx - 2 * S - i * 0.2), int(fy - 2 - i), P.BONE_SH if i else P.BONE)
-    c.set(int(fx - 2 * S - kurz * 0.2), int(fy - 2 - kurz), mix(P.BONE_LO, mid, 0.5))
+    # Der Steg liegt in ihr - quer zur Achse, kurz und gedeckt.
+    for k in range(-2, 3):
+        c.set(int(fx + nx * k), int(fy + ny * k), P.BONE if abs(k) < 2 else P.BONE_SH)
+
+    # Die beiden Zinken, ungleich lang: der hintere ist angebrochen.
+    for seite, laenge in ((1, int(height * 0.38)), (-1, int(height * 0.21))):
+        for i in range(laenge):
+            v = i / max(1, laenge)
+            # Sie laufen leicht auseinander, wie bei einer echten Gabel.
+            px = fx + nx * seite * (1.6 * S + v * 1.4) + ax * i
+            py = fy + ny * seite * (1.6 * S + v * 1.4) + ay * i
+            c.set(int(px), int(py), P.BONE if i % 4 else P.BONE_SH)
+            if i > laenge * 0.5:
+                c.set(int(px - nx * seite), int(py - ny * seite), P.BONE_SH)
+        ex = fx + nx * seite * (1.6 * S + 1.4) + ax * laenge
+        ey = fy + ny * seite * (1.6 * S + 1.4) + ay * laenge
+        # Der kurze endet rau: dort ist er abgebrochen.
+        c.set(int(ex), int(ey),
+              mix(P.BONE, P.AMBER, 0.4) if seite > 0 else mix(P.BONE_LO, mid, 0.5))
 
     if glow > 0:
         c.glow(fx, fy, 7 * S, (P.AMBER[0], P.AMBER[1], P.AMBER[2], int(120 * glow)))
@@ -258,7 +351,7 @@ def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
 
 def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
                   height: float, phase: float, lean: float, smear: float,
-                  split: float, sway: float, hinter: bool) -> None:
+                  split: float, sway: float, hinter: bool) -> float:
     """
     Zeichnet die getragene Fassung ueber die Gestalt.
 
@@ -281,48 +374,68 @@ def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
     stoff, saum_licht = g["stoff"], g["licht"]
     stoff_hi = shade(stoff, 0.42)
     slits = _garment_slits(openings)
+    # Gezeichnet werden hoechstens vier. Der Spielwert kennt vierzehn
+    # Oeffnungen, aber vierzehn Kerben in einem vierzig Pixel hohen Umriss
+    # sind keine Fassung mehr, sondern ein Saegeblatt.
+    sichtbar = slits[:4] if len(slits) > 4 else slits
 
     # Ein Cape haengt hinter ihr, ein Mantel liegt auf ihr. Deshalb wird das
-    # eine vor der Gestalt gezeichnet und das andere danach.
+    # eine vor der Gestalt gezeichnet und das andere danach. Zurueck kommt
+    # die Hoehe des Kragens - bis dorthin deckt der Stoff.
     if (cut == "cape") != hinter:
-        return
+        return LEG_T if cut == "cape" else coverage
 
     if cut == "cape":
         _draw_cape(c, kind=kind, cx=cx, base=base, height=height, phase=phase,
                    lean=lean, smear=smear, sway=sway, coverage=coverage,
                    slits=slits, stoff=stoff, stoff_hi=stoff_hi, licht=saum_licht)
-        return
+        return LEG_T
 
     if cut == "bruch":
         _draw_fetzen(c, kind=kind, cx=cx, base=base, height=height, phase=phase,
                      lean=lean, smear=smear, sway=sway, coverage=coverage,
                      stoff=stoff, licht=saum_licht)
-        return
+        return LEG_T
 
     starr = cut == "harnisch"
-    rows = max(2, int(height * coverage))
+    rows = max(2, int(height * (coverage - LEG_T * 0.78)))
+    # Der Bauch der Flamme gibt das Mass fuer den ganzen Schnitt.
+    bauch = _profile(0.26, kind)
 
     for i in range(rows + 1):
         u = i / rows                      # 0 Saum, 1 Kragen
-        t = u * coverage                  # in den Einheiten der Gestalt
+        # Der Saum endet ueber den Knien, sonst verdeckt er die Beine -
+        # und dann steht sie wieder als Kegel da.
+        t = LEG_T * 0.78 + u * (coverage - LEG_T * 0.78)
         y = base - t * height
         hang = (1 - u) ** 2               # wie frei der Stoff haengt
+        # Die Breite richtet sich nach der Flamme, nicht nach der Hoehe.
+        tf = max(0.0, (t - LEG_T) / max(0.001, 1 - LEG_T))
 
         if starr:
             # Metall haengt nicht. Es sitzt auf ihr und folgt nur der Neigung.
             sx = cx + lean * t
             sx += math.sin(t * 2.6 + phase) * (0.6 + t * 0.9) * 0.5
-            # Enger Sitz: die Schienen liegen dicht ueber der Gestalt, unten
-            # laeuft der Beintaschen-Rand ein Stueck aus.
-            w = _profile(t, kind) * 0.98 + 0.9 + 0.9 * hang
+            # Enger Sitz: die Schienen liegen dicht auf ihr, unten laeuft
+            # der Rand der Beintaschen ein Stueck aus.
+            w = bauch * (1.02 + 0.30 * hang) + 0.8
         else:
             # Lose: der Saum haengt weit hinterher und schwingt nach.
             sx = cx + lean * t * (1 - 0.42 * hang)
             sx += math.sin(t * 2.6 + phase - 1.1 * hang) * (0.9 + t * 1.7) * 0.85
             sx += (-lean * 0.75 - smear * 5.5) * hang
             sx += math.sin(phase * 1.3 + sway * 3.0 + u * 2.2) * hang * (1.5 + sway * 2.8)
-            # Weit geschnitten: er faellt ueber den Bauch der Gestalt hinaus.
-            w = _profile(t, kind) * 0.88 + 1.4 + 4.2 * hang
+            # Weit geschnitten und unten am weitesten - eine Glocke. Die
+            # Breite haengt am Bauch der Flamme, nicht an der Hoehe: sonst
+            # ist der Saum genau dort schmal, wo er fallen soll.
+            w = bauch * (1.05 + 0.55 * hang) + 0.8
+            # Der Saum rundet sich ab, statt gerade abzuschneiden - eine
+            # waagerechte Unterkante liest sich als Moebelstueck.
+            if u < 0.16:
+                w *= 0.72 + 1.75 * u
+            # Ein langsamer Faltenwurf, damit die Seiten nicht schnurgerade
+            # fallen.
+            w += math.sin(u * 3.1 + phase * 0.7 + sway * 0.6) * 0.7
         w *= 1 + smear * 0.20
         if split > 0:
             sx += math.sin(t * 9.0 + phase * 2) * split * 3.0
@@ -330,55 +443,56 @@ def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
         # Eine Oeffnung ist eine Kerbe im Rand, kein fehlendes Stueck: der
         # Stoff weicht dort zurueck, und in der Kerbe steht ihr Licht.
         def kerbe(seite: int) -> float:
-            for su, s_, laenge in slits:
+            for su, s_, laenge in sichtbar:
                 if s_ == seite and abs(u - su) < laenge / 2:
                     tief = 1 - abs(u - su) / (laenge / 2)
-                    return (1.8 + 1.8 * tief) * min(1.0, w / 4)
+                    return (1.6 + 1.6 * tief) * min(1.0, w / 4)
             return 0.0
 
         links = int(sx - w + kerbe(-1))
         rechts = int(sx + w - kerbe(1))
-        # Waagerechte Schienen: alle drei Reihen eine Fuge, darueber ein
-        # heller Grat. Daran erkennt man Metall auf den ersten Blick.
-        schiene = starr and i % 3 == 0
+        # Geschlossen fuellen. Jedes Loch im Stoff bricht die Silhouette,
+        # und eine gebrochene Silhouette ist bei vierzig Pixeln nicht mehr
+        # zu lesen - daran ist der erste Anlauf gescheitert.
         for x in range(links, rechts + 1):
             rand = x <= links or x >= rechts
-            if not starr and u < 0.14 and hash01(x, int(y) + int(phase * 4)) < 0.45:
-                continue
-            # Ihr Licht sitzt hinter dem Stoff, also glueht der Rand - ein
-            # dunkler Umriss verschwaende vor dem dunklen Grund.
             if rand:
-                col = mix(stoff, saum_licht, 0.42)
-            elif schiene:
-                col = shade(stoff, -0.42)
+                # Ihr Licht sitzt hinter dem Stoff: der Rand glueht.
+                col = mix(stoff, saum_licht, 0.45)
+            elif starr and i % 3 == 0:
+                col = shade(stoff, -0.40)          # Fuge zwischen den Schienen
             elif starr and i % 3 == 1:
-                col = stoff_hi
+                col = stoff_hi                     # Grat darueber
             elif abs(x - int(sx)) <= 1:
-                col = mix(stoff, saum_licht, 0.18)
+                col = shade(stoff, 0.16)           # Licht laeuft mittig durch
             else:
                 col = stoff
-            if not starr:
-                falte = int(sx) + int(math.sin(u * 2.4 + phase * 0.6 + sway) * 2) - 2
-                if x == falte and not rand:
-                    col = shade(stoff, -0.35)
             c.set(x, int(y), col)
+
+        # Nur die unterste Kante franst aus - der Rest bleibt geschlossen.
+        if not starr and u < 0.08:
+            for x in range(links, rechts + 1):
+                if hash01(x, int(y) + int(phase * 4)) < 0.42:
+                    c.set(x, int(y), None)
 
         for seite, kante in ((-1, links), (1, rechts)):
             if kerbe(seite) > 0:
-                c.set(kante, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 225))
+                c.set(kante, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 235))
                 c.blend(kante + seite, int(y),
-                        (saum_licht[0], saum_licht[1], saum_licht[2], 60))
+                        (saum_licht[0], saum_licht[1], saum_licht[2], 70))
 
         # Der Kragen haelt sie zusammen. Beim Harnisch steht er als Kehle
         # hoch und laesst genau den Kopf frei.
         if u > 0.90:
-            c.set(links, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 170))
-            c.set(rechts, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 170))
+            c.set(links, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 190))
+            c.set(rechts, int(y), (saum_licht[0], saum_licht[1], saum_licht[2], 190))
             if starr:
                 for x in range(links + 1, rechts):
                     c.set(x, int(y - 1), stoff_hi)
                 c.set(links, int(y - 1), mix(stoff, saum_licht, 0.5))
                 c.set(rechts, int(y - 1), mix(stoff, saum_licht, 0.5))
+
+    return coverage
 
 
 def _draw_fetzen(c: Canvas, *, kind: str, cx: int, base: float, height: float,
@@ -398,10 +512,10 @@ def _draw_fetzen(c: Canvas, *, kind: str, cx: int, base: float, height: float,
     # steht nicht ab. Dunkel bleiben sie auch: sonst verliert sie den Umriss
     # ganz, und ohne Umriss ist sie im Kampf nicht mehr zu lesen.
     for k in range(10):
-        u = 0.06 + (k / 10) * coverage
+        u = LEG_T + (k / 10) * (coverage - LEG_T)
         y = base - u * height
         seite = 1 if k % 2 == 0 else -1
-        w = _profile(u, kind) * 0.92 + 0.6 * S
+        w = _profile(max(0.0, (u - LEG_T) / (1 - LEG_T)), kind) * 0.92 + 0.6 * S
         eigen = math.sin(phase * (1.2 + k * 0.23) + k * 2.1 + sway * 1.4)
         laenge = (3.0 + (k % 4) * 2.0) * S
         x = cx + lean * u + seite * w
@@ -518,17 +632,42 @@ def draw_heroine(
     rim = mix(P.TRIM, P.CLOAK, 0.45)
 
     # Was hinter ihr haengt, kommt zuerst - sonst laege das Cape vor ihr.
-    _draw_garment(c, garment=garment, kind=kind, cx=cx, base=base, height=height,
-                  phase=phase, lean=lean, smear=smear, split=split, sway=sway,
-                  hinter=True)
+    _ = _draw_garment(c, garment=garment, kind=kind, cx=cx, base=base,
+                      height=height, phase=phase, lean=lean, smear=smear,
+                      split=split, sway=sway, hinter=True)
+
+    # --- Die Beine --------------------------------------------------------
+    #
+    # Unten ist sie nicht formlos. Der Klang hat sich dort zu Kristall
+    # gesetzt - zwei kurze, gedrungene Beine mit einer hellen Ader darin.
+    # Vorher lief die Gestalt nach unten einfach spitz zu und schleifte
+    # ueber den Boden; das sah aus, als kroeche sie.
+    _draw_beine(c, cx=cx, base=base, height=height, phase=phase, lean=lean,
+                leg_phase=leg_phase, leg_spread=leg_spread, crouch=crouch,
+                settle=settle, smear=smear)
+
+    # Der Mantel ist die Grundform, nicht die Verzierung: er wird zuerst
+    # gesetzt, geschlossen und undurchsichtig. Die Flamme sitzt darauf.
+    # Andersherum franst sie ueber den Rand hinaus, und die Silhouette
+    # zerfaellt in Sprenkel - genau daran ist der erste Anlauf gescheitert.
+    kragen = _draw_garment(c, garment=garment, kind=kind, cx=cx, base=base,
+                           height=height, phase=phase, lean=lean, smear=smear,
+                           split=split, sway=sway, hinter=False)
 
     # --- Die Gestalt ------------------------------------------------------
-    steps = int(height) + 1
+    hueft = base - LEG_T * height          # wo die Flamme aufsitzt
+    flamme = height * (1 - LEG_T)
+    # Unterhalb des Kragens deckt der Stoff ohnehin - dort wuerde die
+    # Flamme nur seitlich herausfransen.
+    ab = max(0.0, (kragen - LEG_T) / (1 - LEG_T) - 0.10)
+    steps = int(flamme) + 1
     for i in range(steps):
         t = i / max(1, steps - 1)
-        y = base - t * height
+        if t < ab:
+            continue
+        y = hueft - t * flamme
 
-        w = _profile(t, kind) * (1 + smear * 0.5)
+        w = _profile(t, kind) * 0.72 * (1 + smear * 0.5)
         # Der Schlag treibt eine Welle durch sie hindurch.
         w *= 1 + whip * math.sin(t * math.pi * 1.6) * 0.5
 
@@ -549,8 +688,7 @@ def draw_heroine(
                 continue
             # Sie ist Klang, kein Fleisch: der Grund scheint durch sie
             # hindurch. Dicht in der Mitte, duenner zum Rand und nach oben,
-            # wo sie ohnehin ausfranst. Das macht sie traeumerisch, ohne
-            # dass die Silhouette verlorenginge - die traegt der Mantel.
+            # wo sie ohnehin ausfranst.
             if d < 0.34:
                 col = core
                 deckung = 0.86 - 0.20 * t
@@ -563,25 +701,19 @@ def draw_heroine(
             a = int(255 * max(0.18, deckung))
             c.set(int(sx) + dx, int(y), (col[0], col[1], col[2], a))
 
-    # Unten loest sie sich auf, statt auf dem Boden aufzusetzen.
-    for k in range(3):
-        y = base - k
-        for dx in range(-4, 5):
-            if hash01(cx + dx, int(y) + int(phase * 5)) < 0.35 + k * 0.2:
-                c.set(cx + dx + int(lean * 0.2), int(y), None)
-    c.rect(cx - 3, GROUND, 7, 1, mix(P.TRIM, P.CLOAK_LO, 0.65))
-
-    # Funken steigen auf.
-    for k in range(5):
-        u = (k / 5 + phase * 0.35) % 1.0
-        fy = base - height * (0.75 + u * 0.5)
-        fx = cx + lean * 0.8 + math.sin(u * 7 + phase * 3) * (3 + u * 5)
-        if hash01(k, int(phase * 8)) > 0.35:
-            c.set(int(fx), int(fy), mix(mid, P.AMBER, 0.35))
-
-    _draw_garment(c, garment=garment, kind=kind, cx=cx, base=base, height=height,
-                  phase=phase, lean=lean, smear=smear, split=split, sway=sway,
-                  hinter=False)
+    # Funken. Sie steigen aus der Flamme auf, werden nach oben hin duenner
+    # und wehen mit ihrer Neigung mit - ein Kopf aus Feuer, der nichts
+    # absondert, sieht aus wie gemalter Rauch.
+    for k in range(9):
+        u = (k / 9 + phase * 0.22) % 1.0
+        fy = hueft - flamme * (0.55 + u * 0.75)
+        fx = cx + lean * (0.6 + u) + math.sin(u * 6.2 + phase * 2.4 + k) * (2 + u * 6)
+        if hash01(k * 3, int(phase * 7) + k) < 0.30:
+            continue
+        hell = mix(mid, P.AMBER, 0.25 + u * 0.5)
+        c.set(int(fx), int(fy), (hell[0], hell[1], hell[2], int(235 * (1 - u * 0.7))))
+        if u < 0.35:
+            c.set(int(fx), int(fy) + 1, (hell[0], hell[1], hell[2], 90))
 
     # --- Der Resonanzschlitz ----------------------------------------------
     # Kein Gesicht - nur eine dunkle Kerbe, dort wo die Gestalt am dichtesten
@@ -591,9 +723,19 @@ def draw_heroine(
     slot_x = int(cx + lean * slot_t + math.sin(slot_t * 2.6 + phase) * 1.6)
     sw = max(2, int(round(2 * HERO_SCALE)))
     sh = max(5, int(round(5 * HERO_SCALE)))
-    c.rect(slot_x, slot_y - int(round((3 if aim > 0.5 else 2) * HERO_SCALE)), sw, sh, P.EYE)
-    c.set(slot_x - 1, slot_y - 2, P.EYE)
-    c.set(slot_x + sw, slot_y + 2, P.EYE)
+    top = slot_y - int(round((3 if aim > 0.5 else 2) * HERO_SCALE))
+    # Kein Schwarz. Ein schwarzes Rechteck stanzt ein Loch in sie, weil
+    # sonst nirgends im Bild Schwarz vorkommt. Stattdessen ein tiefes
+    # Blau, das nach unten hin waermer wird - eine Tiefe, kein Loch.
+    for i in range(sh):
+        v = i / max(1, sh - 1)
+        col = mix(hexc("#161d33"), hexc("#2a2036"), v)
+        c.rect(slot_x, top + i, sw, 1, (col[0], col[1], col[2], int(232 - 40 * v)))
+    c.set(slot_x - 1, top + 1, (22, 29, 51, 150))
+    c.set(slot_x + sw, top + sh - 2, (22, 29, 51, 150))
+    # Ganz unten glimmt es: dort sitzt der Ton, den sie haelt.
+    c.set(slot_x + sw // 2, top + sh - 1,
+          mix(P.TRIM, P.BONE, 0.3 + 0.4 * (0.5 + 0.5 * math.sin(phase * 2))))
 
     # --- Der Kern ---------------------------------------------------------
     _draw_kern(c, kern=kind, cx=cx, base=base, height=height,
@@ -677,6 +819,9 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
                      # Zwei Schritte je Runde: der Koerper hebt sich zweimal.
                      stretch=0.93 + abs(math.sin(i / 8 * math.tau)) * 0.12,
                      settle=1.0 - abs(math.sin(i / 8 * math.tau)),
+                     # Der Schritt laeuft doppelt so schnell wie der Rumpf:
+                     # zwei Schritte auf eine Runde des Koerpers.
+                     leg_phase=i / 8 * math.tau,
                      smear=0.16, sway=math.sin(i / 8 * math.tau + 1.1) * 1.5)
         for i in range(8)
     ]
@@ -686,17 +831,21 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     # aber ein einziges reicht eben nicht, dann steht sie in der Luft.
     anims["jump"] = [
         draw_heroine(instrument=instrument, garment=garment, phase=0.6,
-                     lean=1.6, stretch=1.30, smear=0.08, sway=-1.7),
+                     lean=1.6, stretch=1.30, smear=0.08, sway=-1.7,
+                     leg_phase=1.2, leg_spread=0.6, crouch=1.4),
         draw_heroine(instrument=instrument, garment=garment, phase=1.5,
-                     lean=1.3, stretch=1.22, smear=0.04, sway=-1.1),
+                     lean=1.3, stretch=1.22, smear=0.04, sway=-1.1,
+                     leg_phase=1.9, leg_spread=0.3, crouch=0.8),
         draw_heroine(instrument=instrument, garment=garment, phase=2.4,
-                     lean=1.0, stretch=1.12, sway=-0.5, glow=1.1),
+                     lean=1.0, stretch=1.12, sway=-0.5, glow=1.1,
+                     leg_phase=2.6, crouch=0.3),
     ]
 
     # Fall: sie zieht sich lang, das Tuch steht nach oben weg und flattert.
     anims["fall"] = [
         draw_heroine(instrument=instrument, garment=garment, phase=i * 1.4,
                      lean=0.6, stretch=0.86 + i * 0.02, smear=0.18,
+                     leg_phase=3.4 + i * 0.4, leg_spread=0.8,
                      sway=1.5 + math.sin(i * 1.9) * 0.5)
         for i in range(4)
     ]
@@ -704,9 +853,11 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     # Landung: erst staucht es sie zusammen, dann federt sie zurueck.
     anims["land"] = [
         draw_heroine(instrument=instrument, garment=garment, phase=1.1,
-                     stretch=0.68, settle=3, smear=0.36, sway=2.1),
+                     stretch=0.68, settle=3, smear=0.36, sway=2.1,
+                     leg_spread=1.4, crouch=2.6),
         draw_heroine(instrument=instrument, garment=garment, phase=1.8,
-                     stretch=0.84, settle=1, smear=0.18, sway=1.2),
+                     stretch=0.84, settle=1, smear=0.18, sway=1.2,
+                     leg_spread=0.7, crouch=1.2),
         draw_heroine(instrument=instrument, garment=garment, phase=2.5,
                      stretch=1.04, smear=0.05, sway=0.4),
     ]

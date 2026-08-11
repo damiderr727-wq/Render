@@ -41,8 +41,19 @@ alle zwanzig dieselbe falsche Voraussetzung teilten.
 Die Voraussetzung war: eine Heldin in einer Welt aus Klang sieht aus wie
 jemand, der Klang *benutzt*. Falsch. **Sie ist selbst welcher.**
 
-Cadence hat keinen Körper, sie hat eine Gestalt: eine flammenartige,
-**durchscheinende** Masse, die oben ausfranst und den Boden kaum berührt.
+Cadence hat keinen Körper, sie hat drei Zonen — und die Trennung ist das
+Interessanteste an ihr:
+
+- **Unten Kristall.** Zwei kurze, gedrungene Beine, in denen sich der
+  Klang abgesetzt und verfestigt hat, mit einer hellen Ader, die im Takt
+  pulst. Ohne sie lief die Gestalt nach unten spitz zu und schleifte über
+  den Boden — sie sah aus, als kröche sie.
+- **In der Mitte Stoff.** Die Fassung, geschlossen und undurchsichtig. Sie
+  ist die Grundform, nicht die Verzierung: sie wird zuerst gesetzt, und
+  die Flamme sitzt darauf. Andersherum franst die Flamme über den Rand
+  hinaus und die Silhouette zerfällt in Sprenkel.
+- **Oben Flamme.** Eine **durchscheinende** Masse, die ausfranst und
+  Funken abgibt.
 Der Grund scheint durch sie hindurch — dicht in der Mitte, dünner zum Rand
 und nach oben. Die Silhouette trägt trotzdem, weil der Mantel deckt: das
 Durchscheinende ist der Körper, nicht die Kleidung. Kein
@@ -52,15 +63,19 @@ ist, damit der Blick einen Halt hat.
 Darin steckt der einzige harte Gegenstand an ihr: eine **Stimmgabel mit
 abgebrochenem Zinken, halb im Körper versenkt**.
 
-Der abgebrochene Zinken ist kein Detail, sondern die Lösung eines
-konkreten Problems. Vorher standen zwei gleich lange Zinken mit
-Leuchtspitze oben heraus — und bei dreißig Pixeln liest sich das als
-**Fühlerpaar**, damit die ganze Figur als Tier. Es lag nicht an der
-Größe: was oben paarweise und symmetrisch absteht, hält das Auge für
-Anatomie. Seit nur noch einer lang heraussteht und der zweite ein Stumpf
-ist, liest es sich als Gegenstand, der in ihr steckt. Dazu ist das Licht
-von den Spitzen an die Eintrittsstelle gewandert — er leuchtet, weil sie
-ihn treibt, nicht weil er glüht.
+Die Gabel steht **schräg** in ihr, nicht senkrecht. Das ist die Lösung
+eines konkreten Problems, an dem zwei Anläufe gescheitert sind. Zuerst standen zwei gleich lange Zinken mit
+Leuchtspitze senkrecht oben heraus — und bei dreißig Pixeln liest sich das
+als **Fühlerpaar**, damit die ganze Figur als Tier. Was oben paarweise und
+symmetrisch absteht, hält das Auge für Anatomie. Der zweite Anlauf ließ
+nur einen Zinken stehen: kein Tier mehr, aber auch keine Stimmgabel — ein
+Stock.
+
+Schräg löst beides. Die Gabel behält ihre zwei Zinken und den Steg, steht
+aber **quer zur Körperachse** — so kann das Auge sie gar nicht als
+Körperteil lesen, denn so wächst nichts. Sie steckt. Der hintere Zinken
+ist dabei kürzer und rau abgebrochen, das Licht sitzt an der
+Eintrittsstelle: sie treibt ihn, er glüht nicht von selbst.
 
 Nebenbei entsteht daraus eine Beziehung, die vorher fehlte: die
 Stimmgabel im Boden, an der man rastet, ist heil. Ihre ist es nicht. Der Steg liegt tief genug, dass die Masse ihn

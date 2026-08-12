@@ -292,29 +292,6 @@ public final class GameSimulation {
         return Swift.max(1, Int(roh.rounded()))
     }
 
-    /// Der Nachklang am Ende einer Kette.
-    ///
-    /// Er trifft nicht dorthin, wohin man zielt, sondern rundherum - das
-    /// ist der Sinn: man baut die Kette an einem Gegner auf und gibt sie
-    /// dort aus, wo mehrere stehen.
-    private func nachklang(um mitte: Vec2, schaden: Int, events: inout [GameEvent]) {
-        let radius = 58.0
-        let feld = Rect(center: mitte, radius: radius)
-        for enemy in enemies where enemy.alive && enemy.rect.intersects(feld) {
-            let weg = (enemy.center - mitte)
-            let ab = weg.length < 1 ? Vec2(0, -1) : weg.normalized
-            enemy.takeDamage(Swift.max(1, schaden / 2), knockback: ab * 220,
-                             events: &events)
-            if !enemy.alive { player.gainResonance(enemy.kind.resonanceReward) }
-        }
-        if let boss, boss.alive, boss.rect.intersects(feld) {
-            boss.takeDamage(Swift.max(1, schaden / 2), events: &events)
-        }
-        events.append(.effect(.burstGlow, mitte, .zero))
-        events.append(.shake(7))
-        events.append(.sound(.hit(strong: true)))
-    }
-
     // MARK: - Wirkung der Spieleraktionen
     //
     // Der Spieler meldet nur seine Absicht. Was daraus in der Welt wird -
@@ -474,12 +451,13 @@ public final class GameSimulation {
                                     abstandZumSchlag: takt.abstandZumSchlag(elapsed))
             events.append(.klangkette(wirkung, glieder: kette.glieder))
         }
-        let faktor = wirkung == .ausklang ? 2.0 : kette.faktor
-        let schaden = skaliert(profile.damage, faktor)
+        let schaden = skaliert(profile.damage, kette.faktor)
 
         for enemy in enemies where enemy.alive && hitbox.intersects(enemy.rect) {
             let away = Vec2(sign(enemy.center.x - player.position.x), -0.35).normalized
-            let knock = away * profile.knockback * (wirkung == .ausklang ? 1.6 : 1.0)
+            // Voll aufgebaut schlaegt sie auch weiter - der Faktor wirkt
+            // auf Schaden und Wucht, nicht nur auf die Zahl.
+            let knock = away * profile.knockback * (kette.voll ? 1.4 : 1.0)
             enemy.takeDamage(schaden, knockback: knock, events: &events)
             if !enemy.alive { player.gainResonance(enemy.kind.resonanceReward) }
             hits += 1
@@ -490,10 +468,6 @@ public final class GameSimulation {
             hits += 1
         }
 
-        // Der Nachklang: das vierte Glied trifft alles in der Naehe.
-        if wirkung == .ausklang {
-            nachklang(um: hitbox.center, schaden: schaden, events: &events)
-        }
 
         // Auch Dornen tragen den Abpraller - der Spieler kann sie als
         // Sprungbrett nutzen, statt nur an ihnen zu sterben.

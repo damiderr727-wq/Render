@@ -29,13 +29,25 @@ final class KlangketteTests: XCTestCase {
         XCTAssertEqual(kette.faktor, 1.6, accuracy: 0.001)
     }
 
-    func testDasVierteGliedKlingtAusUndVerbrauchtDieKette() {
+    /// Oben ist oben: die Kette verbraucht sich nicht, sie bleibt voll.
+    ///
+    /// Anfangs klang sie beim vierten Glied aus und traf alles in der
+    /// Naehe. Das war eine zweite Regel im Gewand der ersten - man musste
+    /// die Kette nicht nur aufbauen, sondern auch ausgeben. Jetzt macht
+    /// sie nichts als Schaden.
+    func testDieKetteBleibtVollUndVerbrauchtSichNicht() {
         var kette = Klangkette()
-        for t in 0..<3 {
+        for t in 0..<4 {
             _ = kette.treffer(jetzt: Double(t) * 0.5, abstandZumSchlag: 0.0)
         }
-        XCTAssertEqual(kette.treffer(jetzt: 1.5, abstandZumSchlag: 0.0), .ausklang)
-        XCTAssertEqual(kette.glieder, 0, "Der Ausklang verbraucht die Kette")
+        XCTAssertEqual(kette.glieder, Klangkette.voll)
+        XCTAssertTrue(kette.voll)
+        XCTAssertEqual(kette.faktor, 2.0, accuracy: 0.001)
+
+        // Weiter im Takt: sie bleibt oben, sie faellt nicht auf null.
+        XCTAssertEqual(kette.treffer(jetzt: 2.0, abstandZumSchlag: 0.0),
+                       .imTakt(glieder: Klangkette.voll))
+        XCTAssertEqual(kette.faktor, 2.0, accuracy: 0.001)
     }
 
     /// Der wichtigste Test: danebenliegen kostet den Aufbau, nicht den Kampf.
@@ -79,7 +91,7 @@ final class KlangketteTests: XCTestCase {
         for i in 0..<16 {
             let t = Double(i) * 0.5
             _ = mit.treffer(jetzt: t, abstandZumSchlag: 0.0)
-            schadenMit += mit.glieder == 0 ? 2.0 : mit.faktor
+            schadenMit += mit.faktor
             _ = ohne.treffer(jetzt: t, abstandZumSchlag: 0.24)
             schadenOhne += ohne.faktor
         }

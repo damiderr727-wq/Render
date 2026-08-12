@@ -20,9 +20,15 @@ import Foundation
 /// 2. **Ein Treffer daneben setzt sie auf eins zurueck**, nicht auf
 ///    null. Danebenliegen kostet den Aufbau, nicht den Kampf. Wer nur
 ///    draufhaut, gewinnt langsamer - aber er gewinnt.
-/// 3. **Beim vierten Glied klingt es aus.** Der Nachklang trifft alles
-///    in der Naehe und setzt die Kette zurueck. Man baut sie also
-///    absichtlich auf und gibt sie absichtlich aus.
+/// 3. **Die Kette macht nichts als Schaden.** Sie hat vier Stufen, dann
+///    ist sie oben, und dabei bleibt es.
+///
+/// Der dritte Punkt war anfangs anders: beim vierten Glied klang es aus
+/// und traf alles in der Naehe. Das war eine zweite Regel im Gewand der
+/// ersten - man musste die Kette nicht nur aufbauen, sondern auch
+/// ausgeben, und damit hing am Takt nicht mehr eine Entscheidung,
+/// sondern zwei. Eine Funktion, die man in einem Satz erklaeren kann,
+/// ist mehr wert als eine, die zwei braucht.
 ///
 /// Der erste Boss heisst nicht zufaellig DER GROSSE AUFTAKT: er gibt den
 /// Takt vor, an dem man die Sache lernt.
@@ -34,8 +40,8 @@ public struct Klangkette: Sendable, Equatable {
     /// ein Rhythmusspiel verlangen wuerde. Hier ist es kein Test.
     public static let fenster: Double = 0.13
 
-    /// Laenge, ab der die Kette ausklingt.
-    public static let ausklang = 4
+    /// Laenge, ab der es nicht mehr weiter geht.
+    public static let voll = 4
 
     /// Nach so langer Pause zerfaellt die Kette von selbst.
     public static let haltbarkeit: Double = 2.2
@@ -46,7 +52,7 @@ public struct Klangkette: Sendable, Equatable {
 
     public init() {}
 
-    /// Der Schadensfaktor der aktuellen Kette.
+    /// Der Schadensfaktor der aktuellen Kette - das Einzige, was sie tut.
     ///
     /// Bewusst flach: die Kette soll sich lohnen, aber nicht darueber
     /// entscheiden, ob man gewinnt. Wer sie nie trifft, braucht etwa ein
@@ -59,6 +65,9 @@ public struct Klangkette: Sendable, Equatable {
         default: return 2.0
         }
     }
+
+    /// Ist die Kette voll? Dann bleibt sie es, solange man im Takt bleibt.
+    public var voll: Bool { glieder >= Self.voll }
 
     /// Ist die Kette abgelaufen?
     public func zerfallen(jetzt: Double) -> Bool {
@@ -73,10 +82,8 @@ public struct Klangkette: Sendable, Equatable {
     public enum Wirkung: Sendable, Equatable {
         /// Daneben - die Kette faengt von vorn an.
         case daneben
-        /// Im Takt, die Kette waechst.
+        /// Im Takt, die Kette waechst (oder steht schon oben).
         case imTakt(glieder: Int)
-        /// Das vierte Glied: es klingt aus, und die Kette ist verbraucht.
-        case ausklang
     }
 
     /// Traegt einen Treffer ein. `phase` ist der Abstand zum naechsten
@@ -91,11 +98,9 @@ public struct Klangkette: Sendable, Equatable {
             return .daneben
         }
 
-        glieder += 1
-        if glieder >= Self.ausklang {
-            glieder = 0
-            return .ausklang
-        }
+        // Oben ist oben: die Kette bleibt voll, solange man im Takt
+        // bleibt, statt sich zu verbrauchen.
+        glieder = Swift.min(Self.voll, glieder + 1)
         return .imTakt(glieder: glieder)
     }
 }

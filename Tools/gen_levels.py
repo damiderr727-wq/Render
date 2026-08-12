@@ -30,6 +30,9 @@ AIR, SOLID, PLATFORM, SPIKE, DWALL = ".", "#", "=", "^", "D"
 # Dornen zeigen in vier Richtungen. Wer sie alle als "^" schreibt,
 # bekommt an der Decke Dornen, die nach oben wachsen.
 SPIKE_DOWN, SPIKE_LEFT, SPIKE_RIGHT = "v", "<", ">"
+# Deckenschraegen, sanft (zwei Kacheln je Hoehenkachel).
+CEIL_DOWN_HIGH, CEIL_DOWN_LOW = "q", "w"
+CEIL_UP_LOW, CEIL_UP_HIGH = "e", "r"
 SLOPE_UP, SLOPE_DOWN = "/", "\\"
 UP_LOW, UP_HIGH, DOWN_HIGH, DOWN_LOW = "1", "2", "3", "4"
 
@@ -42,6 +45,9 @@ class Room:
         self.w = w
         self.h = h
         self.music = music or region
+        # Die Kulisse ist normalerweise die der Region. Der Schattentempel
+        # bricht damit: er liegt im Hain und sieht aus wie gebaut.
+        self.backdrop: str | None = None
         self.grid = [[AIR] * w for _ in range(h)]
         self.doors: list[dict] = []
         self.spawns: dict[str, dict] = {}
@@ -200,6 +206,61 @@ class Room:
                 tx = a1 + k
                 self.set(tx, ty, ch)
                 self.fill(tx, ty + 1, 1, self.h - ty - 1, SOLID)
+        return self
+
+    def deckenglaetten(self, min_run: int = 2) -> "Room":
+        """
+        Macht aus Deckenstufen sanfte Schraegen - das Gegenstueck zu `soften`.
+
+        Der Boden hatte das laengst: ein gerundetes Hoehenprofil wird zur
+        Treppe, und jede Einzelstufe wird nachtraeglich durch ein
+        Rampenpaar ersetzt. Nach oben ging das nicht, weil es keine
+        Schraegkacheln gab - deshalb blieb die Decke ein Regal, egal wie
+        fein das Profil war. Der Ausweg war bisher, die Stufen mit
+        Tropfsteinen zu verdecken. Das ist Kosmetik; das hier ist die
+        Sache selbst.
+
+        Angefasst wird nur gewachsener Fels: eine Saeule, die bis zum
+        oberen Rand durchsteht. Ein freischwebender Block behaelt seine
+        Kante, und eine Stufe von zwei oder mehr Kacheln bleibt stehen -
+        eine Kliffkante ist eine Absicht, keine Panne.
+        """
+        unter: list[int | None] = [None] * self.w
+
+        for x in range(1, self.w - 1):
+            for y in range(self.h - 2, 0, -1):
+                if self.grid[y][x] != SOLID or self.grid[y + 1][x] != AIR:
+                    continue
+                if not all(self.grid[j][x] == SOLID for j in range(0, y + 1)):
+                    continue
+                unter[x] = y
+                break
+
+        laeufe: list[tuple[int, int, int]] = []
+        x = 1
+        while x < self.w - 1:
+            if unter[x] is None:
+                x += 1
+                continue
+            start, hoehe = x, unter[x]
+            while x + 1 < self.w - 1 and unter[x + 1] == hoehe:
+                x += 1
+            laeufe.append((start, x, hoehe))
+            x += 1
+
+        for (a0, a1, ha), (b0, b1, hb) in zip(laeufe, laeufe[1:]):
+            if b0 != a1 + 1 or abs(ha - hb) != 1:
+                continue
+            if a1 - a0 + 1 < min_run or b1 - b0 + 1 < min_run:
+                continue
+            if hb > ha:                              # Decke steigt nach rechts
+                ty, paar = ha, (CEIL_UP_LOW, CEIL_UP_HIGH)
+            else:                                    # Decke faellt nach rechts
+                ty, paar = hb, (CEIL_DOWN_HIGH, CEIL_DOWN_LOW)
+            for k, ch in enumerate(paar):
+                tx = a1 + k
+                self.set(tx, ty, ch)
+                self.fill(tx, 0, 1, ty)
         return self
 
     def stairs(self, x: int, y: int, steps: int, dx: int = 1, dy: int = -1, w: int = 3) -> "Room":
@@ -540,6 +601,7 @@ class Room:
             "width": self.w, "height": self.h, "darkness": self.dark,
             "tiles": ["".join(row) for row in self.grid],
             "doors": self.doors, "spawns": self.spawns, "benches": self.benches,
+            "backdrop": self.backdrop,
             "enemies": self.enemies, "pickups": self.pickups, "decor": self.decor,
             "lore": self.lore, **({"boss": self.boss} if self.boss else {}),
         }
@@ -737,17 +799,12 @@ def room_A3() -> Room:
 
 def room_A4() -> Room:
     """
-    Die Sackgasse, in der der erste Boss wartet.
+    Der stille Raum vor dem Tempel.
 
-    Vorn eine Bank und ein Raum, in dem nichts passiert - und ganz hinten
-    steht DER GROSSE AUFTAKT: viermal so hoch wie sie, schwarz, mit einer
-    Krone, die gar nicht zu ihm gehoert. Er sieht aus, als koennte er
-    einen mit einer Bewegung erledigen.
-
-    Kann er nicht. Er holt aus, haelt viel zu lange, und schlaegt zu.
-    Genau dafuer steht er hier: er lehrt die Regel, nach der jeder Kampf
-    in diesem Spiel funktioniert - alles ist vorher zu sehen -, und er
-    tut es, indem er furchtbar aussieht und harmlos ist.
+    Ein Gebiet, in dem jeder Gang irgendwohin fuehrt, fuehlt sich an wie
+    ein Schaltplan. Hier ist nichts los: eine Bank, ein Fund, und ganz
+    hinten ein Loch im Boden, aus dem kalte Luft kommt. Erst dahinter
+    faengt der Tempel an.
     """
     r = Room("A4", "DIE STILLE KANZEL", "hain", 40, 22)
     r.border()
@@ -765,11 +822,9 @@ def room_A4() -> Room:
     r.side_door("L", "left", "A3", "R", hint=6)
     r.bench_on(9, 6)
 
-    # Der erste Boss steht am Ende der Sackgasse, und die Bank steht am
-    # Anfang davon. Das ist die uebliche Ordnung: erst ausruhen, dann
-    # sehen, was einen erwartet.
-    r.set_boss("auftakt", 32, 11, (4, 4, 34, 16))
     r.pickup_on("siegel", "scherbenherz", 34, 6)
+    # Hinter der Kanzel geht der Gang weiter - in den Tempel.
+    r.side_door("R", "right", "A10", "L", hint=6)
 
     r.crystal_on(6, 6, 2)
     r.crystal_on(16, 6, 1)
@@ -779,6 +834,54 @@ def room_A4() -> Room:
                      "BIS NICHTS MEHR KAM.")
     r.note(34, 10, "EIN HERZ AUS SCHERBEN SCHLAEGT NICHT LEISER. "
                    "ES SCHLAEGT NUR AN MEHR STELLEN.")
+    return r
+
+
+def room_A10() -> Room:
+    """
+    DER SCHATTENTEMPEL - die Arena des ersten Bosses.
+
+    Er gehoert zum Hain und sieht doch nicht danach aus: kein Himmel,
+    kein Gras, keine Baeume. Statt gewachsenem Fels stehen hier gesetzte
+    Saeulen, der Boden ist eben, die Decke gerade - jemand hat das
+    gebaut, und zwar lange bevor der Hain schlief.
+
+    Eine Arena muss lesbar sein. Es gibt darum genau eine Ebene, zwei
+    Saeulen zum Ausweichen und keinen einzigen Dorn: was hier wehtut,
+    kommt vom Boss, und nichts soll davon ablenken.
+    """
+    r = Room("A10", "DER SCHATTENTEMPEL", "hain", 52, 24)
+    r.border(2)
+    r.fill(2, 19, 48, 5)                    # eine ebene Flaeche, sonst nichts
+    r.fill(2, 2, 48, 4)
+    r.dark = 0.34
+    # Gebaut, nicht gewachsen: hinter dem Tempel stehen Saeulen und
+    # Mauerwerk statt Baeumen. Kachelsatz und Musik bleiben beim Hain -
+    # er gehoert dazu, er sieht nur nicht so aus.
+    r.backdrop = "kathedrale"
+
+    # Zwei Saeulenpaare. Sie stehen im Weg, nicht auf dem Weg: man kann
+    # dazwischen hindurch, aber ein Schlag geht daran vorbei.
+    for x in (14, 36):
+        r.fill(x, 6, 2, 5)
+        r.fill(x - 1, 5, 4, 1)
+        r.fill(x - 1, 11, 4, 1)
+
+    # Der Eingang liegt auf derselben Ebene wie die Arena. Ein Schacht
+    # waere hier falsch: aus einer Arena muss man jederzeit
+    # herauslaufen koennen, ohne erst klettern zu muessen.
+    r.side_door("L", "left", "A4", "R", hint=8)
+    r.bench_on(46, 8)
+
+    r.set_boss("auftakt", 34, 19, (4, 6, 44, 13))
+
+    r.crystal_on(20, 8, 1)
+    r.crystal_on(30, 8, 1)
+
+    r.note_on(12, 8, "GEBAUT, ALS DER HAIN NOCH SANG. "
+                     "WOFUER, STEHT NIRGENDS.")
+    r.note_on(44, 8, "EINER MUSSTE DEN TAKT HALTEN, "
+                     "DAMIT DIE ANDEREN SPIELEN KONNTEN.")
     return r
 
 
@@ -1353,7 +1456,7 @@ def room_D1() -> Room:
 
 ROOMS = [
     room_A1, room_A2, room_A3, room_A4, room_A5,
-    room_A6, room_A7, room_A8, room_A9,
+    room_A6, room_A7, room_A8, room_A9, room_A10,
     room_B1, room_B2, room_B3, room_B4,
     room_C1, room_C2, room_C3,
     room_D0, room_D1,
@@ -1468,9 +1571,10 @@ def build() -> None:
     rooms = {}
     for factory in ROOMS:
         r = factory()
-        # Zum Schluss, wenn Tueren, Simse und Deko stehen: der Boden wird
-        # von seinen Treppenstufen befreit.
+        # Zum Schluss, wenn Tueren, Simse und Deko stehen: Boden und Decke
+        # werden von ihren Treppenstufen befreit.
         r.soften()
+        r.deckenglaetten()
         rooms[r.id] = r
 
     problems = validate(rooms) + check_progression(rooms)

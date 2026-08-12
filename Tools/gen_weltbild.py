@@ -152,44 +152,121 @@ def riss(z, x: float, y: float, laenge: float, richtung: float, farbe,
                  farbe, saat + 3, tiefe - 1)
 
 
+def wurzel(z, x: float, y: float, laenge: float, richtung: float, farbe,
+           saat: int, tiefe: int = 4) -> None:
+    """Eine Wurzel, die sich nach unten verzweigt - Wahrzeichen der Tiefen."""
+    if tiefe <= 0 or laenge < 10:
+        return
+    x1 = x + math.cos(richtung) * laenge
+    y1 = y + math.sin(richtung) * laenge
+    z.line([x, y, x1, y1], fill=(*farbe[:3], 60 + tiefe * 30), width=tiefe + 1)
+    for k in (-1, 1):
+        if hash01(saat, tiefe * 5 + k) > 0.2:
+            wurzel(z, x1, y1, laenge * 0.66,
+                   richtung + k * (0.32 + hash01(int(x1), saat) * 0.42),
+                   farbe, saat + 7, tiefe - 1)
+
+
+def schwarze_sonne(z, x: float, y: float, r: float, farbe) -> None:
+    """
+    Die Finsternis: eine schwarze Scheibe mit einem Kranz darum.
+
+    Das einzige Wahrzeichen der Welt, das ueber ihr steht statt in ihr -
+    und das Letzte, was man sehen wird.
+    """
+    for k in range(9):
+        rr = r * (1.0 + k * 0.16)
+        z.ellipse([x - rr, y - rr, x + rr, y + rr],
+                  outline=(*farbe[:3], max(0, 130 - k * 15)), width=3)
+    z.ellipse([x - r, y - r, x + r, y + r], fill=(*GRUND[:3], 255))
+    z.ellipse([x - r, y - r, x + r, y + r], outline=(*farbe[:3], 255), width=5)
+    # Strahlen, ungleich lang - eine Korona ist nie regelmaessig.
+    for i in range(22):
+        a = i / 22 * math.tau
+        l = r * (1.25 + hash01(i, 3) * 0.85)
+        z.line([x + math.cos(a) * r * 1.05, y + math.sin(a) * r * 1.05,
+                x + math.cos(a) * l, y + math.sin(a) * l],
+               fill=(*farbe[:3], 90 + int(hash01(i, 9) * 90)), width=2)
+
+
 # ---------------------------------------------------------------- Gebiete
 #
 # Von Hand gesetzt, nicht abgeleitet. Jedes Gebiet hat eine Lage in der
 # Welt, eine Form, eine Farbe und ein Wahrzeichen - und eine Groesse, die
 # dem entspricht, was es werden soll, nicht dem, was schon gebaut ist.
 
+# Die Welt ist ein Querschnitt, kein Fleckenteppich.
+#
+# Der erste Anlauf setzte vier gleich grosse Kleckse nebeneinander, und
+# genau so sah er aus. Eine Welt hat aber ein Oben und ein Unten: hier
+# haengt sie unter einem Himmel, den man erst am Ende sieht, und laeuft
+# nach unten in etwas aus, das keinen Boden mehr hat.
+#
+# Darum hat jedes Gebiet eine eigene Form statt einer eigenen Farbe:
+# der Hain liegt breit und flach, die Kathedrale steht hoch und schmal,
+# die Grotten sind gezackt, die Dissonanz ist eine Wunde, die Tiefen
+# sind eine Wurzelmasse ohne Unterkante. Und die Reihenfolge ist die
+# Reihenfolge des Spiels - von oben links nach unten, und ganz zuletzt
+# wieder hinauf.
+
 GEBIETE = [
-    dict(name="DER SCHLAFENDE HAIN", kurz="Hain",
+    dict(name="DER SCHLAFENDE HAIN", beschriftung=(-40, -10), nummer="I", stand="gebaut",
          leucht=hexc("#8fd8a0"), fuell=hexc("#16301f"), wappen="baum",
          text=["Wo die Welt sich selbst sang.", "Jetzt haelt sie den Atem an."],
-         punkte=[(240, 640), (470, 585), (720, 605), (860, 680), (900, 810),
-                 (820, 940), (600, 990), (360, 950), (215, 850), (190, 730)]),
-    dict(name="DIE KATHEDRALE DER FUGEN", kurz="Kathedrale",
+         # Breit und flach, mit einer Senke in der Mitte: eine Landschaft,
+         # kein Klecks.
+         punkte=[(180, 560), (400, 508), (560, 560), (700, 520), (860, 556),
+                 (900, 640), (830, 720), (620, 762), (400, 745), (230, 700),
+                 (150, 630)]),
+    dict(name="DIE KATHEDRALE DER FUGEN", beschriftung=(-130, 40), nummer="II", stand="gebaut",
          leucht=hexc("#b9a6ef"), fuell=hexc("#211a35"), wappen="bogen",
-         text=["Vier Stimmen, die einander",
-               "nie ins Wort fielen."],
-         punkte=[(940, 350), (1240, 300), (1500, 355), (1560, 490),
-                 (1480, 640), (1240, 690), (1010, 630), (900, 500)]),
-    dict(name="DIE RESONANZKAVERNEN", kurz="Grotten",
+         text=["Vier Stimmen, die einander", "nie ins Wort fielen."],
+         # Hoch und schmal, mit einem Turm: das einzige Gebiet, das nach
+         # oben strebt statt in die Breite.
+         punkte=[(1010, 500), (1080, 300), (1150, 250), (1220, 300),
+                 (1290, 430), (1420, 470), (1470, 590), (1380, 700),
+                 (1160, 730), (1000, 650)]),
+    dict(name="DIE RESONANZKAVERNEN", beschriftung=(30, 46), nummer="III", stand="gebaut",
          leucht=hexc("#7fd4f0"), fuell=hexc("#122736"), wappen="kristall",
          text=["Hier wuchs der Klang zu Stein.",
                "Man hoert sich selbst zurueckkommen."],
-         punkte=[(1000, 900), (1300, 840), (1620, 890), (1760, 1010),
-                 (1700, 1180), (1420, 1250), (1120, 1200), (960, 1060)]),
-    dict(name="DAS HERZ DER DISSONANZ", kurz="Dissonanz",
+         # Gezackt: die Kontur selbst ist schon Kristall.
+         punkte=[(620, 880), (740, 830), (830, 880), (960, 815), (1090, 870),
+                 (1210, 820), (1300, 900), (1250, 1010), (1120, 1050),
+                 (980, 1010), (840, 1055), (700, 1010), (600, 960)]),
+    dict(name="DAS HERZ DER DISSONANZ", beschriftung=(150, 10), nummer="IV", stand="gebaut",
          leucht=hexc("#f08a7a"), fuell=hexc("#2e1418"), wappen="riss",
          text=["Nicht still. Alles zugleich."],
-         punkte=[(1790, 620), (2050, 580), (2210, 660), (2240, 810),
-                 (2110, 930), (1870, 930), (1760, 790)]),
+         # Eine Wunde: laenglich, aufgerissen, mit zwei Zipfeln.
+         punkte=[(1420, 880), (1620, 830), (1800, 870), (1930, 950),
+                 (1880, 1040), (1700, 1070), (1560, 1030), (1430, 970)]),
+    dict(name="DIE TIEFEN", beschriftung=(340, 66), nummer="V", stand="geplant - endgame",
+         leucht=hexc("#6f7fa8"), fuell=hexc("#0d1220"), wappen="wurzel",
+         text=["Kein Boden mehr, nur noch Abstand.",
+               "Was hier klingt, hat nie jemand gestimmt."],
+         # Eine Masse ohne Unterkante: sie laeuft nach unten aus dem Bild.
+         punkte=[(360, 1150), (700, 1100), (1050, 1130), (1400, 1090),
+                 (1780, 1140), (1980, 1230), (1960, 1450), (1600, 1500),
+                 (1150, 1480), (700, 1500), (330, 1440), (280, 1270)]),
+    dict(name="DIE FINSTERNIS", beschriftung=(-40, 18), nummer="VI", stand="geplant - danach",
+         leucht=hexc("#e0524a"), fuell=hexc("#2a0c10"), wappen="sonne",
+         text=["Ganz zuletzt geht es wieder hinauf.",
+               "Der Himmel steht rot und still."],
+         # Ein Band ganz oben, ueber allem. Man sieht es das ganze Spiel
+         # ueber nicht - und dann ist es das Letzte, was man sieht.
+         punkte=[(1560, 210), (1900, 175), (2160, 220), (2230, 330),
+                 (2120, 430), (1830, 455), (1610, 400), (1530, 300)]),
 ]
 
 # Gaenge zwischen den Gebieten: von Hand gelegt, wie Wurzeln.
 GAENGE = [
-    ((870, 700), (990, 520), hexc("#8fd8a0")),
-    ((880, 860), (1010, 950), hexc("#8fd8a0")),
-    ((1300, 680), (1290, 850), hexc("#b9a6ef")),
-    ((1540, 560), (1780, 700), hexc("#b9a6ef")),
-    ((1700, 990), (1900, 920), hexc("#7fd4f0")),
+    ((880, 600), (1010, 560), False),
+    ((820, 720), (760, 850), False),
+    ((1180, 730), (1120, 830), False),
+    ((1300, 930), (1430, 930), False),
+    ((1000, 1040), (1000, 1130), True),
+    ((1780, 1050), (1800, 1140), True),
+    ((1900, 1160), (2050, 500), True),
 ]
 
 
@@ -215,10 +292,16 @@ def build() -> None:
         gebiet(bild, g["punkte"], g["leucht"], g["fuell"], saat=i * 31 + 11)
 
     # ---- Die Gaenge dazwischen, als Wurzelstraenge.
-    for (a, b, farbe) in GAENGE:
+    for (a, b, geplant) in GAENGE:
         strang = rauschkontur([a, b], 6, saat=int(a[0]) % 97, dichte=6)
-        z.line(strang, fill=(*farbe[:3], 90), width=7, joint="curve")
-        z.line(strang, fill=(*farbe[:3], 190), width=2, joint="curve")
+        farbe = mix(PERGAMENT, GRUND, 0.45)
+        if geplant:
+            # Was noch nicht gebaut ist, wird gestrichelt gefuehrt.
+            for k in range(0, len(strang) - 3, 6):
+                z.line(strang[k:k + 3], fill=(*farbe[:3], 150), width=3)
+        else:
+            z.line(strang, fill=(*farbe[:3], 80), width=8, joint="curve")
+            z.line(strang, fill=(*farbe[:3], 190), width=2, joint="curve")
 
     # ---- Die Wahrzeichen. Sie stehen im Gebiet, nicht daneben - erst sie
     # machen aus einem Fleck einen Ort.
@@ -266,6 +349,13 @@ def build() -> None:
             # Der See, aus dem sie wachsen.
             z.line([x0 + 80, mitte[1] + 118, x1 - 80, mitte[1] + 118],
                    fill=(*farbe[:3], 120), width=5)
+        elif g["wappen"] == "wurzel":
+            for k in range(9):
+                x = x0 + 90 + k * (x1 - x0 - 180) / 8
+                wurzel(z, x, y0 + 30, 90 + hash01(k, 4) * 60,
+                       math.pi / 2 + (hash01(k, 8) - 0.5) * 0.5, farbe, k * 5)
+        elif g["wappen"] == "sonne":
+            schwarze_sonne(z, mitte[0], mitte[1], (y1 - y0) * 0.26, farbe)
         else:
             riss(z, mitte[0], y0 + 40, 150, math.pi / 2 + 0.2, farbe, 17, tiefe=4)
             riss(z, mitte[0] - 90, y0 + 60, 120, math.pi / 2 - 0.4, farbe, 29, tiefe=3)
@@ -291,14 +381,24 @@ def build() -> None:
     for g in GEBIETE:
         xs = [p[0] for p in g["punkte"]]
         ys = [p[1] for p in g["punkte"]]
-        cx = (min(xs) + max(xs)) / 2
-        oben = min(ys) - 78
-        marke = Image.new("RGBA", (len(g["name"]) * 30, 120), (0, 0, 0, 0))
+        # Die Beschriftung wird je Gebiet von Hand versetzt. Automatisch
+        # ueber die Mitte gesetzt lag sie mal im Titel, mal quer ueber
+        # dem Nachbargebiet - eine Karte beschriftet man von Hand.
+        dx, dy = g.get("beschriftung", (0, 0))
+        cx = (min(xs) + max(xs)) / 2 + dx
+        oben = min(ys) - 78 + dy
+        # Breit genug fuer Nummer und Namen. Zu knapp bemessen schneidet
+        # PIL die Beschriftung einfach ab, und dann fehlt das Ende.
+        marke = Image.new("RGBA", ((len(g["name"]) + 10) * 26, 150), (0, 0, 0, 0))
         mz = ImageDraw.Draw(marke, "RGBA")
-        mz.text((0, 0), g["name"], fill=(*g["leucht"][:3], 235), font=gross)
+        mz.text((0, 0), f'{g["nummer"]}.  {g["name"]}',
+                fill=(*g["leucht"][:3], 235), font=gross)
         for k, zeile in enumerate(g["text"]):
             mz.text((2, 52 + k * 26), zeile,
                     fill=(*mix(g["leucht"], PERGAMENT, 0.5)[:3], 170), font=klein)
+        if g["stand"] != "gebaut":
+            mz.text((2, 52 + len(g["text"]) * 26 + 4), f'[ {g["stand"]} ]',
+                    fill=(*mix(g["leucht"], GRUND, 0.42)[:3], 200), font=klein)
         marke = marke.rotate(-2, expand=True, resample=Image.BICUBIC)
         bild.alpha_composite(marke, (int(cx - marke.width / 2), int(oben - 40)))
 
@@ -331,16 +431,17 @@ def build() -> None:
     z.line([B / 2 - 320, 192, B / 2 + 320, 192], fill=(*GOLD[:3], 150), width=2)
 
     # ---- Legende unten links, damit die Karte sich selbst erklaert.
-    lx, ly = 110, H - 250
+    lx, ly = 110, H - 300
     z.text((lx, ly), "GEBIETE", fill=(*GOLD[:3], 220), font=schrift(24, fett=True))
     for i, g in enumerate(GEBIETE):
         y = ly + 44 + i * 34
         z.ellipse([lx, y, lx + 18, y + 18], fill=(*g["leucht"][:3], 220))
-        z.text((lx + 32, y - 2), g["name"].title(),
+        z.text((lx + 32, y - 2), f'{g["nummer"]}.  {g["name"].title()}',
                fill=(*mix(PERGAMENT, GRUND, 0.3)[:3], 220), font=klein)
 
     z.text((B - 110, H - 96),
-           "Vier Gebiete. Neun Raeume stehen. Der Rest ist Vorhaben.",
+           "Sechs Gebiete, in dieser Reihenfolge. Zehn Raeume stehen. "
+           "Gestrichelt: noch Vorhaben.",
            fill=(*mix(PERGAMENT, GRUND, 0.55)[:3], 200), font=klein, anchor="rs")
 
     AUS.parent.mkdir(exist_ok=True)

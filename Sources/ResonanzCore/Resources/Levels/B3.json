@@ -89,6 +89,7 @@
   }
  },
  "benches": [],
+ "backdrop": null,
  "enemies": [
   {
    "type": "stilleschreiter",

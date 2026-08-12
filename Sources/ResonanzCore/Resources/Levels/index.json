@@ -75,6 +75,10 @@
     {
      "door": "L",
      "to": "A3"
+    },
+    {
+     "door": "R",
+     "to": "A10"
     }
    ]
   },
@@ -165,6 +169,20 @@
     {
      "door": "N",
      "to": "A8"
+    }
+   ]
+  },
+  {
+   "id": "A10",
+   "name": "DER SCHATTENTEMPEL",
+   "region": "hain",
+   "music": "hain",
+   "width": 52,
+   "height": 24,
+   "connections": [
+    {
+     "door": "L",
+     "to": "A4"
     }
    ]
   },

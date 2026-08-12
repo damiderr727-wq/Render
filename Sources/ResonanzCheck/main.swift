@@ -234,6 +234,10 @@ func drawMap(roomID: String, abilities: Set<Ability>) throws -> Int32 {
             case .slopeUpHigh: return "2"
             case .slopeDownHigh: return "3"
             case .slopeDownLow: return "4"
+            case .ceilDownHigh: return "q"
+            case .ceilDownLow: return "w"
+            case .ceilUpLow: return "e"
+            case .ceilUpHigh: return "r"
             case .air: return " "
             }
         }

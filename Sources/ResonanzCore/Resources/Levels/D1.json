@@ -57,6 +57,7 @@
   }
  },
  "benches": [],
+ "backdrop": null,
  "enemies": [],
  "pickups": [],
  "decor": [],

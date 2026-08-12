@@ -81,6 +81,7 @@
   }
  },
  "benches": [],
+ "backdrop": null,
  "enemies": [
   {
    "type": "echoscherbe",

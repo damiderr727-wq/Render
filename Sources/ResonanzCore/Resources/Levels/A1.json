@@ -61,6 +61,7 @@
    "y": 16
   }
  ],
+ "backdrop": null,
  "enemies": [
   {
    "type": "gabelmaus",

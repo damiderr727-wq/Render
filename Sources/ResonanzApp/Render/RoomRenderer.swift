@@ -68,12 +68,14 @@ public final class RoomRenderer {
     // MARK: - Hintergrund
 
     private func buildBackdrop(room: Room) {
-        let region = room.region.rawValue
+        // Die Kulisse darf von der Region abweichen - siehe RoomData.
+        let kulisse = room.data.backdrop ?? room.region
+        let region = kulisse.rawValue
 
         // Eine Himmelsflaeche hinter allem. Die Schichten selbst sind genau
         // bildschirmhoch und werden nur waagerecht gekachelt - senkrecht
         // wiederholt gaebe der Verlauf eine sichtbare Naht.
-        let sky = SKSpriteNode(color: skyColor(for: room.region),
+        let sky = SKSpriteNode(color: skyColor(for: kulisse),
                                size: CGSize(width: Double(room.width) * tileSize + 512,
                                             height: Double(room.height) * tileSize + 512))
         sky.anchorPoint = CGPoint(x: 0, y: 1)
@@ -161,6 +163,9 @@ public final class RoomRenderer {
                                         + "\((tx &* 13 &+ ty &* 7) % 4)")
                 case .spike, .spikeDown, .spikeLeft, .spikeRight:
                     node = atlas.sprite("\(region)_spike\(tile.hazardSuffix)")
+                case .ceilDownHigh, .ceilDownLow, .ceilUpLow, .ceilUpHigh:
+                    node = atlas.sprite("\(region)_ceil_\(tile.ceilingSuffix)_"
+                                        + "\((tx &* 17 &+ ty &* 5) % 4)")
                 case .slopeUp, .slopeDown, .slopeUpLow, .slopeUpHigh,
                      .slopeDownHigh, .slopeDownLow:
                     let kind: String

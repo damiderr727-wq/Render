@@ -76,6 +76,12 @@ public struct RoomData: Codable, Sendable {
     public let width: Int
     public let height: Int
     public let darkness: Double
+    /// Welche Kulisse hinter dem Raum steht, falls nicht die der Region.
+    ///
+    /// Der Schattentempel liegt im Hain, soll aber nicht wie der Hain
+    /// aussehen: er ist gebaut, nicht gewachsen. Kachelsatz und Musik
+    /// bleiben beim Gebiet - nur die Schichten dahinter wechseln.
+    public let backdrop: Region?
     public let tiles: [String]
     public let doors: [Door]
     public let spawns: [String: SpawnPoint]

@@ -29,7 +29,9 @@ SLOPES = {"/": "up", "\\": "down", "1": "uplow", "2": "uphigh",
           "3": "downhigh", "4": "downlow"}
 # Dornen in vier Ausrichtungen - dieselbe Kachel, nur gedreht.
 SPIKES = {"^": "", "v": "_down", "<": "_left", ">": "_right"}
-BLOCKING |= set(SLOPES)
+# Deckenschraegen - dieselbe Schraege, senkrecht gespiegelt.
+CEILS = {"q": "downhigh", "w": "downlow", "e": "uplow", "r": "uphigh"}
+BLOCKING |= set(SLOPES) | set(CEILS)
 
 
 class Atlas:
@@ -72,6 +74,8 @@ def render(room_id: str) -> Image.Image:
     room = json.loads((RES / "Levels" / f"{room_id}.json").read_text())
     w, h = room["width"], room["height"]
     region = room["region"]
+    # Die Kulisse kann von der Region abweichen (siehe RoomData.backdrop).
+    kulisse = room.get("backdrop") or region
     tiles = room["tiles"]
 
     tile_atlas = Atlas("tiles")
@@ -94,13 +98,13 @@ def render(room_id: str) -> Image.Image:
     # als eigener Knoten hinter allem liegt. Ohne sie stehen ueberall dort,
     # wo alle drei Schichten durchsichtig sind, Loecher in der Grundfarbe;
     # in breiten Raeumen ergab das eine schwarze Linie an jeder Kachelfuge.
-    sky_img, _ = backdrops.frame(f"{region}_bg0")
+    sky_img, _ = backdrops.frame(f"{kulisse}_bg0")
     if sky_img is not None:
         canvas.paste(sky_img.crop((0, 0, sky_img.width, 1)).resize((w * TS, h * TS)),
                      (0, 0))
 
     for layer in range(3):
-        img, _ = backdrops.frame(f"{region}_bg{layer}")
+        img, _ = backdrops.frame(f"{kulisse}_bg{layer}")
         if img is None:
             continue
         alpha = [0.42, 0.54, 0.70][layer]
@@ -120,7 +124,9 @@ def render(room_id: str) -> Image.Image:
             ch = tiles[y][x]
             if ch == ".":
                 continue
-            if ch in SLOPES:
+            if ch in CEILS:
+                name = f"{region}_ceil_{CEILS[ch]}_{(x * 17 + y * 5) % 4}"
+            elif ch in SLOPES:
                 name = f"{region}_slope_{SLOPES[ch]}_{(x * 17 + y * 5) % 4}"
             elif ch == "#":
                 name = f"{region}_solid_{edge_key(tiles, x, y, w, h)}_{(x * 31 + y * 17) % 6}"
@@ -232,7 +238,7 @@ def render(room_id: str) -> Image.Image:
         place(*fx.frame("mote_1"), lore["x"], lore["y"] - 0.7)
 
     # Vorderste Schicht: fast schwarze Massen, laufen vor allem anderen.
-    fg_img, _ = backdrops.frame(f"{region}_fg")
+    fg_img, _ = backdrops.frame(f"{kulisse}_fg")
     if fg_img is not None:
         fg_gespiegelt = fg_img.transpose(Image.FLIP_LEFT_RIGHT)
         for i, ox in enumerate(range(0, w * TS, fg_img.width)):

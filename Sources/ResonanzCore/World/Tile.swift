@@ -30,6 +30,18 @@ public enum Tile: UInt8, Sendable, CaseIterable {
     /// Sanftes Gefaelle, untere Haelfte.
     case slopeDownLow
 
+    // Und dasselbe an der Decke. Der Boden hat seine Stufen laengst zu
+    // Rampen geglaettet; die Decke blieb eine Treppe, weil es nach oben
+    // keine Schraegkacheln gab. Jetzt gibt es sie.
+    /// Deckenschraege, faellt nach rechts, obere Haelfte.
+    case ceilDownHigh
+    /// Deckenschraege, faellt nach rechts, untere Haelfte.
+    case ceilDownLow
+    /// Deckenschraege, steigt nach rechts, untere Haelfte.
+    case ceilUpLow
+    /// Deckenschraege, steigt nach rechts, obere Haelfte.
+    case ceilUpHigh
+
     public init(character: Character) {
         switch character {
         case "#": self = .solid
@@ -45,6 +57,10 @@ public enum Tile: UInt8, Sendable, CaseIterable {
         case "2": self = .slopeUpHigh
         case "3": self = .slopeDownHigh
         case "4": self = .slopeDownLow
+        case "q": self = .ceilDownHigh
+        case "w": self = .ceilDownLow
+        case "e": self = .ceilUpLow
+        case "r": self = .ceilUpHigh
         default: self = .air
         }
     }
@@ -55,7 +71,35 @@ public enum Tile: UInt8, Sendable, CaseIterable {
     /// Kachelkante wie gegen eine Wand. Ihre Oberflaeche wird stattdessen
     /// beim senkrechten Aufsetzen berechnet.
     public var isBlocking: Bool {
-        self == .solid || self == .dissoWall
+        switch self {
+        case .solid, .dissoWall,
+             .ceilDownHigh, .ceilDownLow, .ceilUpLow, .ceilUpHigh:
+            // Deckenschraegen sperren wie Fels. Ihre Schraege ist eine
+            // Sache des Bildes - unter dem Kopf zaehlt die ganze Kachel,
+            // und eine halbe Kachel Spielraum am Scheitel merkt niemand.
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// Zeigt die Kachel nach oben ins Gestein? Dann ist sie Decke.
+    public var isCeilingSlope: Bool {
+        switch self {
+        case .ceilDownHigh, .ceilDownLow, .ceilUpLow, .ceilUpHigh: return true
+        default: return false
+        }
+    }
+
+    /// Name der Bildkachel fuer Deckenschraegen.
+    public var ceilingSuffix: String {
+        switch self {
+        case .ceilDownHigh: return "downhigh"
+        case .ceilDownLow: return "downlow"
+        case .ceilUpLow: return "uplow"
+        case .ceilUpHigh: return "uphigh"
+        default: return ""
+        }
     }
 
     public var isSlope: Bool {

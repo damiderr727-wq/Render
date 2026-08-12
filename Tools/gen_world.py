@@ -1050,6 +1050,14 @@ def build() -> None:
             for name, (a, b) in SLOPE_KINDS.items():
                 tiles.add(f"{region}_slope_{name}_{v}", tile_slope(region, v, a, b),
                           pivot=(0, TILE_OVERHANG / (TS + TILE_OVERHANG)))
+            # Deckenschraegen: dieselbe Schraege, senkrecht gespiegelt. Was
+            # am Boden unten Fels ist, ist an der Decke oben Fels - und
+            # damit hoert die Decke auf, eine Treppe zu sein.
+            for aus, ein in (("downhigh", "uplow"), ("downlow", "uphigh"),
+                             ("uplow", "downhigh"), ("uphigh", "downlow")):
+                a, b = SLOPE_KINDS[ein]
+                tiles.add(f"{region}_ceil_{aus}_{v}",
+                          gedreht(tile_slope(region, v, a, b), 2), pivot=(0, 0))
         for cap in ("mid", "l", "r", "lr"):
             for v in range(4):
                 tiles.add(f"{region}_platform_{cap}_{v}",

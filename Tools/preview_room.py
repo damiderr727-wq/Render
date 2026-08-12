@@ -50,6 +50,27 @@ class Atlas:
         return img, (f["pivotX"], f["pivotY"])
 
 
+def variante(tx: int, ty: int, anzahl: int, salz: int = 0) -> int:
+    """
+    Welche Variante einer Kachel an dieser Stelle steht - gestreut, nicht
+    gerechnet.
+
+    Vorher stand hier `(tx * 31 + ty * 17) % n`. Geht man eine Kachel nach
+    rechts, steigt der Wert um genau eins: dieselben Varianten laufen in
+    schnurgeraden Diagonalen durch den Raum. Solange die Kacheln kaum
+    Zeichnung hatten, fiel das nicht auf - mit Rissen und Schichtung
+    sofort. Dieselbe Funktion wie im Spiel, damit Vorschau und Spiel
+    dasselbe Bild zeigen.
+    """
+    h = (tx * 73856093) & 0xFFFFFFFF
+    h ^= (ty * 19349663) & 0xFFFFFFFF
+    h ^= (salz * 83492791) & 0xFFFFFFFF
+    h ^= h >> 13
+    h = (h * 2654435761) & 0xFFFFFFFF
+    h ^= h >> 16
+    return h % anzahl
+
+
 def edge_key(tiles, x: int, y: int, w: int, h: int) -> str:
     def blocking(xx: int, yy: int) -> bool:
         if not (0 <= xx < w and 0 <= yy < h):
@@ -166,7 +187,7 @@ def render(room_id: str) -> Image.Image:
             for k in range(anzahl):
                 mitte = start + breite * (k + 0.5) / anzahl
                 img, pivot = tile_atlas.frame(
-                    f"sockel_{region}_{(int(mitte) * 7 + y * 3 + k * 5) % 3}")
+                    f"sockel_{region}_{variante(int(mitte), y, 3, 6 + k)}")
                 if img is not None:
                     canvas.alpha_composite(
                         img, (int(mitte * TS - img.width / 2), int(y * TS + 4)))
@@ -178,18 +199,18 @@ def render(room_id: str) -> Image.Image:
             if ch == ".":
                 continue
             if ch in CEILS:
-                name = f"{region}_ceil_{CEILS[ch]}_{(x * 17 + y * 5) % 4}"
+                name = f"{region}_ceil_{CEILS[ch]}_{variante(x, y, 4, 2)}"
             elif ch in SLOPES:
-                name = f"{region}_slope_{SLOPES[ch]}_{(x * 17 + y * 5) % 4}"
+                name = f"{region}_slope_{SLOPES[ch]}_{variante(x, y, 4, 3)}"
             elif ch == "#":
-                name = f"{region}_solid_{edge_key(tiles, x, y, w, h)}_{(x * 31 + y * 17) % 6}"
+                name = f"{region}_solid_{edge_key(tiles, x, y, w, h)}_{variante(x, y, 6)}"
             elif ch == "=":
                 cap = ""
                 if x == 0 or tiles[y][x - 1] != "=":
                     cap += "l"
                 if x == w - 1 or tiles[y][x + 1] != "=":
                     cap += "r"
-                name = f"{region}_platform_{cap or 'mid'}_{(x * 13 + y * 7) % 4}"
+                name = f"{region}_platform_{cap or 'mid'}_{variante(x, y, 4, 1)}"
             elif ch in SPIKES:
                 name = f"{region}_spike{SPIKES[ch]}"
             elif ch == "D":

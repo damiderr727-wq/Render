@@ -188,7 +188,7 @@ public final class RoomRenderer {
                     let mitte = Double(start)
                         + Double(breite) * (Double(k) + 0.5) / Double(anzahl)
                     let node = atlas.sprite(
-                        "sockel_\(region)_\((Int(mitte) &* 7 &+ ty &* 3 &+ k &* 5) % 3)")
+                        "sockel_\(region)_\(variante(Int(mitte), ty, 3, salz: 6 &+ k))")
                     node.anchorPoint = CGPoint(x: 0.5, y: 1.0)
                     node.position = CGPoint(x: mitte * tileSize,
                                             y: -Double(ty) * tileSize - 4)
@@ -197,6 +197,28 @@ public final class RoomRenderer {
                 }
             }
         }
+    }
+
+    /// Welche Variante einer Kachel an dieser Stelle steht.
+    ///
+    /// Vorher stand hier `(tx * 31 + ty * 17) % n`. Das ist keine
+    /// Streuung, sondern eine Rechnung: geht man eine Kachel nach
+    /// rechts, steigt der Wert um genau eins, also laufen dieselben
+    /// Varianten in schnurgeraden Diagonalen durch den ganzen Raum. Man
+    /// sieht es erst, wenn die Kacheln selbst Zeichnung haben - dann
+    /// aber sofort, als schraeges Streifenmuster ueber dem Boden.
+    ///
+    /// Eine Hashfunktion streut stattdessen: benachbarte Kacheln
+    /// bekommen unzusammenhaengende Werte, und das Auge findet keine
+    /// Periode mehr.
+    private func variante(_ tx: Int, _ ty: Int, _ anzahl: Int, salz: Int = 0) -> Int {
+        var h = UInt32(truncatingIfNeeded: tx &* 73_856_093)
+        h ^= UInt32(truncatingIfNeeded: ty &* 19_349_663)
+        h ^= UInt32(truncatingIfNeeded: salz &* 83_492_791)
+        h ^= h >> 13
+        h = h &* 2_654_435_761
+        h ^= h >> 16
+        return Int(h % UInt32(anzahl))
     }
 
     // MARK: - Gelaende
@@ -212,7 +234,7 @@ public final class RoomRenderer {
                 switch tile {
                 case .solid:
                     node = atlas.sprite("\(region)_solid_\(edgeKey(room: room, tx: tx, ty: ty))_"
-                                        + "\((tx &* 31 &+ ty &* 17) % 6)")
+                                        + "\(variante(tx, ty, 6))")
                 case .platform:
                     // Enden einer Plattform laufen aus, statt abgeschnitten
                     // zu sein - erst dadurch wird sie Teil der Landschaft.
@@ -220,12 +242,12 @@ public final class RoomRenderer {
                     if room.tile(tx - 1, ty) != .platform { cap += "l" }
                     if room.tile(tx + 1, ty) != .platform { cap += "r" }
                     node = atlas.sprite("\(region)_platform_\(cap.isEmpty ? "mid" : cap)_"
-                                        + "\((tx &* 13 &+ ty &* 7) % 4)")
+                                        + "\(variante(tx, ty, 4, salz: 1))")
                 case .spike, .spikeDown, .spikeLeft, .spikeRight:
                     node = atlas.sprite("\(region)_spike\(tile.hazardSuffix)")
                 case .ceilDownHigh, .ceilDownLow, .ceilUpLow, .ceilUpHigh:
                     node = atlas.sprite("\(region)_ceil_\(tile.ceilingSuffix)_"
-                                        + "\((tx &* 17 &+ ty &* 5) % 4)")
+                                        + "\(variante(tx, ty, 4, salz: 2))")
                 case .slopeUp, .slopeDown, .slopeUpLow, .slopeUpHigh,
                      .slopeDownHigh, .slopeDownLow:
                     let kind: String
@@ -237,7 +259,7 @@ public final class RoomRenderer {
                     case .slopeDownHigh: kind = "downhigh"
                     default: kind = "downlow"
                     }
-                    node = atlas.sprite("\(region)_slope_\(kind)_\((tx &* 17 &+ ty &* 5) % 4)")
+                    node = atlas.sprite("\(region)_slope_\(kind)_\(variante(tx, ty, 4, salz: 3))")
                 case .dissoWall:
                     node = atlas.sprite("dissowall_0")
                     if let loop = atlas.loop("dissowall") { node.run(loop) }
@@ -280,7 +302,7 @@ public final class RoomRenderer {
                 guard isSurface(tx, ty), isSurface(tx - 1, ty) else { continue }
                 let roll = abs((tx &* 2654435761) &+ (ty &* 40503)) % 100
                 guard roll < 34 else { continue }
-                let name = "edge_\(region)_\((tx &* 7 &+ ty &* 3) % 6)"
+                let name = "edge_\(region)_\(variante(tx, ty, 6, salz: 4))"
                 let node = atlas.sprite(name)
                 node.position = CGPoint(x: Double(tx) * tileSize,
                                         y: -Double(ty) * tileSize + 2)
@@ -314,7 +336,7 @@ public final class RoomRenderer {
             for tx in 1..<room.width where isCeiling(tx, ty) {
                 let step = !isCeiling(tx - 1, ty) || !isCeiling(tx + 1, ty)
                 if !step, (tx &* 2654435761 &+ ty &* 40503) % 100 >= 22 { continue }
-                let node = atlas.sprite("hang_\(region)_\((tx &* 5 &+ ty &* 11) % 6)")
+                let node = atlas.sprite("hang_\(region)_\(variante(tx, ty, 6, salz: 5))")
                 node.anchorPoint = CGPoint(x: 0.5, y: 1.0)
                 node.position = CGPoint(x: Double(tx) * tileSize + tileSize / 2,
                                         y: -Double(ty + 1) * tileSize + 2)

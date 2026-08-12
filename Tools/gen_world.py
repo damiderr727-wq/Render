@@ -100,6 +100,33 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
             c.ellipse(px, top + py, r, r * 0.8, shade(body, -0.22))
             c.ellipse(px - 0.4, top + py - 0.5, r * 0.6, r * 0.5, shade(body, -0.08))
 
+    # ---- Das Innere der Masse
+    #
+    # Bisher war da nur Koernung, und Koernung ist kein Gestein. Aus zwei
+    # Metern Abstand blieb der Boden ein grosses gleichmaessiges Feld -
+    # bei den Vorbildern ist genau diese Flaeche durchgearbeitet.
+    #
+    # Der Trick gegen das Raster: **jeder Riss laeuft von Kante zu
+    # Kante.** Ein Riss, der mitten in der Kachel anfaengt und aufhoert,
+    # zeigt genau, wo die Kachel ist. Einer, der an beiden Enden am Rand
+    # ankommt, trifft dort auf den Riss der Nachbarkachel - nicht
+    # buendig, aber nah genug, dass das Auge eine durchgehende Kluft
+    # sieht statt einer Fuge.
+    # Sparsam: zwei bis drei Risse je Kachel ergeben ueber eine Wand
+    # hinweg ein Netz, und ein Netz ist wieder ein Muster.
+    _risse(c, top, body, rng, anzahl=rng.int(0, 2))
+
+    # Eine angedeutete Schichtung. Sie kippt je nach Variante, damit sich
+    # ueber mehrere Kacheln keine Waagerechte bildet.
+    neigung = (-0.35, 0.0, 0.28, -0.15, 0.4, -0.28, 0.12, 0.34)[variant % 8]
+    for band in range(2):
+        y0 = 3 + band * 7 + int(hash01(variant, band) * 3)
+        for x in range(TS):
+            yy = top + int(y0 + neigung * (x - TS / 2))
+            if top <= yy < top + TS - 1:
+                c.blend(x, yy, (*shade(body, -0.22)[:3], 90))
+                c.blend(x, yy + 1, (*shade(body, 0.10)[:3], 45))
+
     # ---- Kanten
 
     if "t" in edges:
@@ -230,6 +257,54 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
     return c
 
 
+def _risse(c: Canvas, top: int, body, rng: Rng, anzahl: int = 2) -> None:
+    """
+    Risse durch die Masse - von Kante zu Kante, nie mittendrin endend.
+
+    Ein Riss hat zwei Seiten: die eine liegt im Schatten, die andere
+    faengt Licht. Ohne diesen Unterschied ist er ein Kritzel; mit ihm
+    ist er eine Kluft, und die Masse bekommt Dicke.
+    """
+    dunkel = shade(body, -0.32)
+    hell = shade(body, 0.12)
+    for _ in range(anzahl):
+        # Start und Ziel auf zwei verschiedenen Kanten.
+        seiten = [0, 1, 2, 3]
+        a = seiten.pop(rng.int(0, 3))
+        b = seiten.pop(rng.int(0, 2))
+
+        def punkt(seite: int) -> tuple[float, float]:
+            t = rng.range(0.15, 0.85)
+            if seite == 0:
+                return t * TS, 0.0
+            if seite == 1:
+                return float(TS - 1), t * TS
+            if seite == 2:
+                return t * TS, float(TS - 1)
+            return 0.0, t * TS
+
+        x0, y0 = punkt(a)
+        x1, y1 = punkt(b)
+        # Ein Knick in der Mitte, damit der Riss nicht gerade laeuft.
+        mx = (x0 + x1) / 2 + rng.range(-3.5, 3.5)
+        my = (y0 + y1) / 2 + rng.range(-3.5, 3.5)
+        schritte = int(max(abs(x1 - x0), abs(y1 - y0))) * 2 + 4
+        for i in range(schritte + 1):
+            t = i / schritte
+            # Quadratische Bezier ueber den Knick.
+            u = 1 - t
+            px = u * u * x0 + 2 * u * t * mx + t * t * x1
+            py = u * u * y0 + 2 * u * t * my + t * t * y1
+            xi, yi = int(px), int(py)
+            if not (0 <= xi < TS and 0 <= yi < TS):
+                continue
+            c.set(xi, top + yi, dunkel)
+            # Die Lichtseite versetzt, und nur streckenweise - eine
+            # durchgezogene Doppellinie sieht gezeichnet aus.
+            if hash01(xi * 3, yi * 5) > 0.45 and yi + 1 < TS:
+                c.blend(xi, top + yi + 1, (*hell[:3], 70))
+
+
 def _crest_profile(seed: int, amplitude: int = 2) -> list[int]:
     """
     Ein unregelmaessiger Kamm, dessen Enden auf null liegen.
@@ -264,9 +339,22 @@ def tile_platform(region: str, variant: int = 0, cap: str = "") -> Canvas:
     `cap` sagt, ob links ('l') oder rechts ('r') das Ende liegt.
     """
     body, edge, accent = P.REGIONS[region][:3]
-    c = Canvas(TS, 10 + TILE_OVERHANG)
+    # Dicker als bisher und mit Platz nach unten: eine Plattform von
+    # sieben Pixeln Hoehe ist ein Brett, und ein Brett bleibt ein Brett,
+    # egal was oben darauf waechst. Was sie zu einem gewachsenen
+    # Vorsprung macht, ist die Unterseite - Wurzeln, Bruch, Ausfransung -
+    # und die braucht Platz ausserhalb des Rasters.
+    c = Canvas(TS, 12 + TILE_OVERHANG + TILE_UNDERHANG)
     top = TILE_OVERHANG
     crest = _crest_profile(variant)
+    rng = Rng(2100 + variant * 331 + sum(map(ord, region)) * 7)
+
+    # Die Unterkante laeuft frei, wie der Kamm oben. Vorher war sie eine
+    # gerade Linie ueber die ganze Plattform - und eine gerade Linie
+    # unter einer unregelmaessigen Oberkante liest sich als Brett mit
+    # Grasstreifen.
+    saum = [2 + int(hash01(x * 5 + variant * 29, 3) * 3)
+            + int(math.sin(x * 0.55 + variant) * 1.4 + 1.4) for x in range(TS)]
 
     for x in range(TS):
         thin = 0
@@ -277,17 +365,37 @@ def tile_platform(region: str, variant: int = 0, cap: str = "") -> Canvas:
         if thin >= 5:
             continue
         k = crest[x]
-        depth = 7 - thin
+        depth = 8 - thin
         for i in range(depth + k):
             t = i / (depth + k)
-            c.set(x, top - k + i, mix(shade(body, 0.12), shade(body, -0.38), t ** 0.65))
+            c.set(x, top - k + i, mix(shade(body, 0.10), shade(body, -0.40), t ** 0.6))
         c.set(x, top - k, mix(edge, accent, 0.20))
         c.set(x, top - k + 1, mix(edge, body, 0.28))
 
-        if hash01(x * 3, variant + 9) > 0.5:
-            c.set(x, top - k + depth + k, shade(body, -0.45))
-        if hash01(x * 5, variant + 19) > 0.8:
-            c.set(x, top - k + depth + k + 1, shade(body, -0.52))
+        # Die ausgefranste Unterseite, die in den Unterhang reicht.
+        unten = top - k + depth + k
+        for i in range(max(0, saum[x] - thin)):
+            t = i / max(1, saum[x])
+            c.set(x, unten + i, mix(shade(body, -0.44), P.INK, 0.10 + t * 0.45))
+
+    # Wurzeln, die aus der Unterseite fallen. Sie sind das eigentliche
+    # Kennzeichen: ein Vorsprung haengt unten aus, ein Brett nicht.
+    if region in ("hain", "grotten", "dissonanz"):
+        wurzel = mix(shade(body, -0.46), P.INK, 0.25)
+        for x in range(TS):
+            if ("l" in cap and x < 5) or ("r" in cap and x > TS - 6):
+                continue
+            if hash01(x * 7 + variant * 13, 51) > 0.42:
+                continue
+            k = crest[x]
+            unten = top - k + 8 + k + saum[x]
+            laenge = 1 + int(hash01(x, variant + 5) * (TILE_UNDERHANG - 2))
+            drift = (hash01(x, 31) - 0.5) * 0.45
+            px = float(x)
+            for i in range(laenge):
+                px += drift
+                t = i / max(1, laenge)
+                c.set(int(px), unten + i, mix(wurzel, P.INK, t * 0.55))
 
     if region == "hain":
         for x in range(TS):
@@ -1372,7 +1480,8 @@ def build() -> None:
             for v in range(4):
                 tiles.add(f"{region}_platform_{cap}_{v}",
                           tile_platform(region, v, "" if cap == "mid" else cap),
-                          pivot=(0, TILE_OVERHANG / (10 + TILE_OVERHANG)))
+                          pivot=(0, TILE_OVERHANG
+                                 / (12 + TILE_OVERHANG + TILE_UNDERHANG)))
         dorn = tile_spike(region)
         tiles.add(f"{region}_spike", dorn, pivot=(0, 0))
         # Decke, linke Wand, rechte Wand. Die Kachel wird gedreht, nicht neu

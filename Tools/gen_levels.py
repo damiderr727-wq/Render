@@ -310,6 +310,85 @@ class Room:
                 self.fill(tx, ty + 1, 1, self.h - ty - 1, SOLID)
         return self
 
+    def simse_formen(self, seed: int = 0) -> "Room":
+        """
+        Freistehende Simse verlieren ihre Rechteckform.
+
+        `soften` fasst nur gewachsenen Boden an - eine Saeule, die bis
+        zum unteren Rand durchsteht. Alles, was in der Luft steht, blieb
+        deshalb genau das, was `ledge()` gesetzt hat: ein Rechteck. Und
+        ein Rechteck in einer gewachsenen Landschaft sticht sofort
+        heraus, egal wie fein Boden und Decke ringsum verlaufen.
+
+        Zwei Griffe, beide billig:
+
+          Die Enden der Oberkante werden angerampt. Damit laeuft der
+          Sims aus, statt abzubrechen - und man kann von der Seite
+          heraufgehen statt heraufzuspringen.
+
+          Die unteren Ecken werden weggenommen. Das aendert am Laufen
+          nichts (dort steht ohnehin niemand), bricht aber die zweite
+          gerade Kante, an der man den Block erkennt.
+
+        Nicht jeder Sims bekommt beides: gleiche Behandlung an allen
+        Simsen ergibt wieder ein Muster, nur ein anderes.
+        """
+        for y in range(1, self.h - 2):
+            x = 0
+            while x < self.w:
+                if self.grid[y][x] != SOLID or self.grid[y - 1][x] != AIR:
+                    x += 1
+                    continue
+                start = x
+                while (x < self.w and self.grid[y][x] == SOLID
+                       and self.grid[y - 1][x] == AIR):
+                    x += 1
+                laenge = x - start
+
+                # Gewachsener Boden gehoert `soften`, nicht hierher.
+                gewachsen = all(self.grid[j][start] == SOLID
+                                for j in range(y, self.h))
+                if gewachsen or laenge < 4:
+                    continue
+
+                if hash01(start * 3, seed + 1) < 0.82:
+                    self.set(start, y, SLOPE_UP)
+                if hash01(x * 5, seed + 2) < 0.82:
+                    self.set(x - 1, y, SLOPE_DOWN)
+
+                # Untere Ecken abtragen, wo darunter Luft steht.
+                for ex, wuerfel in ((start, 7), (x - 1, 11)):
+                    if hash01(ex, seed + wuerfel) < 0.7:
+                        continue
+                    for j in range(y + 1, min(self.h - 1, y + 3)):
+                        if self.grid[j][ex] == SOLID and self.grid[j + 1][ex] == AIR:
+                            self.set(ex, j, AIR)
+                            break
+        return self
+
+    def nische(self, x: int, y: int, w: int, h: int, seed: int = 0) -> "Room":
+        """
+        Eine Nische im Fels: ausgehoehlt, mit gerundeten Ecken.
+
+        Bisher gab es genau zwei Arten, Fels wegzunehmen - `carve`
+        schneidet ein Rechteck, `schacht` einen Gang. Beides sind
+        Durchgaenge. Eine Nische ist etwas anderes: eine Ausbuchtung, die
+        nirgendwohin fuehrt, und genau davon lebt ein Gebiet, das
+        gewachsen aussehen soll. Dort steht dann eine Bank, ein Kristall,
+        eine Inschrift - oder nichts, und man geht daran vorbei und
+        merkt nur, dass die Wand nicht gerade ist.
+        """
+        for j in range(h):
+            v = j / max(1, h - 1)
+            # Oben und unten schmaler, in der Mitte am weitesten.
+            einzug = int(round((1 - math.sin(math.pi * v) ** 0.6) * (w / 3)))
+            einzug += 1 if hash01(j, seed) > 0.72 else 0
+            breite = w - einzug * 2
+            if breite <= 0:
+                continue
+            self.carve(x + einzug, y + j, breite, 1)
+        return self
+
     def deckenglaetten(self, min_run: int = 2) -> "Room":
         """
         Macht aus Deckenstufen sanfte Schraegen - das Gegenstueck zu `soften`.
@@ -839,10 +918,16 @@ def room_A2() -> Room:
     r = Room("A2", "LICHTUNG DER STUMMEN VOEGEL", "hain", 72, 34)
     r.border()
 
-    boden = r.profil([(0, 25), (14, 27), (30, 28), (46, 27), (58, 26),
-                      (71, 25)], rauheit=0.6, seed=11)
-    kopf = r.profil([(0, 10), (12, 13), (26, 18), (40, 16), (48, 10),
-                     (60, 22), (71, 24)], rauheit=0.45, seed=13)
+    # Mehr Stuetzpunkte, kleinere Abstaende: dazwischen wird weich
+    # interpoliert, also ergibt jeder zusaetzliche Punkt eine Welle statt
+    # einer Ecke. Mit sechs Punkten auf zweiundsiebzig Kacheln war der
+    # Boden ueber weite Strecken schlicht eben.
+    boden = r.profil([(0, 25), (7, 26), (14, 27), (21, 26), (27, 28),
+                      (34, 29), (40, 27), (46, 27), (52, 25), (58, 26),
+                      (64, 24), (71, 25)], rauheit=0.7, seed=11)
+    kopf = r.profil([(0, 10), (7, 12), (12, 13), (19, 16), (26, 18),
+                     (33, 17), (40, 16), (48, 10), (54, 16), (60, 22),
+                     (71, 24)], rauheit=0.45, seed=13)
     r.hoehle(1, 71, boden, kopf, seed=17, zacken=0.10)
 
     # Der Kamin nach oben rechts. Gefasst und wieder eingebeult - als
@@ -1723,6 +1808,7 @@ def build() -> None:
         # werden von ihren Treppenstufen befreit.
         r.soften()
         r.deckenglaetten()
+        r.simse_formen(seed=sum(map(ord, r.id)))
         rooms[r.id] = r
 
     problems = validate(rooms) + check_progression(rooms)

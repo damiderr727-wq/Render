@@ -325,17 +325,21 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # Bogen aus, und nur deshalb liegt sein Mittelpunkt ruhig, waehrend
     # sich alles andere bewegt.
     dreh_x = cx + 0.6 * S + lean * 0.4
-    dreh_y = base - height * 0.60
+    dreh_y = base - height * 0.52
 
-    # Von schraeg oben hinten nach vorn unten. In Leinwandkoordinaten
-    # zeigt +y nach unten, also ist -1.85 rad oben-hinten und +0.42
-    # vorn-leicht-unten.
-    # Der Bogen liegt *vor* ihr, nicht um sie herum. Bei fast zweihundert
-    # Grad Spannweite lief er ueber ihren Kopf hinweg bis hinter ihren
-    # Ruecken und schloss sich zu einem Ring - und ein Ring ist keine
-    # Bewegungsrichtung. Von knapp ueber dem Kopf nach vorn unten sind es
-    # rund hundertfuenfzig Grad, und die liest man als einen Zug.
-    a0, a1 = -1.72, 0.86
+    # Ein Schlag zur Seite ist keine Kopie des Schlags nach oben.
+    #
+    # Der letzte Stand holte weit ueber den Kopf aus und zog nach vorn
+    # unten durch. Das ist der Bogen fuer einen Hieb *nach oben* - fuer
+    # den Hieb zur Seite steht er zu hoch und ist zu rund. Zur Seite
+    # gehoert eine lange, flache Sichel auf Brusthoehe, die weit nach
+    # vorn reicht und sich kaum kruemmt.
+    #
+    # Die Kruemmung kommt darum nicht mehr von einem Kreis, sondern von
+    # einer Ellipse: waagerecht weit, senkrecht flach. Derselbe
+    # Winkelbereich ergibt damit eine gestreckte Sichel statt eines
+    # Kreisbogens.
+    a0, a1 = -0.98, 0.82
     t = schwung ** 0.78
     winkel = a0 + (a1 - a0) * t
 
@@ -347,7 +351,15 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # Der Bogen ist nicht so lang wie die Klinge, sondern deutlich
     # laenger. Beim Vorbild misst die Sichel gut das Doppelte der Figur -
     # sie ist das eigentliche Bild, die Waffe nur ihr Anlass.
-    bogen_r = height * (0.72 + 0.26 * t)
+    #
+    # Waagerecht weit, senkrecht flach: das macht aus dem Kreisbogen die
+    # langgezogene Sichel.
+    # Gross im Radius, klein im Winkel: so wird eine Sichel lang und
+    # flach statt kurz und rund. Die Bogenlaenge ist Radius mal Winkel,
+    # die Kruemmung ist eins durch Radius - beides zieht in dieselbe
+    # Richtung, sobald man den Radius aufmacht und den Winkel zumacht.
+    bogen_rx = height * (1.02 + 0.42 * t)
+    bogen_ry = height * (0.78 + 0.32 * t)
 
     # --- Der Bogen.
     # Zum Schluss klingt er ab: im letzten Bild soll die ausgestreckte
@@ -371,10 +383,9 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
         # keine Klingenspur. Beim Vorbild misst die dickste Stelle keine
         # zehn Prozent, laeuft ueber ihre ganze Laenge zu zwei Nadeln aus
         # und ist dabei halb durchsichtig - man sieht den Raum dahinter.
-        schleppe = min(t, 0.74)
-        r_aussen = bogen_r
-        max_dicke = bogen_r * 0.11
-        schritte = 84
+        schleppe = min(t, 0.88)
+        max_dicke = height * 0.115
+        schritte = 96
 
         # Erst sammeln, dann setzen. Wird beim Abtasten direkt gemischt,
         # trifft die Bahn manche Pixel zweimal und andere einmal, und die
@@ -397,26 +408,41 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
             # voller Dicke ueber einem Viertel Bogen ist ein Klumpen.
             dicke = math.sin(math.pi * min(1.0, u ** 0.62)) ** 0.75
             dicke *= 0.55 + 0.45 * t
-            r0 = r_aussen - max_dicke * dicke
+            # Die Dicke wird *senkrecht zur Bahn* abgetragen, nicht auf
+            # dem Radius. Bei einer Ellipse zeigt der Radius nicht nach
+            # aussen, und eine Sichel, die entlang des Radius dick wird,
+            # ist an den Enden breit und in der Mitte schmal - genau
+            # verkehrt herum.
+            # Die Normale einer Ellipse ist nicht ihr Radius. Sie ist
+            # proportional zu (ry*cos a, rx*sin a) - der Tangente ueber
+            # Kreuz. Ein Zwischenstand hat hier die Tangente selbst
+            # genommen und die Dicke damit *entlang* der Bahn abgetragen:
+            # die Sichel blieb ein Haarstrich, weil die Dicke in sich
+            # selbst hineinlief.
+            nx, ny = ax * bogen_ry, ay * bogen_rx
+            nl = math.hypot(nx, ny) or 1.0
+            nx, ny = -nx / nl, -ny / nl
+            px0, py0 = dreh_x + ax * bogen_rx, dreh_y + ay * bogen_ry
             # Halb durchsichtig, und an den Spitzen fast nichts: eine
             # Sichel, die ueberall gleich deckt, ist ein Aufkleber.
-            deckung = int((60 + 130 * math.sin(math.pi * min(1.0, u ** 0.6)) ** 0.5)
+            deckung = int((70 + 155 * math.sin(math.pi * min(1.0, u ** 0.6)) ** 0.5)
                           * verblassen)
-            i = r0
-            while i <= r_aussen:
-                v = (i - r0) / max(0.6, r_aussen - r0)
+            d = 0.0
+            tiefe = max_dicke * dicke
+            while d <= tiefe:
+                v = 1.0 - d / max(0.6, tiefe)
                 # Aussen heller: die Vorderkante der Sichel traegt das Licht.
-                auftragen(dreh_x + ax * i, dreh_y + ay * i,
+                auftragen(px0 + nx * d, py0 + ny * d,
                           mix(rosa, (255, 255, 255, 255), 0.34 + v * 0.52),
                           deckung)
-                i += 0.35
+                d += 0.35
             # Die Aussenkante durchgehend - sie ist die Linie, an der das
             # Auge den Schlag festmacht, und sie laeuft ueber die ganze
             # Sichel, nicht nur ueber ihr vorderes Drittel.
             if dicke > 0.05 and verblassen > 0.7:
                 kante = int(215 * math.sin(math.pi * min(1.0, u ** 0.6)) ** 0.35)
-                for r in (r_aussen, r_aussen - 0.45):
-                    auftragen(dreh_x + ax * r, dreh_y + ay * r,
+                for e in (0.0, 0.45):
+                    auftragen(px0 - nx * e, py0 - ny * e,
                               mix(P.BONE, (255, 255, 255, 255), 0.45), kante)
 
         for (px, py), (col, deckung) in flaeche.items():

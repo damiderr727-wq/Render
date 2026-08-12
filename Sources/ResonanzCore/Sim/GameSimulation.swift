@@ -450,6 +450,13 @@ public final class GameSimulation {
             wirkung = kette.treffer(jetzt: elapsed,
                                     abstandZumSchlag: takt.abstandZumSchlag(elapsed))
             events.append(.klangkette(wirkung, glieder: kette.glieder))
+            // Hoerbar machen, nicht nur zeigen: ein Treffer im Takt klingt
+            // aufwaerts, einer daneben bleibt der gewoehnliche Schlag.
+            if case .imTakt(let glieder) = wirkung {
+                events.append(.sound(.imTakt(glieder: glieder)))
+                events.append(.effect(kette.voll ? .ringMittel : .ringKlein,
+                                      hitbox.center, .zero))
+            }
         }
         let schaden = skaliert(profile.damage, kette.faktor)
 

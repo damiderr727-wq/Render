@@ -14,6 +14,9 @@ public enum SoundCue: Sendable, Equatable {
     case meleeSwing
     case rangedShot(Kern)
     case hit(strong: Bool)
+    /// Ein Treffer, der auf dem Schlag lag. `glieder` faerbt die Tonhoehe:
+    /// die Kette klingt aufwaerts, damit man sie hoert, ohne hinzusehen.
+    case imTakt(glieder: Int)
     case enemyDeath
     case playerHurt
     case playerDeath

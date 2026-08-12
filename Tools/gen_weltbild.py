@@ -342,8 +342,14 @@ GEBIETE = [
                  (1880, 1040), (1700, 1070), (1560, 1030), (1430, 970)]),
     dict(name="DIE TIEFEN", beschriftung=(-460, 250), nummer="V", stand="geplant - endgame",
          leucht=hexc("#6f7fa8"), fuell=hexc("#0d1220"), wappen="schichten",
-         text=["Lage um Lage abgesetzter Klang.",
+         text=["Links drueckt die Tiefe, rechts liegt der Schrott.",
                "Man graebt sich durch Jahre, nicht durch Stein."],
+         # Das Gebiet zerfaellt in zwei Haelften, und zwar in dieser
+         # Richtung: wo man ankommt (links) drueckt die Tiefe - enge
+         # Raeume, knarzende Waende, Stroemung, die schiebt. Je weiter
+         # man nach rechts kommt, desto mehr wird daraus ein gewachsener
+         # Schrotthaufen: begehbares Gelaende aus den Resten einer
+         # Zivilisation, Schicht ueber Schicht, laengst zur Ruhe gekommen.
          # Eine Masse ohne Unterkante: sie laeuft nach unten aus dem Bild.
          punkte=[(360, 1150), (700, 1100), (1050, 1130), (1400, 1090),
                  (1780, 1140), (1980, 1230), (1960, 1450), (1600, 1500),

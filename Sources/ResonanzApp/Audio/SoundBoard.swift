@@ -111,6 +111,23 @@ public final class SoundBoard {
             synth.sweep(fromMidi: strong ? 55 : 67, toMidi: strong ? 40 : 55,
                         duration: 0.09, gain: strong ? 0.16 : 0.10, waveform: "saw")
 
+        case .imTakt(let glieder):
+            // Ein Dreiklang, Glied fuer Glied aufwaerts: Grundton, Terz,
+            // Quinte, Oktave. Man hoert die Kette wachsen, ohne die
+            // Anzeige anzusehen - und beim vierten Glied ist sie oben,
+            // hoerbar und ohne Zahl.
+            let stufen = [0, 4, 7, 12]
+            let grund = 72
+            let stufe = stufen[min(stufen.count - 1, max(0, glieder - 1))]
+            synth.play(.bell, midi: grund + stufe, duration: 0.34,
+                       gain: 0.09 + Double(glieder) * 0.02)
+            if glieder >= Klangkette.voll {
+                // Oben klingt die Oktave doppelt - der einzige Ton im
+                // Spiel, den es zweimal gibt.
+                synth.play(.bell, midi: grund + 24, duration: 0.5, gain: 0.07,
+                           delaySeconds: 0.05)
+            }
+
         case .enemyDeath:
             synth.sweep(fromMidi: 60, toMidi: 36, duration: 0.36, gain: 0.16, waveform: "triangle")
             synth.noise(duration: 0.3, gain: 0.13, cutoff: 2400, sweepTo: 400)

@@ -25,6 +25,14 @@ public final class HUDNode: SKNode {
     private let kerben = SKNode()
     private let siegelLabel = SKLabelNode()
     private var heartNodes: [SKShapeNode] = []
+
+    // Die Klangkette. Sie war bisher unsichtbar - und eine Kampffunktion,
+    // die der Spieler nicht sieht, gibt es fuer ihn nicht.
+    private let taktRing = SKShapeNode()
+    private let taktKern = SKShapeNode()
+    private let kettenGlieder = SKNode()
+    private var gliedNodes: [SKShapeNode] = []
+    private var letzteGlieder = -1
     private var lastKerbenBelegt = -1
     private var lastKerbenTotal = -1
     private var lastHealth = -1
@@ -56,6 +64,38 @@ public final class HUDNode: SKNode {
         resonanceFill.strokeColor = .clear
         resonanceFill.position = resonanceBar.position
         addChild(resonanceFill)
+
+        // Der Taktgeber. Ein Ring, in dem ein Kern auf jeden Schlag
+        // aufblitzt - man muss ihn nicht ansehen, um ihn wahrzunehmen,
+        // und genau so soll er wirken: als Puls im Augenwinkel.
+        taktRing.path = CGPath(ellipseIn: CGRect(x: -7, y: -7, width: 14, height: 14),
+                               transform: nil)
+        taktRing.strokeColor = SKColor(white: 1, alpha: 0.22)
+        taktRing.fillColor = .clear
+        taktRing.lineWidth = 1
+        taktRing.position = CGPoint(x: left + 84, y: top - 26)
+        addChild(taktRing)
+
+        taktKern.path = CGPath(ellipseIn: CGRect(x: -4, y: -4, width: 8, height: 8),
+                               transform: nil)
+        taktKern.strokeColor = .clear
+        taktKern.fillColor = glow
+        taktKern.position = taktRing.position
+        addChild(taktKern)
+
+        // Vier Glieder daneben. Sie fuellen sich, sie leeren sich - mehr
+        // muss die Kette nicht erzaehlen.
+        kettenGlieder.position = CGPoint(x: left + 98, y: top - 26)
+        addChild(kettenGlieder)
+        for i in 0..<4 {
+            let glied = SKShapeNode(rectOf: CGSize(width: 4, height: 4), cornerRadius: 1)
+            glied.position = CGPoint(x: CGFloat(i) * 7, y: 0)
+            glied.strokeColor = SKColor(white: 1, alpha: 0.22)
+            glied.fillColor = .clear
+            glied.lineWidth = 1
+            kettenGlieder.addChild(glied)
+            gliedNodes.append(glied)
+        }
 
         style(kernLabel, size: 8, color: glow)
         kernLabel.horizontalAlignmentMode = .left
@@ -151,6 +191,7 @@ public final class HUDNode: SKNode {
                                     cornerWidth: 1, cornerHeight: 1, transform: nil)
         resonanceFill.fillColor = fraction < 0.2 ? rot : glow
 
+        updateTakt(sim: sim)
         updateKerben(progression: sim.save.progression)
         if sim.save.progression.gebrochen {
             // Im Bruch zaehlt nur noch eins: dass nichts mehr haelt.
@@ -208,6 +249,41 @@ public final class HUDNode: SKNode {
     /// Kristalle - jeder kann voll, halb oder leer sein. Ein halber ist
     /// nicht bloss Zierde: mancher Schlag nimmt anderthalb, und auf einem
     /// halben Kristall ueberlebt sie nichts mehr.
+    /// Puls und Kette.
+    ///
+    /// Der Kern im Ring ist genau auf dem Schlag am groessten und am
+    /// hellsten und faellt dazwischen ab - kein Blinken, sondern ein
+    /// Atmen. Ein hartes An/Aus liest sich als Fehler, ein Verlauf als
+    /// Rhythmus.
+    private func updateTakt(sim: GameSimulation) {
+        // `puls` ist 0 auf dem Schlag und 1 genau dazwischen.
+        let naehe = 1 - sim.takt.puls(sim.elapsed)
+        let staerke = pow(max(0, naehe), 2.6)
+        taktKern.setScale(0.45 + staerke * 0.75)
+        taktKern.alpha = 0.25 + staerke * 0.75
+
+        // Voll aufgebaut faerbt sich der Puls um: man sieht am Rand des
+        // Blicks, dass man oben ist.
+        let farbe = sim.kette.voll ? bloom : glow
+        taktKern.fillColor = farbe
+        taktRing.strokeColor = SKColor(white: 1, alpha: sim.kette.voll ? 0.45 : 0.22)
+
+        guard sim.kette.glieder != letzteGlieder else { return }
+        letzteGlieder = sim.kette.glieder
+        for (i, glied) in gliedNodes.enumerated() {
+            let an = i < sim.kette.glieder
+            glied.fillColor = an ? farbe : .clear
+            glied.strokeColor = an ? farbe : SKColor(white: 1, alpha: 0.22)
+            if an {
+                // Jedes neue Glied setzt sich kurz durch, statt einfach
+                // da zu sein.
+                glied.removeAllActions()
+                glied.run(.sequence([.scale(to: 1.6, duration: 0.06),
+                                     .scale(to: 1.0, duration: 0.12)]))
+            }
+        }
+    }
+
     private func updateHearts(health: Int, max maxHealth: Int) {
         guard health != lastHealth || maxHealth != lastMaxHealth else { return }
         let verloren = health < lastHealth

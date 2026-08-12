@@ -507,6 +507,16 @@ public final class GameScene: SKScene {
         node.position = WorldSpace.scenePoint(position)
         node.zPosition = 12
         node.blendMode = .add
+
+        // Der Schlagbogen waechst mit der Kette. Das ist die Rueckmeldung
+        // dort, wo man ohnehin hinsieht - die Anzeige oben links traegt
+        // die Zahl, der Schlag selbst traegt das Gefuehl.
+        if kind == .klingenschlag {
+            let stufe = Double(sim.kette.glieder)
+            node.setScale(1.0 + stufe * 0.11)
+            node.alpha = 0.75 + stufe * 0.06
+        }
+
         renderer.layers.effects.addChild(node)
         node.run(atlas.once(name))
     }

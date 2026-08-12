@@ -1117,29 +1117,48 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     ]
 
     # Nahkampf: eine Welle laeuft durch sie hindurch.
+    #
+    # Drei Bilder waren zu wenig fuer den Schlag, den man am haeufigsten
+    # sieht. Ein Schlag hat vier Teile, und jeder muss ein eigenes Bild
+    # haben, sonst fehlt ihm das Gewicht:
+    #
+    #   ausholen   - sie zieht sich zurueck, gegen die Richtung
+    #   schlagen   - der Umschlag, mit Schmier und ganz gestreckt
+    #   durchziehen- die Klinge ist schon durch, der Koerper folgt
+    #   nachgeben  - sie faengt sich, die Kette schwingt aus
     anims["melee"] = [
         draw_heroine(instrument=instrument, garment=garment,
-                     signatur=laut("melee"), phase=0.2, lean=-1.2, whip=-0.35,
-                     stretch=1.06, glow=1.1),
+                     signatur=laut("melee"), phase=0.1, lean=-2.4, whip=-0.55,
+                     stretch=1.10, settle=-1, glow=0.9),
         draw_heroine(instrument=instrument, garment=garment,
-                     signatur=laut("melee"), phase=1.4, lean=3.4, whip=0.85,
-                     stretch=0.92, smear=0.3, glow=1.6),
+                     signatur=laut("melee"), phase=0.9, lean=1.2, whip=0.35,
+                     stretch=1.02, smear=0.5, glow=1.4),
         draw_heroine(instrument=instrument, garment=garment,
-                     signatur=laut("melee"), phase=2.6, lean=1.6, whip=0.30,
-                     stretch=1.0, glow=1.2),
+                     signatur=laut("melee"), phase=1.7, lean=3.8, whip=0.95,
+                     stretch=0.90, smear=0.85, glow=1.8),
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("melee"), phase=2.4, lean=2.6, whip=0.55,
+                     stretch=0.96, smear=0.25, glow=1.3),
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("melee"), phase=3.0, lean=1.0, whip=0.15,
+                     stretch=1.02, glow=1.1),
     ]
 
     # Fernkampf: sie zieht sich zusammen und stoesst den Ton aus.
+    # Auch hier ein Bild mehr - das Zusammenziehen davor ist die Ansage.
     anims["cast"] = [
         draw_heroine(instrument=instrument, garment=garment,
-                     signatur=laut("cast"), phase=0.3, stretch=0.90,
-                     lean=-0.8, glow=1.0),
+                     signatur=laut("cast"), phase=0.2, stretch=0.86,
+                     lean=-1.4, settle=1, glow=0.9),
         draw_heroine(instrument=instrument, garment=garment,
-                     signatur=laut("cast"), phase=1.6, stretch=1.16,
-                     lean=1.2, split=0.28, glow=1.8),
+                     signatur=laut("cast"), phase=1.0, stretch=0.94,
+                     lean=-0.4, glow=1.2),
         draw_heroine(instrument=instrument, garment=garment,
-                     signatur=laut("cast"), phase=2.8, stretch=1.04,
-                     lean=0.4, glow=1.3),
+                     signatur=laut("cast"), phase=1.8, stretch=1.18,
+                     lean=1.4, split=0.32, glow=1.9),
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("cast"), phase=2.9, stretch=1.04,
+                     lean=0.4, split=0.10, glow=1.3),
     ]
 
     # Treffer: sie zerfaellt fast.

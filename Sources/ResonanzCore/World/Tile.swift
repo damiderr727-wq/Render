@@ -7,8 +7,14 @@ public enum Tile: UInt8, Sendable, CaseIterable {
     case solid
     /// Von unten durchlaessig, von oben begehbar.
     case platform
-    /// Dissonanzdornen - verletzen bei Beruehrung.
+    /// Dissonanzdornen am Boden - verletzen bei Beruehrung.
     case spike
+    /// Dieselben Dornen, aber an der Decke haengend.
+    case spikeDown
+    /// An der linken Wand, Spitzen nach rechts.
+    case spikeRight
+    /// An der rechten Wand, Spitzen nach links.
+    case spikeLeft
     /// Verstimmte Sperre. Nur der Basston bricht sie.
     case dissoWall
     /// Schraege, die nach rechts ansteigt (45 Grad).
@@ -29,6 +35,9 @@ public enum Tile: UInt8, Sendable, CaseIterable {
         case "#": self = .solid
         case "=": self = .platform
         case "^": self = .spike
+        case "v": self = .spikeDown
+        case ">": self = .spikeRight
+        case "<": self = .spikeLeft
         case "D": self = .dissoWall
         case "/": self = .slopeUp
         case "\\": self = .slopeDown
@@ -83,7 +92,22 @@ public enum Tile: UInt8, Sendable, CaseIterable {
     }
 
     public var isHazard: Bool {
-        self == .spike
+        switch self {
+        case .spike, .spikeDown, .spikeLeft, .spikeRight: return true
+        default: return false
+        }
+    }
+
+    /// In welche Richtung die Spitzen zeigen. Dornen an der Decke sind
+    /// dieselben Dornen - sie haengen nur andersherum, und wer das nicht
+    /// zeichnet, hat Gras an der Decke.
+    public var hazardSuffix: String {
+        switch self {
+        case .spikeDown: return "_down"
+        case .spikeLeft: return "_left"
+        case .spikeRight: return "_right"
+        default: return ""
+        }
     }
 }
 

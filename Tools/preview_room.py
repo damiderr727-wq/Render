@@ -27,6 +27,8 @@ KNOWN_EDGES = ['', 't', 'l', 'r', 'b', 'tl', 'tr', 'tb', 'lr', 'lb', 'rb', 'tlr'
 BLOCKING = {"#", "D"}
 SLOPES = {"/": "up", "\\": "down", "1": "uplow", "2": "uphigh",
           "3": "downhigh", "4": "downlow"}
+# Dornen in vier Ausrichtungen - dieselbe Kachel, nur gedreht.
+SPIKES = {"^": "", "v": "_down", "<": "_left", ">": "_right"}
 BLOCKING |= set(SLOPES)
 
 
@@ -129,8 +131,8 @@ def render(room_id: str) -> Image.Image:
                 if x == w - 1 or tiles[y][x + 1] != "=":
                     cap += "r"
                 name = f"{region}_platform_{cap or 'mid'}_{(x * 13 + y * 7) % 4}"
-            elif ch == "^":
-                name = f"{region}_spike"
+            elif ch in SPIKES:
+                name = f"{region}_spike{SPIKES[ch]}"
             elif ch == "D":
                 name = "dissowall_0"
             else:
@@ -158,6 +160,26 @@ def render(room_id: str) -> Image.Image:
             if img is not None:
                 canvas.alpha_composite(
                     img, (x * TS - img.width // 2, y * TS - int(img.height * pivot[1]) + 2))
+
+    # Und dasselbe an der Decke: was dort haengt, bricht die Stufen, die
+    # ein gerundetes Hoehenprofil beim Runden auf ganze Kacheln erzeugt.
+    def is_ceiling(x: int, y: int) -> bool:
+        return (0 <= x < w and 0 <= y < h - 1
+                and tiles[y][x] == "#" and tiles[y + 1][x] == ".")
+
+    for y in range(h - 1):
+        for x in range(1, w):
+            if not is_ceiling(x, y):
+                continue
+            # An einer Stufe immer, sonst nur hier und da: die Kante ist
+            # genau das, was verdeckt werden soll.
+            stufe = not is_ceiling(x - 1, y) or not is_ceiling(x + 1, y)
+            if not stufe and (x * 2654435761 + y * 40503) % 100 >= 22:
+                continue
+            img, pivot = tile_atlas.frame(f"hang_{region}_{(x * 5 + y * 11) % 6}_2")
+            if img is not None:
+                canvas.alpha_composite(
+                    img, (x * TS - img.width // 2 + TS // 2, (y + 1) * TS - 2))
 
     def place(img, pivot, tx: float, ty: float) -> None:
         if img is None:
@@ -196,7 +218,8 @@ def render(room_id: str) -> Image.Image:
             place(*chars.frame(name), enemy["x"], enemy["y"])
 
     if room.get("boss"):
-        place(*chars.frame("kantor_idle_2"), room["boss"]["x"], room["boss"]["y"])
+        place(*chars.frame(f'{room["boss"]["type"]}_idle_2'),
+              room["boss"]["x"], room["boss"]["y"])
 
     # Die Heldin an ihrem Startpunkt
     spawns = room["spawns"]

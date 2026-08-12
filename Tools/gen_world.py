@@ -392,6 +392,98 @@ def tile_spike(region: str) -> Canvas:
     return c
 
 
+def hang_prop(region: str, variant: int, frame: int = 0, frames: int = 1) -> Canvas:
+    """
+    Was von der Decke haengt: Zapfen, Wurzelbart, Tropfstein.
+
+    Der Boden sieht gut aus, weil Requisiten quer ueber seinen Kacheln
+    liegen und die Rasterlinie brechen. Die Decke hatte nichts davon -
+    darum blieb sie eine Treppe aus Rechtecken, egal wie fein das
+    Hoehenprofil war. Das hier ist dieselbe Behandlung, nur andersherum:
+    aufgehaengt an der Oberkante, ueber die Kachelgrenze hinaus.
+    """
+    body, edge, accent = P.REGIONS[region][:3]
+    c = Canvas(20, 26)
+    rng = Rng(1500 + variant * 97 + sum(map(ord, region)))
+    cx = 10
+    fels = shade(body, -0.10)
+    fels_hi = mix(fels, edge, 0.30)
+    kind = variant % 3
+
+    # Auch Haengendes bewegt sich - unten am weitesten, oben gar nicht.
+    schwung = math.sin(frame / max(1, frames) * math.tau + variant * 1.7)
+
+    if kind == 0:
+        # Ein Zapfen: breit an der Decke, spitz nach unten, leicht schief.
+        laenge = rng.range(11, 22)
+        breite = rng.range(3.2, 5.4)
+        neigung = rng.range(-0.28, 0.28)
+        for i in range(int(laenge)):
+            t = i / laenge
+            w = max(1, breite * (1 - t) ** 0.72)
+            x = cx + neigung * i + schwung * (t ** 2) * 0.8
+            for d in range(-int(w), int(w) + 1):
+                # Die dem Licht zugewandte Seite bleibt hell, die andere
+                # faellt weg - sonst ist der Zapfen ein grauer Strich.
+                col = fels_hi if d >= int(w) - 1 else mix(fels, P.INK, t * 0.45)
+                c.set(int(round(x)) + d, i, col)
+        c.set(int(round(cx + neigung * laenge)), int(laenge),
+              mix(fels_hi, accent, 0.25))
+    elif kind == 1:
+        # Wurzelbart: mehrere duenne Straenge, verschieden lang.
+        for k in range(rng.int(3, 5)):
+            x0 = cx + rng.range(-6, 6)
+            laenge = rng.range(7, 20)
+            for i in range(int(laenge)):
+                t = i / laenge
+                x = x0 + math.sin(i * 0.35 + k) * 1.4 + schwung * (t ** 2) * 1.6
+                c.set(int(round(x)), i, mix(fels, P.INK, 0.2 + t * 0.5))
+                if i % 5 == 2:
+                    c.set(int(round(x)) + 1, i, shade(fels, -0.3))
+    else:
+        # Ein flacher Ueberhang: keine Spitze, nur eine Masse, die ueber
+        # die Kante quillt. Genau das nimmt einer Stufe die Waagerechte.
+        w = rng.range(6, 9)
+        c.blob(cx, rng.range(3, 5), w, fels, rng, lumps=6, squash=0.55)
+        c.blob(cx - w * 0.25, 2, w * 0.5, fels_hi, rng, lumps=4, squash=0.5)
+        for k in range(3):
+            x = cx + rng.range(-5, 5)
+            h = rng.int(3, 8)
+            for i in range(h):
+                c.set(int(x + schwung * (i / h) ** 2), 5 + i,
+                      mix(fels, P.INK, 0.25 + i / h * 0.4))
+
+    c.shadow_pass((0, 1), -0.20)
+    return c
+
+
+def gedreht(c: Canvas, viertel: int) -> Canvas:
+    """
+    Dreht eine Kachel um Vielfache von 90 Grad.
+
+    Dornen sind dieselben Dornen, egal ob sie auf dem Boden stehen oder
+    von der Decke haengen - sie zeigen nur woandershin. Vorher wurde
+    ueberall dieselbe Kachel gesetzt, und an der Decke sah das aus wie
+    Gras, das nach oben waechst.
+    """
+    viertel %= 4
+    if viertel == 0:
+        return c
+    out = Canvas(c.h if viertel % 2 else c.w, c.w if viertel % 2 else c.h)
+    for y in range(c.h):
+        for x in range(c.w):
+            px = c.get(x, y)
+            if not px[3]:
+                continue
+            if viertel == 1:        # 90 Grad im Uhrzeigersinn
+                out.set(c.h - 1 - y, x, px)
+            elif viertel == 2:
+                out.set(c.w - 1 - x, c.h - 1 - y, px)
+            else:                   # 270 Grad
+                out.set(y, c.w - 1 - x, px)
+    return out
+
+
 def tile_dissowall(frame: int) -> Canvas:
     """Verstimmte Sperre - nur der Basston bricht sie."""
     c = Canvas(TS, TS)
@@ -963,7 +1055,13 @@ def build() -> None:
                 tiles.add(f"{region}_platform_{cap}_{v}",
                           tile_platform(region, v, "" if cap == "mid" else cap),
                           pivot=(0, TILE_OVERHANG / (10 + TILE_OVERHANG)))
-        tiles.add(f"{region}_spike", tile_spike(region), pivot=(0, 0))
+        dorn = tile_spike(region)
+        tiles.add(f"{region}_spike", dorn, pivot=(0, 0))
+        # Decke, linke Wand, rechte Wand. Die Kachel wird gedreht, nicht neu
+        # gezeichnet: es sind dieselben Dornen.
+        tiles.add(f"{region}_spike_down", gedreht(dorn, 2), pivot=(0, 0))
+        tiles.add(f"{region}_spike_right", gedreht(dorn, 1), pivot=(0, 0))
+        tiles.add(f"{region}_spike_left", gedreht(dorn, 3), pivot=(0, 0))
     for region in REGIONS:
         for v in range(6):
             # Requisiten wiegen sich: eine starre Kante faellt sofort auf,
@@ -971,6 +1069,10 @@ def build() -> None:
             tiles.add_sequence(f"edge_{region}_{v}",
                                [edge_prop(region, v, f, 6) for f in range(6)],
                                pivot=(0.5, 1.0), fps=4)
+            # Dasselbe fuer die Decke, aufgehaengt an der Oberkante.
+            tiles.add_sequence(f"hang_{region}_{v}",
+                               [hang_prop(region, v, f, 6) for f in range(6)],
+                               pivot=(0.5, 0.0), fps=4)
     for f in range(4):
         tiles.add(f"dissowall_{f}", tile_dissowall(f), pivot=(0, 0), fps=6)
     png, js = tiles.write(OUT)

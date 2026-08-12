@@ -1649,6 +1649,185 @@ def draw_echoscherbe(phase: float) -> Canvas:
     return c
 
 
+def draw_auftakt(phase: float, schlag: float = 0.0, wut: float = 0.0) -> Canvas:
+    """
+    DER GROSSE AUFTAKT - der erste Boss, und ein Witz auf Kosten des
+    Spielers.
+
+    Er sieht aus, als wuerde er einen umbringen: viermal so hoch wie
+    Cadence, eine schwarze Saeule aus Stoff, aus der zwei unmoeglich
+    lange Arme wachsen. In der Kapuze ist nichts. Die Krone gehoert gar
+    nicht zu ihm - sie schwebt darueber, loesgeloest, und sie ist das
+    Einzige an ihm, das ein Gesicht hat.
+
+    Und dann kann er genau eine Sache: den Takt vorgeben. Er holt weit
+    aus, haelt viel zu lange, und schlaegt zu. Wer das einmal gelesen
+    hat, gewinnt. Genau dafuer ist er da - er lehrt, dass in diesem Spiel
+    jeder Angriff vorher zu sehen ist, und er tut es, indem er furchtbar
+    aussieht und harmlos ist.
+
+    `schlag` 0 = Ausholen, 1 = Schlag. `wut` faerbt ihn in der zweiten
+    Haelfte um.
+    """
+    c = Canvas(96, 140)
+    base = 139
+    cx = 44
+
+    schweb = math.sin(phase) * 2.2
+    stoff = mix(P.CLOAK_LO, P.INK, 0.45)
+    stoff_hi = mix(stoff, P.STONE, 0.42)
+    stoff_lo = hexc("#04050a")
+    bein = mix(P.BONE, P.STONE, 0.20)          # das Knochenweiss der Krone
+    bein_lo = mix(bein, P.INK2, 0.45)
+    akzent = mix(P.ROT, P.WARM, 0.25) if wut > 0.5 else P.TRIM
+
+    # ---- Die Robe: eine Saeule, unten breit, oben schmal. Sie beruehrt
+    # den Boden nicht als Kante, sondern laeuft in Falten aus.
+    schulter_y = base - 74
+    for y in range(schulter_y, base + 1):
+        t = (y - schulter_y) / (base - schulter_y)
+        halb = 9 + t ** 1.35 * 22
+        neig = schweb * (1 - t) * 0.5
+        x0 = int(cx - halb + neig)
+        c.rect(x0, y, int(halb * 2), 1, mix(stoff_hi, stoff, min(1.0, t * 1.8)))
+        # Falten: senkrechte dunkle Streifen, die nach unten auseinanderlaufen.
+        for k in (-1, 0, 1):
+            fx = int(cx + neig + k * halb * 0.52)
+            c.set(fx, y, mix(stoff, stoff_lo, 0.55))
+        c.set(int(cx - halb + neig), y, stoff_lo)
+        c.set(int(cx + halb + neig) - 1, y, mix(stoff_hi, P.STONE, 0.25))
+    # Der Saum franst aus - kein Strich quer ueber den Boden.
+    for x in range(cx - 32, cx + 32):
+        if hash01(x, int(phase * 2)) > 0.4:
+            c.set(x, base + 1, stoff_lo)
+
+    # ---- Schultern: eckig, viel zu breit, wie ein Gestell unter dem Stoff.
+    _flaeche(c, [(cx - 26, schulter_y + 10), (cx - 21, schulter_y - 4),
+                 (cx + 21, schulter_y - 4), (cx + 26, schulter_y + 10)], stoff)
+    c.line(cx - 21, schulter_y - 4, cx + 21, schulter_y - 4, stoff_hi)
+
+    # ---- Kragen aus Zinken: eine Reihe kleiner Stimmgabeln, nach aussen
+    # geneigt. Sie sind der einzige Schmuck an ihm.
+    for i in range(5):
+        t = i / 4
+        x = cx - 19 + i * 9.5
+        hoehe = 6 + int(abs(math.sin(t * math.pi)) * 6)
+        c.line(x, schulter_y - 3, x + (t - 0.5) * 7, schulter_y - 3 - hoehe,
+               mix(bein, stoff, 0.30))
+        c.line(x + 1, schulter_y - 3, x + 1 + (t - 0.5) * 7, schulter_y - 3 - hoehe,
+               mix(bein, stoff, 0.62))
+        c.set(int(x + (t - 0.5) * 7), schulter_y - 3 - hoehe, mix(bein, akzent, 0.4))
+
+    # ---- Die Kapuze: eine Form, in der nichts steht.
+    #
+    # Der erste Anlauf war ein schwarzes Rechteck, und ein schwarzes
+    # Rechteck ist ein Loch im Bild, keine Oeffnung an einer Figur. Die
+    # Kapuze wird darum Zeile fuer Zeile gezogen: oben rund geschlossen,
+    # nach unten weiter, mit Stoffkante im Licht und einer Oeffnung
+    # darin, die sich nach unten oeffnet wie ein Mantel, der aufsteht.
+    hy = schulter_y - 8
+    for y in range(hy - 13, hy + 13):
+        t = (y - (hy - 13)) / 26                      # 0 oben .. 1 unten
+        halb = 4.5 + 8.0 * t ** 0.42
+        neig = schweb * 0.35 * (1 - t)
+        c.rect(int(cx - halb + neig), y, int(halb * 2), 1,
+               mix(stoff_hi, stoff, min(1.0, 0.25 + t * 1.1)))
+        c.set(int(cx - halb + neig), y, mix(stoff_hi, P.STONE, 0.30))
+        c.set(int(cx + halb + neig) - 1, y, stoff_lo)
+
+        # Die Oeffnung darin - erst ab der Stirn, und nach unten weiter.
+        if t > 0.22:
+            innen = (halb - 3.2) * ((t - 0.22) / 0.78) ** 0.35
+            if innen > 0.8:
+                c.rect(int(cx - innen + neig), y, int(innen * 2), 1, hexc("#03040a"))
+                # Die Kante der Oeffnung faengt Licht - daran erkennt man,
+                # dass es eine Kapuze ist und kein Ausschnitt.
+                c.set(int(cx - innen + neig) - 1, y, mix(stoff_hi, bein, 0.25))
+
+    # Ganz tief darin ein Glimmen - das Einzige, was verraet, dass er da ist.
+    c.glow(cx, hy + 4, 8, (akzent[0], akzent[1], akzent[2], int(46 + 60 * wut)))
+
+    # ---- Die Krone. Sie schwebt frei ueber der Kapuze, mit Abstand.
+    ky = hy - 26 + schweb
+    # Der Bogen: eine breite, flache Sichel.
+    for i in range(-26, 27):
+        t = abs(i) / 26
+        dicke = int(6 * (1 - t ** 1.6)) + 1
+        y = ky + t ** 2 * 9
+        for d in range(dicke):
+            c.set(cx + i, int(y) + d, bein if d < dicke - 1 else bein_lo)
+    for seite in (-1, 1):
+        # Die zwei Zinken an den Enden - die Sichel ist eine Stimmgabel.
+        for k in range(7):
+            c.set(cx + seite * 26, int(ky + 9 - k), mix(bein, akzent, k / 7 * 0.5))
+        c.set(cx + seite * 26, int(ky + 2), mix(bein, P.BONE, 0.6))
+
+    # Das Gesicht in der Mitte der Sichel: schmal, mit hohlen Augen.
+    _flaeche(c, [(cx - 6, ky - 2), (cx + 6, ky - 2), (cx + 4, ky + 12),
+                 (cx - 4, ky + 12)], bein)
+    for seite in (-1, 1):
+        c.rect(cx + seite * 3 - 1, int(ky + 3), 2, 3, hexc("#05060c"))
+    c.rect(cx - 2, int(ky + 8), 4, 1, bein_lo)
+    # Und die Staebe, die daran haengen - sie klirren, wenn er sich bewegt.
+    for i, x in enumerate((-17, -11, 11, 17)):
+        laenge = 8 + (i % 2) * 5
+        for k in range(laenge):
+            c.set(cx + x + int(schweb * 0.3 * k / laenge), int(ky + 11 + k),
+                  mix(bein_lo, stoff, k / laenge * 0.5))
+
+    # ---- Arme. Viel zu lang, viel zu duenn: der eine haelt den Stab,
+    # der andere ist ausgestreckt, als wolle er etwas zeigen.
+    def arm(sx, sy, punkte, dick=2.4):
+        vor = (sx, sy)
+        for i, (px, py) in enumerate(punkte):
+            n = max(2, int(math.dist(vor, (px, py))))
+            for k in range(n + 1):
+                t = k / n
+                x = vor[0] + (px - vor[0]) * t
+                y = vor[1] + (py - vor[1]) * t
+                w = max(1.6, dick - i * 0.4)
+                for d in range(-int(w), int(w) + 1):
+                    # Der Arm muss sich vom Stoff abheben, sonst sieht man
+                    # ihn gar nicht - er bekommt darum eine helle Kante.
+                    c.set(int(x) + d, int(y),
+                          mix(stoff_hi, P.STONE, 0.4) if d <= -int(w) + 1
+                          else mix(stoff, stoff_lo, 0.35))
+            vor = (px, py)
+        return vor
+
+    # Der linke Arm holt aus und schlaegt herunter.
+    hebe = (1 - schlag) * 22
+    hand = arm(cx - 22, schulter_y + 4,
+               [(cx - 36, schulter_y + 10 - hebe * 0.4),
+                (cx - 42, schulter_y + 26 - hebe)], dick=3.2)
+    for k in range(3):
+        c.line(hand[0], hand[1], hand[0] - 6 + k * 4, hand[1] + 11 - k * 3,
+               mix(stoff_hi, bein, 0.45))
+
+    # ---- Der Stab: ein Mast mit Glocken daran, laenger als er selbst.
+    stab_x = cx + 30
+    c.rect(stab_x - 1, int(ky + 6), 3, base - int(ky) - 4, mix(stoff_hi, P.STONE, 0.3))
+    c.rect(stab_x + 1, int(ky + 6), 1, base - int(ky) - 4, stoff_lo)
+    arm(cx + 22, schulter_y + 4, [(stab_x - 4, schulter_y + 2), (stab_x, schulter_y + 8)])
+    for i in range(5):
+        gy = int(ky) + 24 + i * 20
+        r = 3 + i * 1.3
+        if gy > base - 6:
+            break
+        c.ellipse(stab_x, gy, r, r * 0.9, mix(bein_lo, stoff, 0.45))
+        c.ellipse(stab_x - r * 0.3, gy - r * 0.3, r * 0.5, r * 0.4,
+                  mix(bein, akzent, 0.25 + wut * 0.4))
+        c.set(stab_x, int(gy + r * 0.9), akzent)
+        c.line(stab_x, gy - r, stab_x, gy - r - 3, stoff_lo)
+
+    c.shadow_pass((0, 1), -0.16)
+    c.outline(hexc("#05060c", 235))
+    # Ein Schein hinter der Krone: die Krone ist die Lichtquelle, nicht er.
+    c.glow(cx, ky + 4, 34, (akzent[0], akzent[1], akzent[2], int(26 + 30 * wut)),
+           power=2.4)
+    return c
+
+
 def draw_kantor(phase: float, enraged: bool = False) -> Canvas:
     """Der Verstimmte Kantor - Boss. Orgelpfeifen wachsen ihm aus dem Ruecken."""
     c = Canvas(44, 52)
@@ -1743,6 +1922,18 @@ def build() -> None:
     atlas.add_sequence("echoscherbe_spin",
                        [draw_echoscherbe(i / 6 * math.tau) for i in range(6)],
                        pivot=(0.5, 0.5), fps=12)
+    # Der erste Boss. Ausholen ist lang, der Schlag ist kurz - genau so
+    # sollen die Bilder verteilt sein, sonst liest sich der Tell nicht.
+    atlas.add_sequence("auftakt_idle",
+                       [draw_auftakt(i / 8 * math.tau) for i in range(8)],
+                       pivot=(0.5, 1.0), fps=6)
+    atlas.add_sequence("auftakt_aufschwung",
+                       [draw_auftakt(i / 6 * math.tau, schlag=i / 12) for i in range(6)],
+                       pivot=(0.5, 1.0), fps=7)
+    atlas.add_sequence("auftakt_schlag",
+                       [draw_auftakt(i / 4 * math.tau, schlag=0.5 + i / 8, wut=0.7)
+                        for i in range(4)],
+                       pivot=(0.5, 1.0), fps=16)
     atlas.add_sequence("kantor_idle",
                        [draw_kantor(i / 6 * math.tau) for i in range(6)],
                        pivot=(0.5, 1.0), fps=6)

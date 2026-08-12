@@ -61,6 +61,14 @@ KREATUREN = [
       "aufgesprungen ist. Innen stehen drei",
       "Linien, die nicht zueinander passen -",
       "man sieht den Missklang, bevor er kommt."]),
+    ("auftakt", "DER GROSSE AUFTAKT", 3,
+     ["Erster Boss. Viermal so hoch wie sie,",
+      "schwarz, mit einer Krone, die gar nicht",
+      "zu ihm gehoert. In der Kapuze: nichts.",
+      "",
+      "Er kann genau eine Sache - den Takt",
+      "vorgeben - und sagt sie viel zu lange",
+      "vorher an. Genau dafuer ist er da."]),
     ("echoscherbe", "ECHOSCHERBE", 6,
      ["Prallt frei umher; jede Wand dreht sie",
       "um. Sie zielt nicht, sie ist nur im Weg.",
@@ -72,6 +80,7 @@ KREATUREN = [
 ]
 
 ZEICHNER = {
+    "auftakt": G.draw_auftakt,
     "gabelmaus": G.draw_gabelmaus,
     "klangmotte": G.draw_klangmotte,
     "stilleschreiter": G.draw_stilleschreiter,

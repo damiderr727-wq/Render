@@ -43,7 +43,25 @@ public final class Boss {
         case entrance, hover, chord, sweep, pipes, summon, stagger, defeated
     }
 
-    public let maxHealth = 72
+    /// Welcher Boss. Beide benutzen denselben Ablauf - der Unterschied
+    /// liegt darin, wie lange sie ausholen und was sie koennen.
+    public enum Art: String, Sendable {
+        /// Der grosse Auftakt: erster Boss, Tutorial. Sieht furchtbar aus,
+        /// kann genau eine Sache, und sagt sie viel zu lange vorher an.
+        case auftakt
+        /// Der verstimmte Kantor: Endgegner.
+        case kantor
+
+        var health: Int { self == .auftakt ? 28 : 72 }
+        /// Wie lange er schwebt, bevor er zuschlaegt. Beim Auftakt ist das
+        /// der ganze Witz: man hat Zeit, den Schlag zu lesen.
+        var ansage: Double { self == .auftakt ? 2.1 : 1.0 }
+        var kannPfeifen: Bool { self == .kantor }
+        var kannRufen: Bool { self == .kantor }
+    }
+
+    public let art: Art
+    public var maxHealth: Int { art.health }
     public private(set) var health: Int
     public private(set) var phase: Phase = .takt
     public private(set) var action: Action = .entrance
@@ -66,12 +84,13 @@ public final class Boss {
     private var targetX: Double
     private var attacksSinceMove = 0
 
-    public init(position: Vec2, arena: Rect) {
+    public init(position: Vec2, arena: Rect, art: Art = .kantor) {
+        self.art = art
         self.position = position
         self.arena = arena
         self.floorY = position.y
         self.targetX = position.x
-        self.health = maxHealth
+        self.health = art.health
     }
 
     public var rect: Rect {
@@ -122,11 +141,15 @@ public final class Boss {
     }
 
     private var hoverDuration: Double {
+        // Die Ansage ist beim Auftakt der ganze Kampf: er holt lange aus,
+        // damit man lernt, dass hier jeder Schlag vorher zu sehen ist.
+        let basis: Double
         switch phase {
-        case .takt: return 1.5
-        case .fuge: return 1.05
-        case .toccata: return 0.7
+        case .takt: basis = 1.5
+        case .fuge: basis = 1.05
+        case .toccata: basis = 0.7
         }
+        return basis * art.ansage
     }
 
     private func begin(_ next: Action) {
@@ -154,9 +177,13 @@ public final class Boss {
         }
 
         var options: [Action] = [.chord, .sweep]
-        if phase != .takt { options.append(.pipes) }
-        if phase == .fuge { options.append(.summon) }
-        if phase == .toccata { options.append(contentsOf: [.pipes, .sweep]) }
+        // Der Auftakt kann genau diese zwei Dinge. Keine Pfeifen, keine
+        // gerufenen Kreaturen - er ist eine Uebung, kein Kampf.
+        if phase != .takt, art.kannPfeifen { options.append(.pipes) }
+        if phase == .fuge, art.kannRufen { options.append(.summon) }
+        if phase == .toccata, art.kannPfeifen {
+            options.append(contentsOf: [.pipes, .sweep])
+        }
 
         let pick = options[rng.int(0, options.count - 1)]
         begin(pick)

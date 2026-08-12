@@ -130,10 +130,11 @@ public final class GameScene: SKScene {
         }
 
         if let boss = sim.boss {
-            let node = atlas.sprite("kantor_idle_0")
+            let bild = "\(boss.art.rawValue)_idle"
+            let node = atlas.sprite("\(bild)_0")
             node.zPosition = 7
             node.position = WorldSpace.scenePoint(boss.position)
-            if let loop = atlas.loop("kantor_idle") { node.run(loop) }
+            if let loop = atlas.loop(bild) { node.run(loop) }
             renderer.layers.entities.addChild(node)
             bossNode = node
         }

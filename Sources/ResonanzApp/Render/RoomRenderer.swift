@@ -60,6 +60,7 @@ public final class RoomRenderer {
         buildBackdrop(room: room)
         buildTerrain(room: room)
         scatterEdgeProps(room: room)
+        scatterHangProps(room: room)
         buildDecor(room: room)
         buildAtmosphere(room: room)
     }
@@ -158,8 +159,8 @@ public final class RoomRenderer {
                     if room.tile(tx + 1, ty) != .platform { cap += "r" }
                     node = atlas.sprite("\(region)_platform_\(cap.isEmpty ? "mid" : cap)_"
                                         + "\((tx &* 13 &+ ty &* 7) % 4)")
-                case .spike:
-                    node = atlas.sprite("\(region)_spike")
+                case .spike, .spikeDown, .spikeLeft, .spikeRight:
+                    node = atlas.sprite("\(region)_spike\(tile.hazardSuffix)")
                 case .slopeUp, .slopeDown, .slopeUpLow, .slopeUpHigh,
                      .slopeDownHigh, .slopeDownLow:
                     let kind: String
@@ -221,6 +222,33 @@ public final class RoomRenderer {
                     let versatz = Double((tx &* 13 &+ ty &* 7) % 100) / 100.0
                     node.run(.sequence([.wait(forDuration: versatz), loop]))
                 }
+                layers.decor.addChild(node)
+            }
+        }
+    }
+    /// Dasselbe an der Decke.
+    ///
+    /// Der Boden sieht gut aus, weil Requisiten quer ueber seinen Kacheln
+    /// liegen. Die Decke hatte nichts davon und blieb deshalb eine Treppe
+    /// aus Rechtecken, egal wie fein das Hoehenprofil war. An jeder Stufe
+    /// haengt jetzt etwas darueber - genau dort, wo die Waagerechte
+    /// sichtbar waere.
+    private func scatterHangProps(room: Room) {
+        let region = room.region.rawValue
+
+        func isCeiling(_ tx: Int, _ ty: Int) -> Bool {
+            room.tile(tx, ty) == .solid && room.tile(tx, ty + 1) == .air
+        }
+
+        for ty in 0..<(room.height - 1) {
+            for tx in 1..<room.width where isCeiling(tx, ty) {
+                let step = !isCeiling(tx - 1, ty) || !isCeiling(tx + 1, ty)
+                if !step, (tx &* 2654435761 &+ ty &* 40503) % 100 >= 22 { continue }
+                let node = atlas.sprite("hang_\(region)_\((tx &* 5 &+ ty &* 11) % 6)")
+                node.anchorPoint = CGPoint(x: 0.5, y: 1.0)
+                node.position = CGPoint(x: Double(tx) * tileSize + tileSize / 2,
+                                        y: -Double(ty + 1) * tileSize + 2)
+                node.zPosition = 2
                 layers.decor.addChild(node)
             }
         }

@@ -27,6 +27,9 @@ def hash01(x: int, y: int = 0) -> float:
 OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Resources" / "Levels"
 
 AIR, SOLID, PLATFORM, SPIKE, DWALL = ".", "#", "=", "^", "D"
+# Dornen zeigen in vier Richtungen. Wer sie alle als "^" schreibt,
+# bekommt an der Decke Dornen, die nach oben wachsen.
+SPIKE_DOWN, SPIKE_LEFT, SPIKE_RIGHT = "v", "<", ">"
 SLOPE_UP, SLOPE_DOWN = "/", "\\"
 UP_LOW, UP_HIGH, DOWN_HIGH, DOWN_LOW = "1", "2", "3", "4"
 
@@ -267,36 +270,46 @@ class Room:
         Damit ist die Decke keine eigene Erfindung mehr, sondern eine
         Aussage ueber den Ort.
 
-        `zacken` haengt Tropfsteine an die Decke, `saeulen` laesst
-        einzelne davon bis zum Boden durchwachsen. Beides ist das, was
-        eine glatte Kante zu Fels macht.
+        Die Decke bekommt ausserdem eine Behandlung, die der Boden schon
+        hatte: **an jeder Stufe haengt Fels.**
+
+        Eine gerundete Kurve wird beim Runden auf ganze Kacheln zur
+        Treppe, und eine Treppe quer ueber das Bild sieht aus wie ein
+        Regal. Der Boden loest das mit Rampen (`soften`); nach oben gibt
+        es keine Rampenkacheln. Also wird die Stufe stattdessen
+        *verdeckt*: wo die Decke springt, waechst ein Zapfen herunter,
+        der genau so lang ist wie der Sprung, plus ein wenig. Damit ist
+        die waagerechte Kante weg - was bleibt, liest sich als Fels.
         """
+        hoehen: dict[int, tuple[int, int]] = {}
         for x in range(x0, x1):
-            b = int(round(boden(x)))
-            b = max(2, min(self.h - 1, b))
+            b = max(2, min(self.h - 1, int(round(boden(x)))))
             d = max(1, int(round(b - max(3, kopfhoehe(x)))))
+            hoehen[x] = (b, d)
             self.fill(x, b, 1, self.h - b)
             self.fill(x, 0, 1, d)
 
-            # Tropfsteine sind Schmuck, kein Hindernis. Sie haengen nur in
-            # Raeumen mit wirklich viel Luft und lassen immer sieben Kacheln
-            # frei - die Figur braucht drei zum Stehen, und der Rest ist der
-            # Abstand, den Schmuck zum Weg zu halten hat.
-            #
-            # Der erste Versuch war grosszuegiger, und die Physikpruefung
-            # meldete prompt, was daraus wird: in "Unter den Wurzeln" waren
-            # 16 von 56 Standflaechen nicht mehr erreichbar, weil die Zacken
-            # den niedrigen Gang in Inseln zerschnitten hatten.
-            if zacken and b - d >= 10 and hash01(x, seed) < zacken:
+        for x in range(x0, x1):
+            b, d = hoehen[x]
+            luft = b - d
+
+            # Der Zapfen an der Stufe: so lang wie der Hoehensprung zum
+            # Nachbarn, damit die Kante darin verschwindet.
+            stufe = max(abs(d - hoehen[x - 1][1]) if x - 1 in hoehen else 0,
+                        abs(d - hoehen[x + 1][1]) if x + 1 in hoehen else 0)
+            laenge = 0
+            if stufe and luft >= 6:
+                laenge = stufe + 1 + int(hash01(x, seed + 3) * 2)
+            elif zacken and luft >= 10 and hash01(x, seed) < zacken:
                 laenge = 1 + int(hash01(x, seed + 1) * 2.6)
-                self.fill(x, d, 1, min(laenge, max(0, b - d - 7)))
-            if saeulen and b - d >= 10 and hash01(x, seed + 9) < saeulen:
+            if laenge:
+                self.fill(x, d, 1, min(laenge, max(0, luft - 5)))
+
+            if saeulen and luft >= 10 and hash01(x, seed + 9) < saeulen:
                 # Eine Saeule, die durchsteht, sperrt den Gang - und weil
                 # sie an zufaelliger Stelle steht, sperrt sie ihn an
                 # zufaelliger Stelle. Also waechst sie von oben und von
-                # unten aufeinander zu und trifft sich nicht ganz: sie
-                # sieht aus wie eine Saeule und laesst trotzdem durch.
-                luft = b - d
+                # unten aufeinander zu und trifft sich nicht ganz.
                 oben, unten = int(luft * 0.34), int(luft * 0.24)
                 for k in range(2):
                     self.fill(x + k, d, 1, oben)
@@ -319,12 +332,25 @@ class Room:
         return self
 
     def deckendornen(self, x: int, w: int) -> "Room":
-        """Dornen, die von der Decke haengen - sie begrenzen die Sprunghoehe."""
+        """
+        Dornen, die von der Decke haengen - sie begrenzen die Sprunghoehe.
+
+        Sie bekommen die gedrehte Kachel: nach unten zeigend. Vorher stand
+        hier dieselbe Kachel wie am Boden, und das sah aus wie Gras, das
+        von der Decke waechst.
+        """
         for i in range(x, x + w):
-            for y in range(1, self.h):
+            for y in range(1, self.h - 1):
                 if self.grid[y][i] == SOLID and self.grid[y + 1][i] == AIR:
-                    self.set(i, y + 1, SPIKE)
+                    self.set(i, y + 1, SPIKE_DOWN)
                     break
+        return self
+
+    def wanddornen(self, x: int, y: int, h: int, nach: int = 1) -> "Room":
+        """Dornen an einer senkrechten Wand. `nach` 1 zeigt nach rechts."""
+        ch = SPIKE_RIGHT if nach > 0 else SPIKE_LEFT
+        for j in range(y, y + h):
+            self.set(x, j, ch)
         return self
 
     # ---- Bodensuche
@@ -711,12 +737,17 @@ def room_A3() -> Room:
 
 def room_A4() -> Room:
     """
-    Eine Sackgasse, und zwar mit Absicht.
+    Die Sackgasse, in der der erste Boss wartet.
 
-    Ein Gebiet, in dem jeder Gang irgendwohin fuehrt, fuehlt sich an wie
-    ein Schaltplan. Es braucht Raeume, die nichts weiter tun als da zu
-    sein: hier steht eine Bank, hier ist nichts los, hier war einmal
-    jemand.
+    Vorn eine Bank und ein Raum, in dem nichts passiert - und ganz hinten
+    steht DER GROSSE AUFTAKT: viermal so hoch wie sie, schwarz, mit einer
+    Krone, die gar nicht zu ihm gehoert. Er sieht aus, als koennte er
+    einen mit einer Bewegung erledigen.
+
+    Kann er nicht. Er holt aus, haelt viel zu lange, und schlaegt zu.
+    Genau dafuer steht er hier: er lehrt die Regel, nach der jeder Kampf
+    in diesem Spiel funktioniert - alles ist vorher zu sehen -, und er
+    tut es, indem er furchtbar aussieht und harmlos ist.
     """
     r = Room("A4", "DIE STILLE KANZEL", "hain", 40, 22)
     r.border()
@@ -734,9 +765,11 @@ def room_A4() -> Room:
     r.side_door("L", "left", "A3", "R", hint=6)
     r.bench_on(9, 6)
 
+    # Der erste Boss steht am Ende der Sackgasse, und die Bank steht am
+    # Anfang davon. Das ist die uebliche Ordnung: erst ausruhen, dann
+    # sehen, was einen erwartet.
+    r.set_boss("auftakt", 32, 11, (4, 4, 34, 16))
     r.pickup_on("siegel", "scherbenherz", 34, 6)
-
-    r.enemy_on("gabelmaus", 22, 8, patrol=5)
 
     r.crystal_on(6, 6, 2)
     r.crystal_on(16, 6, 1)

@@ -153,7 +153,8 @@ public final class GameSimulation {
                              width: Double(b.arena.w) * tileSize,
                              height: Double(b.arena.h) * tileSize)
             if !save.collected.contains("\(room.id)/boss") {
-                boss = Boss(position: Vec2.entity(b.x, b.y), arena: arena)
+                boss = Boss(position: Vec2.entity(b.x, b.y), arena: arena,
+                            art: Boss.Art(rawValue: b.type) ?? .kantor)
             }
         }
 

@@ -89,12 +89,32 @@ public final class RoomRenderer {
             let container = SKNode()
             container.zPosition = CGFloat(layer)
             let columns = Int(ceil(Double(room.width) * tileSize / Double(info.size.width))) + 2
+
+            // In Raeumen, die hoeher sind als ein Bildschirm, bleibt oben
+            // Himmel stehen. Das ist gewollt: die Schichten sind in ihren
+            // obersten Reihen durchsichtig gezeichnet (`in_dunst` in
+            // gen_backdrops.py) und gehen ohne Kante in ihn ueber, statt
+            // irgendwo in der Luft aufzuhoeren.
             for column in 0..<columns {
                 let sprite = SKSpriteNode(texture: info.texture, size: info.size)
                 sprite.anchorPoint = CGPoint(x: 0, y: 0)
                 sprite.position = CGPoint(x: CGFloat(column) * info.size.width,
                                           y: -Double(room.height) * tileSize)
                 sprite.alpha = [0.55, 0.7, 0.85][layer]
+
+                // Jede zweite Kachel gespiegelt. Aneinandergereiht stiess
+                // sonst die rechte Kante der Schicht auf ihre eigene linke,
+                // und in breiten Raeumen lief alle 512 Pixel eine harte
+                // senkrechte Naht durchs Bild. Gespiegelt trifft jede Kante
+                // auf sich selbst, und die Naht verschwindet.
+                //
+                // Der Preis: auf den gespiegelten Kacheln kommt das Licht
+                // von links statt von rechts. In dieser Entfernung, hinter
+                // zwei Schleiern, faellt das nicht auf - eine Naht schon.
+                if column % 2 == 1 {
+                    sprite.xScale = -1
+                    sprite.position.x += info.size.width
+                }
                 container.addChild(sprite)
             }
             container.userData = ["parallax": factor]
@@ -352,6 +372,12 @@ public final class RoomRenderer {
                 sprite.anchorPoint = CGPoint(x: 0, y: 0)
                 sprite.position = CGPoint(x: CGFloat(column) * info.size.width,
                                           y: -Double(room.height) * tileSize)
+                // Wie hinten: gespiegelt gekachelt, sonst steht in breiten
+                // Raeumen alle 512 Pixel eine schwarze Kante im Vordergrund.
+                if column % 2 == 1 {
+                    sprite.xScale = -1
+                    sprite.position.x += info.size.width
+                }
                 container.addChild(sprite)
             }
             container.userData = ["parallax": atlas.parallaxFactors["\(room.region.rawValue)_fg"] ?? 1.3]

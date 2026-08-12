@@ -82,11 +82,20 @@ def render(room_id: str) -> Image.Image:
 
     # Hintergrundschichten. Sie sind genau bildschirmhoch und werden nur
     # waagerecht gekachelt - senkrecht wiederholt gaebe der Himmelsverlauf
-    # eine sichtbare Naht. Was darueber liegt, bekommt die Himmelsfarbe.
+    # eine sichtbare Naht.
+    #
+    # Ist der Raum hoeher als ein Bildschirm, bleibt oben Himmel stehen:
+    # die Schichten selbst sind in ihren obersten Reihen durchsichtig
+    # gezeichnet (siehe `in_dunst` in gen_backdrops.py) und gehen darum
+    # ohne Kante in ihn ueber.
+    # Ganz hinten eine durchgehende Himmelsflaeche - dieselbe, die im Spiel
+    # als eigener Knoten hinter allem liegt. Ohne sie stehen ueberall dort,
+    # wo alle drei Schichten durchsichtig sind, Loecher in der Grundfarbe;
+    # in breiten Raeumen ergab das eine schwarze Linie an jeder Kachelfuge.
     sky_img, _ = backdrops.frame(f"{region}_bg0")
     if sky_img is not None:
-        top_row = sky_img.crop((0, 0, sky_img.width, 1)).resize((1, 1))
-        canvas.paste(top_row.resize((w * TS, h * TS)), (0, 0))
+        canvas.paste(sky_img.crop((0, 0, sky_img.width, 1)).resize((w * TS, h * TS)),
+                     (0, 0))
 
     for layer in range(3):
         img, _ = backdrops.frame(f"{region}_bg{layer}")
@@ -95,8 +104,13 @@ def render(room_id: str) -> Image.Image:
         alpha = [0.55, 0.7, 0.85][layer]
         faded = img.copy()
         faded.putalpha(faded.getchannel("A").point(lambda v: int(v * alpha)))
-        for ox in range(0, w * TS, img.width):
-            canvas.alpha_composite(faded, (ox, h * TS - img.height))
+        oben = h * TS - img.height
+        # Jede zweite Kachel gespiegelt: sonst stoesst die rechte Kante der
+        # Schicht auf ihre eigene linke, und alle 512 Pixel laeuft eine
+        # harte senkrechte Naht durchs Bild. Derselbe Kniff wie im Spiel.
+        gespiegelt = faded.transpose(Image.FLIP_LEFT_RIGHT)
+        for i, ox in enumerate(range(0, w * TS, img.width)):
+            canvas.alpha_composite(gespiegelt if i % 2 else faded, (ox, oben))
 
     # Gelaende
     for y in range(h):
@@ -197,8 +211,10 @@ def render(room_id: str) -> Image.Image:
     # Vorderste Schicht: fast schwarze Massen, laufen vor allem anderen.
     fg_img, _ = backdrops.frame(f"{region}_fg")
     if fg_img is not None:
-        for ox in range(0, w * TS, fg_img.width):
-            canvas.alpha_composite(fg_img, (ox, h * TS - fg_img.height))
+        fg_gespiegelt = fg_img.transpose(Image.FLIP_LEFT_RIGHT)
+        for i, ox in enumerate(range(0, w * TS, fg_img.width)):
+            canvas.alpha_composite(fg_gespiegelt if i % 2 else fg_img,
+                                   (ox, h * TS - fg_img.height))
 
     # Verdunklung tiefer Regionen
     if room.get("darkness", 0) > 0:
@@ -208,12 +224,32 @@ def render(room_id: str) -> Image.Image:
     return canvas
 
 
+# Was die Kamera im Spiel wirklich zeigt: GameScene.designSize, in
+# Kacheln also 32 mal 18. Der Raumueberblick weiter oben zeigt zwei- bis
+# fuenfmal so viel und laesst darum alles winzig wirken - das ist eine
+# Eigenschaft des Werkzeugs, nicht des Spiels.
+SICHT_W, SICHT_H = 512, 288
+
+
+def kameraausschnitt(bild: Image.Image, room: dict, zoom: int = 3) -> Image.Image:
+    """Schneidet den Bildausschnitt zu, den die Kamera im Spiel zeigt."""
+    spawn = next(iter(room.get("spawns", {}).values()), None)
+    cx = (spawn["x"] * TS if spawn else bild.width / 2)
+    cy = (spawn["y"] * TS - 40 if spawn else bild.height / 2)
+    x0 = int(max(0, min(bild.width - SICHT_W, cx - SICHT_W / 2)))
+    y0 = int(max(0, min(bild.height - SICHT_H, cy - SICHT_H / 2)))
+    schnitt = bild.crop((x0, y0, x0 + SICHT_W, y0 + SICHT_H))
+    return schnitt.resize((SICHT_W * zoom, SICHT_H * zoom), Image.NEAREST)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("room", nargs="?", help="Raumkennung, etwa A1")
     parser.add_argument("--out", default=None, help="Zieldatei")
     parser.add_argument("--alle", action="store_true", help="alle Raeume rendern")
     parser.add_argument("--scale", type=int, default=1)
+    parser.add_argument("--kamera", action="store_true",
+                        help="nur den Ausschnitt zeigen, den die Kamera im Spiel zeigt")
     args = parser.parse_args()
 
     index = json.loads((RES / "Levels" / "index.json").read_text())
@@ -224,7 +260,10 @@ def main() -> int:
 
     for room_id in ids:
         image = render(room_id)
-        if args.scale > 1:
+        if args.kamera:
+            room = json.loads((RES / "Levels" / f"{room_id}.json").read_text())
+            image = kameraausschnitt(image, room)
+        elif args.scale > 1:
             image = image.resize((image.width * args.scale, image.height * args.scale),
                                  Image.NEAREST)
         target = Path(args.out) if (args.out and not args.alle) else out_dir / f"{room_id}.png"

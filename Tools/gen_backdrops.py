@@ -629,13 +629,45 @@ BUILDERS = {"hain": hain, "kathedrale": kathedrale,
             "grotten": grotten, "dissonanz": dissonanz}
 
 
+def in_dunst(c: Canvas, hoehe: int = 72) -> Canvas:
+    """
+    Loest die oberen Reihen einer Schicht in Luft auf.
+
+    Die Schichten sind genau bildschirmhoch. In einem Raum, der hoeher
+    ist, endeten sie mitten in der Luft - eine harte Kante quer durchs
+    Bild. Der erste Versuch, die oberste Zeile nach oben zu strecken,
+    machte daraus lange senkrechte Schlieren, also nur eine andere Art
+    Fehler.
+
+    Die Loesung ist keine technische, sondern eine malerische: eine
+    Schicht darf oben gar nicht aufhoeren. Sie verliert nach oben ihre
+    Deckkraft und verschwindet im Dunst, und was darueber steht, ist
+    Himmel - so wie ein Wald sich nach oben eben in Nebel verliert. Damit
+    ist es voellig gleich, wie hoch der Raum ist.
+    """
+    for y in range(min(hoehe, c.h)):
+        t = y / hoehe                       # 0 ganz oben .. 1 unten
+        f = t * t * (3 - 2 * t)             # weich anlaufen, weich enden
+        for x in range(c.w):
+            r, g, b, a = c.get(x, y)
+            if a:
+                c.set(x, y, (r, g, b, int(a * f)))
+    return c
+
+
 def build() -> None:
     atlas = Atlas("backdrops", padding=2, max_width=512)
     for region in REGIONS:
         for layer in range(3):
-            atlas.add(f"{region}_bg{layer}", BUILDERS[region](layer), pivot=(0, 0),
+            bild = BUILDERS[region](layer)
+            # Der Himmel selbst bleibt deckend - hinter ihm liegt nichts
+            # mehr, was durchscheinen koennte.
+            if layer > 0:
+                bild = in_dunst(bild, 64 + layer * 24)
+            atlas.add(f"{region}_bg{layer}", bild, pivot=(0, 0),
                       parallax=[0.10, 0.28, 0.52][layer])
-        atlas.add(f"{region}_fg", foreground(region), pivot=(0, 0), parallax=1.30)
+        atlas.add(f"{region}_fg", in_dunst(foreground(region), 56),
+                  pivot=(0, 0), parallax=1.30)
     png, js = atlas.write(OUT)
     print(f"backdrops  -> {png.name} ({len(atlas.frames)} Frames)")
 

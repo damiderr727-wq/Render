@@ -204,11 +204,28 @@ class Room:
     # ihr y also genau 15.0 - die Oberkante dieser Reihe.
 
     def floor_at(self, x: float, hint: float = 0) -> int:
-        """Erste begehbare Oberflaeche ab `hint` abwaerts (Fels mit Luft darueber)."""
+        """
+        Erste begehbare Oberflaeche ab `hint` abwaerts (Fels mit Luft darueber).
+
+        Der Hinweis dient dazu, ein Sims zu ueberspringen und den Boden
+        darunter zu treffen. Liegt er versehentlich *unter* dem Boden,
+        findet die Suche nichts mehr - und lieferte frueher die unterste
+        Raumzeile zurueck, also mitten im Fels. Beim Ausbau des Hains
+        passierte das gleich siebenmal.
+
+        Ein unerfuellbarer Hinweis ist immer ein Versehen. Also wird er in
+        dem Fall verworfen und von oben gesucht, statt etwas an eine
+        Stelle zu setzen, die nachweislich falsch ist.
+        """
+        # Schraegen zaehlen mit: auf einer Rampe steht man genauso wie auf
+        # Fels, und wer das vergisst, setzt Gegner ueber Rampen ins Leere.
+        begehbar = (SOLID, PLATFORM, SLOPE_UP, SLOPE_DOWN,
+                    UP_LOW, UP_HIGH, DOWN_HIGH, DOWN_LOW)
         xi = max(0, min(self.w - 1, int(x)))
-        for y in range(max(1, int(hint)), self.h):
-            if self.grid[y][xi] in (SOLID, PLATFORM) and self.grid[y - 1][xi] == AIR:
-                return y
+        for start in (max(1, int(hint)), 1):
+            for y in range(start, self.h):
+                if self.grid[y][xi] in begehbar and self.grid[y - 1][xi] == AIR:
+                    return y
         return self.h - 1
 
     def spawn_on(self, name: str, x: float, hint: float = 0, facing: int = 1) -> "Room":
@@ -474,12 +491,14 @@ def room_A2() -> Room:
     r.side_door("R", "right", "A3", "L", hint=17)
     r.shaft_door("U", 53, 5, "up", "B1", "N", requires="fluegelschlag")
     r.spawn_on("U", 55, 4, 1)
+    # Und ein Loch nach unten, mitten auf der Lichtung. Es ist offen,
+    # unverschlossen und fuehrt in einen Teil des Hains, den man von hier
+    # oben gar nicht vermutet.
+    r.shaft_door("D", 20, 4, "down", "A5", "N")
+    r.spawn_on("D", 18, 25, 1)
 
     r.pickup("kern", "trommel", 30, 21)
-    r.pickup("equipment", "offene_fassung", 20, 19)
     r.pickup("equipment", "cape", 10, 22)
-    r.pickup("kern", "metronom", 39, 18)
-    r.pickup("siegel", "scherbenherz", 55, 22)
 
     r.enemy_on("gabelmaus", 21, 22, patrol=5)
     r.enemy("klangmotte", 16, 19)
@@ -520,12 +539,15 @@ def room_A3() -> Room:
     r.ledge(53, 15, 8, 2)
 
     r.side_door("L", "left", "A2", "R")
+    r.side_door("R", "right", "A4", "L", hint=13)
+    # Ein Loch im Muldenboden. Man faellt hindurch, ohne es zu wollen -
+    # und steht dann unten im Wurzelwerk, wo man ohne Fluegelschlag den
+    # langen Weg zurueck nehmen muss.
+    r.shaft_door("T", 17, 3, "down", "A7", "N")
+    r.spawn_on("T", 15, 17, 1)
 
     r.pickup("kern", "floete", 34, 15)
     r.pickup("ability", "fluegelschlag", 56, 13)
-    r.pickup("siegel", "federstaub", 14, 16)
-    r.pickup("siegel", "pilgerstab", 44, 20)
-    r.pickup("klinge", "gezackt", 26, 18)
 
     r.enemy_on("gabelmaus", 18, 15, patrol=5)
     r.enemy("klangmotte", 20, 11)
@@ -542,6 +564,275 @@ def room_A3() -> Room:
                      "SIE STICHT, WO DIE LEIER STREICHELT.")
     r.note_on(50, 8, "EIN FLUEGELSCHLAG BLIEB IN DER LUFT HAENGEN, "
                      "ALS DER VOGEL SCHON LANGE FORT WAR.")
+    return r
+
+
+def room_A4() -> Room:
+    """
+    Eine Sackgasse, und zwar mit Absicht.
+
+    Ein Gebiet, in dem jeder Gang irgendwohin fuehrt, fuehlt sich an wie
+    ein Schaltplan. Es braucht Raeume, die nichts weiter tun als da zu
+    sein: hier steht eine Bank, hier ist nichts los, hier war einmal
+    jemand. Der Weg hierher kostet zwei Minuten und gibt einem dafuer den
+    einzigen Ort im Hain, an dem es wirklich still ist.
+    """
+    r = Room("A4", "DIE STILLE KANZEL", "hain", 40, 20)
+    r.border()
+    r.ground(1, 39, lambda x: 14 - 2 * math.sin(x * 0.09))
+    r.ceiling(1, 39, lambda x: 3 + 2 * math.sin(x * 0.15 + 1))
+
+    # Eine flache Terrasse, die nach hinten ansteigt. Kein Hindernis,
+    # nichts zu holen ausser dem, was oben liegt.
+    r.ramp(24, 13, 4, 1)
+    r.ledge(30, 9, 8, 2)
+
+    r.side_door("L", "left", "A3", "R", hint=13)
+    r.bench_on(10, 13)
+
+    r.pickup("siegel", "scherbenherz", 34, 8)
+
+    r.enemy_on("gabelmaus", 20, 13, patrol=6)
+    r.enemy_on("dissonanzknospe", 27, 12)
+
+    r.crystal_on(7, 13, 2)
+    r.crystal_on(15, 13, 1)
+    r.scatter_decor(18, 13)
+
+    r.note_on(13, 13, "HIER SETZTE SICH JEMAND HIN UND HOERTE ZU, "
+                      "BIS NICHTS MEHR KAM.")
+    r.note(34, 8, "EIN HERZ AUS SCHERBEN SCHLAEGT NICHT LEISER. "
+                  "ES SCHLAEGT NUR AN MEHR STELLEN.")
+    return r
+
+
+def room_A5() -> Room:
+    """
+    Unter der Lichtung: niedrig, dunkel, voller Wurzeln.
+
+    Der Hain war bisher ein Gang mit Aussicht. Ein Gebiet wird aber erst
+    gross, wenn es unter sich noch etwas hat - und wenn dieses Etwas
+    anders aussieht. Hier ist die Decke zwei Kacheln ueber dem Kopf, es
+    gibt keinen Himmel, und das Licht kommt nur aus den Loechern oben.
+    """
+    r = Room("A5", "UNTER DEN WURZELN", "hain", 56, 18)
+    r.border()
+    r.ground(1, 55, lambda x: 13 - 1.5 * math.sin(x * 0.08))
+    r.ceiling(1, 55, lambda x: 6 + 2 * math.sin(x * 0.11 + 2))
+    r.dark = 0.16
+
+    # Der Weg zurueck nach oben: eine Treppe unter dem Schacht. Ohne sie
+    # waere der Sturz aus A2 eine Falle - und Fallen, aus denen man nicht
+    # mehr herauskommt, sind keine.
+    r.ledge(8, 11, 5, 2)
+    r.platform(14, 9, 5)
+    r.ledge(19, 7, 6, 2)
+
+    # Wurzeln, die von der Decke bis zum Boden reichen: Deckung, Sicht-
+    # sperre, und der Grund, warum man hier langsamer geht.
+    for x in (30, 38, 46):
+        r.fill(x, 7, 1, 4)
+
+    # Zurueck durch das eigene Loch geht es erst mit dem Fluegelschlag.
+    # Der freie Weg hinaus fuehrt nach rechts durch den Untergrund und
+    # oben im Stamm wieder heraus - man faellt hier hinein und kommt
+    # woanders an, so wie es sein soll.
+    r.shaft_door("N", 20, 4, "up", "A2", "D", requires="fluegelschlag")
+    r.spawn_on("N", 22, 8, 1)
+    r.side_door("R", "right", "A6", "L", hint=12)
+
+    r.pickup("siegel", "federstaub", 44, 11)
+
+    r.enemy_on("gabelmaus", 12, 11, patrol=4)
+    r.enemy_on("stilleschreiter", 34, 12, patrol=5)
+    r.enemy_on("gabelmaus", 42, 12, patrol=6)
+    r.enemy_on("dissonanzknospe", 50, 12)
+
+    r.crystal_on(6, 12, 1)
+    r.crystal_on(27, 12, 2)
+    r.scatter_decor(33, 12)
+
+    r.note_on(9, 12, "WAS OBEN LICHTUNG HEISST, HEISST HIER UNTEN DECKE.")
+    r.note_on(48, 12, "DIE WURZELN HABEN DEN TON BEHALTEN. "
+                      "SIE GEBEN IHN NUR NICHT MEHR HERAUS.")
+    return r
+
+
+def room_A6() -> Room:
+    """
+    Ein Gang, mehr nicht - und genau darum wichtig.
+
+    Zwischen zwei Ereignissen muss Weg liegen, sonst reiht sich alles
+    aneinander wie Perlen. Dieser hier ist eng, tropft und hat eine
+    einzige Stelle, an der man aufpassen muss.
+    """
+    r = Room("A6", "DER TROPFSTEINGANG", "hain", 44, 22)
+    r.border()
+    r.ground(1, 43, lambda x: 16 - 3 * math.sin(x * 0.07 + 1))
+    r.ceiling(1, 43, lambda x: 7 + 3 * math.sin(x * 0.13))
+    r.dark = 0.10
+
+    # Eine Senke mit Dornen, ueber die zwei Simse fuehren. Wer laeuft,
+    # faellt hinein; wer schaut, geht darueber.
+    r.carve(18, 14, 9, 6)
+    r.fill(18, 20, 9, 2)
+    r.spikes(18, 19, 9)
+    r.ledge(16, 13, 4, 2)
+    r.platform(22, 12, 5)
+    r.ledge(27, 13, 4, 2)
+
+    r.side_door("L", "left", "A5", "R", hint=15)
+    r.side_door("R", "right", "A7", "L", hint=15)
+
+    r.pickup("equipment", "offene_fassung", 35, 14)
+
+    r.enemy_on("gabelmaus", 10, 15, patrol=5)
+    r.enemy("klangmotte", 23, 9)
+    r.enemy_on("dissonanzknospe", 32, 15)
+    r.enemy_on("gabelmaus", 38, 15, patrol=3)
+
+    r.crystal_on(8, 15, 1)
+    r.crystal_on(40, 15, 2)
+    r.scatter_decor(13, 15)
+
+    r.note_on(12, 15, "TROPFEN SIND DER LANGSAMSTE TAKT, DEN ES GIBT. "
+                      "UND DER EINZIGE, DER NIE AUSSETZT.")
+    return r
+
+
+def room_A7() -> Room:
+    """
+    Der gefallene Stamm: der Knoten des ganzen Gebiets.
+
+    Vier Wege treffen sich hier, und einer davon ist die Abkuerzung, die
+    das Gebiet zusammenbindet: der Schacht nach oben in den Wurzelgang.
+    Bis man den Fluegelschlag hat, geht es nur hinunter - danach spart
+    man sich den halben Rueckweg. Genau das macht aus einer Reihe von
+    Raeumen ein Gebiet.
+    """
+    r = Room("A7", "DER GEFALLENE STAMM", "hain", 36, 44)
+    r.border()
+    r.fill(1, 40, 34, 3)
+    r.ceiling(1, 35, lambda x: 3)
+
+    # Der Stamm liegt schraeg im Raum: eine Reihe von Simsen, die von
+    # links unten nach rechts oben fuehrt, mit einer Luecke in der Mitte.
+    # Die Abstaende bleiben unter vier Kacheln: dieser Aufstieg muss ohne
+    # jede Faehigkeit gehen, denn er ist der einzige freie Weg aus dem
+    # Untergrund heraus. Waere er gesperrt, waere das Loch in A3 eine
+    # Falle statt einer Abkuerzung.
+    for i, (x, y, w) in enumerate([(3, 36, 10), (16, 33, 9), (5, 29, 9),
+                                   (18, 26, 8), (6, 22, 8), (17, 18, 9),
+                                   (4, 14, 8), (16, 10, 10), (17, 6, 8)]):
+        if i % 3 == 2:
+            r.platform(x, y, w)
+        else:
+            r.ledge(x, y, w, 2)
+
+    r.shaft_door("N", 18, 3, "up", "A3", "T")
+    r.spawn_on("N", 20, 6, 1)
+    r.side_door("L", "left", "A6", "R", hint=38)
+    r.side_door("R", "right", "A8", "L", hint=38)
+    r.bench_on(28, 38)
+
+    r.pickup("siegel", "pilgerstab", 8, 21)
+
+    r.enemy_on("gabelmaus", 12, 38, patrol=6)
+    r.enemy("klangmotte", 20, 30)
+    r.enemy_on("stilleschreiter", 8, 28, patrol=3)
+    r.enemy("klangmotte", 12, 18)
+    r.enemy_on("dissonanzknospe", 20, 25)
+    r.enemy("echoscherbe", 22, 14)
+
+    r.crystal_on(22, 38, 2)
+    r.crystal_on(6, 38, 1)
+    r.scatter_decor(15, 38)
+
+    r.note_on(25, 38, "ER FIEL, ALS DER LETZTE TON AUSGING. "
+                      "SEITDEM LIEGT ER DA UND TRAEGT DEN WEG.")
+    r.note(20, 10, "OBEN IST DER WURZELGANG. "
+                   "DER STAMM TRAEGT DICH HIN, WENN DU IHM FOLGST.")
+    return r
+
+
+def room_A8() -> Room:
+    """
+    Weit, offen, voller Motten - der Gegenentwurf zum Tropfsteingang.
+
+    Ein Gebiet braucht auch einmal Platz. Hier ist der Boden fast eben,
+    die Decke hoch, und die Gefahr kommt aus der Luft statt aus dem Weg.
+    """
+    r = Room("A8", "NEST DER KLANGMOTTEN", "hain", 80, 32)
+    r.border()
+    r.ground(1, 79, lambda x: 26 - 2 * math.sin(x * 0.05))
+    r.ceiling(1, 79, lambda x: 3 + 2 * math.sin(x * 0.08 + 3))
+
+    # Nur wenige, weit auseinanderliegende Simse: der Raum soll leer
+    # wirken, nicht moebliert.
+    r.ledge(14, 22, 7, 2)
+    r.platform(28, 19, 6)
+    r.ledge(40, 21, 8, 2)
+    r.ledge(64, 22, 8, 2)
+
+    # Rechts hinten steigt eine Kante bis unter die Decke - von dort geht
+    # der Schacht weiter, aber erst mit dem Fluegelschlag. Man sieht ihn
+    # lange vorher, und das ist der Sinn der Sache.
+    for i, (x, y, w) in enumerate([(52, 20, 8), (58, 15, 7), (52, 10, 8)]):
+        r.platform(x, y, w) if i == 1 else r.ledge(x, y, w, 2)
+
+    r.side_door("L", "left", "A7", "R", hint=24)
+    r.shaft_door("U", 54, 3, "up", "A9", "N", requires="fluegelschlag")
+    r.spawn_on("U", 57, 9, 1)
+
+    r.pickup("klinge", "gezackt", 44, 20)
+
+    r.enemy("klangmotte", 18, 14)
+    r.enemy("klangmotte", 26, 10)
+    r.enemy("klangmotte", 38, 13)
+    r.enemy("klangmotte", 50, 8)
+    r.enemy("klangmotte", 62, 14)
+    r.enemy_on("gabelmaus", 22, 20, patrol=8)
+    r.enemy_on("gabelmaus", 70, 20, patrol=8)
+    r.enemy_on("stilleschreiter", 34, 20, patrol=6)
+
+    r.crystal_on(10, 20, 2)
+    r.crystal_on(36, 20, 1)
+    r.crystal_on(74, 20, 2)
+    r.scatter_decor(46, 20)
+
+    r.note_on(12, 20, "SIE FLIEGEN NOCH IMMER ZUM LICHT. "
+                      "ES IST NUR KEINES MEHR DA.")
+    r.note(44, 20, "EINE KLINGE AUS SCHALL SCHNEIDET NICHT. "
+                   "SIE BRINGT ZUM KLINGEN, BIS ETWAS BRICHT.")
+    return r
+
+
+def room_A9() -> Room:
+    """
+    Klein, hoch oben, nur mit Fluegelschlag zu erreichen.
+
+    Der Lohn dafuer, dass man mit einer neuen Faehigkeit zurueckkommt und
+    nachsieht, wo sie etwas oeffnet. Ein Gebiet ohne so einen Raum hat
+    keinen Grund, ein zweites Mal betreten zu werden.
+    """
+    r = Room("A9", "DIE VERGESSENE BANK", "hain", 28, 16)
+    r.border()
+    r.ground(1, 27, lambda x: 11)
+    r.ceiling(1, 27, lambda x: 3 + 1.5 * math.sin(x * 0.2))
+
+    r.shaft_door("N", 12, 3, "down", "A8", "U")
+    r.spawn_on("N", 10, 10, 1)
+    r.bench_on(20, 10)
+
+    r.pickup("kern", "metronom", 6, 10)
+
+    r.enemy_on("dissonanzknospe", 16, 10)
+
+    r.crystal_on(23, 10, 2)
+    r.scatter_decor(8, 10)
+
+    r.note_on(18, 10, "WER HIERHER FINDET, HAT SCHON GELERNT ZU FLIEGEN. "
+                      "SETZ DICH TROTZDEM.")
     return r
 
 
@@ -882,7 +1173,8 @@ def room_D1() -> Room:
 # =====================================================================
 
 ROOMS = [
-    room_A1, room_A2, room_A3,
+    room_A1, room_A2, room_A3, room_A4, room_A5,
+    room_A6, room_A7, room_A8, room_A9,
     room_B1, room_B2, room_B3, room_B4,
     room_C1, room_C2, room_C3,
     room_D0, room_D1,

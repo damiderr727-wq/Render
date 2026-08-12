@@ -35,6 +35,10 @@
     {
      "door": "U",
      "to": "B1"
+    },
+    {
+     "door": "D",
+     "to": "A5"
     }
    ]
   },
@@ -49,6 +53,118 @@
     {
      "door": "L",
      "to": "A2"
+    },
+    {
+     "door": "R",
+     "to": "A4"
+    },
+    {
+     "door": "T",
+     "to": "A7"
+    }
+   ]
+  },
+  {
+   "id": "A4",
+   "name": "DIE STILLE KANZEL",
+   "region": "hain",
+   "music": "hain",
+   "width": 40,
+   "height": 20,
+   "connections": [
+    {
+     "door": "L",
+     "to": "A3"
+    }
+   ]
+  },
+  {
+   "id": "A5",
+   "name": "UNTER DEN WURZELN",
+   "region": "hain",
+   "music": "hain",
+   "width": 56,
+   "height": 18,
+   "connections": [
+    {
+     "door": "N",
+     "to": "A2"
+    },
+    {
+     "door": "R",
+     "to": "A6"
+    }
+   ]
+  },
+  {
+   "id": "A6",
+   "name": "DER TROPFSTEINGANG",
+   "region": "hain",
+   "music": "hain",
+   "width": 44,
+   "height": 22,
+   "connections": [
+    {
+     "door": "L",
+     "to": "A5"
+    },
+    {
+     "door": "R",
+     "to": "A7"
+    }
+   ]
+  },
+  {
+   "id": "A7",
+   "name": "DER GEFALLENE STAMM",
+   "region": "hain",
+   "music": "hain",
+   "width": 36,
+   "height": 44,
+   "connections": [
+    {
+     "door": "N",
+     "to": "A3"
+    },
+    {
+     "door": "L",
+     "to": "A6"
+    },
+    {
+     "door": "R",
+     "to": "A8"
+    }
+   ]
+  },
+  {
+   "id": "A8",
+   "name": "NEST DER KLANGMOTTEN",
+   "region": "hain",
+   "music": "hain",
+   "width": 80,
+   "height": 32,
+   "connections": [
+    {
+     "door": "L",
+     "to": "A7"
+    },
+    {
+     "door": "U",
+     "to": "A9"
+    }
+   ]
+  },
+  {
+   "id": "A9",
+   "name": "DIE VERGESSENE BANK",
+   "region": "hain",
+   "music": "hain",
+   "width": 28,
+   "height": 16,
+   "connections": [
+    {
+     "door": "N",
+     "to": "A8"
     }
    ]
   },

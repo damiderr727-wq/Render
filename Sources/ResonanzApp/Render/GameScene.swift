@@ -30,6 +30,9 @@ public final class GameScene: SKScene {
     private var playerGarment = EquipmentCatalog.mantel.id
 
     private var playerNode = SKSpriteNode()
+    /// Ihre Flamme an der Stimmgabel. Sie liegt still im Baum und wird
+    /// nur sichtbar, wenn eine Einkehr laeuft.
+    private var flammeNode = SKSpriteNode()
     private var bossNode: SKSpriteNode?
     private var enemyNodes: [Int: SKSpriteNode] = [:]
     private var projectileNodes: [SKSpriteNode] = []
@@ -73,6 +76,13 @@ public final class GameScene: SKScene {
         playerNode = atlas.sprite("cadence_stimmgabel_mantel_idle_0")
         playerNode.zPosition = 5
         renderer.layers.entities.addChild(playerNode)
+
+        flammeNode = atlas.sprite("flamme_0")
+        flammeNode.zPosition = 6
+        flammeNode.alpha = 0
+        flammeNode.isHidden = true
+        if let loop = atlas.loop("flamme") { flammeNode.run(loop) }
+        renderer.layers.entities.addChild(flammeNode)
 
         input.attach(to: view)
 
@@ -318,6 +328,25 @@ public final class GameScene: SKScene {
             playerNode.alpha = Int(sim.elapsed * 20) % 2 == 0 ? 0.35 : 1.0
         } else {
             playerNode.alpha = 1.0
+        }
+
+        // Die Einkehr: die Gestalt verliert sich, die Flamme steigt.
+        //
+        // Beides blendet ueber denselben Anteil, damit es ein Vorgang
+        // bleibt und nicht zwei. Die Flamme sitzt mit ihrem Fuss auf der
+        // Gabel - der Ursprung ihres Bildes liegt unten - und steigt von
+        // dort aus auf.
+        let anteil = sim.einkehr.flammenanteil
+        if sim.einkehr.aktiv {
+            flammeNode.isHidden = false
+            flammeNode.alpha = anteil
+            let hoch = sim.einkehr.schwebe * 20
+            flammeNode.position = CGPoint(x: playerNode.position.x,
+                                          y: playerNode.position.y + hoch + 4)
+            playerNode.alpha *= max(0, 1 - anteil * 1.25)
+        } else if !flammeNode.isHidden {
+            flammeNode.isHidden = true
+            flammeNode.alpha = 0
         }
     }
 

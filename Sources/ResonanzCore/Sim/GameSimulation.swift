@@ -68,6 +68,8 @@ public final class GameSimulation {
     private var nextEntityID = 1
     private var deathTimer: Double = 0
     private var restTimer: Double = 0
+    /// Der Ablauf an der Stimmgabel: aufloesen, schweben, zurueckfallen.
+    public private(set) var einkehr = Einkehr()
     /// Angesammelter Zerfall im Bruch, in halben Kristallen.
     private var zerfall: Double = 0
     private var transitionCooldown: Double = 0
@@ -227,19 +229,37 @@ public final class GameSimulation {
 
         if player.isResting {
             restTimer += dt
-            if input.cycleEquipment != 0 {
-                cycleEquipment(by: input.cycleEquipment, events: &events)
+            let vorher = einkehr.zustand
+            einkehr.tick(dt)
+            if vorher != .flamme && einkehr.zustand == .flamme {
+                events.append(.sound(.bench))
             }
-            if let index = input.toggleSiegel {
-                let owned = save.progression.ownedSiegel
-                if index >= 0, index < owned.count, toggleSiegel(owned[index].id) {
-                    events.append(.sound(.pickup))
-                    events.append(.siegelWorn(owned[index],
-                                              angelegt: save.progression.siegelWorn
-                                                  .contains(owned[index].id)))
+
+            // Gewechselt wird nur als Flamme. Ohne Gefaess kann man das
+            // Gefaess wechseln - waehrend des Aufloesens noch nicht.
+            if einkehr.darfWechseln {
+                if input.cycleEquipment != 0 {
+                    cycleEquipment(by: input.cycleEquipment, events: &events)
+                }
+                if let index = input.toggleSiegel {
+                    let owned = save.progression.ownedSiegel
+                    if index >= 0, index < owned.count, toggleSiegel(owned[index].id) {
+                        events.append(.sound(.pickup))
+                        events.append(.siegelWorn(owned[index],
+                                                  angelegt: save.progression.siegelWorn
+                                                      .contains(owned[index].id)))
+                    }
                 }
             }
-            if input.interactPressed && restTimer > 0.35 {
+
+            // Man geht aus einer Einkehr heraus, indem man sich abstoesst:
+            // der Sprung loest sie. Die Ansprechtaste bleibt als zweiter
+            // Weg bestehen - wer sie gedrueckt hat, um sich hinzusetzen,
+            // versucht es damit auch wieder.
+            if (input.jumpPressed || input.interactPressed) && restTimer > 0.35 {
+                einkehr.verlasse()
+            }
+            if einkehr.zustand == .fort && restTimer > 0.35 {
                 player.endRest()
                 restTimer = 0
             }
@@ -610,6 +630,7 @@ public final class GameSimulation {
                 player.placeAt(Vec2(bench.position.x, bench.position.y), facing: player.facing)
                 player.beginRest()
                 player.restore()
+                einkehr.beginne()
                 restTimer = 0
                 save.roomID = room.id
                 save.spawnName = benchSpawnName()
@@ -674,6 +695,8 @@ public final class GameSimulation {
     }
 
     private func enter(door: RoomData.Door, events: inout [GameEvent]) throws {
+        // Wer den Raum verlaesst, sitzt nicht mehr an der Gabel.
+        einkehr.abbrechen()
         let from = room.id
         let target = try catalog.room(door.target)
         applyBrokenWalls(to: target)
@@ -691,6 +714,7 @@ public final class GameSimulation {
 
     private func respawnAtBench(events: inout [GameEvent]) {
         deathTimer = 0
+        einkehr.abbrechen()
         do {
             let target = try catalog.loadFresh(save.roomID)
             applyBrokenWalls(to: target)

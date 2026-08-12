@@ -1200,6 +1200,62 @@ def fx_dust(frame: int) -> Canvas:
     return c
 
 
+def fx_flamme(frame: int, frames: int = 8) -> Canvas:
+    """
+    Ihre Flamme - die Gestalt, die sie an der Stimmgabel wieder annimmt.
+
+    Sie ist das, was von ihr uebrig ist, wenn das Gefaess weg ist: ein
+    Klang ohne Umriss. Deshalb hat sie keine feste Silhouette, sondern
+    eine, die in jedem Bild anders steht - unten schmal, wo sie an der
+    Gabel haengt, oben breit und ausgefranst.
+
+    Zwei Toene: innen ihr blasses Kristallgruen, aussen der warme Saum,
+    den man sonst nur an ihrem Kern sieht.
+    """
+    c = Canvas(22, 34)
+    p = frame / max(1, frames) * math.tau
+    kern = mix(P.BONE, P.TRIM, 0.35)
+    kern_hell = mix(P.BONE, (255, 255, 255, 255), 0.5)
+    saum = mix(P.AMBER, P.WARM, 0.35)
+    cx = 11.0
+
+    hoehe = 27 + math.sin(p) * 2.5
+    for i in range(int(hoehe)):
+        t = i / hoehe                       # 0 unten, 1 oben
+        # Die Flanke: unten spitz an der Gabel, in der Mitte am
+        # breitesten, oben ausgefranst.
+        breite = (1.6 + 4.6 * math.sin(math.pi * min(1.0, t * 0.92 + 0.08)) ** 0.8)
+        breite *= 1.0 + math.sin(p * 1.7 + t * 5.0) * 0.16
+        # Die Spitze zuckt seitlich, der Fuss steht still.
+        versatz = math.sin(p + t * 3.4) * (t ** 2) * 2.6
+        y = int(33 - i)
+        x0 = cx + versatz - breite
+        x1 = cx + versatz + breite
+        q = x0
+        while q <= x1:
+            u = abs(q - (cx + versatz)) / max(0.6, breite)
+            if u > 0.72 and hash01(int(q * 3), i + frame * 7) > 1.35 - u:
+                q += 0.5
+                continue
+            if u < 0.35:
+                col, a = kern_hell, 235
+            elif u < 0.72:
+                col, a = kern, 205
+            else:
+                col, a = saum, 150
+            c.blend(int(q), y, (col[0], col[1], col[2], int(a * (1 - t * 0.35))))
+            q += 0.5
+
+    # Ein Funkenpaar, das mit aufsteigt.
+    for k in range(2):
+        fx = cx + math.sin(p * 1.3 + k * 2.2) * 4.5
+        fy = 26 - ((frame + k * 4) % frames) / frames * 22
+        c.blend(int(fx), int(fy), (saum[0], saum[1], saum[2], 190))
+
+    c.glow(cx, 20, 15, (saum[0], saum[1], saum[2], 44), power=1.7)
+    return c
+
+
 def fx_mote(frame: int, tint) -> Canvas:
     """Klangfunke - Resonanz, die man aufsammelt."""
     c = Canvas(8, 8)
@@ -1559,6 +1615,10 @@ def build() -> None:
     fx.add_sequence("burst_rot", [fx_burst(f, P.ROT) for f in range(5)], pivot=(0.5, 0.5), fps=24)
     fx.add_sequence("dust", [fx_dust(f) for f in range(5)], pivot=(0.5, 1.0), fps=18)
     fx.add_sequence("mote", [fx_mote(f, P.GLOW) for f in range(4)], pivot=(0.5, 0.5), fps=6)
+    # Ihre Flamme an der Stimmgabel. Der Ursprung sitzt unten Mitte: sie
+    # steht auf der Gabel, sie schwebt nicht daneben.
+    fx.add_sequence("flamme", [fx_flamme(f, 8) for f in range(8)],
+                    pivot=(0.5, 1.0), fps=12)
     png, js = fx.write(OUT)
     print(f"fx         -> {png.name} ({len(fx.frames)} Frames)")
 

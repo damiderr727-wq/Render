@@ -1141,6 +1141,44 @@ def tempel(layer: int) -> Canvas:
         c.dither_v(0, 0, W, H, mix(wand, stein, 0.35), wand, levels=6)
         masonry(c, 0, 0, W, H, wand, course=26, seed=7)
 
+        # Die Wand war zu glatt: ein Mauerwerk aus lauter gleichen
+        # Quadern ist ein Raster, und ein Raster in der Kulisse ist
+        # dasselbe Problem wie eines im Boden. Was einer alten Wand ihre
+        # Oberflaeche gibt, sind drei Sachen - und keine davon ist die
+        # Fuge.
+        #
+        #   Jeder Quader hat seinen eigenen Ton. Steine werden nicht
+        #   gefaerbt, sie sind verschieden.
+        for reihe in range(H // 26 + 1):
+            for spalte in range(W // 52 + 1):
+                qx, qy = spalte * 52 + (reihe % 2) * 26, reihe * 26
+                ton = (hash01(spalte * 7 + reihe * 13, 3) - 0.5) * 0.13
+                for y in range(qy + 1, min(H, qy + 26)):
+                    for x in range(qx + 1, min(W, qx + 52)):
+                        r, g, b, a = c.get(x, y)
+                        if a:
+                            c.set(x, y, shade((r, g, b, a), ton))
+
+        #   Ausblueh- und Wasserspuren laufen ueber die Fugen hinweg.
+        for _ in range(26):
+            x = rng.int(4, W - 5)
+            y0 = rng.int(0, H - 60)
+            laenge = rng.int(24, 90)
+            hell = rng.chance(0.4)
+            for i in range(laenge):
+                t = i / laenge
+                px = x + math.sin(i * 0.08 + x) * 1.6
+                col = mix(stein_hi, wand, 0.45) if hell else hexc("#0c0e15")
+                c.blend(int(px), y0 + i,
+                        (col[0], col[1], col[2], int(60 * (1 - abs(t - 0.5) * 1.4))))
+
+        #   Und abgeplatzte Ecken, wo zwei Fugen sich treffen.
+        for _ in range(40):
+            x, y = rng.int(2, W - 3), rng.int(2, H - 3)
+            r = rng.range(1.2, 3.4)
+            c.ellipse(x, y, r, r * 0.8, mix(stein, wand, 0.55))
+            c.ellipse(x - 0.4, y - 0.5, r * 0.6, r * 0.5, mix(stein_hi, stein, 0.5))
+
         cx = 256
         for k in (-1, 1):
             # Die zwei Zinken - unten breiter, oben angeschlagen.

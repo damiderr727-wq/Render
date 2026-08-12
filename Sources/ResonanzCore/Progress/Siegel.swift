@@ -132,10 +132,28 @@ public enum SiegelKatalog {
                + "UND LANG GENUG, UM DAHINTER ANZUKOMMEN.",
         modifiers: Modifiers(), stil: .peitsche)
 
+    /// Aus der gesunkenen Lichtung. Wer unter dem Hain steht, merkt, dass
+    /// der Boden ueber ihm derselbe ist, auf dem er vorher lief.
+    public static let wurzelmark = Siegel(
+        id: "wurzelmark", name: "WURZELMARK", kerben: 1,
+        summary: "SIE STEHT FESTER - RUECKSTOSS WIRFT SIE KAUM ZURUECK",
+        flavour: "DAS INNERE EINER WURZEL, DIE DAS EINGESUNKENE DACH "
+               + "GEHALTEN HAT, ALS SONST NICHTS MEHR HIELT.",
+        modifiers: Modifiers(cohesion: 1.18))
+
+    /// Aus dem hohlen Stamm. Ein Ton, der lange genug im Kreis lief, um
+    /// sich selbst zu begegnen.
+    public static let stammklang = Siegel(
+        id: "stammklang", name: "STAMMKLANG", kerben: 2,
+        summary: "NAHKLANG TRAEGT WEITER, OHNE HAERTER ZU WERDEN",
+        flavour: "IM HOHLEN STAMM IST DER TON SO LANGE GEKREIST, "
+               + "BIS ER SICH SELBST BEGEGNET IST. DANN WAR ER STILL.",
+        modifiers: Modifiers(meleeReach: 1.22))
+
     public static let all: [Siegel] = [
         nachhall, dauerton, bruchstein, federstaub, windschliff, hohlklang, stille,
         scherbenherz, bleisiegel, taubesOhr, pilgerstab,
-        kreiselsiegel, nadelsiegel,
+        kreiselsiegel, nadelsiegel, wurzelmark, stammklang,
     ]
 
     public static func find(_ id: String) -> Siegel? {

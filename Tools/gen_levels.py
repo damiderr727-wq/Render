@@ -366,6 +366,74 @@ class Room:
                             break
         return self
 
+    def kamin(self, x: int, w: int, y_oben: int, y_unten: int,
+              seed: int = 0, tuer_x: int | None = None,
+              abstand: int = 3) -> "Room":
+        """
+        Ein Kamin: senkrechter Schacht mit Sprossen darin.
+
+        Fuenf Raeume hintereinander hatten denselben Fehler - eine Tuer
+        in der Decke und darunter Absaetze, die irgendwo im Fels steckten
+        oder zu weit auseinander lagen. Das ist keine Frage des
+        Geschmacks, sondern eine Rechnung: die Figur braucht drei Kacheln
+        Kopffreiheit zum Stehen und schafft vier Kacheln Hoehe pro Sprung.
+        Wer das jedes Mal von Hand hinschreibt, macht es jedes Mal anders
+        falsch.
+
+        Der Schacht bekommt eingebeulte Waende (kein Rechteck), die
+        Sprossen sitzen abwechselnd links und rechts, und die oberste
+        liegt genau unter der Oeffnung - nur dort steht die Figur mit
+        genug Luft ueber dem Kopf.
+        """
+        # Nur aushoehlen, nicht einfassen. `schacht` legt Fels um seinen
+        # Gang - richtig fuer einen Aufstieg durch gewachsenes Gestein,
+        # falsch fuer einen Kamin, der in einer Kammer steht: dort steht
+        # danach eine Wand quer im Raum, und alles dahinter ist
+        # abgeschnitten. Ueber der Kammerdecke ist ohnehin Fels; wer dort
+        # aushoehlt, bekommt seine Waende geschenkt.
+        self.carve(x, y_oben, w, y_unten - y_oben)
+        # Beulen in den Waenden - aber einzeln, hoechstens eine Kachel
+        # tief, und nur im oberen Teil.
+        #
+        # Ein Zwischenstand hat sie ueber zwei Kacheln Tiefe und ohne
+        # Luecken gesetzt. Aus den Beulen wurde eine durchgehende Wand,
+        # und die stand ausgerechnet unten, wo der Kamin zum Raum hin
+        # offen sein muss: der Aufstieg war zugemauert, und man kam
+        # nicht einmal an die unterste Sprosse.
+        for j in range(y_oben, y_unten):
+            t = (j - y_oben) / max(1, y_unten - y_oben - 1)
+            if t < 0.35:
+                continue
+            for seite in (0, 1):
+                if hash01(j * 3 + seite * 7, seed + 11) < 0.55:
+                    continue
+                self.fill(x + (0 if seite == 0 else w - 1), j, 1, 1)
+
+        tuer_x = x + (w - 4) // 2 if tuer_x is None else tuer_x
+        breite = max(4, min(6, w - 4))
+
+        # Die Sprossen werden gleichmaessig ueber die Hoehe verteilt,
+        # nicht von unten abgezaehlt. Zaehlt man ab, bleibt oben ein
+        # Rest - und wenn der groesser ist als ein Sprung, endet der
+        # Kamin drei Kacheln unter seiner eigenen Tuer.
+        # Die oberste Sprosse liegt dicht unter der Oeffnung. Bleibt
+        # dort ein voller Sprung Abstand, kommt man ohne Faehigkeit
+        # nicht hindurch - und eine Kammer, in die man faellt, waere
+        # damit eine Falle statt eines Endes.
+        oberste = y_oben + 1
+        spanne = y_unten - oberste
+        if spanne <= 0:
+            return self
+        anzahl = max(1, int(math.ceil(spanne / abstand)))
+        for k in range(1, anzahl + 1):
+            y = int(round(y_unten - spanne * k / anzahl))
+            if k == anzahl:
+                self.platform(tuer_x, y, min(breite, 4))
+            else:
+                sx = x + 1 if k % 2 else x + w - breite - 1
+                self.platform(sx, y, breite)
+        return self
+
     def nische(self, x: int, y: int, w: int, h: int, seed: int = 0) -> "Room":
         """
         Eine Nische im Fels: ausgehoehlt, mit gerundeten Ecken.
@@ -886,6 +954,12 @@ def room_A1() -> Room:
     r.platform(39, 12, 4)
 
     r.side_door("R", "right", "A2", "L", hint=6)
+    # Das Loch in der Mulde. Im ersten Raum ein Loch in den Boden zu
+    # setzen ist Absicht: man tritt hinein, bevor man weiss, dass es
+    # eines gibt, und lernt in einem Zug, dass die Welt nach unten
+    # weitergeht und dass man von unten wieder heraufkommt.
+    r.shaft_door("D", 27, 4, "down", "A11", "N")
+    r.spawn_on("D", 33, 20, -1)
     r.spawn_on("start", 8, 6, 1)
     r.bench_on(11, 6)
 
@@ -1008,6 +1082,11 @@ def room_A3() -> Room:
     r.side_door("L", "left", "A2", "R", hint=6)
     r.side_door("R", "right", "A4", "L", hint=6)
     r.shaft_door("T", 25, 3, "down", "A7", "N")
+    r.kamin(7, 11, 2, 16, seed=17, tuer_x=10)
+    r.shaft_door("U", 10, 4, "up", "A16", "N", requires="fluegelschlag")
+    # Nicht bei x=14: dort liegt die Dornengrube dieses Raums,
+    # und ein Ankunftspunkt gehoert nie neben Dornen.
+    r.spawn_on("U", 11, 16, 1)
     r.spawn_on("T", 22, 16, 1)
 
     r.pickup_on("kern", "floete", 30, 16)
@@ -1051,6 +1130,8 @@ def room_A4() -> Room:
     r.ramp(25, 12, 3, 1)
 
     r.side_door("L", "left", "A3", "R", hint=6)
+    r.shaft_door("D", 8, 4, "down", "A13", "U")
+    r.spawn_on("D", 14, 15, 1)
     r.bench_on(9, 6)
 
     r.pickup_on("siegel", "scherbenherz", 34, 6)
@@ -1153,6 +1234,7 @@ def room_A5() -> Room:
     r.shaft_door("N", 20, 4, "up", "A2", "D", requires="fluegelschlag")
     r.spawn_on("N", 24, 6, 1)
     r.side_door("R", "right", "A6", "L", hint=6)
+    r.side_door("L", "left", "A14", "R", hint=6)
 
     r.pickup_on("siegel", "federstaub", 44, 10)
 
@@ -1200,6 +1282,8 @@ def room_A6() -> Room:
 
     r.side_door("L", "left", "A5", "R", hint=6)
     r.side_door("R", "right", "A7", "L", hint=6)
+    r.shaft_door("D", 38, 4, "down", "A12", "N")
+    r.spawn_on("D", 35, 15, -1)
 
     r.pickup_on("equipment", "offene_fassung", 42, 10)
 
@@ -1299,6 +1383,7 @@ def room_A8() -> Room:
     r.dornengrube(68, 5, 3, boden)
 
     r.side_door("L", "left", "A7", "R", hint=6)
+    r.side_door("R", "right", "A13", "L", hint=26)
     r.shaft_door("U", 54, 3, "up", "A9", "N", requires="fluegelschlag")
     r.platform(54, 5, 3)
     r.spawn_on("U", 55, 4, 1)
@@ -1348,6 +1433,277 @@ def room_A9() -> Room:
 
     r.note_on(17, 6, "WER HIERHER FINDET, HAT SCHON GELERNT ZU FLIEGEN. "
                      "SETZ DICH TROTZDEM.")
+    return r
+
+
+# ---------------------------------------------------------------------
+#  Der Hain, zweiter Ausbau
+#
+#  Bis hierher bestand das Gebiet aus zwei Ketten: oben A1-A2-A3-A4-A10,
+#  unten A5-A6-A7-A8-A9, verbunden an genau zwei Stellen. Zwei Ketten
+#  sind kein Gebiet, sondern zwei Gaenge. Was in den Vorbildern ein
+#  Gebiet ausmacht, ist die **Schleife**: man laeuft irgendwo hinaus,
+#  kommt woanders wieder heraus und weiss ploetzlich, wie alles
+#  zusammenhaengt.
+#
+#  Die sechs Raeume hier schliessen drei davon:
+#
+#    Westen   A1 faellt nach A11, von dort ueber A14 nach A5 und die
+#             Oberkette wieder hinauf. Wer im ersten Raum ins Loch
+#             tritt, steht nicht in einer Sackgasse.
+#    Osten    A8 fuehrt nach A13 und dort hinauf nach A4 - der kurze
+#             Weg zurueck zum Tempel, der sich erst mit dem
+#             Fluegelschlag oeffnet.
+#    Tiefe    A15 unter A11 und A12 unter A6: zwei Kammern, die
+#             nirgendwohin fuehren. Ein Gebiet braucht auch Enden.
+#
+#  Und A16 steht senkrecht ueber A3: ein hohler Stamm, den man von
+#  aussen sieht, lange bevor man hineinkommt.
+# ---------------------------------------------------------------------
+
+def room_A11() -> Room:
+    """
+    Die gesunkene Lichtung: das Loch, in das man im ersten Raum tritt.
+
+    Sie ist der Beweis dafuer, dass der Hain unter sich weitergeht. Oben
+    steht das Loch, durch das man gefallen ist, und durch dasselbe Loch
+    faellt Licht - der einzige helle Fleck. Der Rest liegt im Schatten
+    des eingesunkenen Daches.
+    """
+    r = Room("A11", "DIE GESUNKENE LICHTUNG", "hain", 54, 26)
+    r.border()
+
+    boden = r.profil([(0, 19), (8, 20), (16, 21), (24, 20), (32, 22),
+                      (40, 21), (47, 19), (53, 19)], rauheit=0.6, seed=311)
+    kopf = r.profil([(0, 8), (9, 12), (17, 14), (25, 10), (33, 13),
+                     (41, 15), (53, 11)], rauheit=0.45, seed=313)
+    r.hoehle(1, 53, boden, kopf, seed=317, zacken=0.12)
+
+    r.dark = 0.12
+
+    # Der eingesunkene Trichter unter dem Loch. Hier faellt man herein,
+    # also darf hier nichts stehen - und der Weg hinaus fuehrt ueber die
+    # Stufen an seinem Rand.
+    r.kamin(8, 12, 2, 19, seed=3, tuer_x=12)
+    r.ledge(24, 17, 6, 2)
+
+    r.shaft_door("N", 12, 4, "up", "A1", "D", requires="fluegelschlag")
+    r.spawn_on("N", 17, 16, 1)
+    r.side_door("R", "right", "A14", "L", hint=18)
+    r.shaft_door("D", 36, 4, "down", "A15", "N")
+    r.spawn_on("D", 41, 20, -1)
+
+    r.pickup_on("siegel", "wurzelmark", 27, 20)
+
+    r.enemy_on("gabelmaus", 33, 20, patrol=5)
+    r.enemy_on("stilleschreiter", 46, 18, patrol=4)
+
+    r.crystal_on(6, 18, 2)
+    r.crystal_on(30, 20, 1)
+    r.scatter_decor(19, 13)
+
+    r.note_on(21, 20, "DAS DACH IST NICHT GEFALLEN. "
+                      "ES HAT AUFGEHOERT, SICH ZU HALTEN.")
+    return r
+
+
+def room_A14() -> Room:
+    """
+    Der Farngrund: Weg, sonst nichts - und deshalb wichtig.
+
+    Zwischen zwei Raeumen, in denen etwas passiert, muss Strecke liegen.
+    Sonst reiht sich alles aneinander wie Perlen auf einer Schnur, und
+    ein Gebiet, das so gebaut ist, fuehlt sich klein an, egal wie viele
+    Raeume es hat.
+    """
+    r = Room("A14", "DER FARNGRUND", "hain", 46, 20)
+    r.border()
+
+    boden = r.profil([(0, 15), (9, 16), (18, 15), (27, 16), (36, 14),
+                      (45, 15)], rauheit=0.55, seed=331)
+    kopf = r.profil([(0, 8), (10, 6), (20, 9), (30, 6), (40, 8), (45, 7)],
+                    rauheit=0.4, seed=337)
+    r.hoehle(1, 45, boden, kopf, seed=347, zacken=0.18)
+
+    r.dark = 0.14
+
+    r.ledge(20, 12, 6, 2)
+    r.platform(30, 11, 5)
+
+    r.side_door("L", "left", "A11", "R", hint=6)
+    r.side_door("R", "right", "A5", "L", hint=6)
+
+    r.enemy_on("dissonanzknospe", 24, 14)
+    r.enemy_on("gabelmaus", 38, 14, patrol=6)
+
+    r.crystal_on(7, 14, 1)
+    r.scatter_decor(29, 14)
+
+    r.note_on(13, 14, "HIER WAECHST NICHTS, WAS KLINGT. "
+                      "DARUM WAECHST HIER UEBERHAUPT ETWAS.")
+    return r
+
+
+def room_A15() -> Room:
+    """
+    Kammer der ersten Stimme: klein, tief, und ein Ende.
+
+    Nicht jeder Gang muss weitergehen. Ein Gebiet, in dem jeder Weg
+    irgendwohin fuehrt, ist ein Schaltplan; erst die Sackgassen machen
+    daraus eine Gegend, durch die man sucht.
+    """
+    r = Room("A15", "KAMMER DER ERSTEN STIMME", "hain", 38, 24)
+    r.border()
+
+    boden = r.profil([(0, 19), (12, 20), (24, 19), (37, 19)],
+                     rauheit=0.4, seed=353)
+    kopf = r.profil([(0, 8), (10, 11), (20, 9), (37, 7)], rauheit=0.4, seed=359)
+    r.hoehle(1, 37, boden, kopf, seed=367, zacken=0.16)
+
+    r.dark = 0.22
+
+    # Der Weg zurueck hinauf, ohne Faehigkeit zu schaffen. Wer hier
+    # herunterfaellt, kommt auch wieder heraus - eine Kammer ist ein
+    # Ende, keine Falle.
+    #
+    # Der Raum ist dafuer hoeher als noetig: ein Kamin braucht Sprossen,
+    # Sprossen brauchen Abstand, und in einem Raum von achtzehn Kacheln
+    # frisst der Kamin den Boden auf, auf dem man landet.
+    r.kamin(4, 12, 2, 19, seed=7, tuer_x=8)
+
+    r.shaft_door("N", 8, 4, "up", "A11", "D")
+    r.spawn_on("N", 20, 18, 1)
+
+    r.pickup_on("equipment", "lauschband", 30, 18)
+
+    r.crystal_on(26, 18, 2)
+    r.scatter_decor(7, 18)
+
+    r.note_on(22, 18, "DIE ERSTE STIMME WAR NICHT LAUT. "
+                      "SIE WAR NUR ALLEIN.")
+    return r
+
+
+def room_A12() -> Room:
+    """
+    Die Horchkammer unter dem Tropfsteingang.
+
+    Ein Ort zum Sitzen, mehr will er nicht sein. Baenke stehen in den
+    Vorbildern nie am Weg, sondern immer ein Stueck daneben - man muss
+    sie suchen, und genau deshalb merkt man sie sich.
+    """
+    r = Room("A12", "DIE HORCHKAMMER", "hain", 36, 18)
+    r.border()
+
+    boden = r.profil([(0, 13), (12, 14), (24, 13), (35, 13)],
+                     rauheit=0.35, seed=373)
+    kopf = r.profil([(0, 6), (12, 8), (24, 7), (35, 6)], rauheit=0.4, seed=379)
+    r.hoehle(1, 35, boden, kopf, seed=383, zacken=0.1)
+
+    r.dark = 0.18
+
+    r.kamin(5, 11, 2, 13, seed=9, tuer_x=8)
+
+    r.shaft_door("N", 8, 4, "up", "A6", "D")
+    r.spawn_on("N", 15, 12, 1)
+
+    r.bench_on(27, 12)
+
+    r.crystal_on(22, 12, 1)
+    r.scatter_decor(11, 12)
+
+    r.note_on(19, 12, "SETZ DICH. DIE STILLE HIER IST DIE EINZIGE, "
+                      "DIE NICHT VON DER DISSONANZ KOMMT.")
+    return r
+
+
+def room_A13() -> Room:
+    """
+    Der Splitterhang: der kurze Weg zurueck, wenn man fliegen kann.
+
+    Von unten links nach oben rechts, ueber Absaetze und an Dornen
+    vorbei. Er verbindet das Mottennest wieder mit der Kanzel - und
+    damit laeuft man nach dem Tempel nicht denselben Weg zurueck, den
+    man gekommen ist.
+    """
+    r = Room("A13", "DER SPLITTERHANG", "hain", 40, 38)
+    r.border()
+
+    boden = r.profil([(0, 31), (10, 32), (20, 30), (30, 31), (39, 30)],
+                     rauheit=0.55, seed=389)
+    kopf = r.profil([(0, 20), (12, 24), (22, 21), (32, 12), (39, 6)],
+                    rauheit=0.5, seed=397)
+    r.hoehle(1, 39, boden, kopf, seed=401, zacken=0.12)
+
+    # Der Aufstieg. Die unteren Stufen gehen ohne alles, ab der Mitte
+    # braucht es den Fluegelschlag - so ist der Raum von unten ein
+    # Ausblick und von oben eine Abkuerzung.
+    r.ledge(6, 27, 7, 2)
+    r.platform(16, 24, 6)
+    r.ledge(26, 22, 7, 2)
+    r.platform(14, 18, 6)
+    r.ledge(24, 14, 7, 2)
+    r.kamin(20, 12, 2, 14, seed=13, tuer_x=24)
+
+    r.dornengrube(16, 5, 3, boden)
+    r.deckendornen(30, 4)
+
+    r.side_door("L", "left", "A8", "R", hint=30)
+    r.shaft_door("U", 24, 4, "up", "A4", "D", requires="fluegelschlag")
+    r.spawn_on("U", 27, 5, -1)
+
+    r.enemy_on("stilleschreiter", 9, 26, patrol=4)
+    r.enemy("klangmotte", 20, 20)
+    r.enemy("klangmotte", 34, 18)
+
+    r.crystal_on(34, 30, 2)
+    r.scatter_decor(41, 30)
+
+    r.note_on(5, 30, "DER HANG IST AUS DEM GEBROCHEN, "
+                     "WAS EINMAL DIE KANZEL GETRAGEN HAT.")
+    return r
+
+
+def room_A16() -> Room:
+    """
+    Der hohle Stamm: ein senkrechter Raum ueber dem Wurzelgang.
+
+    Man sieht ihn von unten, lange bevor man hineinkommt - das ist der
+    ganze Zweck. Ein Gebiet, in dem man nur sieht, wo man gerade steht,
+    hat keine Ferne.
+    """
+    r = Room("A16", "DER HOHLE STAMM", "hain", 26, 42)
+    r.border()
+
+    boden = r.profil([(0, 35), (12, 36), (25, 35)], rauheit=0.4, seed=409)
+    kopf = r.profil([(0, 30), (8, 32), (16, 31), (25, 30)],
+                    rauheit=0.35, seed=419)
+    r.hoehle(1, 25, boden, kopf, seed=421, zacken=0.1)
+
+    r.dark = 0.2
+
+    # Der Stamm selbst: ein Schacht mit eingebeulten Waenden, in dem
+    # abwechselnd links und rechts Absaetze stehen.
+    r.schacht(6, 2, 14, 30, seed=11, wand=2)
+    for k, y in enumerate(range(28, 4, -4)):
+        if k % 2 == 0:
+            r.platform(7, y, 5)
+        else:
+            r.platform(14, y, 5)
+
+    r.shaft_door("N", 10, 4, "down", "A3", "U")
+    r.spawn_on("N", 16, 33, -1)
+
+    r.pickup_on("siegel", "stammklang", 12, 6)
+
+    r.enemy("klangmotte", 12, 20)
+    r.enemy("klangmotte", 15, 11)
+
+    r.crystal_on(4, 34, 1)
+    r.scatter_decor(23, 34)
+
+    r.note_on(20, 34, "DER STAMM IST HOHL, WEIL DER TON IN IHM "
+                      "IRGENDWANN AUFGEHOERT HAT ZU KREISEN.")
     return r
 
 
@@ -1690,6 +2046,7 @@ def room_D1() -> Room:
 ROOMS = [
     room_A1, room_A2, room_A3, room_A4, room_A5,
     room_A6, room_A7, room_A8, room_A9, room_A10,
+    room_A11, room_A12, room_A13, room_A14, room_A15, room_A16,
     room_B1, room_B2, room_B3, room_B4,
     room_C1, room_C2, room_C3,
     room_D0, room_D1,

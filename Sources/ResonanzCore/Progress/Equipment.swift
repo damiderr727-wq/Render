@@ -226,8 +226,22 @@ public enum EquipmentCatalog {
                              rangedDamage: 0.85, resonanceRegen: 1.4,
                              cohesion: 0.85))
 
+    /// Aus der Kammer der ersten Stimme. Kein Panzer, kein Gewand -
+    /// nur ein Band, das den Klang beisammenhaelt, damit man ihn hoert,
+    /// statt ihn zu tragen.
+    public static let lauschband = Equipment(
+        id: "lauschband",
+        name: "LAUSCHBAND",
+        openings: 2,
+        stil: .bogen,
+        summary: "WENIGE OEFFNUNGEN, DAFUER KEHRT DER KLANG SCHNELL ZURUECK",
+        flavour: "JEMAND HAT ES SICH UM DEN KOPF GEBUNDEN, UM BESSER ZU "
+               + "HOEREN. ES HAT NICHTS GENUETZT - ABER ES HAELT.",
+        modifiers: Modifiers(resonanceRegen: 1.35, cohesion: 1.05))
+
     public static let all: [Equipment] = [
         ohne, mantel, cape, chorpanzer, pfeifenharnisch, flimmerhemd, engeFassung, offeneFassung, schlagfassung, gerissenesGewand,
+        lauschband,
     ]
 
     public static func find(_ id: String) -> Equipment? {

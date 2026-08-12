@@ -13,6 +13,10 @@
     {
      "door": "R",
      "to": "A2"
+    },
+    {
+     "door": "D",
+     "to": "A11"
     }
    ]
   },
@@ -61,6 +65,10 @@
     {
      "door": "T",
      "to": "A7"
+    },
+    {
+     "door": "U",
+     "to": "A16"
     }
    ]
   },
@@ -75,6 +83,10 @@
     {
      "door": "L",
      "to": "A3"
+    },
+    {
+     "door": "D",
+     "to": "A13"
     },
     {
      "door": "R",
@@ -97,6 +109,10 @@
     {
      "door": "R",
      "to": "A6"
+    },
+    {
+     "door": "L",
+     "to": "A14"
     }
    ]
   },
@@ -115,6 +131,10 @@
     {
      "door": "R",
      "to": "A7"
+    },
+    {
+     "door": "D",
+     "to": "A12"
     }
    ]
   },
@@ -153,6 +173,10 @@
      "to": "A7"
     },
     {
+     "door": "R",
+     "to": "A13"
+    },
+    {
      "door": "U",
      "to": "A9"
     }
@@ -183,6 +207,106 @@
     {
      "door": "L",
      "to": "A4"
+    }
+   ]
+  },
+  {
+   "id": "A11",
+   "name": "DIE GESUNKENE LICHTUNG",
+   "region": "hain",
+   "music": "hain",
+   "width": 54,
+   "height": 26,
+   "connections": [
+    {
+     "door": "N",
+     "to": "A1"
+    },
+    {
+     "door": "R",
+     "to": "A14"
+    },
+    {
+     "door": "D",
+     "to": "A15"
+    }
+   ]
+  },
+  {
+   "id": "A12",
+   "name": "DIE HORCHKAMMER",
+   "region": "hain",
+   "music": "hain",
+   "width": 36,
+   "height": 18,
+   "connections": [
+    {
+     "door": "N",
+     "to": "A6"
+    }
+   ]
+  },
+  {
+   "id": "A13",
+   "name": "DER SPLITTERHANG",
+   "region": "hain",
+   "music": "hain",
+   "width": 40,
+   "height": 38,
+   "connections": [
+    {
+     "door": "L",
+     "to": "A8"
+    },
+    {
+     "door": "U",
+     "to": "A4"
+    }
+   ]
+  },
+  {
+   "id": "A14",
+   "name": "DER FARNGRUND",
+   "region": "hain",
+   "music": "hain",
+   "width": 46,
+   "height": 20,
+   "connections": [
+    {
+     "door": "L",
+     "to": "A11"
+    },
+    {
+     "door": "R",
+     "to": "A5"
+    }
+   ]
+  },
+  {
+   "id": "A15",
+   "name": "KAMMER DER ERSTEN STIMME",
+   "region": "hain",
+   "music": "hain",
+   "width": 38,
+   "height": 24,
+   "connections": [
+    {
+     "door": "N",
+     "to": "A11"
+    }
+   ]
+  },
+  {
+   "id": "A16",
+   "name": "DER HOHLE STAMM",
+   "region": "hain",
+   "music": "hain",
+   "width": 26,
+   "height": 42,
+   "connections": [
+    {
+     "door": "N",
+     "to": "A3"
     }
    ]
   },

@@ -137,6 +137,11 @@ GARMENTS = {
     "flimmerhemd": dict(
         openings=12, cut="mantel", deckung=0.60,
         stoff=mix(mix(P.CLOAK, P.STONE, 0.55), P.BLOOM, 0.20), licht=P.BLOOM),
+    # Kein Gewand, sondern ein Band: es deckt am wenigsten von allem, was
+    # sie tragen kann, und haelt sie trotzdem zusammen.
+    "lauschband": dict(
+        openings=2, cut="cape", deckung=0.48,
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.45), P.AMBER, 0.12), licht=P.AMBER),
     # Der Bruch: kein Gefaess mehr, nur noch Fetzen an ihr. Was bleibt,
     # traegt nichts - es haengt nur noch dran.
     "bruch": dict(

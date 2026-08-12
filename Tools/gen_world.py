@@ -1221,6 +1221,7 @@ SIGIL_TINTS = {
 # im Spiel steht, denn das Siegel ist nichts als ihr Querschnitt.
 EQUIPMENT_SIGILS = {
     "mantel": (4, P.BONE_SH),
+    "lauschband": (2, P.AMBER),
     "enge_fassung": (1, P.GOLD),
     "offene_fassung": (9, P.GLOW),
     "schlagfassung": (2, P.ROT),
@@ -1308,6 +1309,11 @@ SIEGEL_SIGILS = {
     "windschliff": (3, hexc("#9fe8ff")),
     "hohlklang":  (2, P.WARM),
     "stille":     (1, P.BONE_SH),
+    "wurzelmark": (1, hexc("#8a6b48")),
+    "stammklang": (2, hexc("#7fbf9a")),
+    "glockenmund": (2, hexc("#e8c76a")),
+    "spiegelgrund": (2, hexc("#9fe8ff")),
+    "taubwerk": (3, hexc("#5c6470")),
 }
 
 

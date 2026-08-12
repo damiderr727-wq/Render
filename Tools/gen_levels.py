@@ -1731,6 +1731,8 @@ def room_B1() -> Room:
 
     r.shaft_door("U", 18, 5, "up", "B2", "N", requires="fluegelschlag")
     r.shaft_door("N", 33, 5, "down", "A2", "U")
+    r.shaft_door("D", 6, 4, "down", "B7", "N")
+    r.spawn_on("D", 12, 40, 1)
     r.spawn_on("U", 20, 5, 1)
     r.spawn_on("N", 26, 42, 1)
     r.side_door("R", "right", "B3", "L", hint=42)
@@ -1820,6 +1822,13 @@ def room_B3() -> Room:
     r.door("R", 79, 12, 1, 4, "B4", "L", requires="klangschritt")
     r.spawn_on("R", 76, 12, -1)
     r.shaft_door("N", 36, 5, "down", "C1", "U", requires="herzschlag")
+    # Der Weg hinauf in den Triforiengang. Der Pfeiler bei x=30 steht
+    # dort schon - der Kamin wird durch ihn hindurchgeschlagen.
+    r.kamin(28, 10, 1, 28, seed=31, tuer_x=30)
+    r.shaft_door("U", 30, 4, "up", "B5", "N", requires="fluegelschlag")
+    r.spawn_on("U", 34, 18, 1)
+    r.shaft_door("D", 60, 4, "down", "B8", "U")
+    r.spawn_on("D", 56, 18, -1)
     r.spawn_on("N", 42, 20, 1)
 
     r.pickup("siegel", "bruchstein", 74, 15)
@@ -1850,6 +1859,9 @@ def room_B4() -> Room:
     r.spikes(18, 21, 7)
 
     r.side_door("L", "left", "B3", "R", hint=6)
+    r.kamin(12, 10, 1, 21, seed=37, tuer_x=14)
+    r.shaft_door("U", 14, 4, "up", "B6", "D", requires="fluegelschlag")
+    r.spawn_on("U", 19, 18, 1)
     r.bench_on(6, 6)
 
     r.pickup("ability", "herzschlag", 30, 14)
@@ -1865,6 +1877,161 @@ def room_B4() -> Room:
     r.scatter_decor(77, 12, kinds=("crystal",))
     r.note_on(24, 6, "EIN HERZ SCHLUG HIER SO LAUT, "
                      "DASS DER RAUM SICH DANACH RICHTETE.")
+    return r
+
+
+# ---------------------------------------------------------------------
+#  Die Kathedrale, zweiter Ausbau
+#
+#  Vier Raeume waren eine Reihe mit einem Abzweig. Eine Kathedrale ist
+#  aber gerade das Gegenteil einer Reihe: sie hat ein Schiff, darueber
+#  einen Umgang, darunter eine Krypta, und man kann auf drei Hoehen
+#  durch denselben Raum gehen. Genau diese Schichtung fehlte.
+#
+#    oben    B5 Triforiengang, B6 Glockenstube
+#    Mitte   B1 Vorhalle, B3 Kreuzgang, B4 Herzkammer  (wie bisher)
+#    unten   B7 Krypta, B8 Verschuetteter Chor
+#
+#  Damit laufen zwei Schleifen durch das Gebiet: eine oben herum
+#  (B3-B5-B6-B4) und eine unten herum (B1-B7-B8-B3).
+# ---------------------------------------------------------------------
+
+def room_B5() -> Room:
+    """
+    Der Triforiengang: der schmale Umgang ueber dem Kreuzgang.
+
+    Er laeuft in der Wandstaerke, also ist er eng, und man sieht durch
+    seine Oeffnungen hinunter in den Raum, durch den man vorhin
+    gelaufen ist. Das ist der Zweck eines Umgangs - nicht ein Weg,
+    sondern ein zweiter Blick auf einen bekannten.
+    """
+    r = Room("B5", "DER TRIFORIENGANG", "kathedrale", 64, 20)
+    r.border()
+    r.ground(1, 63, lambda x: 15 - 1.5 * math.sin(x * 0.09))
+    r.ceiling(1, 63, lambda x: 5 + 1.2 * math.sin(x * 0.15 + 1))
+
+    # Die Arkadenoeffnungen. Sie haengen von der Decke herunter und
+    # reichen *nicht* bis zum Boden - ein Pfeiler, der durchsteht, ist
+    # in einem Gang von zehn Kacheln Hoehe keine Gliederung, sondern
+    # eine Wand, und der Umgang war damit an vier Stellen zugemauert.
+    for x in range(8, 60, 13):
+        r.fill(x, 5, 2, 6)
+
+    r.platform(20, 11, 6)
+    r.platform(40, 11, 6)
+
+    r.shaft_door("N", 30, 4, "down", "B3", "U")
+    r.spawn_on("N", 36, 13, 1)
+    r.side_door("R", "right", "B6", "L", hint=6)
+
+    r.enemy_on("stilleschreiter", 16, 14, patrol=5)
+    r.enemy("echoscherbe", 46, 10)
+
+    r.crystal_on(6, 14, 1)
+    r.scatter_decor(131, 10, kinds=("crystal",))
+    r.note_on(52, 14, "VON HIER OBEN SIEHT DER KREUZGANG AUS "
+                      "WIE EIN NOTENBLATT, AUF DEM JEMAND STEHT.")
+    return r
+
+
+def room_B6() -> Room:
+    """
+    Die Glockenstube: hoch, leer, und einmal war hier alles voll Klang.
+
+    Sie haengt ueber der Herzkammer, und der Weg hinunter fuehrt durch
+    das Loch, durch das frueher das Seil lief.
+    """
+    r = Room("B6", "DIE GLOCKENSTUBE", "kathedrale", 38, 34)
+    r.border()
+    r.ground(1, 37, lambda x: 28 - 1.5 * math.sin(x * 0.11))
+    r.ceiling(1, 37, lambda x: 3)
+
+    # Die Balkenlage, auf der die Glocken hingen: drei Ebenen, versetzt.
+    r.ledge(4, 22, 9, 2)
+    r.platform(18, 19, 7)
+    r.ledge(26, 15, 9, 2)
+    r.platform(10, 11, 7)
+    r.ledge(20, 7, 10, 2)
+
+    r.side_door("L", "left", "B5", "R", hint=27)
+    r.shaft_door("D", 14, 4, "down", "B4", "U")
+    r.spawn_on("D", 20, 27, -1)
+
+    r.pickup("siegel", "glockenmund", 24, 6)
+
+    r.enemy("echoscherbe", 16, 16)
+    r.enemy_on("dissonanzknospe", 32, 27)
+
+    r.crystal_on(6, 27, 2)
+    r.scatter_decor(137, 12, kinds=("crystal",))
+    r.note_on(9, 27, "DIE GLOCKEN SIND NICHT FORT. "
+                     "SIE HAENGEN NUR NICHT MEHR HIER.")
+    return r
+
+
+def room_B7() -> Room:
+    """
+    Die Krypta unter der Vorhalle: niedrig, breit, voller Pfeiler.
+
+    Was oben Halle heisst, heisst hier unten Keller - und der Keller
+    traegt die Halle. Man geht zwischen den Pfeilern hindurch, die man
+    von oben als Boden kennt.
+    """
+    r = Room("B7", "DIE KRYPTA DER STIMMEN", "kathedrale", 58, 22)
+    r.border()
+    r.ground(1, 57, lambda x: 17 - 1.2 * math.sin(x * 0.1))
+    r.ceiling(1, 57, lambda x: 7 + 1.5 * math.sin(x * 0.2))
+    r.dark = 0.2
+
+    for x in range(10, 54, 11):
+        r.fill(x, 7, 3, 10)
+
+    r.shaft_door("N", 6, 4, "up", "B1", "D", requires="fluegelschlag")
+    r.spawn_on("N", 14, 15, 1)
+    r.side_door("R", "right", "B8", "L", hint=6)
+
+    r.kamin(4, 9, 2, 17, seed=23, tuer_x=6)
+
+    r.enemy_on("stilleschreiter", 26, 16, patrol=6)
+    r.enemy_on("dissonanzknospe", 47, 15)
+
+    r.crystal_on(20, 16, 1)
+    r.scatter_decor(139, 10, kinds=("crystal",))
+    r.note_on(36, 16, "SIE HABEN DIE STIMMEN HIER UNTEN GELASSEN, "
+                      "DAMIT SIE DAS GEWOELBE HALTEN.")
+    return r
+
+
+def room_B8() -> Room:
+    """
+    Der verschuettete Chor: die Decke ist herunter, der Raum steigt an.
+
+    Von hier fuehrt ein Schacht wieder hinauf in den Kreuzgang - der
+    Beweis dafuer, dass die Kathedrale nicht flach ist, sondern
+    uebereinander liegt.
+    """
+    r = Room("B8", "DER VERSCHUETTETE CHOR", "kathedrale", 52, 30)
+    r.border()
+    r.ground(1, 51, lambda x: 24 - x * 0.22)
+    r.ceiling(1, 51, lambda x: 6 + 6 * math.sin(x * 0.06))
+    r.dark = 0.14
+
+    r.ledge(12, 20, 8, 2)
+    r.platform(24, 17, 7)
+    r.ledge(34, 15, 8, 2)
+
+    r.side_door("L", "left", "B7", "R", hint=22)
+    r.shaft_door("U", 42, 4, "up", "B3", "D", requires="klangschritt")
+    r.spawn_on("U", 46, 12, -1)
+    r.kamin(38, 10, 2, 13, seed=29, tuer_x=42)
+
+    r.enemy("echoscherbe", 20, 18)
+    r.enemy_on("stilleschreiter", 30, 14, patrol=4)
+
+    r.crystal_on(8, 22, 2)
+    r.scatter_decor(149, 10, kinds=("crystal",))
+    r.note_on(16, 20, "DER CHOR HAT WEITERGESUNGEN, ALS DAS GEWOELBE KAM. "
+                      "MAN HOERT IHN NOCH, WENN MAN STILLSTEHT.")
     return r
 
 
@@ -1898,6 +2065,8 @@ def room_C1() -> Room:
     r.shaft_door("U", 6, 5, "up", "B3", "N")
     r.spawn_on("U", 8, 8, 1)
     r.side_door("R", "right", "C2", "L", hint=8)
+    r.shaft_door("D", 78, 4, "down", "C4", "N")
+    r.spawn_on("D", 74, 22, -1)
     r.bench_on(16, 8)
 
     r.pickup("equipment", "schlagfassung", 48, 10)
@@ -1944,6 +2113,8 @@ def room_C2() -> Room:
 
     r.side_door("L", "left", "C1", "R", hint=34)
     r.side_door("R", "right", "C3", "L", hint=6)
+    r.shaft_door("D", 24, 4, "down", "C5", "U")
+    r.spawn_on("D", 20, 34, -1)
 
     r.pickup("ability", "basston", 26, 4)
 
@@ -1979,6 +2150,11 @@ def room_C3() -> Room:
 
     r.side_door("L", "left", "C2", "R", hint=7)
     r.side_door("R", "right", "D0", "L", hint=7, requires="basston")
+    # Nicht ganz links: dort kommt man aus dem Schlund herein, und ein
+    # Kamin genau im Eingang laesst den Ankommenden im Fels stehen.
+    r.kamin(32, 10, 1, 21, seed=47, tuer_x=34)
+    r.shaft_door("U", 34, 4, "up", "C6", "N", requires="fluegelschlag")
+    r.spawn_on("U", 40, 21, -1)
 
     r.pickup("equipment", "gerissenes_gewand", 55, 17)
     r.pickup("siegel", "windschliff", 46, 10)
@@ -1998,6 +2174,125 @@ def room_C3() -> Room:
                      "DER SICH WEIGERT AUFZULOESEN.")
     r.note_on(58, 7, "WER NUR NOCH IN FETZEN ZUSAMMENHAENGT, "
                      "IST SCHNELL. UND KURZ.")
+    return r
+
+
+# ---------------------------------------------------------------------
+#  Die Resonanzkavernen, zweiter Ausbau
+#
+#  Drei Raeume in einer Reihe waren ein Gang mit Kristallen an der Wand.
+#  Eine Hoehle ist aber nie eine Reihe: sie hat ein Niveau, unter dem
+#  noch eines liegt, und Wasser sammelt sich immer unten. Genau das
+#  fehlte - der Unterschied zwischen "weiter rechts" und "weiter unten".
+#
+#    oben    C1 Kristallgrotten, C2 Schlund, C3 Verstimmte Adern
+#    unten   C4 Spiegelbecken, C5 Nadelkammer
+#    hoch    C6 Der taube Gang, ueber den Adern
+# ---------------------------------------------------------------------
+
+def room_C4() -> Room:
+    """
+    Das Spiegelbecken: das tiefste Stueck der Kavernen, und das hellste.
+
+    Unten steht Wasser, und darauf steht der Fels auf dem Kopf. Es ist
+    der einzige Ort im Spiel, an dem etwas *heller* ist als der Weg
+    dorthin - deshalb sieht man den Eingang schon von oben.
+    """
+    r = Room("C4", "DAS SPIEGELBECKEN", "grotten", 62, 26)
+    r.border()
+    r.ground(1, 61, lambda x: 20 - 2.5 * math.sin(x * 0.07))
+    r.ceiling(1, 61, lambda x: 5 + 2.5 * math.sin(x * 0.11 + 2))
+
+    r.ledge(10, 16, 8, 2)
+    r.platform(24, 13, 7)
+    r.ledge(38, 15, 9, 2)
+    r.platform(50, 12, 6)
+
+    r.shaft_door("N", 8, 4, "up", "C1", "D", requires="fluegelschlag")
+    r.spawn_on("N", 15, 19, 1)
+    r.kamin(6, 10, 2, 19, seed=41, tuer_x=8)
+    r.side_door("R", "right", "C5", "L", hint=6)
+
+    r.pickup("siegel", "spiegelgrund", 44, 14)
+
+    r.enemy_on("dissonanzknospe", 30, 19)
+    r.enemy("echoscherbe", 36, 12)
+    r.enemy_on("stilleschreiter", 54, 19, patrol=4)
+
+    r.crystal_on(20, 19, 2)
+    r.crystal_on(46, 19, 2)
+    r.scatter_decor(151, 12, kinds=("crystal",))
+    r.note_on(26, 19, "DAS WASSER GIBT DEN TON ZURUECK, DEN ES BEKOMMT. "
+                      "MEHR HAT NIE JEMAND VERLANGT.")
+    return r
+
+
+def room_C5() -> Room:
+    """
+    Die Nadelkammer: alles hier ist spitz, und alles zeigt zur Mitte.
+
+    Der Aufstieg zurueck in den Schlund fuehrt zwischen den Nadeln
+    hindurch - der Raum ist die Probe darauf, ob man springen kann,
+    ohne zu haengen.
+    """
+    r = Room("C5", "DIE NADELKAMMER", "grotten", 48, 34)
+    r.border()
+    r.ground(1, 47, lambda x: 28 - 1.5 * math.sin(x * 0.13))
+    r.ceiling(1, 47, lambda x: 4 + 3 * math.sin(x * 0.09))
+    r.dark = 0.1
+
+    r.ledge(6, 24, 8, 2)
+    r.platform(18, 21, 6)
+    r.ledge(28, 19, 8, 2)
+    r.platform(16, 15, 6)
+    r.ledge(26, 11, 8, 2)
+
+    r.spikes(15, 27, 8)
+    r.deckendornen(20, 5)
+    r.wanddornen(40, 14, 8, nach=-1)
+
+    r.side_door("L", "left", "C4", "R", hint=27)
+    r.shaft_door("U", 28, 4, "up", "C2", "D", requires="klangschritt")
+    r.spawn_on("U", 33, 10, -1)
+    r.kamin(26, 10, 2, 11, seed=43, tuer_x=28)
+
+    r.enemy("echoscherbe", 22, 24)
+    r.enemy_on("dissonanzknospe", 38, 27)
+
+    r.crystal_on(8, 27, 1)
+    r.scatter_decor(157, 10, kinds=("crystal",))
+    r.note_on(11, 27, "WER HIER STEHENBLEIBT, HAT ZEIT, DIE NADELN ZU ZAEHLEN. "
+                      "ES SIND MEHR, ALS MAN DENKT.")
+    return r
+
+
+def room_C6() -> Room:
+    """
+    Der taube Gang: eine Kammer ueber den Adern, in der nichts klingt.
+
+    Ein Ende, aber eines mit einem Grund - hier liegt das Siegel, das
+    Stille zu etwas macht, das man tragen kann.
+    """
+    r = Room("C6", "DER TAUBE GANG", "grotten", 40, 20)
+    r.border()
+    r.ground(1, 39, lambda x: 15 - 1.2 * math.sin(x * 0.12))
+    r.ceiling(1, 39, lambda x: 4 + 1.5 * math.sin(x * 0.18))
+    r.dark = 0.24
+
+    r.ledge(8, 12, 7, 2)
+    r.platform(20, 10, 6)
+
+    r.shaft_door("N", 6, 4, "down", "C3", "U")
+    r.spawn_on("N", 13, 14, 1)
+
+    r.pickup("siegel", "taubwerk", 32, 13)
+
+    r.enemy("echoscherbe", 26, 9)
+
+    r.crystal_on(18, 14, 1)
+    r.scatter_decor(163, 8, kinds=("crystal",))
+    r.note_on(24, 14, "HIER HOERT MAN NICHTS. NICHT, WEIL ES STILL IST - "
+                      "SONDERN WEIL DER GANG NICHTS DURCHLAESST.")
     return r
 
 
@@ -2048,7 +2343,8 @@ ROOMS = [
     room_A6, room_A7, room_A8, room_A9, room_A10,
     room_A11, room_A12, room_A13, room_A14, room_A15, room_A16,
     room_B1, room_B2, room_B3, room_B4,
-    room_C1, room_C2, room_C3,
+    room_B5, room_B6, room_B7, room_B8,
+    room_C1, room_C2, room_C3, room_C4, room_C5, room_C6,
     room_D0, room_D1,
 ]
 

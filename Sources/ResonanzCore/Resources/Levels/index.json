@@ -327,6 +327,10 @@
      "to": "A2"
     },
     {
+     "door": "D",
+     "to": "B7"
+    },
+    {
      "door": "R",
      "to": "B3"
     }
@@ -365,6 +369,14 @@
     {
      "door": "N",
      "to": "C1"
+    },
+    {
+     "door": "U",
+     "to": "B5"
+    },
+    {
+     "door": "D",
+     "to": "B8"
     }
    ]
   },
@@ -378,6 +390,82 @@
    "connections": [
     {
      "door": "L",
+     "to": "B3"
+    },
+    {
+     "door": "U",
+     "to": "B6"
+    }
+   ]
+  },
+  {
+   "id": "B5",
+   "name": "DER TRIFORIENGANG",
+   "region": "kathedrale",
+   "music": "kathedrale",
+   "width": 64,
+   "height": 20,
+   "connections": [
+    {
+     "door": "N",
+     "to": "B3"
+    },
+    {
+     "door": "R",
+     "to": "B6"
+    }
+   ]
+  },
+  {
+   "id": "B6",
+   "name": "DIE GLOCKENSTUBE",
+   "region": "kathedrale",
+   "music": "kathedrale",
+   "width": 38,
+   "height": 34,
+   "connections": [
+    {
+     "door": "L",
+     "to": "B5"
+    },
+    {
+     "door": "D",
+     "to": "B4"
+    }
+   ]
+  },
+  {
+   "id": "B7",
+   "name": "DIE KRYPTA DER STIMMEN",
+   "region": "kathedrale",
+   "music": "kathedrale",
+   "width": 58,
+   "height": 22,
+   "connections": [
+    {
+     "door": "N",
+     "to": "B1"
+    },
+    {
+     "door": "R",
+     "to": "B8"
+    }
+   ]
+  },
+  {
+   "id": "B8",
+   "name": "DER VERSCHUETTETE CHOR",
+   "region": "kathedrale",
+   "music": "kathedrale",
+   "width": 52,
+   "height": 30,
+   "connections": [
+    {
+     "door": "L",
+     "to": "B7"
+    },
+    {
+     "door": "U",
      "to": "B3"
     }
    ]
@@ -397,6 +485,10 @@
     {
      "door": "R",
      "to": "C2"
+    },
+    {
+     "door": "D",
+     "to": "C4"
     }
    ]
   },
@@ -415,6 +507,10 @@
     {
      "door": "R",
      "to": "C3"
+    },
+    {
+     "door": "D",
+     "to": "C5"
     }
    ]
   },
@@ -433,6 +529,60 @@
     {
      "door": "R",
      "to": "D0"
+    },
+    {
+     "door": "U",
+     "to": "C6"
+    }
+   ]
+  },
+  {
+   "id": "C4",
+   "name": "DAS SPIEGELBECKEN",
+   "region": "grotten",
+   "music": "grotten",
+   "width": 62,
+   "height": 26,
+   "connections": [
+    {
+     "door": "N",
+     "to": "C1"
+    },
+    {
+     "door": "R",
+     "to": "C5"
+    }
+   ]
+  },
+  {
+   "id": "C5",
+   "name": "DIE NADELKAMMER",
+   "region": "grotten",
+   "music": "grotten",
+   "width": 48,
+   "height": 34,
+   "connections": [
+    {
+     "door": "L",
+     "to": "C4"
+    },
+    {
+     "door": "U",
+     "to": "C2"
+    }
+   ]
+  },
+  {
+   "id": "C6",
+   "name": "DER TAUBE GANG",
+   "region": "grotten",
+   "music": "grotten",
+   "width": 40,
+   "height": 20,
+   "connections": [
+    {
+     "door": "N",
+     "to": "C3"
     }
    ]
   },

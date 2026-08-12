@@ -150,10 +150,37 @@ public enum SiegelKatalog {
                + "BIS ER SICH SELBST BEGEGNET IST. DANN WAR ER STILL.",
         modifiers: Modifiers(meleeReach: 1.22))
 
+    /// Aus der Glockenstube. Was von einer Glocke bleibt, wenn niemand
+    /// mehr an ihr zieht, ist der Mund - und der steht offen.
+    public static let glockenmund = Siegel(
+        id: "glockenmund", name: "GLOCKENMUND", kerben: 2,
+        summary: "FERNKLANG SCHLAEGT HAERTER, KOSTET ABER MEHR",
+        flavour: "SIE HAENGEN NICHT MEHR HIER. WAS GEBLIEBEN IST, "
+               + "IST DIE OEFFNUNG, DURCH DIE SIE GEKLUNGEN HABEN.",
+        modifiers: Modifiers(rangedDamage: 1.3, rangedCost: 1.25))
+
+    /// Aus dem Spiegelbecken. Was hineingeht, kommt heraus - genau so
+    /// laut, genau so lang.
+    public static let spiegelgrund = Siegel(
+        id: "spiegelgrund", name: "SPIEGELGRUND", kerben: 2,
+        summary: "IM TAKT GETROFFEN SCHLAEGT SIE HAERTER",
+        flavour: "DAS BECKEN GIBT ZURUECK, WAS ES BEKOMMT. "
+               + "WER SAUBER ANSCHLAEGT, BEKOMMT MEHR ZURUECK.",
+        modifiers: Modifiers(meleeDamage: 1.18))
+
+    /// Aus dem tauben Gang. Ein Stueck Fels, durch das nichts geht.
+    public static let taubwerk = Siegel(
+        id: "taubwerk", name: "TAUBWERK", kerben: 3,
+        summary: "SIE HAELT DEUTLICH MEHR AUS - DAFUER KLINGT SIE LEISER",
+        flavour: "DER GANG LAESST NICHTS DURCH, IN KEINE RICHTUNG. "
+               + "EIN STUECK DAVON AM GUERTEL TUT DASSELBE.",
+        modifiers: Modifiers(rangedDamage: 0.86, cohesion: 1.35))
+
     public static let all: [Siegel] = [
         nachhall, dauerton, bruchstein, federstaub, windschliff, hohlklang, stille,
         scherbenherz, bleisiegel, taubesOhr, pilgerstab,
-        kreiselsiegel, nadelsiegel, wurzelmark, stammklang,
+        kreiselsiegel, nadelsiegel, wurzelmark, stammklang, glockenmund,
+        spiegelgrund, taubwerk,
     ]
 
     public static func find(_ id: String) -> Siegel? {

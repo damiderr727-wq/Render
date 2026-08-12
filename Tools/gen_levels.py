@@ -854,11 +854,13 @@ def room_A10() -> Room:
     r.border(2)
     r.fill(2, 19, 48, 5)                    # eine ebene Flaeche, sonst nichts
     r.fill(2, 2, 48, 4)
-    r.dark = 0.34
-    # Gebaut, nicht gewachsen: hinter dem Tempel stehen Saeulen und
-    # Mauerwerk statt Baeumen. Kachelsatz und Musik bleiben beim Hain -
-    # er gehoert dazu, er sieht nur nicht so aus.
-    r.backdrop = "kathedrale"
+    # Dunkel, aber lesbar: in einer Arena muss man sehen, was auf einen
+    # zukommt. Finsternis gehoert vor den Kampf, nicht hinein.
+    r.dark = 0.16
+    # Gebaut, nicht gewachsen - und ohne Himmel. Der Tempel hat eine
+    # eigene Kulisse, die es als Gebiet gar nicht gibt: hinten steht eine
+    # Wand, nicht die Ferne. Kachelsatz und Musik bleiben beim Hain.
+    r.backdrop = "tempel"
 
     # Zwei Saeulenpaare. Sie stehen im Weg, nicht auf dem Weg: man kann
     # dazwischen hindurch, aber ein Schlag geht daran vorbei.

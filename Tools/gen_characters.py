@@ -1653,202 +1653,244 @@ def draw_auftakt(phase: float, schlag: float = 0.0, wut: float = 0.0) -> Canvas:
     """
     DER GROSSE AUFTAKT - der erste Boss.
 
-    Der erste Entwurf sah putzig aus, und der Grund dafuer war nicht der
-    Stil, sondern die Anlage: er war symmetrisch, rund und stand auf
-    eigenen Beinen. Alles drei nimmt einer Gestalt das Unheimliche.
+    Zwei Fehler in den Anlaeufen davor, und beide lagen nicht am Motiv.
 
-    Jetzt haengt er. Die Krone schwebt nicht ueber ihm - *sie haelt ihn*,
-    an vier duennen Faeden, und der Stoff darunter beruehrt den Boden gar
-    nicht. Die Maske hat keine Augen, nur einen Spalt, der senkrecht
-    durch sie hindurchgeht. Der Saum ist zerfetzt, die Schultern stehen
-    schief, und aus dem Stoff kommen zu viele Finger.
+    Der erste: er war zu gross. Eine Gestalt, die den halben Bildschirm
+    fuellt, ist nicht bedrohlich, sie ist unhandlich - man sieht sie nicht
+    mehr im Ganzen, und im Kampf verdeckt sie den Boden, auf dem man
+    steht. Er ist jetzt knapp dreimal so hoch wie Cadence. Das reicht.
 
-    Und er kann trotzdem nur eine Sache: den Takt geben. Er holt weit
-    aus, haelt viel zu lange, und schlaegt zu. Genau dafuer steht er da.
+    Der zweite: er war flach. Der Stoff war eine Flaeche in einer Farbe
+    mit ein paar Strichen darauf, und daran erkennt man Zeichnung, die
+    nicht zu Ende gefuehrt ist. Cadence bekommt ihre Form aus einem
+    Verlauf quer ueber den Koerper, aus Koernung und aus einer Lichtkante
+    - er bekommt jetzt dasselbe: jede Zeile des Stoffs wird von links
+    nach rechts durchgeschattet, die Falten sind weiche Taeler statt
+    Striche, und wo etwas ueber etwas anderem liegt, liegt Schatten.
 
     `schlag` 0 = Ausholen, 1 = Schlag. `wut` faerbt ihn in der zweiten
     Haelfte um.
     """
-    c = Canvas(120, 168)
-    base = 160                                  # der Saum, nicht der Boden
-    cx = 56
+    c = Canvas(86, 118)
+    base = 112
+    cx = 40
 
-    schweb = math.sin(phase) * 2.4
-    zug = math.sin(phase * 0.7 + 1.1) * 1.4     # die Faeden ziehen ungleich
-    stoff = mix(P.CLOAK_LO, P.INK, 0.42)
-    stoff_hi = mix(stoff, P.STONE, 0.46)
-    stoff_lo = hexc("#04050a")
+    schweb = math.sin(phase) * 1.7
+    zug = math.sin(phase * 0.7 + 1.1) * 1.1
+    # Der erste Anlauf mit Schattierung war richtig gerechnet und
+    # trotzdem unbrauchbar: die Werte lagen alle drei so tief, dass die
+    # Form zwar da war, aber niemand sie sah. Eine Schattierung braucht
+    # Spielraum - zwischen dunkelstem und hellstem Ton muss genug liegen.
+    stoff_lo = hexc("#070912")
+    stoff_mid = mix(P.CLOAK, P.STONE, 0.62)
+    stoff_hi = mix(stoff_mid, P.BONE, 0.34)
     bein = mix(P.BONE, P.STONE, 0.18)
     bein_lo = mix(bein, P.INK2, 0.50)
     akzent = mix(P.ROT, P.WARM, 0.30) if wut > 0.5 else P.TRIM
 
-    schulter_y = base - 96
-    ky = schulter_y - 44 + schweb               # Hoehe der Krone
+    def stoffton(q: float, tiefe: float = 0.0, koernung: int = 0):
+        """
+        Die Farbe des Stoffs an einer Stelle.
 
-    # ---- Die Faeden zuerst: sie liegen hinter allem und tragen ihn.
-    for i, (ax, sx) in enumerate(((-30, -20), (-12, -8), (12, 9), (30, 21))):
-        for k in range(int(schulter_y - ky - 4)):
-            t = k / max(1, schulter_y - ky - 4)
-            x = cx + ax + (sx - ax) * t + zug * (1 - t) * 0.6
-            if hash01(int(x), i) > 0.18:
-                c.set(int(round(x)), int(ky + 12 + k), mix(bein_lo, stoff, 0.45))
+        `q` ist die Lage quer ueber die Form, -1 links bis +1 rechts.
+        Das Licht kommt von rechts oben, also liegt dort ein heller Grat,
+        und ganz aussen kippt es wieder ab - so wirkt eine Flaeche rund
+        statt flach. `tiefe` verdunkelt zusaetzlich (Falten, Ueberlappung).
+        """
+        # Rund statt flach: hell bei q ~ 0.6, dunkel nach beiden Seiten.
+        # Breiter Lichtgrat statt schmalem Streifen: sonst ist fast die
+        # ganze Flaeche im Abfall und damit wieder eintoenig.
+        licht = 0.30 + 0.70 * math.exp(-((q - 0.45) ** 2) / 0.72)
+        rand = max(0.0, abs(q) - 0.86) / 0.14          # Abkippen ganz aussen
+        wert = licht * (1 - rand * 0.7) - tiefe
+        wert = max(0.0, min(1.0, wert))
+        farbe = mix(stoff_lo, stoff_mid, min(1.0, wert * 1.55))
+        if wert > 0.64:
+            farbe = mix(stoff_mid, stoff_hi, (wert - 0.64) / 0.36)
+        if koernung and hash01(koernung, int(q * 40)) > 0.86:
+            farbe = shade(farbe, -0.09)
+        return farbe
 
-    # ---- Die Robe. Sie haengt: oben schmal, unten weit, und der Saum
-    # beruehrt den Boden nicht, sondern franst in der Luft aus.
+    schulter_y = base - 66
+    ky = schulter_y - 30 + schweb
+
+    # ---- Die Faeden, an denen er haengt. Sie liegen hinter allem.
+    for i, (ax, sx) in enumerate(((-20, -13), (-8, -5), (8, 6), (20, 14))):
+        n = int(schulter_y - ky - 3)
+        for k in range(max(0, n)):
+            t = k / max(1, n)
+            x = cx + ax + (sx - ax) * t + zug * (1 - t) * 0.5
+            if hash01(int(x), i) > 0.16:
+                c.set(int(round(x)), int(ky + 9 + k), mix(bein_lo, stoff_mid, 0.5))
+
+    # ---- Die Robe. Jede Zeile wird quer durchgeschattet, nicht gefuellt.
+    falten = (-0.72, -0.34, 0.04, 0.40, 0.76)
     for y in range(schulter_y, base + 1):
         t = (y - schulter_y) / (base - schulter_y)
-        halb = 11 + t ** 1.5 * 26
-        # Schief: die Robe faellt nicht senkrecht, sie haengt nach links.
-        neig = schweb * (1 - t) * 0.5 - t * 4
-        x0 = int(cx - halb + neig)
-        c.rect(x0, y, int(halb * 2), 1, mix(stoff_hi, stoff, min(1.0, t * 1.6)))
-        # Falten: fuenf, ungleich verteilt, nach unten auseinanderlaufend.
-        for f in (-0.74, -0.36, 0.05, 0.42, 0.78):
-            fx = int(cx + neig + f * halb)
-            c.set(fx, y, mix(stoff, stoff_lo, 0.6))
-            c.set(fx + 1, y, mix(stoff_hi, stoff, 0.35))
-        c.set(int(cx - halb + neig), y, mix(stoff_hi, P.STONE, 0.22))
-        c.set(int(cx + halb + neig) - 1, y, stoff_lo)
+        halb = 8 + t ** 1.45 * 18
+        neig = schweb * (1 - t) * 0.4 - t * 3
+        links = cx - halb + neig
+        for x in range(int(links), int(cx + halb + neig) + 1):
+            q = (x - (cx + neig)) / halb
+            # Falten: weiche Taeler, keine Striche. Nach unten laufen sie
+            # auseinander, weil der Stoff dort weiter faellt.
+            tiefe = 0.0
+            for f in falten:
+                d = abs(q - f * (0.6 + 0.4 * t))
+                if d < 0.16:
+                    tiefe = max(tiefe, (1 - d / 0.16) * 0.42)
+            # Unten wird es schwerer: der Saum liegt im Eigenschatten.
+            tiefe += t * 0.22
+            c.set(x, y, stoffton(q, tiefe, koernung=y))
+        # Lichtkante rechts, Abschluss links.
+        c.set(int(cx + halb + neig), y, mix(stoff_hi, P.STONE, 0.35))
+        c.set(int(links), y, stoff_lo)
 
-    # Zerfetzter Saum: Zipfel verschiedener Laenge, kein Strich.
-    for x in range(cx - 40, cx + 36):
-        if hash01(x, 5) > 0.35:
-            laenge = 1 + int(hash01(x, 9) * 7)
-            for k in range(laenge):
-                if hash01(x, k + 13) > 0.25:
-                    c.set(x - 4, base + k, mix(stoff, stoff_lo, 0.3 + k / 9))
+    # Zerfetzter Saum: Zipfel verschiedener Laenge, im Eigenschatten.
+    for x in range(cx - 26, cx + 24):
+        if hash01(x, 5) > 0.32:
+            for k in range(1 + int(hash01(x, 9) * 5)):
+                if hash01(x, k + 13) > 0.22:
+                    c.set(x - 3, base + k, mix(stoff_lo, stoff_mid, 0.35 - k * 0.06))
 
-    # ---- Schultern: eckig, ungleich hoch. Symmetrie ist das Erste, was
-    # einer Gestalt das Bedrohliche nimmt.
-    _flaeche(c, [(cx - 32, schulter_y + 14), (cx - 26, schulter_y - 7),
-                 (cx + 24, schulter_y - 3), (cx + 30, schulter_y + 14)], stoff)
-    c.line(cx - 26, schulter_y - 7, cx + 24, schulter_y - 3, stoff_hi)
-    for i in range(7):
-        t = i / 6
-        x = cx - 24 + i * 8
-        hoehe = 4 + int(abs(math.sin(t * math.pi + 0.4)) * 9)
-        c.line(x, schulter_y - 5, x + (t - 0.5) * 9, schulter_y - 5 - hoehe,
-               mix(bein_lo, stoff, 0.3))
-        c.set(int(x + (t - 0.5) * 9), schulter_y - 5 - hoehe, mix(bein, akzent, 0.35))
+    # ---- Schultern: eckig, ungleich hoch, und ebenfalls durchgeschattet.
+    for y in range(schulter_y - 6, schulter_y + 11):
+        t = (y - (schulter_y - 6)) / 17
+        halb = 15 + t * 6
+        for x in range(int(cx - halb - 2), int(cx + halb)):
+            q = (x - cx) / halb
+            c.set(x, y, stoffton(q, 0.10 + t * 0.18, koernung=y * 3))
+        c.set(int(cx + halb) - 1, y, mix(stoff_hi, P.STONE, 0.28))
+        c.set(int(cx - halb - 2), y, stoff_lo)
 
-    # ---- Die Kapuze: leer, und man sieht in sie hinein.
-    hy = schulter_y - 10
-    for y in range(hy - 15, hy + 15):
-        t = (y - (hy - 15)) / 30
-        halb = 5.0 + 9.5 * t ** 0.4
-        neig = schweb * 0.3 * (1 - t) - 1.5 * t
-        c.rect(int(cx - halb + neig), y, int(halb * 2), 1,
-               mix(stoff_hi, stoff, min(1.0, 0.2 + t * 1.15)))
-        c.set(int(cx - halb + neig), y, mix(stoff_hi, P.STONE, 0.32))
-        c.set(int(cx + halb + neig) - 1, y, stoff_lo)
-        if t > 0.18:
-            innen = (halb - 3.6) * ((t - 0.18) / 0.82) ** 0.32
+    for i in range(6):
+        t = i / 5
+        x = cx - 16 + i * 6.4
+        hoehe = 3 + int(abs(math.sin(t * math.pi + 0.4)) * 6)
+        c.line(x, schulter_y - 5, x + (t - 0.5) * 6, schulter_y - 5 - hoehe,
+               mix(bein_lo, stoff_mid, 0.3))
+        c.set(int(x + (t - 0.5) * 6), schulter_y - 5 - hoehe, mix(bein, akzent, 0.35))
+
+    # ---- Die Kapuze: leer, und man sieht hinein.
+    hy = schulter_y - 8
+    for y in range(hy - 11, hy + 11):
+        t = (y - (hy - 11)) / 22
+        halb = 3.6 + 6.6 * t ** 0.4
+        neig = schweb * 0.25 * (1 - t) - t
+        for x in range(int(cx - halb + neig), int(cx + halb + neig) + 1):
+            q = (x - (cx + neig)) / halb
+            c.set(x, y, stoffton(q, 0.06 + t * 0.10, koernung=y * 7))
+        c.set(int(cx + halb + neig), y, mix(stoff_hi, P.STONE, 0.3))
+        c.set(int(cx - halb + neig), y, stoff_lo)
+        if t > 0.2:
+            innen = (halb - 2.6) * ((t - 0.2) / 0.8) ** 0.32
             if innen > 0.8:
                 c.rect(int(cx - innen + neig), y, int(innen * 2), 1, hexc("#020307"))
-                c.set(int(cx - innen + neig) - 1, y, mix(stoff_hi, bein, 0.22))
-    # Tief drin ein Rest Licht - und zwei winzige Punkte, die keine Augen
-    # sind, sondern zwei Zinken, die man gerade noch sieht.
-    c.glow(cx - 1, hy + 6, 9, (akzent[0], akzent[1], akzent[2], int(40 + 55 * wut)))
+                c.set(int(cx - innen + neig) - 1, y, mix(stoff_hi, bein, 0.25))
+    c.glow(cx - 1, hy + 4, 7, (akzent[0], akzent[1], akzent[2], int(38 + 55 * wut)))
     for k in (-2, 2):
-        c.set(cx + k, hy + 4, mix(akzent, P.BONE, 0.5))
+        c.set(cx + k, hy + 3, mix(akzent, P.BONE, 0.5))
 
-    # ---- Die Krone. Eine Sichel aus Knochen, an der er haengt.
-    for i in range(-34, 35):
-        t = abs(i) / 34
-        dicke = int(7 * (1 - t ** 1.5)) + 1
-        y = ky + t ** 2.1 * 13 + (0 if i < 0 else 1)   # rechts eine Spur tiefer
+    # ---- Die Krone. Auch Knochen ist rund: die Sichel bekommt oben
+    # Licht, unten Schatten, und an der Bruchkante eine harte Naht.
+    for i in range(-24, 25):
+        t = abs(i) / 24
+        dicke = int(5 * (1 - t ** 1.5)) + 1
+        y = ky + t ** 2.1 * 9 + (0 if i < 0 else 1)
         for d in range(dicke):
-            c.set(cx + i, int(y) + d,
-                  bein if d < dicke - 2 else (bein_lo if d < dicke - 1 else stoff_lo))
-        # Kerben in der Sichel: sie ist alt und angeschlagen.
-        if hash01(i, 3) > 0.86:
-            c.set(cx + i, int(y), mix(bein_lo, stoff, 0.5))
+            v = d / max(1, dicke - 1)
+            ton = mix(mix(bein, P.BONE, 0.35 * (1 - v)), bein_lo, v ** 0.7)
+            if hash01(i, d) > 0.9:
+                ton = shade(ton, -0.12)
+            c.set(cx + i, int(y) + d, ton)
+        c.set(cx + i, int(y) + dicke - 1, stoff_lo)
+        if hash01(i, 3) > 0.87:
+            c.set(cx + i, int(y), mix(bein_lo, stoff_mid, 0.4))
     for seite in (-1, 1):
-        laenge = 11 if seite < 0 else 8         # ungleich lang
+        laenge = 8 if seite < 0 else 6
         for k in range(laenge):
-            c.set(cx + seite * 34, int(ky + 13 - k),
-                  mix(bein, akzent, k / laenge * 0.55))
-        c.set(cx + seite * 34, int(ky + 13 - laenge), mix(bein, P.BONE, 0.7))
-        c.glow(cx + seite * 34, ky + 13 - laenge, 5,
-               (akzent[0], akzent[1], akzent[2], 60))
+            c.set(cx + seite * 24, int(ky + 9 - k), mix(bein, akzent, k / laenge * 0.55))
+        c.set(cx + seite * 24, int(ky + 9 - laenge), mix(bein, P.BONE, 0.7))
+        c.glow(cx + seite * 24, ky + 9 - laenge, 4,
+               (akzent[0], akzent[1], akzent[2], 55))
 
-    # Die Maske in der Mitte: keine Augen. Ein senkrechter Spalt, der
-    # durch sie hindurchgeht, und darunter zu viele kleine Zaehne.
-    _flaeche(c, [(cx - 8, ky - 4), (cx + 8, ky - 3), (cx + 6, ky + 17),
-                 (cx - 5, ky + 16)], bein)
-    _flaeche(c, [(cx - 6, ky - 2), (cx - 2, ky - 2), (cx - 2, ky + 14),
-                 (cx - 5, ky + 13)], mix(bein, P.BONE, 0.45))
-    c.rect(cx, int(ky - 3), 1, 20, hexc("#05060c"))
-    c.rect(cx + 1, int(ky - 3), 1, 20, mix(bein_lo, P.INK2, 0.4))
-    for k in range(6):
-        c.set(cx - 4 + k * 2, int(ky + 15), bein_lo)
-    # Und die Staebe, die daran haengen und klirren.
-    for i, x in enumerate((-24, -18, -9, 13, 20, 27)):
-        laenge = 9 + (i * 5) % 13
+    # Die Maske: kein Gesicht. Ein Spalt, der senkrecht hindurchgeht.
+    for y in range(int(ky - 3), int(ky + 13)):
+        t = (y - (ky - 3)) / 16
+        halb = 4.2 - t * 1.4
+        for x in range(int(cx - halb), int(cx + halb) + 1):
+            q = (x - cx) / halb
+            # Auch Knochen ist gewoelbt: links die Lichtseite, rechts
+            # faellt es ab. Ein gleichmaessig heller Block sieht aus wie
+            # Papier, das jemand aufgeklebt hat.
+            ton = mix(bein_lo, mix(bein, P.BONE, 0.5),
+                      max(0.0, 1.0 - abs(q + 0.30) * 1.15))
+            c.set(x, y, mix(ton, bein_lo, t * 0.5))
+    c.rect(cx, int(ky - 3), 1, 16, hexc("#04050a"))
+    c.rect(cx + 1, int(ky - 3), 1, 16, mix(bein_lo, P.INK2, 0.35))
+    for k in range(5):
+        c.set(cx - 3 + k * 2, int(ky + 12), bein_lo)
+
+    for i, x in enumerate((-17, -12, -6, 9, 14, 19)):
+        laenge = 6 + (i * 5) % 9
         for k in range(laenge):
-            c.set(cx + x + int(zug * 0.35 * k / laenge), int(ky + 15 + k),
-                  mix(bein_lo, stoff, 0.25 + k / laenge * 0.55))
-        c.set(cx + x, int(ky + 15 + laenge), mix(bein_lo, akzent, 0.3))
+            c.set(cx + x + int(zug * 0.3 * k / laenge), int(ky + 11 + k),
+                  mix(bein_lo, stoff_mid, 0.2 + k / laenge * 0.55))
+        c.set(cx + x, int(ky + 11 + laenge), mix(bein_lo, akzent, 0.3))
 
-    # ---- Arme: zu lang, zu duenn, mit zu vielen Fingern.
-    def arm(sx, sy, punkte, dick=3.0):
+    # ---- Arme: zu lang, zu duenn, mit zu vielen Fingern - und ebenfalls
+    # gerundet statt als Strich gezogen.
+    def arm(sx, sy, punkte, dick=2.4):
         vor = (sx, sy)
         for i, (px, py) in enumerate(punkte):
             n = max(2, int(math.dist(vor, (px, py))))
             for k in range(n + 1):
-                t = k / n
-                x = vor[0] + (px - vor[0]) * t
-                y = vor[1] + (py - vor[1]) * t
-                w = max(1.6, dick - i * 0.45)
+                tt = k / n
+                x = vor[0] + (px - vor[0]) * tt
+                y = vor[1] + (py - vor[1]) * tt
+                w = max(1.4, dick - i * 0.35)
                 for d in range(-int(w), int(w) + 1):
-                    c.set(int(x) + d, int(y),
-                          mix(stoff_hi, P.STONE, 0.35) if d <= -int(w) + 1
-                          else mix(stoff, stoff_lo, 0.3))
+                    q = d / max(1.0, w)
+                    c.set(int(x) + d, int(y), stoffton(-q, 0.12, koernung=int(y)))
             vor = (px, py)
         return vor
 
-    hebe = (1 - schlag) * 30
-    hand = arm(cx - 27, schulter_y + 6,
-               [(cx - 44, schulter_y + 12 - hebe * 0.35),
-                (cx - 53, schulter_y + 34 - hebe)])
+    hebe = (1 - schlag) * 20
+    hand = arm(cx - 19, schulter_y + 5,
+               [(cx - 30, schulter_y + 9 - hebe * 0.35),
+                (cx - 36, schulter_y + 24 - hebe)], dick=2.6)
     for k in range(5):
-        laenge = 8 + (k * 3) % 7
+        laenge = 6 + (k * 3) % 5
         a = 0.5 + k * 0.34
         c.line(hand[0], hand[1],
                hand[0] - math.cos(a) * laenge, hand[1] + math.sin(a) * laenge,
-               mix(stoff_hi, bein, 0.35 + k * 0.06))
+               mix(stoff_hi, bein, 0.3 + k * 0.06))
 
-    # ---- Der Stab: ein Mast mit Glocken. Kein Rundzeug - gegossene
-    # Formen, dunkel, mit einem einzigen Glanz an der Kante.
-    stab_x = cx + 38
-    c.rect(stab_x - 1, int(ky + 10), 3, base - int(ky) + 2,
-           mix(stoff_hi, P.STONE, 0.26))
-    c.rect(stab_x + 1, int(ky + 10), 1, base - int(ky) + 2, stoff_lo)
-    arm(cx + 26, schulter_y + 6, [(stab_x - 5, schulter_y + 3), (stab_x, schulter_y + 10)])
-    for i in range(5):
-        gy = int(ky) + 34 + i * 24
-        r = 4 + i * 1.7
-        if gy > base - 10:
+    # ---- Der Stab mit den Glocken.
+    stab_x = cx + 27
+    for y in range(int(ky + 8), base + 2):
+        for d in (-1, 0, 1):
+            c.set(stab_x + d, y, stoffton(-d * 0.7, 0.16, koernung=y))
+    arm(cx + 18, schulter_y + 5, [(stab_x - 4, schulter_y + 2), (stab_x, schulter_y + 7)])
+    for i in range(4):
+        gy = int(ky) + 26 + i * 19
+        r = 3 + i * 1.4
+        if gy > base - 8:
             break
-        # Glockenform: oben schmal, unten weit, gerader Rand.
-        # Dunkles Metall, ein einziger Glanz an der Kante. Hell gefuellt
-        # sahen die Glocken aus wie kleine graue Berge.
         for k in range(int(r * 1.6)):
             t = k / (r * 1.6)
             halb = r * (0.35 + 0.75 * t ** 0.7)
-            c.rect(int(stab_x - halb), gy + k, int(halb * 2), 1,
-                   mix(stoff, stoff_lo, 0.30 + (1 - t) * 0.35))
-            c.set(int(stab_x - halb), gy + k, mix(stoff_hi, bein, 0.30))
-            c.set(int(stab_x + halb) - 1, gy + k, stoff_lo)
+            for x in range(int(stab_x - halb), int(stab_x + halb) + 1):
+                q = (x - stab_x) / max(1.0, halb)
+                c.set(x, gy + k, stoffton(q, 0.28 - (1 - t) * 0.14, koernung=gy + k))
+            c.set(int(stab_x + halb), gy + k, mix(stoff_hi, bein, 0.35))
         c.rect(int(stab_x - r * 1.15), gy + int(r * 1.6), int(r * 2.3), 1,
-               mix(stoff_hi, bein, 0.20))
-        # Der Kloeppel haengt heraus.
-        c.rect(stab_x, gy + int(r * 1.6) + 1, 1, 2, mix(bein_lo, stoff, 0.4))
+               mix(stoff_hi, bein, 0.22))
+        c.rect(stab_x, gy + int(r * 1.6) + 1, 1, 2, mix(bein_lo, stoff_mid, 0.4))
         c.set(stab_x, gy + int(r * 1.6) + 3, mix(akzent, bein, 0.4))
 
-    c.shadow_pass((0, 1), -0.14)
     c.outline(hexc("#05060c", 240))
-    c.glow(cx, ky + 6, 42, (akzent[0], akzent[1], akzent[2], int(22 + 30 * wut)),
+    c.glow(cx, ky + 4, 30, (akzent[0], akzent[1], akzent[2], int(20 + 28 * wut)),
            power=2.6)
     return c
 

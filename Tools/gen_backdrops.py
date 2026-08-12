@@ -27,6 +27,18 @@ OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Res
 W, H = 512, 288          # so gross wie das Sichtfeld
 LIGHT = 1                # Licht von rechts
 
+# Wie schnell eine Schicht mitlaeuft. 0 heisst: sie klebt am Bildschirm
+# und bewegt sich gar nicht; 1 heisst: sie liegt in der Welt und laeuft
+# mit ihr.
+#
+# Die Werte waren vorher deutlich hoeher, und das war der Grund, warum
+# die Wiederholung der Schichten auffiel: eine Kachelfuge, die schnell
+# durchs Bild zieht, sieht man. Dieselbe Fuge, die sich kaum bewegt,
+# liest sich als Ferne. Die Vorbilder machen genau das - ihre
+# Hintergruende sind ebenfalls wiederholt, sie kriechen nur.
+PARALLAX = [0.04, 0.11, 0.24]
+PARALLAX_VORN = 1.16
+
 REGIONS = ["hain", "kathedrale", "grotten", "dissonanz"]
 
 
@@ -623,6 +635,100 @@ def foreground(region: str) -> Canvas:
     return c
 
 
+# ------------------------------------------------------------------ Tempel
+#
+# Der Schattentempel liegt im Hain und darf trotzdem nicht wie er
+# aussehen. Beim ersten Anlauf lieh er sich einfach die Kulisse der
+# Kathedrale - das war keine Loesung, sondern eine Abkuerzung, und man
+# sah es sofort: dieselben Rosetten, dieselben Boegen, nur dunkler.
+#
+# Er hat jetzt eine eigene. Sie folgt einer anderen Regel als alle
+# anderen Kulissen im Spiel: **kein Himmel, keine Ferne, keine Luft.**
+# Wo sonst hinten Licht steht, steht hier eine Wand. Der Blick hat kein
+# Entkommen - und das ist das Einzige, was eine Arena vom uebrigen
+# Gebiet unterscheiden muss.
+
+def tempel(layer: int) -> Canvas:
+    wand = hexc("#12141d")
+    stein = hexc("#1b1f2b")
+    stein_hi = hexc("#2a3040")
+    gold = mix(P.GOLD, wand, 0.55)
+    c = Canvas(W, H)
+    rng = Rng(9100 + layer * 31)
+
+    if layer == 0:
+        # Die Rueckwand. Grosse Quader, und darauf ein Relief: eine
+        # Stimmgabel, so hoch wie die Wand, halb abgeschlagen.
+        c.dither_v(0, 0, W, H, mix(wand, stein, 0.35), wand, levels=6)
+        masonry(c, 0, 0, W, H, wand, course=26, seed=7)
+
+        cx = 256
+        for k in (-1, 1):
+            # Die zwei Zinken - unten breiter, oben angeschlagen.
+            for y in range(40, 190):
+                t = (y - 40) / 150
+                x = cx + k * (34 - t * 6)
+                breite = int(9 - t * 3)
+                if k > 0 and y < 96 and hash01(y, 3) > 0.5:
+                    continue        # rechts fehlt ein Stueck
+                c.rect(int(x - breite / 2), y, breite, 1,
+                       mix(stein, gold, 0.10 + t * 0.10))
+                c.set(int(x + breite / 2) - 1, y, mix(stein_hi, gold, 0.25))
+        c.rect(cx - 40, 188, 80, 14, mix(stein, gold, 0.14))
+        for y in range(202, 262):
+            t = (y - 202) / 60
+            halb = int(11 - t * 4)
+            c.rect(cx - halb, y, halb * 2, 1, mix(stein, gold, 0.12))
+            c.set(cx + halb - 1, y, mix(stein_hi, gold, 0.2))
+
+        # Fackelnischen: die einzigen Lichter im Raum.
+        for x in (74, 438):
+            c.rect(x - 7, 96, 14, 34, hexc("#070810"))
+            c.glow(x, 118, 26, (255, 196, 120, 34), power=2.2)
+            c.ellipse(x, 120, 3.2, 5.0, mix(P.WARM, P.GOLD, 0.4))
+        return c
+
+    if layer == 1:
+        # Eine Reihe Saeulen, weit hinten, mit Kapitell und Sockel.
+        col = mix(stein, wand, 0.35)
+        for x in (46, 148, 250, 352, 454):
+            for y in range(28, 250):
+                t = (y - 28) / 222
+                halb = 9 + t * 2
+                for px in range(int(x - halb), int(x + halb)):
+                    q = (px - x) / halb
+                    c.set(px, y, mix(col, stein_hi,
+                                     max(0.0, 0.55 - abs(q + 0.35) * 0.7)))
+                c.set(int(x - halb), y, hexc("#0a0c14"))
+            c.rect(x - 15, 20, 30, 10, mix(col, stein_hi, 0.25))
+            c.rect(x - 13, 30, 26, 4, col)
+            c.rect(x - 16, 250, 32, 12, mix(col, stein_hi, 0.18))
+        # Ein durchlaufendes Gesims darueber.
+        c.rect(0, 8, W, 12, mix(col, stein_hi, 0.3))
+        c.rect(0, 20, W, 3, hexc("#0a0c14"))
+        return c
+
+    if layer == 2:
+        # Nahe Saeulen: nur zwei, dafuer schwer. Sie rahmen das Bild.
+        col = mix(stein, hexc("#05060c"), 0.45)
+        for x in (18, 494):
+            for y in range(0, H):
+                halb = 26 + (y / H) * 5
+                for px in range(int(x - halb), int(x + halb)):
+                    q = (px - x) / halb
+                    c.set(px, y, mix(col, stein_hi,
+                                     max(0.0, 0.4 - abs(q + 0.3) * 0.55)))
+            c.rect(int(x - 34), 0, 68, 22, mix(col, stein_hi, 0.16))
+        # Ketten mit Schalen, die von der Decke haengen.
+        for x, laenge in ((150, 74), (362, 52)):
+            c.chain(x, 0, laenge, mix(col, stein_hi, 0.3), link=6)
+            c.ellipse(x, laenge + 6, 9, 4.4, mix(col, stein_hi, 0.22))
+            c.glow(x, laenge + 4, 16, (255, 196, 120, 26), power=2.0)
+        return c
+
+    return c
+
+
 # --------------------------------------------------------------------- Bau
 
 BUILDERS = {"hain": hain, "kathedrale": kathedrale,
@@ -665,9 +771,18 @@ def build() -> None:
             if layer > 0:
                 bild = in_dunst(bild, 64 + layer * 24)
             atlas.add(f"{region}_bg{layer}", bild, pivot=(0, 0),
-                      parallax=[0.10, 0.28, 0.52][layer])
+                      parallax=PARALLAX[layer])
         atlas.add(f"{region}_fg", in_dunst(foreground(region), 56),
-                  pivot=(0, 0), parallax=1.30)
+                  pivot=(0, 0), parallax=PARALLAX_VORN)
+
+    # Der Tempel ist keine Region, aber eine Kulisse. Er bekommt keinen
+    # Dunst nach oben: hinter ihm ist Wand, kein Himmel, und eine Wand
+    # loest sich nicht auf.
+    for layer in range(3):
+        atlas.add(f"tempel_bg{layer}", tempel(layer), pivot=(0, 0),
+                  parallax=PARALLAX[layer])
+    atlas.add("tempel_fg", in_dunst(foreground("kathedrale"), 40),
+              pivot=(0, 0), parallax=PARALLAX_VORN)
     png, js = atlas.write(OUT)
     print(f"backdrops  -> {png.name} ({len(atlas.frames)} Frames)")
 

@@ -69,13 +69,12 @@ public final class RoomRenderer {
 
     private func buildBackdrop(room: Room) {
         // Die Kulisse darf von der Region abweichen - siehe RoomData.
-        let kulisse = room.data.backdrop ?? room.region
-        let region = kulisse.rawValue
+        let region = room.data.backdrop ?? room.region.rawValue
 
         // Eine Himmelsflaeche hinter allem. Die Schichten selbst sind genau
         // bildschirmhoch und werden nur waagerecht gekachelt - senkrecht
         // wiederholt gaebe der Verlauf eine sichtbare Naht.
-        let sky = SKSpriteNode(color: skyColor(for: kulisse),
+        let sky = SKSpriteNode(color: skyColor(for: region, fallback: room.region),
                                size: CGSize(width: Double(room.width) * tileSize + 512,
                                             height: Double(room.height) * tileSize + 512))
         sky.anchorPoint = CGPoint(x: 0, y: 1)
@@ -207,6 +206,10 @@ public final class RoomRenderer {
     /// unterscheidet - nicht das Kachelbild selbst, sondern die Dinge, die
     /// quer ueber den Fugen liegen.
     private func scatterEdgeProps(room: Room) {
+        // Raeume mit eigener Kulisse bekommen keine Regionsrequisiten. Im
+        // Schattentempel wuchs sonst Gras auf den Bodenplatten - er hat
+        // seinen Kachelsatz vom Hain geerbt, nicht dessen Vegetation.
+        guard room.data.backdrop == nil else { return }
         let region = room.region.rawValue
         func isSurface(_ tx: Int, _ ty: Int) -> Bool {
             ty > 0 && room.tile(tx, ty) == .solid && room.tile(tx, ty - 1) == .air
@@ -239,6 +242,7 @@ public final class RoomRenderer {
     /// haengt jetzt etwas darueber - genau dort, wo die Waagerechte
     /// sichtbar waere.
     private func scatterHangProps(room: Room) {
+        guard room.data.backdrop == nil else { return }
         let region = room.region.rawValue
 
         func isCeiling(_ tx: Int, _ ty: Int) -> Bool {
@@ -433,6 +437,15 @@ public final class RoomRenderer {
     }
 
     /// Der hellste Wert der Region - er steht hinter allem.
+    /// Die Farbe hinter allen Schichten. Kulissen, die keine Region sind,
+    /// bringen ihre eigene mit - der Tempel hat gar keinen Himmel.
+    private func skyColor(for kulisse: String, fallback: Region) -> SKColor {
+        if kulisse == "tempel" {
+            return SKColor(red: 0.055, green: 0.06, blue: 0.085, alpha: 1)
+        }
+        return skyColor(for: Region(rawValue: kulisse) ?? fallback)
+    }
+
     private func skyColor(for region: Region) -> SKColor {
         switch region {
         case .hain: return SKColor(red: 0.49, green: 0.55, blue: 0.58, alpha: 1)

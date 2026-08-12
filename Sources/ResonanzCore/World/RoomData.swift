@@ -81,12 +81,16 @@ public struct RoomData: Codable, Sendable {
     /// Der Schattentempel liegt im Hain, soll aber nicht wie der Hain
     /// aussehen: er ist gebaut, nicht gewachsen. Kachelsatz und Musik
     /// bleiben beim Gebiet - nur die Schichten dahinter wechseln.
-    public let backdrop: Region?
+    ///
+    /// Bewusst ein Name und keine Region: eine Kulisse ist Bildwerk und
+    /// muss kein Gebiet sein. Der Tempel hat eine eigene, die es als
+    /// Region gar nicht gibt.
+    public let backdrop: String?
 
     /// Fehlt das Feld in aelteren Raumdaten, gilt die Region.
     public init(id: String, name: String, region: Region, music: String,
                 width: Int, height: Int, darkness: Double,
-                backdrop: Region? = nil, tiles: [String], doors: [Door],
+                backdrop: String? = nil, tiles: [String], doors: [Door],
                 spawns: [String: SpawnPoint], benches: [Placement],
                 enemies: [EnemySpawn], pickups: [PickupSpawn],
                 decor: [DecorSpawn], lore: [LoreSpawn], boss: BossSpawn?) {

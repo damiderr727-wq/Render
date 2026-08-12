@@ -154,8 +154,13 @@ def render(room_id: str) -> Image.Image:
         return (0 <= x < w and 0 < y < h
                 and tiles[y][x] == "#" and tiles[y - 1][x] == ".")
 
+    eigene_kulisse = room.get("backdrop") is not None
     for y in range(1, h):
         for x in range(1, w):
+            # Raeume mit eigener Kulisse bekommen keine Regionsrequisiten -
+            # sonst waechst im Tempel Gras auf den Bodenplatten.
+            if eigene_kulisse:
+                break
             if not (is_surface(x, y) and is_surface(x - 1, y)):
                 continue
             if (x * 2654435761 + y * 40503) % 100 >= 34:
@@ -175,7 +180,7 @@ def render(room_id: str) -> Image.Image:
 
     for y in range(h - 1):
         for x in range(1, w):
-            if not is_ceiling(x, y):
+            if eigene_kulisse or not is_ceiling(x, y):
                 continue
             # An einer Stufe immer, sonst nur hier und da: die Kante ist
             # genau das, was verdeckt werden soll.

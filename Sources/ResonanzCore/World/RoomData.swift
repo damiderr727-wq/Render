@@ -82,6 +82,32 @@ public struct RoomData: Codable, Sendable {
     /// aussehen: er ist gebaut, nicht gewachsen. Kachelsatz und Musik
     /// bleiben beim Gebiet - nur die Schichten dahinter wechseln.
     public let backdrop: Region?
+
+    /// Fehlt das Feld in aelteren Raumdaten, gilt die Region.
+    public init(id: String, name: String, region: Region, music: String,
+                width: Int, height: Int, darkness: Double,
+                backdrop: Region? = nil, tiles: [String], doors: [Door],
+                spawns: [String: SpawnPoint], benches: [Placement],
+                enemies: [EnemySpawn], pickups: [PickupSpawn],
+                decor: [DecorSpawn], lore: [LoreSpawn], boss: BossSpawn?) {
+        self.id = id
+        self.name = name
+        self.region = region
+        self.music = music
+        self.width = width
+        self.height = height
+        self.darkness = darkness
+        self.backdrop = backdrop
+        self.tiles = tiles
+        self.doors = doors
+        self.spawns = spawns
+        self.benches = benches
+        self.enemies = enemies
+        self.pickups = pickups
+        self.decor = decor
+        self.lore = lore
+        self.boss = boss
+    }
     public let tiles: [String]
     public let doors: [Door]
     public let spawns: [String: SpawnPoint]

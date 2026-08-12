@@ -631,17 +631,37 @@ def hang_prop(region: str, variant: int, frame: int = 0, frames: int = 1) -> Can
                 if i % 5 == 2:
                     c.set(int(round(x)) + 1, i, shade(fels, -0.3))
     else:
-        # Ein flacher Ueberhang: keine Spitze, nur eine Masse, die ueber
-        # die Kante quillt. Genau das nimmt einer Stufe die Waagerechte.
-        w = rng.range(6, 9)
-        c.blob(cx, rng.range(3, 5), w, fels, rng, lumps=6, squash=0.55)
-        c.blob(cx - w * 0.25, 2, w * 0.5, fels_hi, rng, lumps=4, squash=0.5)
-        for k in range(3):
-            x = cx + rng.range(-5, 5)
-            h = rng.int(3, 8)
+        # Ein Vorhang, der ueber die Kante quillt.
+        #
+        # Hier hing vorher ein rundlicher Klumpen mit ein paar Faeden
+        # darunter. Aus zwei Metern Abstand war das ein Wespennest, das
+        # mitten im Wald an der Decke klebte - eine Form, die niemand
+        # bestellt hat und die man dann ueberall sieht. Ein Vorhang macht
+        # dieselbe Arbeit (er nimmt der Stufe ihre Waagerechte) und
+        # behauptet nichts.
+        breite = int(rng.range(9, 16))
+        x0 = cx - breite // 2
+        for i in range(breite):
+            # Zwei Wellen uebereinander: keine gerade Kante, kein Zacken
+            # in gleichem Abstand.
+            ln = rng.range(4, 9) + math.sin(i * 0.7 + variant) * 3.0
+            ln = max(2.0, ln + math.sin(i * 0.23) * 2.5)
+            for k in range(int(ln)):
+                t = k / ln
+                if t > 0.6 and rng.chance(t * 0.5):
+                    continue
+                c.set(int(x0 + i + schwung * (t ** 2) * 1.4), k,
+                      mix(fels, P.INK, 0.15 + t * 0.55))
+            if ln > 4:
+                c.set(x0 + i, 0, fels_hi)
+        # Und ein paar laengere Straenge, die aus dem Vorhang fallen.
+        for _ in range(rng.int(1, 3)):
+            x = x0 + rng.int(1, max(2, breite - 1))
+            h = rng.int(7, 16)
             for i in range(h):
-                c.set(int(x + schwung * (i / h) ** 2), 5 + i,
-                      mix(fels, P.INK, 0.25 + i / h * 0.4))
+                t = i / h
+                c.set(int(x + schwung * (t ** 2) * 2.2 + math.sin(i * 0.4) * 1.1),
+                      i, mix(fels, P.INK, 0.3 + t * 0.5))
 
     c.shadow_pass((0, 1), -0.20)
     return c

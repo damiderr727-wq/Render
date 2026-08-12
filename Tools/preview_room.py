@@ -98,19 +98,48 @@ def render(room_id: str) -> Image.Image:
     # als eigener Knoten hinter allem liegt. Ohne sie stehen ueberall dort,
     # wo alle drei Schichten durchsichtig sind, Loecher in der Grundfarbe;
     # in breiten Raeumen ergab das eine schwarze Linie an jeder Kachelfuge.
-    sky_img, _ = backdrops.frame(f"{kulisse}_bg0")
-    if sky_img is not None:
-        canvas.paste(sky_img.crop((0, 0, sky_img.width, 1)).resize((w * TS, h * TS)),
-                     (0, 0))
+    # Ganz hinten der Himmelsverlauf, ueber die ganze Raumhoehe gezogen -
+    # derselbe Streifen, den das Spiel dort hinlegt. Damit ist es gleich,
+    # wie hoch ein Raum ist.
+    streifen, _ = backdrops.frame(f"{kulisse}_himmel")
+    if streifen is not None:
+        canvas.paste(streifen.resize((w * TS, h * TS)), (0, 0))
+
+    # Wohin die Kamera schaut - danach richtet sich, wo die bildschirmfeste
+    # Schicht liegt.
+    spawn = next(iter(room.get("spawns", {}).values()), None)
+    blickpunkt = spawn["x"] * TS if spawn else w * TS / 2
 
     for layer in range(4):
         img, _ = backdrops.frame(f"{kulisse}_bg{layer}")
         if img is None:
             continue
-        alpha = [1.0, 0.46, 0.58, 0.74][layer]
-        faded = img.copy()
-        faded.putalpha(faded.getchannel("A").point(lambda v: int(v * alpha)))
+        # Die Staffelung steckt in der Farbe, nicht in der Deckkraft
+        # (siehe `in_ferne` in gen_backdrops.py). Jede Schicht deckt.
+        faded = img
         oben = h * TS - img.height
+
+        # Schicht 0 laeuft mit dem Faktor 0, klebt also am Bildschirm: im
+        # Spiel sieht man immer dieselbe Kopie, egal wie weit man laeuft.
+        # Hier lag sie gekachelt im Raum, und dann stand der Mond zweimal
+        # im Bild - ein Fehler der Vorschau, nicht des Spiels, aber einer,
+        # den man dem Spiel anlastet. Also genau einmal, dort wo die
+        # Kamera steht.
+        if layer == 0:
+            # Von Hand zuschneiden. `alpha_composite` will ein Ziel
+            # innerhalb der Leinwand; steht die Kamera nah am linken Rand,
+            # ist der Zielpunkt negativ, und dann klebt ein verschobenes
+            # Stueck Himmel mitten im Raum - der Mond als weisser Fetzen
+            # neben einem Sigil. Ein Fehler der Vorschau, aber einer, der
+            # wie ein Fehler des Spiels aussieht.
+            dx = int(blickpunkt - img.width / 2)
+            x0, x1 = max(0, dx), min(w * TS, dx + img.width)
+            if x1 > x0:
+                # Und oben angeschlagen, nicht unten: Schicht 0 ist Luft.
+                canvas.alpha_composite(
+                    faded.crop((x0 - dx, 0, x1 - dx, img.height)), (x0, 0))
+            continue
+
         # Jede zweite Kachel gespiegelt: sonst stoesst die rechte Kante der
         # Schicht auf ihre eigene linke, und alle 512 Pixel laeuft eine
         # harte senkrechte Naht durchs Bild. Derselbe Kniff wie im Spiel.

@@ -37,6 +37,42 @@ SLOPE_UP, SLOPE_DOWN = "/", "\\"
 UP_LOW, UP_HIGH, DOWN_HIGH, DOWN_LOW = "1", "2", "3", "4"
 
 
+def _treppenfrei(hoehen: dict[int, int], x0: int, x1: int) -> dict[int, int]:
+    """
+    Begradigt ein Deckenprofil, damit daraus eine Linie werden kann.
+
+    Zwei Bedingungen, beide notwendig, damit `Room.deckenglaetten` an
+    einer Stufe ueberhaupt ein Paar Schraegkacheln setzen darf: der
+    Sprung zwischen zwei Spalten ist hoechstens eine Kachel, und links
+    wie rechts der Stufe steht ein Lauf von mindestens zwei Spalten auf
+    gleicher Hoehe. Wird das vorher nicht erzwungen, bleibt jede zweite
+    Stufe stehen - und eine halb geglaettete Decke sieht schlechter aus
+    als eine ehrliche Treppe.
+
+    Begradigt wird ausschliesslich nach oben (kleinere Werte gewinnen).
+    Das Ergebnis ist die untere Huellkurve des Rohprofils: sie liegt
+    nirgends tiefer als das Original, also nimmt die Glaettung nirgends
+    Kopfhoehe weg. Was sie kostet, ist etwas Fels - das ist zu
+    verschmerzen.
+    """
+    d = dict(hoehen)
+    for x in range(x0 + 1, x1):                     # von links
+        d[x] = min(d[x], d[x - 1] + 1)
+    for x in range(x1 - 2, x0 - 1, -1):             # und zurueck
+        d[x] = min(d[x], d[x + 1] + 1)
+
+    # Einzelne Spalten auf eigener Hoehe verbreitern, wieder nach oben.
+    for _ in range(4):
+        ruhig = True
+        for x in range(x0 + 1, x1 - 1):
+            if d[x] < d[x - 1] and d[x] < d[x + 1]:
+                d[x - 1 if d[x - 1] <= d[x + 1] else x + 1] = d[x]
+                ruhig = False
+        if ruhig:
+            break
+    return d
+
+
 class Room:
     def __init__(self, rid: str, name: str, region: str, w: int, h: int, music: str | None = None):
         self.id = rid
@@ -99,6 +135,35 @@ class Room:
 
     def ledge(self, x: int, y: int, w: int, h: int = 2) -> "Room":
         return self.fill(x, y, w, h, SOLID)
+
+    def schacht(self, x: int, y: int, w: int, h: int, seed: int = 0,
+                wand: int = 2) -> "Room":
+        """
+        Ein senkrechter Aufstieg mit gewachsenen Waenden.
+
+        `carve` schneidet ein Rechteck. Ein Rechteck ist genau das, was
+        man einem Raum ansieht: zwei kerzengerade Waende ueber zwanzig
+        Kacheln, links und rechts gleich weit weg. Hier wird stattdessen
+        gefasst und dann wieder eingebeult - die Breite atmet ueber die
+        Hoehe, links und rechts unabhaengig voneinander.
+
+        Die schmalste Stelle bleibt breit genug zum Springen; eingebeult
+        wird nur, wo Platz dafuer ist.
+        """
+        self.fill(x - wand, y, w + wand * 2, h)
+        self.carve(x, y, w, h)
+        for j in range(y, y + h):
+            t = (j - y) / max(1, h - 1)
+            for seite in (0, 1):
+                # Zwei Wellen ungleicher Laenge: die Wand darf nirgends
+                # eine Weile geradeaus laufen.
+                tiefe = (math.sin(t * 7.0 + seed + seite * 2.1) * 0.5 + 0.5) \
+                    * (math.sin(t * 2.3 + seed * 0.7 + seite) * 0.5 + 0.7)
+                d = int(tiefe * min(3, (w - 5) / 2))
+                if d <= 0:
+                    continue
+                self.fill(x + (0 if seite == 0 else w - d), j, d, 1)
+        return self
 
     def spikes(self, x: int, y: int, w: int) -> "Room":
         return self.fill(x, y, w, 1, SPIKE)
@@ -331,21 +396,36 @@ class Room:
         Damit ist die Decke keine eigene Erfindung mehr, sondern eine
         Aussage ueber den Ort.
 
-        Die Decke bekommt ausserdem eine Behandlung, die der Boden schon
-        hatte: **an jeder Stufe haengt Fels.**
+        Die Decke wird dabei **treppenfrei gebaut, nicht treppenfrei
+        verkleidet.**
 
-        Eine gerundete Kurve wird beim Runden auf ganze Kacheln zur
-        Treppe, und eine Treppe quer ueber das Bild sieht aus wie ein
-        Regal. Der Boden loest das mit Rampen (`soften`); nach oben gibt
-        es keine Rampenkacheln. Also wird die Stufe stattdessen
-        *verdeckt*: wo die Decke springt, waechst ein Zapfen herunter,
-        der genau so lang ist wie der Sprung, plus ein wenig. Damit ist
-        die waagerechte Kante weg - was bleibt, liest sich als Fels.
+        Vorher stand hier das Gegenteil: eine gerundete Kurve wird beim
+        Runden auf ganze Kacheln zur Treppe, und an jede Stufe wurde ein
+        Zapfen gehaengt, der genau so lang war wie der Sprung. Das war
+        Kosmetik ueber einem Baufehler, und es hat auch nicht
+        funktioniert - was man sah, waren senkrechte Bloecke in
+        verschiedenen Laengen nebeneinander, also erst recht ein Regal.
+
+        Jetzt wird das Deckenprofil vor dem Setzen begradigt: hoechstens
+        eine Kachel Unterschied von Spalte zu Spalte, und keine Hoehe
+        steht allein. Damit findet `deckenglaetten` an jeder Stufe ein
+        Paar Schraegkacheln, das dort hinpasst, und aus der Treppe wird
+        eine durchgehende Linie. Begradigt wird ausserdem immer *nach
+        oben* - die Decke geht hoch, nie herunter, sonst nimmt eine
+        Glaettung irgendwo die Kopfhoehe weg, die der Raum braucht.
         """
-        hoehen: dict[int, tuple[int, int]] = {}
+        b_roh: dict[int, int] = {}
+        d_roh: dict[int, int] = {}
         for x in range(x0, x1):
             b = max(2, min(self.h - 1, int(round(boden(x)))))
-            d = max(1, int(round(b - max(3, kopfhoehe(x)))))
+            b_roh[x] = b
+            d_roh[x] = max(1, int(round(b - max(3, kopfhoehe(x)))))
+
+        decke = _treppenfrei(d_roh, x0, x1)
+
+        hoehen: dict[int, tuple[int, int]] = {}
+        for x in range(x0, x1):
+            b, d = b_roh[x], decke[x]
             hoehen[x] = (b, d)
             self.fill(x, b, 1, self.h - b)
             self.fill(x, 0, 1, d)
@@ -354,17 +434,20 @@ class Room:
             b, d = hoehen[x]
             luft = b - d
 
-            # Der Zapfen an der Stufe: so lang wie der Hoehensprung zum
-            # Nachbarn, damit die Kante darin verschwindet.
-            stufe = max(abs(d - hoehen[x - 1][1]) if x - 1 in hoehen else 0,
-                        abs(d - hoehen[x + 1][1]) if x + 1 in hoehen else 0)
-            laenge = 0
-            if stufe and luft >= 6:
-                laenge = stufe + 1 + int(hash01(x, seed + 3) * 2)
-            elif zacken and luft >= 10 and hash01(x, seed) < zacken:
-                laenge = 1 + int(hash01(x, seed + 1) * 2.6)
-            if laenge:
-                self.fill(x, d, 1, min(laenge, max(0, luft - 5)))
+            # Tropfsteine bleiben - aber als Form, nicht als Fuellung
+            # einer Luecke. Zwei Kacheln breit oben, eine unten: eine
+            # einzelne Kachelsaeule ist kein Fels, sondern ein Strich.
+            #
+            # Nur wo die Decke ueber beide Spalten gleich hoch liegt.
+            # Sonst steht die zweite Spalte an einer Stufe, hat Luft
+            # ueber sich - und bekommt vom Kachelsatz eine Oberkante mit
+            # Gras. Gras, das unter der Decke nach oben waechst.
+            if (zacken and luft >= 11 and hash01(x, seed) < zacken
+                    and hoehen.get(x + 1, (0, -1))[1] == d):
+                laenge = min(2 + int(hash01(x, seed + 1) * 3), luft - 7)
+                if laenge >= 2:
+                    self.fill(x, d, 2, laenge - 1)
+                    self.fill(x, d + laenge - 1, 1, 1)
 
             if saeulen and luft >= 10 and hash01(x, seed + 9) < saeulen:
                 # Eine Saeule, die durchsteht, sperrt den Gang - und weil
@@ -699,10 +782,10 @@ def room_A2() -> Room:
                      (60, 22), (71, 24)], rauheit=0.45, seed=13)
     r.hoehle(1, 71, boden, kopf, seed=17, zacken=0.10)
 
-    # Der Kamin nach oben rechts wird freigeraeumt und gefasst.
-    r.carve(46, 3, 22, 22)
-    r.fill(44, 3, 2, 22)
-    r.fill(68, 3, 3, 22)
+    # Der Kamin nach oben rechts. Gefasst und wieder eingebeult - als
+    # ausgeschnittenes Rechteck war er die auffaelligste gerade Linie im
+    # ganzen Hain.
+    r.schacht(46, 3, 22, 22, seed=5, wand=2)
 
     # Links: zwei Simse als Aussicht ueber die Lichtung.
     r.ledge(8, 23, 7, 2)

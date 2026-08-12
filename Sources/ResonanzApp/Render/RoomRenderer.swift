@@ -75,9 +75,20 @@ public final class RoomRenderer {
         // Eine Himmelsflaeche hinter allem. Die Schichten selbst sind genau
         // bildschirmhoch und werden nur waagerecht gekachelt - senkrecht
         // wiederholt gaebe der Verlauf eine sichtbare Naht.
-        let sky = SKSpriteNode(color: skyColor(for: region, fallback: room.region),
-                               size: CGSize(width: Double(room.width) * tileSize + 512,
-                                            height: Double(room.height) * tileSize + 512))
+        // Und zwar als *Verlauf*, nicht als Flaeche: ein schmaler Streifen
+        // aus dem Atlas, ueber die ganze Raumhoehe gezogen. Vorher stand
+        // hier eine einzige Farbe, und die traf den Verlauf der Kulisse
+        // nur an einem Ende - am anderen lief eine waagerechte Kante
+        // quer durchs Bild.
+        let himmelGroesse = CGSize(width: Double(room.width) * tileSize + 512,
+                                   height: Double(room.height) * tileSize + 512)
+        let sky: SKSpriteNode
+        if let streifen = atlas.frame("\(region)_himmel") {
+            sky = SKSpriteNode(texture: streifen.texture, size: himmelGroesse)
+        } else {
+            sky = SKSpriteNode(color: skyColor(for: region, fallback: room.region),
+                               size: himmelGroesse)
+        }
         sky.anchorPoint = CGPoint(x: 0, y: 1)
         sky.position = CGPoint(x: -256, y: 256)
         sky.zPosition = -10
@@ -101,15 +112,24 @@ public final class RoomRenderer {
             // obersten Reihen durchsichtig gezeichnet (`in_dunst` in
             // gen_backdrops.py) und gehen ohne Kante in ihn ueber, statt
             // irgendwo in der Luft aufzuhoeren.
+            // Schicht 0 ist Luft und haengt oben im Raum, alle anderen
+            // stehen unten auf dem Boden. Bodenbuendig gehaengt landete
+            // der Mond in einem hohen Raum auf halber Hoehe zwischen den
+            // Plattformen - ein Mond gehoert nach oben.
+            let unterkante = layer == 0
+                ? -Double(info.size.height)
+                : -Double(room.height) * tileSize
+
             for column in 0..<columns {
                 let sprite = SKSpriteNode(texture: info.texture, size: info.size)
                 sprite.anchorPoint = CGPoint(x: 0, y: 0)
                 sprite.position = CGPoint(x: CGFloat(column) * info.size.width,
-                                          y: -Double(room.height) * tileSize)
-                // Die Schichten sitzen bewusst weit zurueck. Ein Hintergrund,
-                // der so kraeftig ist wie das Spielgeschehen davor, macht
-                // Gegner unsichtbar - vorn gehoert der hellste Wert hin.
-                sprite.alpha = [1.0, 0.46, 0.58, 0.74][layer]
+                                          y: unterkante)
+                // Deckend. Die Staffelung nach hinten steckt in der Farbe
+                // der Schicht selbst (`in_ferne` in gen_backdrops.py), nicht
+                // in ihrer Deckkraft. Halbdurchsichtig hiess: man sah den
+                // Mond durch den Baumstamm.
+                sprite.alpha = 1.0
 
                 // Jede zweite Kachel gespiegelt. Aneinandergereiht stiess
                 // sonst die rechte Kante der Schicht auf ihre eigene linke,
@@ -489,18 +509,16 @@ public final class RoomRenderer {
 
     /// Die Farbe hinter allen Schichten.
     ///
-    /// Sie muss dem oberen Ende des Himmelsverlaufs entsprechen, den
-    /// `gen_backdrops.py` in Schicht 0 zeichnet. Vorher war sie deutlich
-    /// heller, weil Schicht 0 halbdurchsichtig darueberlag und sich mit
-    /// ihr mischte. Seit Schicht 0 deckend ist, sieht man diese Farbe nur
-    /// noch ueber ihrem oberen Rand - in hohen Raeumen - und dort wuerde
-    /// jede Abweichung als waagerechte Kante quer durchs Bild laufen.
+    /// Sie muss dem *unteren* Ende des Himmelsverlaufs entsprechen, den
+    /// `gen_backdrops.py` in Schicht 0 zeichnet. Schicht 0 haengt oben im
+    /// Raum; was darunter noch frei bleibt, fuellt diese Farbe, und jede
+    /// Abweichung liefe dort als waagerechte Kante quer durchs Bild.
     private func skyColor(for region: Region) -> SKColor {
         switch region {
-        case .hain: return SKColor(red: 0.224, green: 0.278, blue: 0.294, alpha: 1)
-        case .kathedrale: return SKColor(red: 0.231, green: 0.220, blue: 0.314, alpha: 1)
-        case .grotten: return SKColor(red: 0.200, green: 0.255, blue: 0.310, alpha: 1)
-        case .dissonanz: return SKColor(red: 0.200, green: 0.149, blue: 0.165, alpha: 1)
+        case .hain: return SKColor(red: 0.208, green: 0.196, blue: 0.176, alpha: 1)
+        case .kathedrale: return SKColor(red: 0.188, green: 0.153, blue: 0.192, alpha: 1)
+        case .grotten: return SKColor(red: 0.137, green: 0.180, blue: 0.243, alpha: 1)
+        case .dissonanz: return SKColor(red: 0.125, green: 0.078, blue: 0.098, alpha: 1)
         }
     }
 

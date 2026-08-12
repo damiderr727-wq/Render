@@ -320,7 +320,7 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # Von schraeg oben hinten nach vorn unten. In Leinwandkoordinaten
     # zeigt +y nach unten, also ist -1.85 rad oben-hinten und +0.42
     # vorn-leicht-unten.
-    a0, a1 = -1.85, 0.42
+    a0, a1 = -2.15, 0.78
     t = schwung ** 0.78
     winkel = a0 + (a1 - a0) * t
 
@@ -332,36 +332,64 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # --- Der Bogen.
     # Zum Schluss klingt er ab: im letzten Bild soll die ausgestreckte
     # Klinge stehen, nicht noch einmal dieselbe Sichel.
-    verblassen = 1.0 if t < 0.80 else 1.0 - (t - 0.80) / 0.20 * 0.62
+    verblassen = 1.0 if t < 0.93 else 1.0 - (t - 0.93) / 0.07 * 0.55
     if t > 0.06:
         # Er zieht einen festen Winkelbetrag hinter sich her, statt bis
         # zum Anfang zurueckzureichen: sonst steht im letzten Bild ein
         # halber Kreis um sie herum.
-        schleppe = min(t, 0.62)
-        r_innen, r_aussen = reichweite * 0.70, reichweite * 1.00
-        schritte = 46
+        # Eine Sichel, keine Schleifspur.
+        #
+        # Der Unterschied steckt im Querschnitt. Eine Spur ist hinten
+        # duenn und vorn dick, laeuft also in eine stumpfe Kante aus.
+        # Eine Sichel ist in der Mitte am breitesten und laeuft nach
+        # *beiden* Seiten spitz zu - das ist die Form, die man von der
+        # Klinge im Vorbild kennt, und sie ist der ganze Grund, warum man
+        # dort einen Schlag sieht und keinen Wisch. Der Aussenradius
+        # bleibt darum fest; nur der Innenradius wandert.
+        schleppe = min(t, 0.78)
+        r_innen, r_aussen = reichweite * 0.60, reichweite * 1.00
+        schritte = 56
+
+        # Erst sammeln, dann setzen. Wird beim Abtasten direkt gemischt,
+        # trifft die Bahn manche Pixel zweimal und andere einmal, und die
+        # Sichel bekommt ein Schachbrettmuster. Pro Pixel zaehlt nur der
+        # hoechste Wert, den die Bahn dort erreicht.
+        flaeche: dict[tuple[int, int], tuple[tuple, int]] = {}
+
+        def auftragen(px: float, py: float, col, deckung: int) -> None:
+            schluessel = (int(px), int(py))
+            vorher = flaeche.get(schluessel)
+            if vorher is None or deckung > vorher[1]:
+                flaeche[schluessel] = (col, deckung)
+
         for k in range(schritte):
-            u = k / (schritte - 1)          # 0 = Ende der Schleppe, 1 = Klinge
+            u = k / (schritte - 1)          # 0 = hintere Spitze, 1 = Klinge
             a = a0 + (a1 - a0) * (t - schleppe * (1 - u))
             ax, ay = math.cos(a), math.sin(a)
-            # Vorn ist der Bogen dick und deckend, hinten duenn und blass.
-            dicke = 0.30 + 0.70 * u ** 0.9
+            # Linse: null an den Enden, am dicksten kurz vor der Klinge.
+            # Im Ausholen ist sie zusaetzlich flacher - eine Sichel in
+            # voller Dicke ueber einem Viertel Bogen ist ein Klumpen.
+            dicke = math.sin(math.pi * min(1.0, u ** 0.72)) ** 0.55
+            dicke *= 0.45 + 0.55 * t
             r0 = r_aussen - (r_aussen - r_innen) * dicke
-            deckung = int((230 * u ** 1.35 + 12) * verblassen)
+            deckung = int((90 + 150 * u ** 1.1) * verblassen)
             i = r0
             while i <= r_aussen:
-                px, py = dreh_x + ax * i, dreh_y + ay * i
                 v = (i - r0) / max(1.0, r_aussen - r0)
                 # Aussen heller: die Vorderkante der Sichel traegt das Licht.
-                col = mix(rosa, P.BONE, 0.10 + v * 0.55 + u * 0.25)
-                c.blend(int(px), int(py), (col[0], col[1], col[2], deckung))
-                i += 0.5
-            # Die Vorderkante noch einmal, deckend - sie ist die Linie,
-            # an der das Auge den Schlag festmacht.
-            if u > 0.55 and verblassen > 0.7:
-                for r in (r_aussen, r_aussen - 0.6):
-                    c.set(int(dreh_x + ax * r), int(dreh_y + ay * r),
-                          mix(P.BONE, rosa_hi, 0.35))
+                auftragen(dreh_x + ax * i, dreh_y + ay * i,
+                          mix(rosa, P.BONE, 0.10 + v * 0.55 + u * 0.25), deckung)
+                i += 0.4
+            # Die Aussenkante durchgehend, deckend - sie ist die Linie,
+            # an der das Auge den Schlag festmacht, und sie laeuft ueber
+            # die ganze Sichel, nicht nur ueber ihr vorderes Drittel.
+            if dicke > 0.06 and verblassen > 0.7:
+                for r in (r_aussen, r_aussen - 0.5):
+                    auftragen(dreh_x + ax * r, dreh_y + ay * r,
+                              mix(P.BONE, rosa_hi, 0.25 + (1 - u) * 0.35), 255)
+
+        for (px, py), (col, deckung) in flaeche.items():
+            c.blend(px, py, (col[0], col[1], col[2], deckung))
 
     # --- Die Klinge, auf der Vorderkante des Bogens.
     ax, ay = math.cos(winkel), math.sin(winkel)

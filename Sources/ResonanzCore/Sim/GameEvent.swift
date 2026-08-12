@@ -56,6 +56,8 @@ public enum GameEvent: Sendable {
     case wallsBroken(roomID: String, tiles: [(Int, Int)])
 
     case enemyKilled(kind: String, position: Vec2)
+    /// Ein Bestiariumseintrag hat sich ganz geoeffnet.
+    case bestiariumEintrag(Bestiarium.Eintrag)
     case playerDied
 
     case roomChanged(from: String, to: String, door: String)

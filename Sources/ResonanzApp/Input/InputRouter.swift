@@ -40,6 +40,7 @@ public final class InputRouter {
     private var pendingKern: Kern?
     private var pendingCycle = 0
     private var pendingEquipmentCycle = 0
+    private var pendingBestiarium = false
     private var pendingSiegel: Int?
 
     #if os(macOS)
@@ -82,7 +83,8 @@ public final class InputRouter {
             selectKern: pendingKern,
             cycleKern: pendingCycle,
             cycleEquipment: pendingEquipmentCycle,
-            toggleSiegel: pendingSiegel)
+            toggleSiegel: pendingSiegel,
+            bestiariumPressed: pendingBestiarium)
     }
 
     /// Nach dem Auswerten die Flanken loeschen.
@@ -92,6 +94,7 @@ public final class InputRouter {
         pendingCycle = 0
         pendingEquipmentCycle = 0
         pendingSiegel = nil
+        pendingBestiarium = false
     }
 
     private func set(_ keyPath: WritableKeyPath<Held, Bool>, _ value: Bool) {
@@ -145,6 +148,8 @@ public final class InputRouter {
         case "1": pendingKern = .leier
         case "2": pendingKern = .trommel
         case "3": pendingKern = .floete
+        // Das Bestiarium - jederzeit, nicht nur an der Bank.
+        case "b": pendingBestiarium = true
         case "q": pendingCycle = -1
         case "e": pendingCycle = 1
         // Fassung wechseln - wirkt nur an der Stimmgabel.

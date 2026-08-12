@@ -14,6 +14,7 @@ public final class GameScene: SKScene {
     private let renderer = RoomRenderer()
     private let atlas = AtlasStore.shared
     private let hud = HUDNode()
+    private let bestiarium = BestiariumNode()
     private let input = InputRouter()
 
     private let synth = SynthEngine()
@@ -62,6 +63,8 @@ public final class GameScene: SKScene {
         addChild(cameraNode)
         cameraNode.addChild(hud)
         hud.build(in: Self.designSize)
+        cameraNode.addChild(bestiarium)
+        bestiarium.build(in: Self.designSize)
 
         playerNode = atlas.sprite("cadence_stimmgabel_mantel_idle_0")
         playerNode.zPosition = 5
@@ -153,7 +156,26 @@ public final class GameScene: SKScene {
         let dt = min(1.0 / 30.0, max(0.0001, currentTime - lastUpdate))
         lastUpdate = currentTime
 
-        let events = sim.update(dt: dt, input: input.snapshot())
+        let eingabe = input.snapshot()
+
+        // Das Bestiarium haelt das Spiel an. Es ist kein Menue neben dem
+        // Spiel, sondern ein Blick in etwas, das die Figur mit sich
+        // fuehrt - und dabei laeuft die Welt nicht weiter.
+        if eingabe.bestiariumPressed {
+            bestiarium.toggle(save: sim.save)
+            board.play(.pickup)
+        }
+        if bestiarium.offen {
+            // aimY ist die senkrechte Achse der Steuerung: hoch ist
+            // negativ, also blaettert hoch nach oben in der Liste.
+            if eingabe.aimY != 0 {
+                bestiarium.blaettern(eingabe.aimY > 0 ? 1 : -1, save: sim.save)
+            }
+            input.endFrame()
+            return
+        }
+
+        let events = sim.update(dt: dt, input: eingabe)
         input.endFrame()
 
         handle(events: events)
@@ -187,6 +209,11 @@ public final class GameScene: SKScene {
 
             case .musicChanged(let track, _):
                 music.play(track, now: synth.currentTime)
+
+            case .bestiariumEintrag(let eintrag):
+                hud.announce(eintrag.name,
+                             subtitle: "BESTIARIUM - EINTRAG VOLLSTAENDIG",
+                             lore: eintrag.deutung.joined(separator: " "))
 
             case .kernPicked(let kern):
                 hud.announce(kern.displayName, subtitle: kern.summary,

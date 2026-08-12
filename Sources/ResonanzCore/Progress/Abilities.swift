@@ -189,6 +189,11 @@ public struct SaveState: Codable, Sendable, Equatable {
     public var brokenWalls: [String: [Int]]
     /// Bereits eingesammelte Fundstuecke ("A3/fluegelschlag").
     public var collected: Set<String>
+    /// Wie oft welche Kreatur erlegt wurde. Traegt das Bestiarium: ein
+    /// Eintrag oeffnet sich erst, wenn man oft genug mit ihr zu tun hatte.
+    public var erlegt: [String: Int]
+    /// Wem man ueberhaupt schon begegnet ist - auch ohne sie zu erlegen.
+    public var gesehen: Set<String>
     public var playTime: Double
 
     public init(roomID: String = "A1",
@@ -197,6 +202,8 @@ public struct SaveState: Codable, Sendable, Equatable {
                 kern: Kern = .leier,
                 brokenWalls: [String: [Int]] = [:],
                 collected: Set<String> = [],
+                erlegt: [String: Int] = [:],
+                gesehen: Set<String> = [],
                 playTime: Double = 0) {
         self.version = Self.currentVersion
         self.roomID = roomID
@@ -205,6 +212,29 @@ public struct SaveState: Codable, Sendable, Equatable {
         self.kern = kern
         self.brokenWalls = brokenWalls
         self.collected = collected
+        self.erlegt = erlegt
+        self.gesehen = gesehen
         self.playTime = playTime
+    }
+
+    /// Fehlende Felder werden nachgesehen, nicht bemaengelt.
+    ///
+    /// Ein Spielstand aus einer aelteren Fassung kennt das Bestiarium
+    /// nicht. Ohne diesen Umweg wuerde das Laden daran scheitern - und
+    /// jemand verloere seinen Spielstand, weil eine Liste dazugekommen
+    /// ist. Neue Felder gehoeren darum immer mit Rueckfallwert gelesen.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        version = try c.decodeIfPresent(Int.self, forKey: .version) ?? Self.currentVersion
+        roomID = try c.decodeIfPresent(String.self, forKey: .roomID) ?? "A1"
+        spawnName = try c.decodeIfPresent(String.self, forKey: .spawnName) ?? "start"
+        progression = try c.decodeIfPresent(Progression.self, forKey: .progression)
+            ?? Progression()
+        kern = try c.decodeIfPresent(Kern.self, forKey: .kern) ?? .leier
+        brokenWalls = try c.decodeIfPresent([String: [Int]].self, forKey: .brokenWalls) ?? [:]
+        collected = try c.decodeIfPresent(Set<String>.self, forKey: .collected) ?? []
+        erlegt = try c.decodeIfPresent([String: Int].self, forKey: .erlegt) ?? [:]
+        gesehen = try c.decodeIfPresent(Set<String>.self, forKey: .gesehen) ?? []
+        playTime = try c.decodeIfPresent(Double.self, forKey: .playTime) ?? 0
     }
 }

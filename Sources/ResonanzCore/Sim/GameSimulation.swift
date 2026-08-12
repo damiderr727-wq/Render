@@ -117,7 +117,11 @@ public final class GameSimulation {
             enemies.append(Enemy(id: takeID(), kind: kind,
                                  position: Vec2.entity(e.x, e.y),
                                  patrolTiles: e.patrol))
+            // Wer einen Raum betritt, hat gesehen, was darin steht. Damit
+            // hat das Bestiarium den Eintrag - nur noch nicht seinen Inhalt.
+            save.gesehen.insert(kind.rawValue)
         }
+        if let b = room.data.boss { save.gesehen.insert(b.type) }
 
         for p in room.data.pickups {
             let key = "\(room.id)/\(p.id)"
@@ -229,8 +233,30 @@ public final class GameSimulation {
         checkDoors(events: &events)
         updateCamera(dt: dt)
         updateMusic(dt: dt, events: &events)
+        zaehleErlegte(events: &events)
 
         return events
+    }
+
+    /// Traegt erlegte Kreaturen ins Bestiarium ein.
+    ///
+    /// Laeuft am Ende des Bildes ueber die Ereignisse, statt beim Toeten
+    /// mitzuzaehlen: die Kreatur weiss nichts vom Spielstand, und das
+    /// soll auch so bleiben. Sie meldet nur, dass sie gefallen ist.
+    private func zaehleErlegte(events: inout [GameEvent]) {
+        var neu: [GameEvent] = []
+        for event in events {
+            guard case .enemyKilled(let art, _) = event,
+                  let kind = EnemyKind(rawValue: art),
+                  let eintrag = Bestiarium.eintrag(fuer: kind) else { continue }
+            let vorher = save.erlegt[art] ?? 0
+            save.erlegt[art] = vorher + 1
+            // Genau beim Ueberschreiten melden, nicht bei jedem weiteren.
+            if vorher + 1 == eintrag.schwelle {
+                neu.append(.bestiariumEintrag(eintrag))
+            }
+        }
+        events.append(contentsOf: neu)
     }
 
     // MARK: - Wirkung der Spieleraktionen

@@ -24,6 +24,9 @@ public struct PlayerInput: Sendable, Equatable {
     public var cycleEquipment: Int
     /// Siegel an dieser Stelle der Fundliste umschalten - nur an der Stimmgabel.
     public var toggleSiegel: Int?
+    /// Das Bestiarium auf- oder zuklappen. Es haelt das Spiel an, also
+    /// gehoert es zur Steuerung und nicht zur Anzeige.
+    public var bestiariumPressed: Bool
 
     public init(moveX: Double = 0,
                 aimY: Double = 0,
@@ -37,7 +40,8 @@ public struct PlayerInput: Sendable, Equatable {
                 selectKern: Kern? = nil,
                 cycleKern: Int = 0,
                 cycleEquipment: Int = 0,
-                toggleSiegel: Int? = nil) {
+                toggleSiegel: Int? = nil,
+                bestiariumPressed: Bool = false) {
         self.moveX = moveX
         self.aimY = aimY
         self.jumpHeld = jumpHeld
@@ -51,6 +55,7 @@ public struct PlayerInput: Sendable, Equatable {
         self.cycleKern = cycleKern
         self.cycleEquipment = cycleEquipment
         self.toggleSiegel = toggleSiegel
+        self.bestiariumPressed = bestiariumPressed
     }
 
     public static let neutral = PlayerInput()

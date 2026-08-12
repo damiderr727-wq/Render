@@ -88,6 +88,16 @@ public final class Enemy {
     /// Nur die Gabelmaus: huscht sie gerade, oder sitzt sie?
     private var huscht = false
 
+    /// Was die Kreatur gerade tut - fuer die Wahl des Bildes.
+    ///
+    /// Sie hatte bisher genau eine Bewegung, und damit sah man ihr nie
+    /// an, was sie vorhat. Ein Gegner ohne Ansage ist keine Aufgabe,
+    /// sondern eine Falle.
+    public enum Haltung: String, Sendable {
+        case ruhe, lauf, angriff
+    }
+    public private(set) var haltung: Haltung = .lauf
+
     private let home: Vec2
     private let patrolRange: Double
     private var rng: Rng
@@ -184,6 +194,7 @@ public final class Enemy {
             facing = -facing
         }
 
+        haltung = huscht ? .lauf : .ruhe
         let ziel = huscht ? facing * 132 : 0
         velocity.x = approach(velocity.x, ziel, (huscht ? 900 : 500) * dt)
     }
@@ -201,7 +212,9 @@ public final class Enemy {
 
     private func updateWalker(dt: Double, room: Room, toPlayer: Vec2, distance: Double) {
         let chargeRange = 130.0
-        let speed: Double = aggro && distance < chargeRange ? 105 : 42
+        let stuermt = aggro && distance < chargeRange
+        haltung = stuermt ? .angriff : .lauf
+        let speed: Double = stuermt ? 105 : 42
         if aggro && distance < chargeRange {
             facing = sign(toPlayer.x) == 0 ? facing : sign(toPlayer.x)
         } else {
@@ -223,6 +236,8 @@ public final class Enemy {
                            spawnProjectile: (Projectile) -> Void) {
         velocity.x = 0
         facing = sign(toPlayer.x) == 0 ? facing : sign(toPlayer.x)
+        // Kurz vor dem Schuss sichtbar aufreissen - das ist die Ansage.
+        haltung = (aggro && distance < 260 && attackTimer < 0.45) ? .angriff : .ruhe
         guard aggro, distance < 260, attackTimer <= 0 else { return }
         attackTimer = 1.9 + rng.range(0, 0.7)
         // Drei schiefe Toene faecherfoermig.

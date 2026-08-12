@@ -1464,7 +1464,7 @@ def draw_klangmotte(phase: float) -> Canvas:
     return c
 
 
-def draw_stilleschreiter(phase: float) -> Canvas:
+def draw_stilleschreiter(phase: float, sturm: float = 0.0) -> Canvas:
     """
     Stilleschreiter - schwerer Waechter, der Klang schluckt.
 
@@ -1478,7 +1478,10 @@ def draw_stilleschreiter(phase: float) -> Canvas:
     cx, base = 15, 27
     step = math.sin(phase)
     heben = abs(step) * 1.1
-    ky = base - 15 - heben          # Schultermitte
+    # Beim Ansturm geht er in die Hocke und nach vorn - erst dadurch
+    # sieht man ihm an, dass gleich etwas passiert. Ein Gegner ohne
+    # Ansage ist kein Gegner, sondern eine Falle.
+    ky = base - 15 - heben + sturm * 3.0
 
     stein = P.STONE
     stein_hi = P.STONE_HI
@@ -1496,8 +1499,10 @@ def draw_stilleschreiter(phase: float) -> Canvas:
 
     # Der Rumpf haengt vornueber: eine Masse, die zu schwer fuer sich
     # selbst ist. Ein aufrechter Rumpf saehe aus wie eine Ruestung.
-    _flaeche(c, [(cx - 8.5, ky - 3), (cx + 5.0, ky - 5.5), (cx + 8.0, ky + 1),
-                 (cx + 5.5, ky + 6), (cx - 6.0, ky + 6.5), (cx - 9.5, ky + 2)],
+    v = sturm * 3.5
+    _flaeche(c, [(cx - 8.5 + v, ky - 3), (cx + 5.0 + v, ky - 5.5),
+                 (cx + 8.0 + v, ky + 1), (cx + 5.5 + v, ky + 6),
+                 (cx - 6.0 + v, ky + 6.5), (cx - 9.5 + v, ky + 2)],
              stein)
     _kante_licht(c, stein_hi, stein_lo)
 
@@ -1518,7 +1523,7 @@ def draw_stilleschreiter(phase: float) -> Canvas:
     # nicht wie eine Oeffnung an ihm. Der Schatten hat darum jetzt die
     # Form der Haube - er laeuft nach unten breiter, wie die Oeffnung
     # selbst - und darunter liegt die Lippe des Stoffs im Licht.
-    hx, hy = cx + 3.5, ky - 7.5
+    hx, hy = cx + 3.5 + sturm * 4.5, ky - 7.5
     _flaeche(c, [(hx - 1.6, hy), (hx + 1.8, hy + 0.4), (hx + 4.2, hy + 6.5),
                  (hx - 3.4, hy + 6.0)], mix(stein, P.INK2, 0.30))
     c.line(hx - 1.6, hy, hx + 1.8, hy + 0.4, stein_hi)
@@ -1536,7 +1541,7 @@ def draw_stilleschreiter(phase: float) -> Canvas:
     return c
 
 
-def draw_dissonanzknospe(phase: float) -> Canvas:
+def draw_dissonanzknospe(phase: float, spucken: float = 0.0) -> Canvas:
     """
     Dissonanzknospe - festgewachsen, spuckt schiefe Toene.
 
@@ -1547,7 +1552,11 @@ def draw_dissonanzknospe(phase: float) -> Canvas:
     """
     c = Canvas(24, 26)
     cx, base = 12, 25
+    # Beim Spucken reisst sie weiter auf als im Atmen - und zuckt dabei
+    # zusammen. Wer das einmal gesehen hat, weiss beim naechsten Mal,
+    # wann der Schuss kommt.
     auf = max(0.0, math.sin(phase)) ** 0.7      # 0 zu, 1 offen
+    auf = min(1.0, auf + spucken * 0.8)
     ky = base - 11.5                             # Mitte der Schale
 
     stiel = mix(P.ROT_DIM, P.INK2, 0.35)
@@ -1604,7 +1613,11 @@ def draw_dissonanzknospe(phase: float) -> Canvas:
                    ky + math.sin(-math.pi / 2 + w) * laenge,
                    mix(P.ROT, P.WARM, 0.25 + 0.25 * math.sin(phase * 3 + i)))
 
-    _hohlraum(c, cx, ky, 2.3, P.ROT, puls=auf)
+    _hohlraum(c, cx, ky, 2.3 + spucken * 0.9, P.ROT, puls=auf)
+    if spucken > 0.3:
+        # Der Ton verlaesst sie sichtbar, bevor er fliegt.
+        c.glow(cx, ky, 12 * spucken, (P.ROT[0], P.ROT[1], P.ROT[2],
+                                      int(70 * spucken)), power=1.8)
 
     c.outline(hexc("#05060c", 210))
     c.glow(cx, ky, 9, (P.ROT[0], P.ROT[1], P.ROT[2], int(24 + 44 * auf)))
@@ -1649,7 +1662,8 @@ def draw_echoscherbe(phase: float) -> Canvas:
     return c
 
 
-def draw_auftakt(phase: float, schlag: float = 0.0, wut: float = 0.0) -> Canvas:
+def draw_auftakt(phase: float, schlag: float = 0.0, wut: float = 0.0,
+                 wurf: float = 0.0) -> Canvas:
     """
     DER GROSSE AUFTAKT - der erste Boss.
 
@@ -1675,8 +1689,11 @@ def draw_auftakt(phase: float, schlag: float = 0.0, wut: float = 0.0) -> Canvas:
     base = 112
     cx = 40
 
-    schweb = math.sin(phase) * 1.7
-    zug = math.sin(phase * 0.7 + 1.1) * 1.1
+    # `wurf` hebt ihn beim Schattenwurf an den Faeden hoch: die Krone
+    # zieht, der Stoff folgt spaeter. Genau das macht ihn zur Marionette
+    # statt zur Figur, die sich selbst bewegt.
+    schweb = math.sin(phase) * 1.7 - wurf * 5.0
+    zug = math.sin(phase * 0.7 + 1.1) * 1.1 + wurf * 2.5
     # Der erste Anlauf mit Schattierung war richtig gerechnet und
     # trotzdem unbrauchbar: die Werte lagen alle drei so tief, dass die
     # Form zwar da war, aber niemand sie sah. Eine Schattierung braucht
@@ -1855,7 +1872,8 @@ def draw_auftakt(phase: float, schlag: float = 0.0, wut: float = 0.0) -> Canvas:
             vor = (px, py)
         return vor
 
-    hebe = (1 - schlag) * 20
+    # Beim Schattenwurf geht der Arm nicht nach vorn, sondern hoch.
+    hebe = (1 - schlag) * 20 + wurf * 26
     hand = arm(cx - 19, schulter_y + 5,
                [(cx - 30, schulter_y + 9 - hebe * 0.35),
                 (cx - 36, schulter_y + 24 - hebe)], dick=2.6)
@@ -1980,6 +1998,19 @@ def build() -> None:
     atlas.add_sequence("klangmotte_fly",
                        [draw_klangmotte(i / 6 * math.tau) for i in range(6)],
                        pivot=(0.5, 0.5), fps=10)
+    atlas.add_sequence("stilleschreiter_sturm",
+                       [draw_stilleschreiter(i / 6 * math.tau,
+                                             sturm=min(1.0, i / 3))
+                        for i in range(6)],
+                       pivot=(0.5, 1.0), fps=12)
+    atlas.add_sequence("dissonanzknospe_spucken",
+                       [draw_dissonanzknospe(i / 5 * math.tau,
+                                             spucken=min(1.0, i / 2.5))
+                        for i in range(5)],
+                       pivot=(0.5, 1.0), fps=11)
+    atlas.add_sequence("gabelmaus_sitz",
+                       [draw_gabelmaus(math.pi * 2 * 0 + i * 0.11) for i in range(5)],
+                       pivot=(0.5, 1.0), fps=6)
     atlas.add_sequence("stilleschreiter_walk",
                        [draw_stilleschreiter(i / 6 * math.tau) for i in range(6)],
                        pivot=(0.5, 1.0), fps=7)
@@ -1997,6 +2028,10 @@ def build() -> None:
     atlas.add_sequence("auftakt_aufschwung",
                        [draw_auftakt(i / 6 * math.tau, schlag=i / 12) for i in range(6)],
                        pivot=(0.5, 1.0), fps=7)
+    atlas.add_sequence("auftakt_schatten",
+                       [draw_auftakt(i / 6 * math.tau, wurf=min(1.0, i / 4))
+                        for i in range(6)],
+                       pivot=(0.5, 1.0), fps=9)
     atlas.add_sequence("auftakt_schlag",
                        [draw_auftakt(i / 4 * math.tau, schlag=0.5 + i / 8, wut=0.7)
                         for i in range(4)],

@@ -35,6 +35,10 @@ public final class GameScene: SKScene {
     private var projectileNodes: [SKSpriteNode] = []
     private var pickupNodes: [String: SKNode] = [:]
     private var hazardNodes: [SKShapeNode] = []
+    /// Welches Bild eine Kreatur gerade zeigt - damit die Schleife nur
+    /// dann neu gesetzt wird, wenn sich die Haltung wirklich aendert.
+    private var enemyClip: [Int: String] = [:]
+    private var bossClip = ""
 
     // MARK: - Aufbau
 
@@ -108,6 +112,8 @@ public final class GameScene: SKScene {
         pickupNodes.removeAll()
         bossNode?.removeFromParent()
         bossNode = nil
+        bossClip = ""
+        enemyClip.removeAll()
         hazardNodes.forEach { $0.removeFromParent() }
         hazardNodes.removeAll()
 
@@ -339,12 +345,20 @@ public final class GameScene: SKScene {
             if let existing = enemyNodes[enemy.id] {
                 node = existing
             } else {
-                let name = spriteName(for: enemy.kind)
-                node = atlas.sprite(name)
+                node = atlas.sprite(spriteName(for: enemy))
                 node.zPosition = 4
-                if let loop = atlas.loop(name) { node.run(loop) }
                 renderer.layers.entities.addChild(node)
                 enemyNodes[enemy.id] = node
+            }
+
+            // Haltung gewechselt? Dann anderes Bild - aber nur dann, sonst
+            // faengt die Schleife jedes Bild von vorn an und steht still.
+            let name = spriteName(for: enemy)
+            if enemyClip[enemy.id] != name {
+                enemyClip[enemy.id] = name
+                node.removeAllActions()
+                node.texture = atlas.sprite(name).texture
+                if let loop = atlas.loop(name) { node.run(loop) }
             }
             node.position = WorldSpace.scenePoint(enemy.position)
             node.xScale = enemy.facing >= 0 ? 1 : -1
@@ -354,21 +368,51 @@ public final class GameScene: SKScene {
         for (id, node) in enemyNodes where !lebend.contains(id) {
             node.removeFromParent()
             enemyNodes.removeValue(forKey: id)
+            enemyClip.removeValue(forKey: id)
         }
     }
 
-    private func spriteName(for kind: EnemyKind) -> String {
-        switch kind {
-        case .gabelmaus: return "gabelmaus_husch"
-        case .klangmotte: return "klangmotte_fly"
-        case .stilleschreiter: return "stilleschreiter_walk"
-        case .dissonanzknospe: return "dissonanzknospe_bloom"
-        case .echoscherbe: return "echoscherbe_spin"
+    /// Welches Bild eine Kreatur gerade braucht.
+    ///
+    /// Nicht nur die Art entscheidet, sondern was sie tut: der Schreiter
+    /// geht anders, wenn er gleich losstuermt, und die Knospe reisst auf,
+    /// bevor sie schiesst. Wer keine Pose fuer eine Haltung hat, behaelt
+    /// seine gewoehnliche - das ist der Rueckfall, nicht ein Fehler.
+    private func spriteName(for enemy: Enemy) -> String {
+        switch (enemy.kind, enemy.haltung) {
+        case (.gabelmaus, .ruhe): return "gabelmaus_sitz"
+        case (.gabelmaus, _): return "gabelmaus_husch"
+        case (.stilleschreiter, .angriff): return "stilleschreiter_sturm"
+        case (.stilleschreiter, _): return "stilleschreiter_walk"
+        case (.dissonanzknospe, .angriff): return "dissonanzknospe_spucken"
+        case (.dissonanzknospe, _): return "dissonanzknospe_bloom"
+        case (.klangmotte, _): return "klangmotte_fly"
+        case (.echoscherbe, _): return "echoscherbe_spin"
+        }
+    }
+
+    /// Und dasselbe fuer den Boss: er zeigt, was er vorhat.
+    private func spriteName(for boss: Boss) -> String {
+        switch boss.action {
+        case .schattenwurf: return "\(boss.art.rawValue)_schatten"
+        case .chord, .sweep: return "\(boss.art.rawValue)_schlag"
+        case .hover, .entrance: return "\(boss.art.rawValue)_idle"
+        default: return "\(boss.art.rawValue)_aufschwung"
         }
     }
 
     private func syncBoss() {
         guard let boss = sim.boss, let node = bossNode else { return }
+
+        // Der Boss zeigt, was er vorhat. Das ist bei ihm nicht Schmuck,
+        // sondern die halbe Aufgabe: wer die Ansage liest, gewinnt.
+        let name = spriteName(for: boss)
+        if bossClip != name {
+            bossClip = name
+            node.removeAllActions()
+            node.texture = atlas.sprite(name).texture
+            if let loop = atlas.loop(name) { node.run(loop) }
+        }
         node.position = WorldSpace.scenePoint(boss.position)
         node.xScale = boss.facing >= 0 ? 1 : -1
         node.colorBlendFactor = boss.hitFlash > 0 ? 0.7 : 0

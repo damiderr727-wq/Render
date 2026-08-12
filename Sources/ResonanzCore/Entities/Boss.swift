@@ -41,6 +41,10 @@ public final class Boss {
 
     public enum Action: String, Sendable {
         case entrance, hover, chord, sweep, pipes, summon, stagger, defeated
+        /// Nur der Auftakt: sein Schatten loest sich und faehrt ueber den
+        /// Boden. Der Schatten ist das Einzige an ihm, das den Boden
+        /// beruehrt - er selbst haengt ja.
+        case schattenwurf
     }
 
     /// Welcher Boss. Beide benutzen denselben Ablauf - der Unterschied
@@ -130,6 +134,8 @@ public final class Boss {
             runPipes(player: player, events: &events)
         case .summon:
             runSummon(events: &events)
+        case .schattenwurf:
+            runSchattenwurf(dt: dt, player: player, events: &events)
         case .stagger:
             drift(dt: dt * 0.3)
             if actionTime > 1.1 { begin(.hover) }
@@ -177,6 +183,8 @@ public final class Boss {
         }
 
         var options: [Action] = [.chord, .sweep]
+        // Der Auftakt hat statt Pfeifen und Kreaturen seinen Schatten.
+        if art == .auftakt { options.append(contentsOf: [.schattenwurf, .schattenwurf]) }
         // Der Auftakt kann genau diese zwei Dinge. Keine Pfeifen, keine
         // gerufenen Kreaturen - er ist eine Uebung, kein Kampf.
         if phase != .takt, art.kannPfeifen { options.append(.pipes) }
@@ -233,6 +241,38 @@ public final class Boss {
             events.append(.shake(4))
         }
         if actionTime > 1.0 { begin(.hover) }
+    }
+
+    /// Der Schattenwurf.
+    ///
+    /// Er hebt den Arm, sein Schatten loest sich vom Stoff und faehrt am
+    /// Boden entlang - erst als angekuendigte Flaeche, dann als Treffer.
+    /// Das ist die einzige Faehigkeit, die den Boden betrifft, und darum
+    /// die einzige, der man nicht durch Weglaufen entkommt: man muss
+    /// springen. Genau eine Lektion, wie alles an ihm.
+    private func runSchattenwurf(dt: Double, player: Player,
+                                 events: inout [GameEvent]) {
+        // Lange Ansage: der Schatten wird sichtbar, bevor er losfaehrt.
+        if firedThisAction == 0, actionTime > 0.1 {
+            firedThisAction = 1
+            let breite = arena.width * 0.62
+            let links = facing < 0
+            hazards.append(BossHazard(
+                rect: Rect(x: links ? arena.minX : arena.maxX - breite,
+                           y: floorY - 18,
+                           width: breite, height: 18),
+                warmup: 1.05, active: 0.34,
+                // Ein halber Kristall. Er soll lehren, nicht bestrafen.
+                damage: 1, kind: "schatten"))
+            events.append(.sound(.bossRoar))
+        }
+        // Der Schlag selbst faellt auf die Ansage, nicht davor.
+        if firedThisAction == 1, actionTime > 1.15 {
+            firedThisAction = 2
+            events.append(.shake(9))
+            events.append(.effect(.burstRot, Vec2(position.x, floorY), .zero))
+        }
+        if actionTime > 1.7 { begin(.hover) }
     }
 
     /// Orgelpfeifen brechen aus dem Boden - vorher leuchtet ihr Umriss auf.

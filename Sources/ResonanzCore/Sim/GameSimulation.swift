@@ -53,6 +53,12 @@ public final class GameSimulation {
     public private(set) var prompt: Prompt = .none
     public private(set) var elapsed: Double = 0
     public private(set) var musicTrack: String = "hain"
+
+    /// Der Takt des Raums - aus dem Stueck, das gerade laeuft.
+    public private(set) var takt = Takt(bpm: 92)
+    /// Die Trefferkette. Sie liegt hier und nicht bei der Figur: sie
+    /// gehoert zum Kampf, nicht zum Koerper.
+    public private(set) var kette = Klangkette()
     public private(set) var musicIntensity: Double = 0
     public private(set) var isComplete = false
 
@@ -85,6 +91,23 @@ public final class GameSimulation {
         populate(room: startRoom, spawn: spawn)
         cameraTarget = player.position
         musicTrack = startRoom.data.music
+        tempi = (try? Resources.decode(ScoreIndex.self, subdirectory: "Scores",
+                                       name: "index"))
+            .map { Dictionary(uniqueKeysWithValues: $0.scores.map { ($0.id, $0.bpm) }) }
+            ?? [:]
+        setzeTakt(fuer: musicTrack)
+    }
+
+    /// Wie schnell welches Stueck laeuft. Der Kampf holt seinen Takt von
+    /// hier - nicht aus einer eigenen Zahl, die dann irgendwann von der
+    /// Musik abweicht.
+    private var tempi: [String: Double] = [:]
+
+    private func setzeTakt(fuer track: String) {
+        // Der Takt faengt beim Wechsel neu an: sonst haengt der Kampf am
+        // Schlagraster eines Stuecks, das gar nicht mehr laeuft.
+        takt = Takt(bpm: tempi[track] ?? 92, beginn: elapsed)
+        kette = Klangkette()
     }
 
     /// Neues Spiel vom Anfang.
@@ -259,6 +282,39 @@ public final class GameSimulation {
         events.append(contentsOf: neu)
     }
 
+    /// Ganzzahliger Schaden, ohne dass ein Aufschlag verschluckt wird.
+    ///
+    /// Bei kleinen Grundwerten frisst das Abrunden jeden Faktor: aus
+    /// 1 mal 1,25 wird sonst wieder 1, und die Kette waere wirkungslos.
+    private func skaliert(_ grund: Int, _ faktor: Double) -> Int {
+        let roh = Double(grund) * faktor
+        if faktor > 1.0 { return Swift.max(grund + 1, Int(roh.rounded())) }
+        return Swift.max(1, Int(roh.rounded()))
+    }
+
+    /// Der Nachklang am Ende einer Kette.
+    ///
+    /// Er trifft nicht dorthin, wohin man zielt, sondern rundherum - das
+    /// ist der Sinn: man baut die Kette an einem Gegner auf und gibt sie
+    /// dort aus, wo mehrere stehen.
+    private func nachklang(um mitte: Vec2, schaden: Int, events: inout [GameEvent]) {
+        let radius = 58.0
+        let feld = Rect(center: mitte, radius: radius)
+        for enemy in enemies where enemy.alive && enemy.rect.intersects(feld) {
+            let weg = (enemy.center - mitte)
+            let ab = weg.length < 1 ? Vec2(0, -1) : weg.normalized
+            enemy.takeDamage(Swift.max(1, schaden / 2), knockback: ab * 220,
+                             events: &events)
+            if !enemy.alive { player.gainResonance(enemy.kind.resonanceReward) }
+        }
+        if let boss, boss.alive, boss.rect.intersects(feld) {
+            boss.takeDamage(Swift.max(1, schaden / 2), events: &events)
+        }
+        events.append(.effect(.burstGlow, mitte, .zero))
+        events.append(.shake(7))
+        events.append(.sound(.hit(strong: true)))
+    }
+
     // MARK: - Wirkung der Spieleraktionen
     //
     // Der Spieler meldet nur seine Absicht. Was daraus in der Welt wird -
@@ -402,22 +458,41 @@ public final class GameSimulation {
     // MARK: - Nahkampf
 
     private func resolveMeleeHits(events: inout [GameEvent]) {
+        kette.verfallenLassen(jetzt: elapsed)
         guard let hitbox = player.activeMeleeHitbox() else { return }
         let profile = player.stats.melee
         let downward = player.aimY > 0.5 && !player.onGround
         var hits = 0
 
+        // Erst den Takt fragen, dann austeilen: der Schaden dieses
+        // Schlages haengt daran, ob er auf dem Schlag liegt.
+        let trifftLeer = !enemies.contains { $0.alive && hitbox.intersects($0.rect) }
+            && !(boss.map { $0.alive && hitbox.intersects($0.rect) } ?? false)
+        var wirkung: Klangkette.Wirkung = .daneben
+        if !trifftLeer {
+            wirkung = kette.treffer(jetzt: elapsed,
+                                    abstandZumSchlag: takt.abstandZumSchlag(elapsed))
+            events.append(.klangkette(wirkung, glieder: kette.glieder))
+        }
+        let faktor = wirkung == .ausklang ? 2.0 : kette.faktor
+        let schaden = skaliert(profile.damage, faktor)
+
         for enemy in enemies where enemy.alive && hitbox.intersects(enemy.rect) {
             let away = Vec2(sign(enemy.center.x - player.position.x), -0.35).normalized
-            let knock = away * profile.knockback
-            enemy.takeDamage(profile.damage, knockback: knock, events: &events)
+            let knock = away * profile.knockback * (wirkung == .ausklang ? 1.6 : 1.0)
+            enemy.takeDamage(schaden, knockback: knock, events: &events)
             if !enemy.alive { player.gainResonance(enemy.kind.resonanceReward) }
             hits += 1
         }
 
         if let boss, boss.alive, hitbox.intersects(boss.rect) {
-            boss.takeDamage(profile.damage, events: &events)
+            boss.takeDamage(schaden, events: &events)
             hits += 1
+        }
+
+        // Der Nachklang: das vierte Glied trifft alles in der Naehe.
+        if wirkung == .ausklang {
+            nachklang(um: hitbox.center, schaden: schaden, events: &events)
         }
 
         // Auch Dornen tragen den Abpraller - der Spieler kann sie als
@@ -654,6 +729,7 @@ public final class GameSimulation {
         let track = isComplete ? "aufloesung" : (boss != nil && boss!.alive ? "boss" : room.data.music)
         if track != musicTrack {
             musicTrack = track
+            setzeTakt(fuer: track)
             events.append(.musicChanged(track: track, intensity: musicIntensity))
         }
 

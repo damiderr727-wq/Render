@@ -107,33 +107,69 @@ def anordnen(raeume: dict, start: str) -> dict[str, tuple[int, int]]:
     # entlang der Achse, auf der sie sich am wenigsten ueberlappen: so
     # bleibt die Anordnung, die aus den Tueren kam, weitgehend erhalten.
     ids = list(pos)
-    for _ in range(400):
-        ruhe = True
-        for i, a in enumerate(ids):
-            for b in ids[i + 1:]:
-                ax, ay = pos[a]
-                bx, by = pos[b]
-                aw, ah = raeume[a]["width"] + 6, raeume[a]["height"] + 6
-                bw, bh = raeume[b]["width"] + 6, raeume[b]["height"] + 6
-                ueberx = min(ax + aw, bx + bw) - max(ax, bx)
-                uebery = min(ay + ah, by + bh) - max(ay, by)
-                if ueberx <= 0 or uebery <= 0:
-                    continue
-                ruhe = False
-                if ueberx < uebery:
-                    schub = (ueberx + 1) // 2
-                    if ax < bx:
-                        pos[a] = (ax - schub, ay); pos[b] = (bx + schub, by)
+
+    def entwirren(runden: int) -> bool:
+        for _ in range(runden):
+            ruhe = True
+            for i, a in enumerate(ids):
+                for b in ids[i + 1:]:
+                    ax, ay = pos[a]
+                    bx, by = pos[b]
+                    aw, ah = raeume[a]["width"] + 6, raeume[a]["height"] + 6
+                    bw, bh = raeume[b]["width"] + 6, raeume[b]["height"] + 6
+                    ueberx = min(ax + aw, bx + bw) - max(ax, bx)
+                    uebery = min(ay + ah, by + bh) - max(ay, by)
+                    if ueberx <= 0 or uebery <= 0:
+                        continue
+                    ruhe = False
+                    if ueberx < uebery:
+                        schub = (ueberx + 1) // 2
+                        if ax < bx:
+                            pos[a] = (ax - schub, ay); pos[b] = (bx + schub, by)
+                        else:
+                            pos[a] = (ax + schub, ay); pos[b] = (bx - schub, by)
                     else:
-                        pos[a] = (ax + schub, ay); pos[b] = (bx - schub, by)
-                else:
-                    schub = (uebery + 1) // 2
-                    if ay < by:
-                        pos[a] = (ax, ay - schub); pos[b] = (bx, by + schub)
-                    else:
-                        pos[a] = (ax, ay + schub); pos[b] = (bx, by - schub)
-        if ruhe:
+                        schub = (uebery + 1) // 2
+                        if ay < by:
+                            pos[a] = (ax, ay - schub); pos[b] = (bx, by + schub)
+                        else:
+                            pos[a] = (ax, ay + schub); pos[b] = (bx, by - schub)
+            if ruhe:
+                return True
+        return False
+
+    # Gebiete bleiben beieinander.
+    #
+    # Das Auseinanderschieben allein kennt nur Raeume, keine Gegenden -
+    # und schob deshalb einen Hainraum mitten zwischen die Kathedrale,
+    # sobald dort Platz war. Auf der Karte stand dann ein gruener Fleck
+    # im violetten Feld, und die Regionsnamen lagen quer ueber fremden
+    # Raeumen.
+    #
+    # Also abwechselnd: alle Raeume ein Stueck zu ihrer eigenen Region
+    # hin ziehen, dann wieder entwirren. Der Zug ist schwach genug, dass
+    # die Anordnung aus den Tueren erhalten bleibt - er sortiert nur,
+    # was sonst willkuerlich danebenrutscht.
+    for durchgang in range(24):
+        mitten: dict[str, tuple[float, float, int]] = {}
+        for rid in ids:
+            reg = raeume[rid]["region"]
+            x, y = pos[rid]
+            mx, my, n = mitten.get(reg, (0.0, 0.0, 0))
+            mitten[reg] = (mx + x + raeume[rid]["width"] / 2,
+                           my + y + raeume[rid]["height"] / 2, n + 1)
+        for rid in ids:
+            reg = raeume[rid]["region"]
+            mx, my, n = mitten[reg]
+            mx, my = mx / n, my / n
+            x, y = pos[rid]
+            zx = x + raeume[rid]["width"] / 2
+            zy = y + raeume[rid]["height"] / 2
+            pos[rid] = (int(round(x + (mx - zx) * 0.05)),
+                        int(round(y + (my - zy) * 0.05)))
+        if entwirren(120) and durchgang > 6:
             break
+    entwirren(400)
     return pos
 
 
@@ -451,8 +487,26 @@ def build_kunst() -> None:
             continue
         # Ueber das Gebiet geschrieben, nicht mittendurch: quer ueber die
         # Raeume gelegt war der Name unlesbar und die Raeume auch.
+        # Ueber die Mitte des Gebiets, aber ueber *seinen* obersten Raum -
+        # nicht ueber den obersten Raum an dieser Stelle. Sonst schreibt
+        # sich der Name eines Gebiets in ein anderes hinein.
         cx = sum(ort[r][0] + raeume[r]["width"] * m / 2 for r in drin) / len(drin)
-        cy = min(ort[r][1] for r in drin) - m * 8
+        cy = min(ort[r][1] for r in drin) - m * 9
+
+        # Und wenn dort schon ein Raum steht, weiter nach oben, bis frei
+        # ist. Ein Titel quer ueber einem Umriss macht beide unlesbar.
+        breite = len(name) * m * 2.2
+        for _ in range(30):
+            frei = True
+            for rid, raum in raeume.items():
+                rx, ry = ort[rid]
+                if (abs(rx + raum["width"] * m / 2 - cx) < (breite + raum["width"] * m) / 2
+                        and ry - m * 3 < cy < ry + raum["height"] * m + m * 3):
+                    frei = False
+                    break
+            if frei:
+                break
+            cy -= m * 3
         marke = Image.new("RGBA", (int(len(name) * m * 4), int(m * 9)), (0, 0, 0, 0))
         ImageDraw.Draw(marke, "RGBA").text((0, 0), name,
                                            fill=(*WASCHUNG[region][0][:3], 190),

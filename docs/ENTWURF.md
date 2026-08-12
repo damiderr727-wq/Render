@@ -56,7 +56,14 @@ Interessanteste an ihr:
   schlank. Nur der Saum schlägt nach hinten aus, und zwar auf einer Seite
   — beidseitig wäre es ein Rock, einseitig ist es ein Mantel im Wind.
 - **Oben Flamme.** Eine **durchscheinende**, flaumige Masse, die ausfranst
-  und Funken abgibt. Sie hat kein Gesicht und vor allem kein dunkles
+  und Funken abgibt. Darin sitzen **zwei rosa Pixel: ihre Augen.** Mehr
+  braucht sie nicht, und mehr verträgt sie auch nicht — alles andere an ihr
+  ist kalt und blass, also reichen zwei Punkte in der Gegenfarbe, damit aus
+  einer Erscheinung jemand wird, der einen ansieht. Es ist dieselbe Farbe
+  wie die Klinge auf ihrem Rücken, aber eine Spur heller als die: sonst
+  sucht das Auge zuerst die Waffe und dann erst sie. Sie blinzelt selten
+  und kurz — ein Blinzeln, das man erwartet, ist Mechanik; eines, das man
+  verpasst, ist Leben. Sie hat kein Gesicht und vor allem kein dunkles
   Rechteck darin — das las sich als Loch, weil Schwarz sonst nirgends in
   ihr vorkommt. Stattdessen verdichtet sich der Klang an einer Stelle zu
   einem hellen Kern, der im Takt heller wird. Der Blick hält sich daran

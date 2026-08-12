@@ -225,8 +225,10 @@ def _draw_klinge(c: Canvas, *, cx: int, base: float, height: float, phase: float
     geht.
     """
     S = HERO_SCALE
-    rosa = hexc("#ff7ad0")
-    rosa_hi = mix(rosa, P.BONE, 0.55)
+    # Etwas dunkler als ihre Augen: die Klinge ist rosa, aber sie ist nicht
+    # das Erste, was man ansieht.
+    rosa = mix(hexc("#ff7ad0"), P.CLOAK, 0.22)
+    rosa_hi = mix(rosa, P.BONE, 0.45)
     rosa_lo = mix(rosa, P.CLOAK, 0.55)
 
     # Schraeg ueber den Ruecken: Griff unten rechts, Spitze oben links.
@@ -926,26 +928,32 @@ def draw_heroine(
         if u < 0.35:
             c.set(int(fx), int(fy) + 1, (hell[0], hell[1], hell[2], 90))
 
-    # --- Der Ton in ihr ---------------------------------------------------
+    # --- Die Augen --------------------------------------------------------
     #
-    # Kein Gesicht, und vor allem kein dunkles Rechteck. Das las sich als
-    # Loch: Schwarz kommt sonst nirgends in ihr vor, also stanzte es sie
-    # aus. Stattdessen verdichtet sich der Klang an einer Stelle zu einem
-    # hellen Kern, der im Takt heller und dunkler wird. Der Blick haelt
-    # sich daran fest, ohne dass etwas behauptet wird.
-    slot_t = 0.62
-    slot_y = int(base - slot_t * height)
-    slot_x = int(cx + lean * slot_t + math.sin(slot_t * 2.6 + phase) * 1.6)
-    puls = 0.5 + 0.5 * math.sin(phase * 1.7)
-    kern_hell = mix(P.BONE, P.TRIM, 0.25 + 0.35 * puls)
-    for dy in range(-1, 2):
-        for dx in range(-1, 2):
-            if abs(dx) + abs(dy) > 1:
-                continue
-            c.set(slot_x + dx, slot_y + dy, kern_hell)
-    c.set(slot_x, slot_y - 2, mix(kern_hell, P.AMBER, 0.35))
-    c.glow(slot_x, slot_y, 5 * HERO_SCALE,
-           (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(60 + 60 * puls)))
+    # Zwei rosa Pixel. Mehr braucht sie nicht, und mehr vertraegt sie auch
+    # nicht: alles andere an ihr ist kalt und blass, also reichen zwei
+    # Punkte in der Gegenfarbe, damit aus einer Erscheinung jemand wird,
+    # der einen ansieht. Es ist dieselbe Farbe wie die Klinge auf ihrem
+    # Ruecken - das Rosa gehoert ihr, nicht der Welt.
+    #
+    # Sie blinzelt selten und kurz. Ein Blinzeln, das man erwartet, ist
+    # Mechanik; eines, das man verpasst, ist Leben.
+    augen_t = 0.80
+    ay_ = int(base - augen_t * height)
+    ax_ = int(cx + lean * augen_t + math.sin(augen_t * 2.6 + phase) * 1.5)
+    rosa = hexc("#ff7ad0")
+    zu = math.sin(phase * 0.8) > 0.93
+    for seite in (-1, 1):
+        ex = ax_ + seite
+        if zu:
+            # Geschlossen: nur ein gedaempfter Strich bleibt stehen.
+            c.set(ex, ay_, mix(rosa, P.CLOAK, 0.5))
+        else:
+            # Sie sind das hellste Rosa im ganzen Bild - heller als die
+            # Klinge. Sonst sucht das Auge zuerst die Waffe und dann erst
+            # sie.
+            c.set(ex, ay_, mix(rosa, (255, 255, 255, 255), 0.30))
+            c.glow(ex, ay_, 3.0 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 95))
 
     # --- Der Kern ---------------------------------------------------------
     _draw_kern(c, kern=kind, cx=cx, base=base, height=height,

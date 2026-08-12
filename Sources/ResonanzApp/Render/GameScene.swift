@@ -331,6 +331,7 @@ public final class GameScene: SKScene {
 
     private func spriteName(for kind: EnemyKind) -> String {
         switch kind {
+        case .gabelmaus: return "gabelmaus_husch"
         case .klangmotte: return "klangmotte_fly"
         case .stilleschreiter: return "stilleschreiter_walk"
         case .dissonanzknospe: return "dissonanzknospe_bloom"

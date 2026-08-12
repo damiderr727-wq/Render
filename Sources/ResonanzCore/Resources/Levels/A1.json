@@ -61,9 +61,21 @@
  ],
  "enemies": [
   {
+   "type": "gabelmaus",
+   "x": 28,
+   "y": 19,
+   "patrol": 4
+  },
+  {
    "type": "klangmotte",
    "x": 30,
    "y": 10
+  },
+  {
+   "type": "gabelmaus",
+   "x": 46,
+   "y": 12,
+   "patrol": 5
   },
   {
    "type": "klangmotte",

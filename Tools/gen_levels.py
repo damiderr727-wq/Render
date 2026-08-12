@@ -425,7 +425,16 @@ def room_A1() -> Room:
     # Anziehen: ohne Gefaess zerstreut sie sich.
     r.pickup("equipment", "mantel", 15, 14)
 
+    # Das Allererste, was einem im Spiel begegnet, ist eine Gabelmaus -
+    # klein, schnell, ein halber Kristall Schaden.
+    #
+    # Sie steht aber nicht neben dem Startpunkt. Die Terrasse links, auf
+    # der man ankommt und auf der die Bank steht, bleibt leer: der erste
+    # Gegner soll gefunden werden, nicht geliefert. Erst unten in der
+    # Mulde, hinter dem Mantel, wartet er.
+    r.enemy_on("gabelmaus", 28, 18, patrol=4)
     r.enemy("klangmotte", 30, 10)
+    r.enemy_on("gabelmaus", 46, 11, patrol=5)
     r.enemy("klangmotte", 48, 7)
 
     r.crystal_on(24, 7, 2)
@@ -472,7 +481,9 @@ def room_A2() -> Room:
     r.pickup("kern", "metronom", 39, 18)
     r.pickup("siegel", "scherbenherz", 55, 22)
 
+    r.enemy_on("gabelmaus", 21, 22, patrol=5)
     r.enemy("klangmotte", 16, 19)
+    r.enemy_on("gabelmaus", 40, 22, patrol=7)
     r.enemy_on("stilleschreiter", 27, 17, patrol=6)
     r.enemy("klangmotte", 41, 15)
     r.enemy_on("dissonanzknospe", 34, 17)
@@ -516,7 +527,9 @@ def room_A3() -> Room:
     r.pickup("siegel", "pilgerstab", 44, 20)
     r.pickup("klinge", "gezackt", 26, 18)
 
+    r.enemy_on("gabelmaus", 18, 15, patrol=5)
     r.enemy("klangmotte", 20, 11)
+    r.enemy_on("gabelmaus", 50, 15, patrol=4)
     r.enemy_on("dissonanzknospe", 32, 8)
     r.enemy("klangmotte", 44, 9)
     r.enemy_on("stilleschreiter", 56, 8, patrol=3)

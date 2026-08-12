@@ -170,6 +170,7 @@ def render(room_id: str) -> Image.Image:
 
     # Kreaturen
     sprite_for = {
+        "gabelmaus": "gabelmaus_husch_2",
         "klangmotte": "klangmotte_fly_1",
         "stilleschreiter": "stilleschreiter_walk_2",
         "dissonanzknospe": "dissonanzknospe_bloom_3",

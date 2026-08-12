@@ -3,6 +3,8 @@ import Foundation
 /// Die Bewohner der verstimmten Welt. Keiner von ihnen ist boese - sie sind
 /// nur seit langem falsch gestimmt.
 public enum EnemyKind: String, Sendable, CaseIterable {
+    /// Die erste Kreatur ueberhaupt: huschendes Tierchen mit Gabelohren.
+    case gabelmaus
     /// Taumelnder Falter aus verklungenen Toenen.
     case klangmotte
     /// Schwerer Waechter, der Klang schluckt.
@@ -14,6 +16,7 @@ public enum EnemyKind: String, Sendable, CaseIterable {
 
     public var maxHealth: Int {
         switch self {
+        case .gabelmaus: return 2
         case .klangmotte: return 3
         case .stilleschreiter: return 8
         case .dissonanzknospe: return 4
@@ -23,8 +26,13 @@ public enum EnemyKind: String, Sendable, CaseIterable {
 
     /// Schaden an der Figur, in halben Kristallen. Ein voller Kristall
     /// sind zwei - der Stilleschreiter nimmt anderthalb.
+    ///
+    /// Die Gabelmaus nimmt einen halben. Das ist der einzige Wert im Spiel,
+    /// der kleiner als ein Kristall ist, und er ist Absicht: der allererste
+    /// Gegner soll wehtun, ohne zu bestrafen.
     public var contactDamage: Int {
         switch self {
+        case .gabelmaus: return 1
         case .klangmotte: return 2
         case .stilleschreiter: return 3
         case .dissonanzknospe: return 2
@@ -34,6 +42,7 @@ public enum EnemyKind: String, Sendable, CaseIterable {
 
     public var size: (width: Double, height: Double) {
         switch self {
+        case .gabelmaus: return (11, 9)
         case .klangmotte: return (12, 10)
         case .stilleschreiter: return (18, 18)
         case .dissonanzknospe: return (12, 16)
@@ -54,6 +63,7 @@ public enum EnemyKind: String, Sendable, CaseIterable {
     public var resonanceReward: Double {
         switch self {
         case .stilleschreiter: return 16
+        case .gabelmaus: return Tuning.resonancePerKill * 0.6
         default: return Tuning.resonancePerKill
         }
     }
@@ -75,6 +85,8 @@ public final class Enemy {
     private var attackTimer: Double = 0
     private var stateTime: Double = 0
     private var aggro = false
+    /// Nur die Gabelmaus: huscht sie gerade, oder sitzt sie?
+    private var huscht = false
 
     private let home: Vec2
     private let patrolRange: Double
@@ -117,6 +129,7 @@ public final class Enemy {
 
         if stagger <= 0 {
             switch kind {
+            case .gabelmaus: updateMaus(dt: dt, room: room, toPlayer: toPlayer)
             case .klangmotte: updateMoth(dt: dt, toPlayer: toPlayer, distance: distance)
             case .stilleschreiter: updateWalker(dt: dt, room: room, toPlayer: toPlayer, distance: distance)
             case .dissonanzknospe:
@@ -128,6 +141,51 @@ public final class Enemy {
         }
 
         applyPhysics(dt: dt, room: room)
+    }
+
+    /// Die Gabelmaus laeuft nicht, sie huscht.
+    ///
+    /// Ein Waechter geht gleichmaessig; ein Tier tut das nie. Also gibt es
+    /// nur zwei Zustaende: sitzen und rennen. Im Sitzen zielt sie neu, im
+    /// Rennen zielt sie gar nicht mehr - sie schiesst geradeaus los und
+    /// laeuft an der Figur vorbei, statt sie zu verfolgen. Genau das macht
+    /// sie als ersten Gegner brauchbar: gefaehrlich nur, wenn man
+    /// stehenbleibt, und mit einem Schlag zu treffen, wenn man wartet.
+    private func updateMaus(dt: Double, room: Room, toPlayer: Vec2) {
+        if attackTimer <= 0 {
+            huscht.toggle()
+            if huscht {
+                // Losrennen: die Richtung wird jetzt gewaehlt und danach
+                // nicht mehr korrigiert.
+                if aggro {
+                    facing = sign(toPlayer.x) == 0 ? facing : sign(toPlayer.x)
+                } else if position.x > home.x + patrolRange {
+                    facing = -1
+                } else if position.x < home.x - patrolRange {
+                    facing = 1
+                } else if rng.chance(0.35) {
+                    facing = -facing
+                }
+                attackTimer = aggro ? 0.5 + rng.range(0, 0.2) : 0.35 + rng.range(0, 0.35)
+                // Der Satz nach vorn - aber nur vom Boden aus.
+                let unten = Vec2(position.x, position.y + 3)
+                if room.tile(at: unten).isStandable {
+                    velocity.y = -70
+                }
+            } else {
+                attackTimer = aggro ? 0.35 + rng.range(0, 0.25) : 0.7 + rng.range(0, 0.9)
+            }
+        }
+
+        // Nicht ins Leere huschen, nicht in die Wand.
+        let ahead = Vec2(position.x + facing * (kind.size.width / 2 + 3), position.y + 4)
+        let wallProbe = rect.offset(by: Vec2(facing * 3, 0))
+        if !room.tile(at: ahead).isStandable || room.overlapsSolid(wallProbe) {
+            facing = -facing
+        }
+
+        let ziel = huscht ? facing * 132 : 0
+        velocity.x = approach(velocity.x, ziel, (huscht ? 900 : 500) * dt)
     }
 
     private func updateMoth(dt: Double, toPlayer: Vec2, distance: Double) {
@@ -239,7 +297,17 @@ public final class Enemy {
         guard alive else { return false }
         health -= amount
         hitFlash = 0.12
-        stagger = kind == .stilleschreiter ? 0.14 : 0.22
+        switch kind {
+        case .stilleschreiter: stagger = 0.14
+        // Die Maus bleibt nach einem Treffer nicht stehen, sie flieht -
+        // in die Richtung, in die der Schlag sie geschoben hat.
+        case .gabelmaus:
+            stagger = 0.08
+            huscht = true
+            attackTimer = 0.55
+            if knockback.x != 0 { facing = sign(knockback.x) }
+        default: stagger = 0.22
+        }
         aggro = true
         if !kind.isRooted {
             velocity += knockback * (kind == .stilleschreiter ? 0.45 : 1.0)

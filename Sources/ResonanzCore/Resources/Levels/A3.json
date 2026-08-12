@@ -55,9 +55,21 @@
  "benches": [],
  "enemies": [
   {
+   "type": "gabelmaus",
+   "x": 18,
+   "y": 20,
+   "patrol": 5
+  },
+  {
    "type": "klangmotte",
    "x": 20,
    "y": 11
+  },
+  {
+   "type": "gabelmaus",
+   "x": 50,
+   "y": 18,
+   "patrol": 4
   },
   {
    "type": "dissonanzknospe",

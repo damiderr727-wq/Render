@@ -92,9 +92,21 @@
  "benches": [],
  "enemies": [
   {
+   "type": "gabelmaus",
+   "x": 21,
+   "y": 24,
+   "patrol": 5
+  },
+  {
    "type": "klangmotte",
    "x": 16,
    "y": 19
+  },
+  {
+   "type": "gabelmaus",
+   "x": 40,
+   "y": 26,
+   "patrol": 7
   },
   {
    "type": "stilleschreiter",

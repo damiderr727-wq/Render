@@ -333,7 +333,8 @@ def _draw_beine(c: Canvas, *, cx: int, base: float, height: float, phase: float,
 
 
 def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
-               phase: float, lean: float, glow: float, mid) -> None:
+               phase: float, lean: float, glow: float, mid,
+               signatur: float = 1.0) -> None:
     """
     Der Kern in ihr - nach einer Regel, die fuer alle gilt.
 
@@ -381,7 +382,8 @@ def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
         # Zeichnen in den Nachbarrahmen.
         xi, yi = int(x), int(y)
         if 0 <= xi < c.w and 1 <= yi < c.h - 1:
-            c.blend(xi, yi, (licht[0], licht[1], licht[2], max(0, min(255, a))))
+            c.blend(xi, yi, (licht[0], licht[1], licht[2],
+                             max(0, min(255, int(a * signatur)))))
 
     def kante(x: float, y: float) -> None:
         """Eine dunkle Fuge unter der Scherbe, damit sie sich abhebt."""
@@ -537,7 +539,8 @@ def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
 
     if glow > 0:
         c.glow(fx, fy - 2 * S, 9 * S,
-               (licht[0], licht[1], licht[2], int((70 + 60 * p) * glow)))
+               (licht[0], licht[1], licht[2],
+                int((70 + 60 * p) * glow * (0.45 + 0.55 * signatur))))
 
 
 def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
@@ -817,6 +820,10 @@ def draw_heroine(
     settle: float = 0.0,      # Absinken (Rast, Landung)
     aim: float = 0.0,
     glow: float = 1.0,
+    # Wie laut der Kern gerade klingt. Beim Gehen fast still, beim Zaubern
+    # voll aufgedreht - sonst ist die Silhouette dauernd von Ringen und
+    # Strahlen zugestellt, und man sieht nicht mehr, was gerade passiert.
+    signatur: float = 0.35,
     alpha_body: int = 255,
     # Von den Animationen weitergereicht, hier ohne Wirkung:
     bob: float = 0.0, leg_phase=None, leg_spread: float = 0.0,
@@ -957,7 +964,7 @@ def draw_heroine(
 
     # --- Der Kern ---------------------------------------------------------
     _draw_kern(c, kern=kind, cx=cx, base=base, height=height,
-               phase=phase, lean=lean, glow=glow, mid=mid)
+               phase=phase, lean=lean, glow=glow, mid=mid, signatur=signatur)
 
     if glow > 0:
         c.glow(cx, base - height * 0.45, 11,
@@ -1009,6 +1016,9 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     """
     anims: dict[str, list[Canvas]] = {}
 
+    def laut(name: str) -> float:
+        return SIGNATUR.get(name, 0.35)
+
     def frames(count: int, **kw) -> list[Canvas]:
         out = []
         for i in range(count):
@@ -1019,7 +1029,8 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
 
     # Ruhe: sie flackert und atmet.
     anims["idle"] = [
-        draw_heroine(instrument=instrument, garment=garment, phase=i / 10 * math.tau,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("idle"), phase=i / 10 * math.tau,
                      # Ein Atemzug: sie hebt sich, sinkt zurueck, und der
                      # Saum kommt eine Spur spaeter nach.
                      stretch=1.0 + math.sin(i / 10 * math.tau) * 0.055,
@@ -1032,7 +1043,8 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
 
     # Lauf: sie neigt sich und zieht einen Schweif hinter sich her.
     anims["run"] = [
-        draw_heroine(instrument=instrument, garment=garment, phase=i / 8 * math.tau * 2,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("run"), phase=i / 8 * math.tau * 2,
                      lean=2.4 + math.sin(i / 8 * math.tau) * 0.9,
                      # Zwei Schritte je Runde: der Koerper hebt sich zweimal.
                      stretch=0.93 + abs(math.sin(i / 8 * math.tau)) * 0.12,
@@ -1048,20 +1060,24 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     # Scheitel sinkt der Mantel wieder auf sie herab. Drei Bilder reichen -
     # aber ein einziges reicht eben nicht, dann steht sie in der Luft.
     anims["jump"] = [
-        draw_heroine(instrument=instrument, garment=garment, phase=0.6,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("jump"), phase=0.6,
                      lean=1.6, stretch=1.30, smear=0.08, sway=-1.7,
                      leg_phase=1.2, leg_spread=0.6, crouch=1.4),
-        draw_heroine(instrument=instrument, garment=garment, phase=1.5,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("jump"), phase=1.5,
                      lean=1.3, stretch=1.22, smear=0.04, sway=-1.1,
                      leg_phase=1.9, leg_spread=0.3, crouch=0.8),
-        draw_heroine(instrument=instrument, garment=garment, phase=2.4,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("jump"), phase=2.4,
                      lean=1.0, stretch=1.12, sway=-0.5, glow=1.1,
                      leg_phase=2.6, crouch=0.3),
     ]
 
     # Fall: sie zieht sich lang, das Tuch steht nach oben weg und flattert.
     anims["fall"] = [
-        draw_heroine(instrument=instrument, garment=garment, phase=i * 1.4,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("fall"), phase=i * 1.4,
                      lean=0.6, stretch=0.86 + i * 0.02, smear=0.18,
                      leg_phase=3.4 + i * 0.4, leg_spread=0.8,
                      sway=1.5 + math.sin(i * 1.9) * 0.5)
@@ -1070,26 +1086,31 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
 
     # Landung: erst staucht es sie zusammen, dann federt sie zurueck.
     anims["land"] = [
-        draw_heroine(instrument=instrument, garment=garment, phase=1.1,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("land"), phase=1.1,
                      stretch=0.68, settle=3, smear=0.36, sway=2.1,
                      leg_spread=1.4, crouch=2.6),
-        draw_heroine(instrument=instrument, garment=garment, phase=1.8,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("land"), phase=1.8,
                      stretch=0.84, settle=1, smear=0.18, sway=1.2,
                      leg_spread=0.7, crouch=1.2),
-        draw_heroine(instrument=instrument, garment=garment, phase=2.5,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("land"), phase=2.5,
                      stretch=1.04, smear=0.05, sway=0.4),
     ]
 
     # Herzschlag: die Gestalt zerreisst waagerecht und zieht nach.
     anims["dash"] = [
-        draw_heroine(instrument=instrument, garment=garment, phase=i * 1.7, lean=4.0 - i,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("dash"), phase=i * 1.7, lean=4.0 - i,
                      stretch=0.82, smear=0.9 - i * 0.2, split=0.5 - i * 0.15,
                      glow=1.4, alpha_body=235 - i * 30)
         for i in range(3)
     ]
 
     anims["wall"] = [
-        draw_heroine(instrument=instrument, garment=garment, phase=i * 1.6,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("wall"), phase=i * 1.6,
                      lean=-1.8, stretch=1.10 - i * 0.02, smear=0.1,
                      sway=-0.7 - i * 0.25)
         for i in range(3)
@@ -1097,40 +1118,50 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
 
     # Nahkampf: eine Welle laeuft durch sie hindurch.
     anims["melee"] = [
-        draw_heroine(instrument=instrument, garment=garment, phase=0.2, lean=-1.2, whip=-0.35,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("melee"), phase=0.2, lean=-1.2, whip=-0.35,
                      stretch=1.06, glow=1.1),
-        draw_heroine(instrument=instrument, garment=garment, phase=1.4, lean=3.4, whip=0.85,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("melee"), phase=1.4, lean=3.4, whip=0.85,
                      stretch=0.92, smear=0.3, glow=1.6),
-        draw_heroine(instrument=instrument, garment=garment, phase=2.6, lean=1.6, whip=0.30,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("melee"), phase=2.6, lean=1.6, whip=0.30,
                      stretch=1.0, glow=1.2),
     ]
 
     # Fernkampf: sie zieht sich zusammen und stoesst den Ton aus.
     anims["cast"] = [
-        draw_heroine(instrument=instrument, garment=garment, phase=0.3, stretch=0.90,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("cast"), phase=0.3, stretch=0.90,
                      lean=-0.8, glow=1.0),
-        draw_heroine(instrument=instrument, garment=garment, phase=1.6, stretch=1.16,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("cast"), phase=1.6, stretch=1.16,
                      lean=1.2, split=0.28, glow=1.8),
-        draw_heroine(instrument=instrument, garment=garment, phase=2.8, stretch=1.04,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("cast"), phase=2.8, stretch=1.04,
                      lean=0.4, glow=1.3),
     ]
 
     # Treffer: sie zerfaellt fast.
     anims["hurt"] = [
-        draw_heroine(instrument=instrument, garment=garment, phase=1.9, lean=-3.4,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("hurt"), phase=1.9, lean=-3.4,
                      stretch=0.84, split=0.85, smear=0.45, sway=-2.2,
                      glow=0.4, alpha_body=195),
-        draw_heroine(instrument=instrument, garment=garment, phase=2.9, lean=-2.2,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("hurt"), phase=2.9, lean=-2.2,
                      stretch=0.90, split=0.45, smear=0.25, sway=-1.2,
                      glow=0.6, alpha_body=220),
-        draw_heroine(instrument=instrument, garment=garment, phase=3.9, lean=-1.0,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("hurt"), phase=3.9, lean=-1.0,
                      stretch=0.97, split=0.15, sway=-0.4,
                      glow=0.85, alpha_body=240),
     ]
 
     # Rast: sie sinkt zu einer Lache zusammen.
     anims["rest"] = [
-        draw_heroine(instrument=instrument, garment=garment, phase=i / 5 * math.tau,
+        draw_heroine(instrument=instrument, garment=garment,
+                     signatur=laut("rest"), phase=i / 5 * math.tau,
                      stretch=0.58, settle=4, glow=1.2,
                      sway=math.sin(i / 5 * math.tau) * 0.35)
         for i in range(5)
@@ -1139,95 +1170,482 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     return anims
 
 
+# ------------------------------------------------------------- Kreaturen
+#
+# Die Bewohner sind aus demselben Stoff wie Cadence - und genau daran
+# erkennt man, was ihnen fehlt.
+#
+# Sie hat eine Scherbe in sich, die leuchtet. Die Kreaturen haben an
+# derselben Stelle **ein Loch**: einen hellen Rand um nichts. Das ist die
+# eine Regel, die alle teilen, und sie wird auch gezeichnet - eine dunkle
+# Mulde mit heller Kante, in der kein Licht steht. Darum sind sie boese
+# und darum sind sie zu bedauern; beides in derselben Form.
+#
+# Zwei Regeln kommen dazu, damit die Silhouetten nicht ineinanderlaufen:
+#
+# 2. **Jede Kreatur hat genau eine harte Kante.** Bei der Maus die
+#    Gabelohren, beim Schreiter die Platte, bei der Knospe die
+#    aufgesprungene Schale. Alles andere an ihr ist weich oder Dunst.
+# 3. **Die Farbe sagt, wie weit sie fort ist.** Was noch klingt, hat
+#    Fluegellicht (BLOOM/GLOW); was verstummt ist, ist Stein; was falsch
+#    klingt, ist rot.
+
+def _flaeche(c: Canvas, punkte, farbe, kante=None) -> None:
+    """
+    Fuellt ein Vieleck.
+
+    Der erste Anlauf zeichnete die Kreaturen aus Linien, und aus Linien
+    wird bei zwanzig Pixeln Matsch: man sieht ein Gekritzel, keine
+    Gestalt. Eine Kreatur braucht zuerst eine geschlossene Flaeche, und
+    erst danach Kanten darauf.
+    """
+    if len(punkte) < 3:
+        return
+    ymin = int(math.floor(min(p[1] for p in punkte)))
+    ymax = int(math.ceil(max(p[1] for p in punkte)))
+    for y in range(ymin, ymax + 1):
+        schnitte = []
+        for i in range(len(punkte)):
+            x0, y0 = punkte[i]
+            x1, y1 = punkte[(i + 1) % len(punkte)]
+            if (y0 <= y < y1) or (y1 <= y < y0):
+                schnitte.append(x0 + (y - y0) / (y1 - y0) * (x1 - x0))
+        schnitte.sort()
+        for k in range(0, len(schnitte) - 1, 2):
+            a, b = int(round(schnitte[k])), int(round(schnitte[k + 1]))
+            for x in range(a, b + 1):
+                c.set(x, y, farbe)
+    if kante is not None:
+        for i in range(len(punkte)):
+            c.line(*punkte[i], *punkte[(i + 1) % len(punkte)], kante)
+
+
+def _kante_licht(c: Canvas, oben, unten) -> None:
+    """
+    Legt Licht auf die Oberkante und Schatten unter die Unterkante.
+
+    Innen aufgehellte Flecken sahen bei diesen Groessen aus wie
+    aufgeklebte Kaesten - eine Ellipse mit drei Pixeln Radius ist eben
+    ein Rechteck. Der Rand dagegen folgt immer der Form, die wirklich da
+    ist, und macht aus einem flachen Klecks einen Koerper.
+
+    Wird mitten im Zeichnen gerufen: nur was bis dahin steht, bekommt
+    Licht. Beine und Ohren, die danach kommen, bleiben unberuehrt.
+    """
+    for x in range(c.w):
+        spalte = [y for y in range(c.h) if c.get(x, y)[3] > 40]
+        if not spalte:
+            continue
+        c.set(x, spalte[0], oben)
+        if len(spalte) > 2:
+            c.set(x, spalte[-1], unten)
+
+
+def _hohlraum(c: Canvas, cx: float, cy: float, r: float, rand,
+              puls: float = 0.0) -> None:
+    """
+    Das Loch, wo der Kern sein sollte.
+
+    Nicht dunkel gefuellt - *ausgeschnitten*: der Rand leuchtet, das
+    Innere ist Leere in der Farbe des Nichts. Ein Ring allein saehe aus
+    wie ein Auge, also sitzt darin eine Spur Rest, die nicht ganz mittig
+    steht: etwas ist herausgebrochen, und der Bruch war nicht sauber.
+
+    Unter drei Pixeln Radius wird aus einem Kreis ein Kaestchen, und ein
+    Kaestchen sieht aufgeklebt aus. Kleine Hohlraeume werden darum als
+    Raute gezeichnet - die hat auch bei fuenf Pixeln noch eine Richtung.
+    """
+    leer = hexc("#04050a")
+    saum = mix(rand, leer, 0.15 + 0.30 * puls)
+    if r < 2.2:
+        ix, iy = int(round(cx)), int(round(cy))
+        c.set(ix, iy, leer)
+        for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            c.set(ix + dx, iy + dy, saum)
+        c.set(ix, iy - 1, mix(saum, P.BONE, 0.3))
+        return
+    # Der Rand liegt aussen und ist hell, die Leere darin ist klein. Waere
+    # es umgekehrt, saehe das Loch aus wie ein schwarzer Kasten, den
+    # jemand aufs Bild gelegt hat.
+    c.ellipse(cx, cy, r, r, saum)
+    c.ellipse(cx, cy, r - 1.0, r - 1.0, leer)
+    c.set(int(cx - r * 0.4), int(cy + r * 0.35), mix(rand, P.BONE, 0.35))
+    c.set(int(cx), int(cy - r + 0.5), mix(saum, P.BONE, 0.35))
+
+
+def draw_gabelmaus(phase: float) -> Canvas:
+    """
+    Gabelmaus - das erste, was einem im Hain begegnet.
+
+    Sie ist der Entwurf, der als Heldin nicht taugte: rundlicher Flaum,
+    zwei symmetrische Zinken mit leuchtenden Spitzen, alles putzig. Als
+    Tier stimmt genau das - die Zinken sind hier Ohren, und dass sie
+    aussehen wie eine Stimmgabel, ist der ganze Witz der Kreatur: sie
+    hat den Ton, der Cadence fehlt, und traegt ihn spazieren.
+
+    Sie huscht in Schueben. Der Zyklus ist darum ungleich verteilt: vier
+    schnelle Bilder Lauf, zwei in denen sie fast steht und die Ohren
+    zucken.
+    """
+    c = Canvas(24, 20)
+    base = 19
+
+    sitz = max(0.0, math.cos(phase)) ** 2   # 1 = sitzt, 0 = rennt
+    lauf = 1 - sitz
+    takt = math.sin(phase * 2)
+    hop = max(0.0, takt) * 1.7 * lauf
+    by = base - 6.4 - hop                   # Ruecken-/Bauchmitte
+    duck = sitz * 0.8                       # im Sitzen richtet sie sich auf
+
+    # Sie muss sich vom Hain abheben, und der Hain ist dunkelgruen. Ein zu
+    # dunkles Fell verschwindet darin - der erste Gegner des Spiels darf
+    # aber nie uebersehen werden.
+    fell = mix(P.CLOAK, P.STONE, 0.85)
+    fell_hi = mix(fell, P.BONE, 0.34)
+    fell_lo = shade(fell, -0.38)
+    ader = mix(P.TRIM, P.BONE, 0.5)
+
+    # Zwei Kreise machen ein Tier: ein grosser Rumpf hinten, ein kleiner
+    # Kopf vorn, halb ineinander. Der Versuch, den Leib in einem Zug als
+    # Tropfen zu ziehen, ergab einen Keil - zwei Formen lesen sich bei
+    # dieser Groesse einfach besser als eine kluge.
+    rx, ry = 8.6, by                     # Rumpfmitte
+    kx, ky = 15.4, by - 1.7 - duck       # Kopfmitte
+
+    c.ellipse(rx, ry, 4.4, 3.8, fell)
+    c.ellipse(kx, ky, 2.8, 2.6, fell)
+    # Der Hals: nur so viel Masse, dass Kopf und Rumpf zusammenhaengen.
+    # Zu viel davon, und aus zwei Formen wird wieder ein Laib.
+    _flaeche(c, [(rx + 3.0, ry - 1.6), (kx - 1.8, ky - 1.0),
+                 (kx - 1.4, ky + 1.8), (rx + 3.0, ry + 2.2)], fell)
+    # Schnauze: ein kurzer Keil nach vorn, sonst endet der Kopf stumpf.
+    _flaeche(c, [(kx + 1.2, ky - 1.4), (kx + 4.4, ky + 0.6),
+                 (kx + 1.2, ky + 1.8)], fell)
+    _kante_licht(c, fell_hi, fell_lo)
+
+    # Flaum: der Umriss franst aus, sonst ist sie ein Stein mit Ohren.
+    for i in range(20):
+        a = i / 20 * math.tau
+        if hash01(i, int(phase * 4)) > 0.5:
+            c.set(int(round(rx + math.cos(a) * 5.0)),
+                  int(round(ry + math.sin(a) * 4.4)), shade(fell, -0.08))
+
+    # Schwanz: duenn, lang, schwingt gegenlaeufig - und endet in einer
+    # kleinen Gabel, damit auch von hinten klar ist, was sie ist.
+    schwung = math.sin(phase * 2 + 1.3) * 2.8
+    sp = [(rx - 3.6, ry + 1.4), (rx - 6.4, ry - 0.6 + schwung * 0.4),
+          (rx - 8.6, ry - 2.6 + schwung)]
+    for i in range(len(sp) - 1):
+        c.line(*sp[i], *sp[i + 1], fell_lo)
+    ex, ey = sp[-1]
+    for k in (-1, 1):
+        c.line(ex, ey, ex - 1.4, ey + k * 1.4, mix(fell, ader, 0.35))
+
+    # Vier Nadelbeine, paarweise gegenlaeufig. Dieselben Spitzen, auf
+    # denen auch Cadence steht - nur kuerzer und zu viert.
+    for ox, ph in ((-2.6, 0.0), (-1.0, math.pi), (4.6, math.pi), (6.2, 0.0)):
+        s = math.sin(phase * 2 + ph) * lauf
+        hx = rx + ox
+        fx = hx + s * 1.8
+        fy = base - max(0.0, s) * 2.0 - hop
+        c.line(hx, ry + 2.2, fx, fy, fell_lo)
+        c.line(hx, ry + 2.2, hx + (fx - hx) * 0.4, ry + 2.2 + (fy - ry - 2.2) * 0.4,
+               shade(fell, -0.18))
+        c.set(int(round(fx)), int(round(fy)), mix(fell, ader, 0.3))
+
+    # Die Gabelohren. Zwei Zinken auf einem Steg - erst der Steg macht
+    # aus zwei Ohren eine Stimmgabel.
+    oy = ky - 2.4
+    zuck = sitz * math.sin(phase * 7) * 0.26
+    c.line(kx - 1.4, oy, kx + 1.4, oy, mix(fell_hi, ader, 0.4))
+    for seite in (-1, 1):
+        a = -math.pi / 2 + seite * (0.24 + zuck)
+        n = 5
+        for i in range(n + 1):
+            x = kx + seite * 1.4 + math.cos(a) * i
+            y = oy + math.sin(a) * i
+            c.set(int(round(x)), int(round(y)), mix(fell_hi, ader, i / n * 0.7))
+        sx = int(round(kx + seite * 1.4 + math.cos(a) * n))
+        sy = int(round(oy + math.sin(a) * n))
+        c.set(sx, sy, mix(ader, P.BONE, 0.55))
+        c.glow(sx, sy, 2.5, (ader[0], ader[1], ader[2], 52))
+
+    # Augen: zwei warme Punkte uebereinander am Kopf, das obere hell.
+    # Rosa gehoert Cadence allein.
+    c.set(int(kx + 1), int(round(ky - 0.2)), P.AMBER)
+    c.set(int(kx + 1), int(round(ky + 0.8)), shade(P.AMBER, -0.45))
+
+    # Und die Regel: in der Flanke fehlt ihr etwas. Klein, dunkel und weit
+    # hinten - sonst liest es sich als Auge, und Augen hat sie schon.
+    _hohlraum(c, rx - 2.2, ry + 1.0, 1.2,
+              mix(ader, P.CLOAK, 0.35), puls=abs(takt))
+
+    c.shadow_pass((0, 1), -0.2)
+    c.outline(hexc("#05060c", 210))
+    return c
+
+
 def draw_klangmotte(phase: float) -> Canvas:
-    """Klangmotte - taumelnder Falter aus verklungenen Toenen."""
-    c = Canvas(16, 14)
-    cx, cy = 8, 7
+    """
+    Klangmotte - taumelnder Falter aus verklungenen Toenen.
+
+    Ihre Fluegel sind keine Fluegel, sondern Wellen: drei Boegen
+    uebereinander, die beim Schlag zusammenlaufen und beim Oeffnen
+    auseinanderdriften. Was von ihr abfaellt, ist Staub aus alten Toenen.
+    """
+    c = Canvas(26, 22)
+    cx, cy = 13, 11
     flap = math.sin(phase)
-    span = 4 + flap * 2.4
-    for side in (-1, 1):
-        for i in range(int(span)):
-            t = i / max(1, span)
-            h = int(3 * (1 - t) + 1)
-            x = cx + side * (2 + i)
-            y = cy - 2 - int(flap * 1.6 * (1 - t))
-            col = mix(P.BLOOM, P.BLOOM_DIM, t)
-            c.rect(x if side > 0 else x, y, 1, h + 2, col)
-    c.ellipse(cx, cy, 2.2, 3.0, P.INK2)
-    c.ellipse(cx, cy - 1, 1.6, 1.8, mix(P.INK2, P.BLOOM, 0.25))
-    c.set(cx - 1, cy - 2, P.GLOW)
-    c.set(cx + 1, cy - 2, P.GLOW)
+    taumel = math.cos(phase * 1.3) * 0.9
+    my = cy + taumel * 0.5
+
+    fluegel = mix(P.BLOOM_DIM, P.INK2, 0.35)
+    fluegel_hi = mix(P.BLOOM, P.BONE, 0.15)
+
+    for seite in (-1, 1):
+        # Zwei Fluegel je Seite - ein grosser oben, ein deutlich kleinerer
+        # unten. Gleich grosse Fluegel ergeben ein Kreuz; erst das
+        # Missverhaeltnis liest sich als Falter. Der Schlag dreht sie um
+        # die Schulter, statt sie zu strecken: gestreckte Fluegel sehen
+        # aus wie Bretter.
+        for gross in (True, False):
+            w = 10.2 if gross else 5.0
+            h = 4.6 if gross else 2.4
+            dreh = (-0.40 if gross else 0.62) + flap * (0.34 if gross else 0.24)
+            sx, sy = cx + seite * 1.6, my - (1.6 if gross else -1.8)
+            ecken = []
+            for ex, ey in ((0.1, -0.2), (0.55, -1.0), (1.0, -0.15),
+                           (0.85, 0.75), (0.3, 0.6)):
+                px, py = ex * w, ey * h
+                ecken.append((sx + seite * (px * math.cos(dreh) - py * math.sin(dreh)),
+                              sy + px * math.sin(dreh) + py * math.cos(dreh)))
+            _flaeche(c, ecken, fluegel)
+            # Die Adern sind Wellen: drei Boegen ueber den Fluegel, so
+            # dass man sieht, dass er aus Klang besteht und nicht aus Haut.
+            for k in range(3):
+                t = 0.3 + k * 0.26
+                a0 = (sx + seite * ((0.15 * w) * math.cos(dreh) - (t * 2 - 1) * h * 0.5 * math.sin(dreh)),
+                      sy + (0.15 * w) * math.sin(dreh) + (t * 2 - 1) * h * 0.5 * math.cos(dreh))
+                a1 = (sx + seite * ((0.95 * w) * math.cos(dreh) - (t * 2 - 1) * h * 0.4 * math.sin(dreh)),
+                      sy + (0.95 * w) * math.sin(dreh) + (t * 2 - 1) * h * 0.4 * math.cos(dreh))
+                c.line(*a0, *a1, mix(fluegel, fluegel_hi, 0.45 - k * 0.1))
+
+    # Leib: eine Spindel, deutlich dunkler als die Fluegel. Sie muss
+    # breit genug sein, um zwischen den Fluegeln zu bestehen - sonst
+    # sieht der Falter aus wie vier Blaetter ohne Mitte.
+    c.ellipse(cx, my, 2.4, 4.2, hexc("#0b0f1c"))
+    c.ellipse(cx, my - 3.0, 2.0, 1.8, P.INK2)          # Kopf
+    for y in range(int(my - 4), int(my + 5)):
+        c.set(cx - 2, y, mix(P.INK2, P.BLOOM, 0.30))   # Lichtkante links
+    # Der Hinterleib ist geringelt - drei Striche genuegen dafuer.
+    for i in range(3):
+        c.rect(cx - 1, int(my + 1 + i * 1.4), 3, 1, mix(P.INK2, P.BLOOM_DIM, 0.45))
+
+    # Fuehler: zwei gefiederte Boegen, nach aussen gekruemmt.
+    for seite in (-1, 1):
+        for i in range(6):
+            t = i / 5
+            x = cx + seite * (1.4 + t * 3.8)
+            y = my - 4.4 - t * 3.4
+            c.set(int(round(x)), int(round(y)), mix(P.BLOOM, P.BONE, 0.25 + t * 0.45))
+            if i and i % 2 == 0:
+                c.set(int(round(x)) + seite, int(round(y)) + 1, P.BLOOM_DIM)
+
+    _hohlraum(c, cx, my + 0.4, 1.5, P.BLOOM, puls=abs(flap))
+
+    # Tonstaub faellt von ihr ab - das Einzige an ihr, das nach unten will.
+    for i in range(3):
+        t = (phase / math.tau + i / 3) % 1.0
+        c.set(int(cx + math.sin(phase + i * 2) * 3.5), int(my + 5 + t * 6),
+              (P.BLOOM[0], P.BLOOM[1], P.BLOOM[2], int(170 * (1 - t))))
+
     c.outline(hexc("#05060c", 200))
-    c.glow(cx, cy, 8, (P.BLOOM[0], P.BLOOM[1], P.BLOOM[2], 44))
+    c.glow(cx, my, 10, (P.BLOOM[0], P.BLOOM[1], P.BLOOM[2], 34))
     return c
 
 
 def draw_stilleschreiter(phase: float) -> Canvas:
-    """Stilleschreiter - schwerer Waechter, der Klang schluckt."""
-    c = Canvas(22, 20)
+    """
+    Stilleschreiter - schwerer Waechter, der Klang schluckt.
+
+    Er ist das Gegenstueck zu Cadence: sie ist Licht in einem Gefaess, er
+    ist ein Gefaess ohne Licht. Also bekommt er als Einziger im Spiel
+    ueberhaupt keine Leuchtfarbe - nur Stein, und in den Fugen zwischen
+    seinen Platten steht ein kalter Rest, der beim Schritt aufblitzt.
+    Sein Kopf ist eine heruntergezogene Haube ueber nichts.
+    """
+    c = Canvas(30, 28)
+    cx, base = 15, 27
     step = math.sin(phase)
-    cx, base = 11, 19
-    # Beine
+    heben = abs(step) * 1.1
+    ky = base - 15 - heben          # Schultermitte
+
+    stein = P.STONE
+    stein_hi = P.STONE_HI
+    stein_lo = P.STONE_LO
+    fuge = mix(P.GLOW_DIM, P.STONE, 0.55)
+
+    # Zwei schwere Beine. Keine Spitzen - er steht auf Flaechen, und man
+    # soll ihn stehen hoeren.
     for i, s in enumerate((step, -step)):
-        x = cx - 4 + i * 6 + int(s * 2)
-        c.rect(x, base - 6, 3, 6, shade(P.STONE, -0.25))
-        c.rect(x - 1, base - 2, 5, 2, P.STONE_LO)
-    # Rumpf: gebeugte Masse
-    c.ellipse(cx, base - 10, 7, 5.4, P.STONE)
-    c.ellipse(cx, base - 11, 6, 4.2, P.STONE_HI)
-    c.ellipse(cx + 1, base - 13, 3.4, 2.6, P.STONE)
-    # Maske ohne Mund
-    c.rect(cx + 2, base - 14, 5, 4, P.INK2)
-    c.set(cx + 5, base - 13, P.ROT)
-    c.set(cx + 5, base - 12, shade(P.ROT, -0.3))
-    # Ruecken-Resonanzplatten
+        x = cx - 6 + i * 8 + s * 2.2
+        _flaeche(c, [(cx - 3 + i * 6, ky + 5), (cx - 0.5 + i * 6, ky + 5),
+                     (x + 3.4, base - 3), (x, base - 3)], shade(stein, -0.30))
+        c.rect(int(x) - 1, base - 3, 6, 2, shade(stein, -0.38))
+        c.rect(int(x) - 2, base - 1, 8, 1, stein_lo)
+
+    # Der Rumpf haengt vornueber: eine Masse, die zu schwer fuer sich
+    # selbst ist. Ein aufrechter Rumpf saehe aus wie eine Ruestung.
+    _flaeche(c, [(cx - 8.5, ky - 3), (cx + 5.0, ky - 5.5), (cx + 8.0, ky + 1),
+                 (cx + 5.5, ky + 6), (cx - 6.0, ky + 6.5), (cx - 9.5, ky + 2)],
+             stein)
+    _kante_licht(c, stein_hi, stein_lo)
+
+    # Ruecken: drei Platten wie Deckel auf einem Kessel. In den Fugen
+    # dazwischen steht der Rest Klang, den er noch nicht geschluckt hat -
+    # und der blitzt beim Schritt auf.
     for i in range(3):
-        c.rect(cx - 6 + i * 3, base - 15 + i, 2, 3, mix(P.STONE_HI, P.GLOW_DIM, 0.35))
-    c.shadow_pass((0, 1), -0.2)
-    c.outline(hexc("#05060c", 220))
+        px, py = cx - 9 + i * 4.4, ky - 5.5 + i * 1.1
+        _flaeche(c, [(px, py), (px + 4.2, py - 0.8), (px + 4.6, py + 4.4),
+                     (px + 0.4, py + 5.0)], mix(stein_hi, P.INK2, 0.35))
+        c.line(px, py, px + 4.2, py - 0.8, stein_hi)
+        c.line(px + 4.4, py - 0.4, px + 4.8, py + 4.6,
+               mix(fuge, stein, 0.5 - 0.35 * abs(math.sin(phase * 2 + i))))
+
+    # Haube: faellt vorn ueber den Kopf und laesst nur Schatten frei.
+    #
+    # Ein schwarzes Rechteck als Gesicht sah aus wie ein Loch im Bild,
+    # nicht wie eine Oeffnung an ihm. Der Schatten hat darum jetzt die
+    # Form der Haube - er laeuft nach unten breiter, wie die Oeffnung
+    # selbst - und darunter liegt die Lippe des Stoffs im Licht.
+    hx, hy = cx + 3.5, ky - 7.5
+    _flaeche(c, [(hx - 1.6, hy), (hx + 1.8, hy + 0.4), (hx + 4.2, hy + 6.5),
+                 (hx - 3.4, hy + 6.0)], mix(stein, P.INK2, 0.30))
+    c.line(hx - 1.6, hy, hx + 1.8, hy + 0.4, stein_hi)
+    _flaeche(c, [(hx - 1.8, hy + 3.0), (hx + 2.2, hy + 3.2),
+                 (hx + 3.0, hy + 6.2), (hx - 2.4, hy + 6.0)], hexc("#04050a"))
+    c.line(hx - 1.8, hy + 3.0, hx + 2.2, hy + 3.2, mix(stein, P.INK2, 0.55))
+    c.line(hx - 2.4, hy + 6.0, hx + 3.0, hy + 6.2, mix(stein_lo, stein, 0.45))
+
+    # Auch er hat das Loch. Bei ihm sitzt es tief in der Brust, halb von
+    # der Haube verdeckt: dass ihm etwas fehlt, sieht man erst genau hin.
+    _hohlraum(c, cx + 3, ky + 2.5, 2.4, fuge, puls=abs(step) * 0.5)
+
+    c.shadow_pass((0, 1), -0.22)
+    c.outline(hexc("#05060c", 225))
     return c
 
 
 def draw_dissonanzknospe(phase: float) -> Canvas:
-    """Dissonanzknospe - festgewachsen, spuckt schiefe Toene."""
-    c = Canvas(16, 18)
-    open_amt = max(0.0, math.sin(phase))
-    cx, base = 8, 17
-    c.rect(cx - 1, base - 7, 3, 7, shade(P.ROT_DIM, -0.2))
-    c.rect(cx - 3, base - 1, 7, 1, P.ROT_DIM)
-    petals = 5
-    for i in range(petals):
-        a = -math.pi / 2 + (i - (petals - 1) / 2) * (0.42 + open_amt * 0.34)
-        for r in range(2, 7):
-            x = cx + math.cos(a) * r
-            y = base - 8 + math.sin(a) * r
-            col = mix(P.ROT, P.ROT_DIM, r / 7)
-            c.set(int(round(x)), int(round(y)), col)
-            c.set(int(round(x)) + (1 if math.cos(a) > 0 else -1), int(round(y)), shade(col, -0.2))
-    c.ellipse(cx, base - 8, 2.6, 2.6, P.INK2)
-    c.ellipse(cx, base - 8, 1.4 + open_amt, 1.4 + open_amt, mix(P.ROT, P.WARM, 0.4 * open_amt))
+    """
+    Dissonanzknospe - festgewachsen, spuckt schiefe Toene.
+
+    Keine Blume. Eine Schale, die aufgesprungen ist: vier harte Scherben
+    klappen zurueck und geben ein Inneres frei, in dem drei Linien
+    stehen, die nicht zueinander passen. Genau das ist ein schiefer
+    Akkord - man sieht ihn, bevor man ihn hoert.
+    """
+    c = Canvas(24, 26)
+    cx, base = 12, 25
+    auf = max(0.0, math.sin(phase)) ** 0.7      # 0 zu, 1 offen
+    ky = base - 11.5                             # Mitte der Schale
+
+    stiel = mix(P.ROT_DIM, P.INK2, 0.35)
+    schale = mix(P.ROT_DIM, P.STONE, 0.34)
+    schale_hi = mix(schale, P.BONE, 0.26)
+    schale_lo = shade(schale, -0.35)
+
+    # Stiel: steif, nicht biegsam. Sie ist eingewachsen, nicht gepflanzt -
+    # also verdickt er sich nach unten und greift mit Wurzeln in den Boden.
+    #
+    # Er muss deutlich duenner sein als die Schale. Vorher waren beide
+    # gleich breit, und daraus wurde eine Saeule mit einem Deckel - ohne
+    # Taille sieht nichts gewachsen aus.
+    _flaeche(c, [(cx - 0.9, ky + 2), (cx + 1.1, ky + 2),
+                 (cx + 2.8, base - 1), (cx - 2.6, base - 1)], stiel)
+    c.line(cx - 0.9, ky + 2, cx - 2.6, base - 1, mix(stiel, P.STONE, 0.3))
+    for k in (-1, 1):
+        c.line(cx + k * 2.0, base - 3, cx + k * 6.0, base - 1, shade(stiel, -0.1))
+        c.line(cx + k * 1.4, base - 2, cx + k * 3.6, base - 1, shade(stiel, -0.25))
+    c.rect(cx - 7, base - 1, 15, 1, shade(stiel, -0.3))
+
+    # Vier Schalenscherben. Sie klappen auf wie etwas, das gebrochen ist -
+    # deshalb bleibt jede gerade und keine biegt sich. Geschlossen bilden
+    # sie ein Ei mit einem Riss darin.
+    for seite in (-1, -0.42, 0.42, 1):
+        a = -math.pi / 2 + seite * (0.30 + auf * 0.86)
+        laenge = 9.0 - abs(seite) * 1.6
+        # Geschlossen muessen die vier Scherben zusammen ein Ei ergeben,
+        # also sind die aeusseren breiter als die inneren.
+        breit = 1.5 + abs(seite) * 0.9
+        ax, ay = math.cos(a), math.sin(a)
+        _flaeche(c, [(cx - ay * breit, ky + ax * breit),
+                     (cx + ax * laenge - ay * breit * 0.35,
+                      ky + ay * laenge + ax * breit * 0.35),
+                     (cx + ax * laenge + ay * breit * 0.35,
+                      ky + ay * laenge - ax * breit * 0.35),
+                     (cx + ay * breit, ky - ax * breit)], schale)
+        # Aussenkante hell, Innenkante dunkel: erst dadurch wird aus dem
+        # Splitter eine Schale mit Innen und Aussen.
+        c.line(cx - ay * breit, ky + ax * breit,
+               cx + ax * laenge - ay * breit * 0.35,
+               ky + ay * laenge + ax * breit * 0.35,
+               schale_hi if seite < 0 else schale_lo)
+        c.set(int(round(cx + ax * laenge)), int(round(ky + ay * laenge)),
+              mix(schale_hi, P.WARM, 0.35))
+
+    # Das Innere: drei Striche in drei Winkeln, die sich nicht treffen.
+    # Ein Akkord, in dem jeder Ton woanders steht - man sieht die
+    # Dissonanz, bevor man sie hoert.
+    if auf > 0.12:
+        for i, w in enumerate((-0.95, -0.05, 0.75)):
+            laenge = (2.6 + i * 1.2) * auf
+            c.line(cx, ky, cx + math.cos(-math.pi / 2 + w) * laenge,
+                   ky + math.sin(-math.pi / 2 + w) * laenge,
+                   mix(P.ROT, P.WARM, 0.25 + 0.25 * math.sin(phase * 3 + i)))
+
+    _hohlraum(c, cx, ky, 2.3, P.ROT, puls=auf)
+
     c.outline(hexc("#05060c", 210))
-    c.glow(cx, base - 8, 7, (P.ROT[0], P.ROT[1], P.ROT[2], int(30 + 40 * open_amt)))
+    c.glow(cx, ky, 9, (P.ROT[0], P.ROT[1], P.ROT[2], int(24 + 44 * auf)))
     return c
 
 
 def draw_echoscherbe(phase: float) -> Canvas:
-    """Echoscherbe - springender Kristallsplitter."""
-    c = Canvas(14, 14)
-    cx, cy = 7, 7
-    spin = phase
-    pts = []
-    for i in range(6):
-        a = spin + i / 6 * math.tau
-        r = 5 if i % 2 == 0 else 3
-        pts.append((cx + math.cos(a) * r, cy + math.sin(a) * r))
-    for i in range(len(pts)):
-        x0, y0 = pts[i]
-        x1, y1 = pts[(i + 1) % len(pts)]
-        c.line(x0, y0, x1, y1, P.GLOW)
-    c.ellipse(cx, cy, 2.4, 2.4, mix(P.GLOW_DIM, P.INK2, 0.4))
-    c.set(cx, cy, P.GLOW)
-    c.glow(cx, cy, 8, (P.GLOW[0], P.GLOW[1], P.GLOW[2], 52))
+    """
+    Echoscherbe - springender Kristallsplitter.
+
+    Sie heisst Echo, also zeichnet sie sich selbst mehrfach: hinter der
+    Scherbe stehen zwei blassere Kopien in aelteren Drehungen. Was man
+    trifft, ist die scharfe vorne - die anderen sind schon vorbei.
+    """
+    c = Canvas(20, 20)
+    cx, cy = 10, 10
+
+    def splitter(spin: float, gr: float, flaeche, kante, facette=None) -> None:
+        # Vier Ecken, ungleich lang: ein Kristall ist nie regelmaessig.
+        pts = []
+        for i, r in enumerate((1.0, 0.62, 0.9, 0.55)):
+            a = spin + i / 4 * math.tau
+            pts.append((cx + math.cos(a) * gr * r, cy + math.sin(a) * gr * r))
+        _flaeche(c, pts, flaeche, kante)
+        if facette is not None:
+            # Eine Bruchkante quer durch: erst die macht aus dem Viereck
+            # einen Kristall statt eines Papierschnipsels.
+            c.line(pts[0][0], pts[0][1], pts[2][0], pts[2][1], facette)
+            c.line((pts[0][0] + pts[1][0]) / 2, (pts[0][1] + pts[1][1]) / 2,
+                   cx, cy, facette)
+
+    # Erst die Echos, dann die scharfe Scherbe darueber.
+    for k in (2, 1):
+        blass = (P.GLOW_DIM[0], P.GLOW_DIM[1], P.GLOW_DIM[2], 54 - k * 14)
+        splitter(phase - k * 0.5, 7.0 - k * 0.7, (0, 0, 0, 0), blass)
+    splitter(phase, 7.4, mix(P.GLOW_DIM, P.INK2, 0.62), P.GLOW,
+             facette=mix(P.GLOW_DIM, P.GLOW, 0.5))
+
+    _hohlraum(c, cx, cy, 2.0, P.GLOW, puls=abs(math.sin(phase * 2)))
+
+    c.glow(cx, cy, 10, (P.GLOW[0], P.GLOW[1], P.GLOW[2], 44))
     return c
 
 
@@ -1310,8 +1728,11 @@ def build() -> None:
         atlas.add_sequence(f"cadence_bruch_bruch_{name}", frames,
                            pivot=(0.5, 1.0), fps=_fps_for(name))
 
+    atlas.add_sequence("gabelmaus_husch",
+                       [draw_gabelmaus(i / 8 * math.tau) for i in range(8)],
+                       pivot=(0.5, 1.0), fps=12)
     atlas.add_sequence("klangmotte_fly",
-                       [draw_klangmotte(i / 4 * math.tau) for i in range(4)],
+                       [draw_klangmotte(i / 6 * math.tau) for i in range(6)],
                        pivot=(0.5, 0.5), fps=10)
     atlas.add_sequence("stilleschreiter_walk",
                        [draw_stilleschreiter(i / 6 * math.tau) for i in range(6)],
@@ -1331,6 +1752,15 @@ def build() -> None:
 
     png, js = atlas.write(OUT)
     print(f"characters -> {png.name} ({len(atlas.frames)} Frames), {js.name}")
+
+
+SIGNATUR = {
+    # Wie laut der Kern in welchem Zustand klingt. Der Klang gehoert in den
+    # Kampf; beim Herumlaufen soll die Silhouette ruhig bleiben.
+    "idle": 0.30, "run": 0.22, "jump": 0.35, "fall": 0.35, "land": 0.45,
+    "dash": 0.75, "wall": 0.25, "melee": 0.85, "cast": 1.00, "hurt": 0.55,
+    "rest": 0.60,
+}
 
 
 def _fps_for(name: str) -> int:

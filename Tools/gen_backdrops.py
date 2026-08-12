@@ -50,6 +50,9 @@ LIGHT = 1                # Licht von rechts
 #   3  Der nahe Rahmen: was den Blick links und rechts abschliesst.
 PARALLAX = [0.0, 0.06, 0.14, 0.27]
 PARALLAX_VORN = 1.16
+
+# So hoch wie der hoechste Raum: so weit reicht die ferne Wand.
+HOCH = 560
 SCHICHTEN = len(PARALLAX)
 
 REGIONS = ["hain", "kathedrale", "grotten", "dissonanz"]
@@ -68,6 +71,61 @@ OHNE_VERLAUF = False
 
 
 # ---------------------------------------------------------------- Bausteine
+
+def luftraum(c: Canvas, stufen) -> None:
+    """
+    Der Himmel als Verlauf ueber mehrere Farbstufen.
+
+    Zwei Stufen reichen nicht. Ein linearer Verlauf zwischen einem kalten
+    dunklen und einem warmen hellen Ton laeuft in der Mitte durch genau
+    den Punkt, an dem sich beide aufheben - und der ist grau. In einem
+    Raum, der hoeher ist als ein Bildschirm, liegt dieses graue Stueck
+    ausgerechnet dort, wo sonst nichts steht, und dann ist das obere
+    Drittel des Bildes eine leere graue Flaeche. Genau das war zu sehen.
+
+    Mit drei oder vier gesetzten Stufen laeuft der Verlauf um den
+    Graupunkt herum: oben blaugruen und fast schwarz, in der Mitte
+    tiefes Tannengruen, unten der warme Dunst, gegen den sich die
+    Staemme abheben. Jede Stufe ist eine Entscheidung, keine Rechnung.
+
+    `stufen` ist eine Liste (Anteil an der Hoehe, Farbe), von oben nach
+    unten.
+    """
+    for i in range(len(stufen) - 1):
+        (t0, c0), (t1, c1) = stufen[i], stufen[i + 1]
+        y0, y1 = int(t0 * c.h), int(t1 * c.h)
+        c.dither_v(0, y0, c.w, max(1, y1 - y0), c0, c1, levels=7)
+
+
+def hochgezogen(bild: Canvas, hoehe: int) -> Canvas:
+    """
+    Zieht eine Schicht nach oben aus, indem jede Spalte ihre oberste
+    Zeile fortsetzt.
+
+    Die Kulissen sind bildschirmhoch, viele Raeume sind doppelt so hoch.
+    Ueber der Kulisse stand deshalb nichts als Himmel - und ein Wald,
+    der auf halber Hoehe aufhoert, ist kein Wald, sondern eine Tapete.
+
+    Fuer die ferne Wand geht das Fortsetzen sauber auf: sie besteht aus
+    senkrechten Staemmen, und ein Stamm, der nach oben weiterlaeuft, ist
+    genau das, was ein Stamm tut. Fuer Schichten mit Aesten und Kronen
+    waere derselbe Griff falsch - die wuerden zu Schlieren.
+    """
+    c = Canvas(bild.w, hoehe)
+    dy = hoehe - bild.h
+    for y in range(bild.h):
+        for x in range(bild.w):
+            px = bild.get(x, y)
+            if px[3]:
+                c.set(x, y + dy, px)
+    for x in range(bild.w):
+        px = bild.get(x, 0)
+        if px[3] < 190:
+            continue
+        for y in range(dy):
+            c.set(x, y, px)
+    return c
+
 
 def trunk(c: Canvas, x: float, top: float, bottom: float, width: float,
           col, rng: Rng | None = None, lean: float = 0.0,
@@ -491,7 +549,9 @@ def hain(layer: int) -> Canvas:
         # ist der Himmel oben am dunkelsten; hell wird es dort, wo Dunst
         # zwischen den Staemmen steht, also unten.
         if not OHNE_VERLAUF:
-            c.dither_v(0, 0, W, H, mix(far, P.FOREGROUND, 0.52), sky, levels=7)
+            luftraum(c, [(0.00, hexc("#0a1015")), (0.34, hexc("#15211e")),
+                         (0.64, hexc("#2b3931")), (0.86, hexc("#4d5945")),
+                         (1.00, hexc("#657053"))])
 
         # Die letzte gehaltene Note steht als bleiche Scheibe im Wald.
         # Sie haengt hoch: dort sind die Kulissenschichten in ihre obersten
@@ -729,7 +789,8 @@ def kathedrale(layer: int) -> Canvas:
         # Nur Luft und Licht. Die Architektur steht eine Schicht davor -
         # eine frei schwebende Rose im Dunst sieht aufgeklebt aus.
         if not OHNE_VERLAUF:
-            c.dither_v(0, 0, W, H, mix(far, P.FOREGROUND, 0.45), sky, levels=7)
+            luftraum(c, [(0.00, hexc("#0c0b14")), (0.40, hexc("#1d1a2c")),
+                         (0.74, hexc("#382f49")), (1.00, hexc("#584c66"))])
         light_shaft(c, 196, 52, accent, 26)
         light_shaft(c, 318, 30, accent, 18)
         motes(c, 240, rng, accent, alpha=(10, 38))
@@ -835,7 +896,8 @@ def grotten(layer: int) -> Canvas:
 
     if layer == 0:
         if not OHNE_VERLAUF:
-            c.dither_v(0, 0, W, H, mix(far, P.FOREGROUND, 0.42), sky, levels=7)
+            luftraum(c, [(0.00, hexc("#070d16")), (0.40, hexc("#12202e")),
+                         (0.74, hexc("#264057")), (1.00, hexc("#44607d"))])
         # Ferne Kristalladern leuchten durch den Fels.
         for x, y, r in ((88, 190, 34), (300, 120, 46), (430, 210, 28)):
             c.glow(x, y, r * 2.2, (accent[0], accent[1], accent[2], 26), power=1.8)
@@ -899,7 +961,8 @@ def dissonanz(layer: int) -> Canvas:
 
     if layer == 0:
         if not OHNE_VERLAUF:
-            c.dither_v(0, 0, W, H, mix(far, P.FOREGROUND, 0.55), sky, levels=6)
+            luftraum(c, [(0.00, hexc("#0d070b")), (0.42, hexc("#1c1016")),
+                         (0.76, hexc("#2e1a20")), (1.00, hexc("#43262a"))])
         # Kein Blickfang, kein Licht - nur ein Glimmen tief unten.
         c.glow(256, 300, 200, (accent[0], accent[1], accent[2], 30), power=1.4)
         motes(c, 160, rng, accent, alpha=(8, 30))
@@ -1249,7 +1312,10 @@ def in_ferne(bild: Canvas, verlauf, menge: float) -> Canvas:
     bleibt dabei deckend.
     """
     for y in range(bild.h):
-        hr, hg, hb = verlauf[min(y, len(verlauf) - 1)]
+        # Der Verlauf ist bildschirmhoch, die Schicht kann hoeher sein.
+        # Abgetastet wird darum ueber den Anteil, nicht ueber die Zeile.
+        hr, hg, hb = verlauf[min(len(verlauf) - 1,
+                                 int(y / max(1, bild.h - 1) * (len(verlauf) - 1)))]
         for x in range(bild.w):
             r, g, b, a = bild.get(x, y)
             if not a:
@@ -1293,6 +1359,11 @@ def build() -> None:
 
         for layer in range(SCHICHTEN):
             bild = luft if layer == 0 else BUILDERS[region](layer)
+            # Die ferne Wand deckt die volle Raumhoehe ab, nicht nur den
+            # Bildschirm - sonst steht ueber ihr in hohen Raeumen nichts
+            # als Himmel.
+            if layer == 1:
+                bild = hochgezogen(bild, HOCH)
             # Der Himmel selbst bleibt deckend - hinter ihm liegt nichts
             # mehr, was durchscheinen koennte.
             if layer > 0:

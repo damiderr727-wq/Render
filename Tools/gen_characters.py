@@ -237,9 +237,10 @@ def _draw_klinge(c: Canvas, *, cx: int, base: float, height: float, phase: float
     S = HERO_SCALE
     # Etwas dunkler als ihre Augen: die Klinge ist rosa, aber sie ist nicht
     # das Erste, was man ansieht.
-    rosa = mix(hexc("#ff7ad0"), P.CLOAK, 0.22)
-    rosa_hi = mix(rosa, P.BONE, 0.45)
-    rosa_lo = mix(rosa, P.CLOAK, 0.55)
+    rosa = mix(hexc("#ff7ad0"), P.CLOAK, 0.46)
+    rosa_hi = mix(rosa, P.BONE, 0.46)
+    rosa_lo = mix(rosa, P.CLOAK, 0.70)
+    griff = mix(P.CLOAK, P.INK, 0.45)
 
     # Schraeg ueber den Ruecken: Griff unten rechts, Spitze oben links.
     # Die Stimmgabel steht nach oben rechts - die Klinge muss in die
@@ -248,35 +249,65 @@ def _draw_klinge(c: Canvas, *, cx: int, base: float, height: float, phase: float
     mx = cx + 0.8 * S + lean * 0.3
     my = base - 0.42 * height
     ax, ay = math.cos(a), math.sin(a)
-    laenge = height * 0.62
 
-    # Griff und Parierstueck
-    for i in range(int(3 * S)):
-        c.set(int(mx - ax * (i + 2)), int(my - ay * (i + 2)), mix(rosa_lo, P.CLOAK, 0.4))
-    for k in (-1, 1):
-        c.set(int(mx - ax * 1.5 - ay * k), int(my - ay * 1.5 + ax * k), rosa_lo)
+    # Lang und schmal. Vorher war sie zweiundzwanzig Pixel lang und sieben
+    # breit - drei zu eins, und in diesem Verhaeltnis liest sich nichts
+    # mehr als Waffe. Es sah aus wie ein rosa Lappen, der ihr am Ruecken
+    # haengt, und weil er in ihrer Silhouette den meisten Platz einnahm,
+    # wurde die ganze Gestalt davon unfoermig.
+    #
+    # Ein Schwert ist ungefaehr zehnmal so lang wie breit, hat ein
+    # Parierstueck quer dazu und einen Griff dahinter. Erst diese drei
+    # Teile machen aus einem Strich eine Waffe.
+    # Lang genug, um ein Schwert zu sein, kurz genug, um nicht die Figur
+    # zu sein: ueber die volle Koerperhoehe hinaus war sie der groesste
+    # Gegenstand im Bild und zog allen Blick auf sich.
+    laenge = height * 0.70
+    breit = 1.35 * S
 
-    # Das Blatt: zum Ende hin schmaler, mit heller Schneide vorn.
-    for i in range(int(laenge)):
+    # Griff und Knauf, unterhalb des Parierstuecks.
+    for i in range(int(4.2 * S)):
+        d = i + 1.5
+        c.set(int(mx - ax * d), int(my - ay * d), griff)
+        if i < 2:
+            c.set(int(mx - ax * d - ay), int(my - ay * d + ax), griff)
+    knauf = (mx - ax * (4.2 * S + 1.5), my - ay * (4.2 * S + 1.5))
+    c.ellipse(knauf[0], knauf[1], 1.1 * S, 1.1 * S, mix(rosa_lo, P.BONE, 0.30))
+
+    # Das Parierstueck: quer zur Klinge, kurz, mit abgesenkten Enden.
+    for k in range(-int(2.4 * S), int(2.4 * S) + 1):
+        q = abs(k) / max(1.0, 2.4 * S)
+        px = mx - ay * k - ax * q * 1.4
+        py = my + ax * k - ay * q * 1.4
+        c.set(int(px), int(py), rosa_lo if q > 0.55 else mix(rosa_hi, P.BONE, 0.2))
+
+    # Das Blatt: zum Ende hin schmaler, mit heller Schneide vorn und
+    # dunklem Ruecken - ohne diesen Unterschied bleibt es ein Balken.
+    i = 0.0
+    while i < laenge:
         v = i / laenge
-        w = (1.9 - 1.5 * v ** 0.8) * S
-        px = mx + ax * i
-        py = my + ay * i
-        for dq in range(-int(w), int(w) + 1):
-            qx = px - ay * dq
-            qy = py + ax * dq
-            if dq > 0:
-                col = rosa_hi if dq >= int(w) else rosa
+        w = breit * (1.0 - 0.72 * v ** 1.35)
+        px, py = mx + ax * i, my + ay * i
+        q = -w
+        while q <= w:
+            qx, qy = px - ay * q, py + ax * q
+            rand = q / max(0.4, w)
+            if rand > 0.55:
+                col = rosa_hi                       # Schneide
+            elif rand < -0.45:
+                col = rosa_lo                       # Ruecken
             else:
-                col = rosa_lo
+                col = rosa                          # Mittelgrat
             c.set(int(qx), int(qy), col)
+            q += 0.5
         # Ein Glanz laeuft die Schneide hinauf.
-        if abs(v - (0.5 + 0.5 * math.sin(phase * 1.4 + sway))) < 0.10:
+        if abs(v - (0.5 + 0.5 * math.sin(phase * 1.4 + sway))) < 0.08:
             c.set(int(px - ay * w), int(py + ax * w), mix(rosa_hi, P.BONE, 0.6))
+        i += 0.5
 
     c.set(int(mx + ax * laenge), int(my + ay * laenge), mix(rosa_hi, P.BONE, 0.4))
-    c.glow(mx + ax * laenge * 0.6, my + ay * laenge * 0.6, 6 * S,
-           (rosa[0], rosa[1], rosa[2], 40))
+    c.glow(mx + ax * laenge * 0.55, my + ay * laenge * 0.55, 5 * S,
+           (rosa[0], rosa[1], rosa[2], 30))
 
 
 def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
@@ -456,24 +487,38 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # Pixel breit und deckend - damit stand sie als kraeftigster
     # Gegenstand im Bild und nahm der Sichel den Rang ab.
     ax, ay = math.cos(winkel), math.sin(winkel)
-    hand = reichweite * 0.20
-    spitze = reichweite * 1.12
+    hand = reichweite * 0.16
+    # Laenger und mit Koerper. Als reine Nadel war sie zwar nicht mehr der
+    # kraeftigste Gegenstand im Bild - aber auch kein Schwert mehr,
+    # sondern ein Zahnstocher. Ein Blatt braucht Breite am Ansatz, eine
+    # Verjuengung ueber seine Laenge und eine Spitze, die kurz ist.
+    spitze = reichweite * 1.42
     kern = mix(rosa_hi, P.BONE, 0.45)
+    breit = 1.45 * S
+
+    # Parierstueck quer zur Klinge - erst daran erkennt man, wo die Waffe
+    # aufhoert und die Hand anfaengt.
+    for k in range(-int(2.2 * S), int(2.2 * S) + 1):
+        px, py = dreh_x + ax * hand - ay * k, dreh_y + ay * hand + ax * k
+        c.blend(int(px), int(py), (rosa_lo[0], rosa_lo[1], rosa_lo[2], 210))
+
     i = hand
     while i < spitze:
         v = max(0.0, (i - hand) / (spitze - hand))
-        w = (1.15 - 0.95 * v ** 0.7) * S
+        w = breit * (1.0 - 0.78 * v ** 1.5)
         px, py = dreh_x + ax * i, dreh_y + ay * i
         q = -w
         while q <= w:
             qx, qy = px - ay * q, py + ax * q
-            rand = abs(q) / max(0.4, w)
+            rand = q / max(0.4, w)
             # Die Schneide (aussen, zur Sichel hin) traegt das Licht, der
             # Ruecken verliert sich.
-            if q > 0:
-                col, a = kern, int(230 - rand * 70)
+            if rand > 0.5:
+                col, a = kern, int(235 - abs(rand) * 40)
+            elif rand < -0.4:
+                col, a = rosa_lo, int(145 - abs(rand) * 60)
             else:
-                col, a = rosa_lo, int(150 - rand * 90)
+                col, a = rosa, int(200 - abs(rand) * 40)
             c.blend(int(qx), int(qy), (col[0], col[1], col[2], max(0, a)))
             q += 0.5
         i += 0.5

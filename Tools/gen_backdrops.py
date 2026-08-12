@@ -36,8 +36,21 @@ LIGHT = 1                # Licht von rechts
 # durchs Bild zieht, sieht man. Dieselbe Fuge, die sich kaum bewegt,
 # liest sich als Ferne. Die Vorbilder machen genau das - ihre
 # Hintergruende sind ebenfalls wiederholt, sie kriechen nur.
-PARALLAX = [0.04, 0.11, 0.24]
+#
+# Seit dem Blick auf Silksong sind es vier statt drei. Dort hat der
+# Hintergrund selbst noch einen Hintergrund: hinter den Baeumen, die man
+# als Baeume erkennt, steht eine zweite Waldwand, die nur noch Wert ist -
+# keine Form, keine Kante, kein Detail. Ohne sie sitzen die erkennbaren
+# Silhouetten direkt auf dem Himmel, und der Wald hoert genau dort auf,
+# wo man hinsieht.
+#
+#   0  Luft. Himmel, Sonne, Staub. Steht voellig still.
+#   1  Die ferne Wand: Werte ohne Form.
+#   2  Der Mittelgrund: hier faengt Gestalt an.
+#   3  Der nahe Rahmen: was den Blick links und rechts abschliesst.
+PARALLAX = [0.0, 0.06, 0.14, 0.27]
 PARALLAX_VORN = 1.16
+SCHICHTEN = len(PARALLAX)
 
 REGIONS = ["hain", "kathedrale", "grotten", "dissonanz"]
 
@@ -215,6 +228,76 @@ def motes(c: Canvas, count: int, rng: Rng, tint, alpha=(12, 46)) -> None:
         c.blend(x, y, (tint[0], tint[1], tint[2], rng.int(*alpha)))
 
 
+# ------------------------------------------------------- Waldbewuchs
+#
+# Was den Wald in den Vorbildern dicht macht, sind nicht die Staemme -
+# es ist alles, was an ihnen haengt. Ein Stamm allein ist ein Balken.
+# Derselbe Stamm mit Moosbart, Baumschwamm und einer Ranke davor ist ein
+# Baum, an dem seit Jahren niemand vorbeigekommen ist.
+
+def moosbart(c: Canvas, x: float, y: float, breite: float, laenge: float,
+             col, rng: Rng) -> None:
+    """Moos, das in ungleichen Straehnen von einem Ast herunterhaengt."""
+    hell = shade(col, 0.10)
+    for i in range(int(breite)):
+        px = x + i
+        # Die Laenge folgt einer weichen Welle, nicht dem Zufall allein -
+        # sonst wird der Bart ein Kamm.
+        ln = laenge * (0.35 + 0.65 * abs(math.sin(i * 0.21 + x * 0.05)))
+        ln *= 0.7 + hash01(i, int(x)) * 0.6
+        for k in range(int(ln)):
+            t = k / max(1.0, ln)
+            # Nach unten franst er aus: nicht jeder Pixel wird gesetzt.
+            if t > 0.55 and hash01(i * 7 + k, int(x) + 3) > 1.25 - t:
+                continue
+            c.set(int(px + math.sin(k * 0.24) * 1.2), int(y + k),
+                  shade(col, -0.10 - t * 0.16))
+        if ln > 3:
+            c.set(int(px), int(y), hell)
+
+
+def baumschwamm(c: Canvas, x: float, y: float, r: float, col, seite: int = 1) -> None:
+    """Ein Baumschwamm - eine flache Konsole am Stamm, oben hell."""
+    for i in range(int(r * 1.15)):
+        t = i / max(1.0, r * 1.15)
+        w = r * (1 - t ** 1.7)
+        c.rect(int(x if seite > 0 else x - w), int(y + i), max(1, int(w)), 1,
+               mix(shade(col, 0.16), shade(col, -0.26), t ** 0.6))
+    # Die Oberkante faengt das Licht, die Unterkante ist ein Strich.
+    c.rect(int(x if seite > 0 else x - r), int(y), max(1, int(r)), 1,
+           shade(col, 0.24))
+    c.rect(int(x if seite > 0 else x - r * 0.5), int(y + r * 1.15),
+           max(1, int(r * 0.5)), 1, shade(col, -0.34))
+
+
+def ranke(c: Canvas, x: float, y: float, laenge: float, col, rng: Rng,
+          blatt: float = 0.5) -> None:
+    """Eine Ranke: ein duenner Strang mit Blaettern, die abwechselnd sitzen."""
+    drift = rng.range(-0.14, 0.14)
+    for i in range(int(laenge)):
+        t = i / laenge
+        px = x + drift * i + math.sin(i * 0.13 + x) * (1.6 + t * 2.4)
+        c.set(int(px), int(y + i), shade(col, -0.06))
+        if i % 7 == 3 and hash01(i, int(x)) < blatt:
+            seite = 1 if (i // 7) % 2 == 0 else -1
+            for k in range(1, rng.int(3, 6)):
+                c.set(int(px + seite * k), int(y + i + k // 2), shade(col, 0.08))
+                c.set(int(px + seite * k), int(y + i + k // 2 + 1), shade(col, -0.14))
+
+
+def farnbueschel(c: Canvas, x: float, boden: float, hoehe: float, col,
+                 rng: Rng) -> None:
+    """Ein Farn am Stammfuss - drei bis fuenf Wedel aus einem Punkt."""
+    for _ in range(rng.int(3, 6)):
+        lean = rng.range(-0.85, 0.85)
+        h = hoehe * rng.range(0.6, 1.0)
+        pts = bezier((x, boden), (x + lean * h * 0.3, boden - h * 0.55),
+                     (x + lean * h * 0.6, boden - h * 0.85),
+                     (x + lean * h * 0.95, boden - h), 20)
+        frond(c, pts, lambda t: h * 0.16 * (1 - t ** 0.7) + 1.2, col,
+              serrate=2.0, back=0.25)
+
+
 # ------------------------------------------------------------------- Hain
 
 def hain(layer: int) -> Canvas:
@@ -223,7 +306,9 @@ def hain(layer: int) -> Canvas:
     rng = Rng(1201 + layer * 17)
 
     if layer == 0:
-        # Himmel: heller Dunst zwischen den Staemmen, oben kuehl, unten warm.
+        # Nur Luft. Kein Stamm, keine Silhouette, keine Kante - alles, was
+        # eine Form hat, steht eine Schicht davor. Diese hier bewegt sich
+        # ueberhaupt nicht, sie ist der Grund, auf dem der Wald liegt.
         c.dither_v(0, 0, W, H, sky, mix(far, sky, 0.35), levels=7)
 
         # Die letzte gehaltene Note steht als bleiche Scheibe im Wald.
@@ -231,23 +316,64 @@ def hain(layer: int) -> Canvas:
         c.ellipse(392, 74, 17, 17, mix(sky, (255, 255, 255, 255), 0.55))
         c.ellipse(388, 70, 13, 13, mix(sky, (255, 255, 255, 255), 0.75))
 
-        # Ferne Staemme, kaum vom Dunst abgesetzt - Tiefe, keine Form.
-        veil = mix(far, sky, 0.42)
-        for x, w in ((36, 12), (92, 9), (150, 15), (214, 8), (268, 13),
-                     (330, 10), (438, 14), (486, 9)):
-            trunk(c, x, 0, H, w, veil, rng, lean=rng.range(-0.02, 0.02),
-                  flare=1.4, bark=False)
         light_shaft(c, 250, 34, (255, 246, 220), 22)
         light_shaft(c, 330, 20, (255, 246, 220), 16)
         motes(c, 300, rng, (255, 250, 235))
         return c
 
     if layer == 1:
+        # Die ferne Waldwand. Sie darf keine lesbare Form haben - kein
+        # Ast, keine Rinde, keine Lichtkante. Nur Werte, die sich vom
+        # Himmel abheben und nach oben in ihm verschwinden.
+        #
+        # Und sie muss *dunkler* sein als der Dunst, nicht heller. Der
+        # erste Anlauf mischte sie zur Haelfte in den Himmel hinein; dann
+        # war die Wand genauso hell wie die Luft dahinter, und das ganze
+        # Bild wurde ein graues Feld, gegen das sich nichts mehr abhob.
+        # Ein Wald in der Ferne ist eine Masse, durch die Licht *nicht*
+        # kommt - er steht als Schatten vor dem Dunst.
+        veil = mix(far, sky, 0.26)
+        tiefer = mix(far, sky, 0.08)
+
+        # Eine Wand aus dicht stehenden Staemmen, die zwischen sich nur
+        # Schlitze freilaesst. Entscheidend ist der Rhythmus: gleiche
+        # Abstaende ergeben einen Lattenzaun, und den erkennt das Auge
+        # sofort als Muster. Also in Gruppen - zwei, drei Staemme dicht
+        # beieinander, dann eine Luecke, in der der Dunst steht.
+        x = -8.0
+        i = 0
+        while x < W + 12:
+            gruppe = 1 + int(hash01(i, 3) * 3)
+            for k in range(gruppe):
+                w = 4 + hash01(i * 7 + k, 11) * 13
+                # Drei Tiefen, nicht zwei: erst damit staffelt sich die
+                # Wand in sich selbst.
+                ton = (tiefer, veil, mix(far, sky, 0.16))[(i + k) % 3]
+                trunk(c, x, 0, H, w, ton, rng,
+                      lean=rng.range(-0.015, 0.015), flare=1.35, bark=False)
+                x += w * rng.range(0.75, 1.25) + 2
+            x += rng.range(6, 26)          # die Luecke dazwischen
+            i += 1
+
+        # Und ganz hinten zwei Baumriesen, die nur als Wert dastehen.
+        for gx, w in ((128, 40), (368, 46)):
+            trunk(c, gx, 0, H, w, mix(far, sky, 0.02), rng, flare=1.6, bark=False)
+
+        # Unterholz als geschlossenes Band am Fuss - der Boden der Ferne.
+        # Es muss oben ausgefranst sein, sonst zieht sich eine waagerechte
+        # Kante durch das Bild, und die verraet die Schicht als Tapete.
+        for i in range(46):
+            c.blob(i * 12 + rng.range(-10, 10), H - rng.range(0, 22),
+                   rng.range(12, 34), tiefer, rng, lumps=6, squash=0.5)
+        return c
+
+    if layer == 2:
         col = mix(far, P.FOREGROUND, 0.34)
-        # Mittelgrund: ein Hain aus fuenf Staemmen, nach rechts enger
+        # Mittelgrund: ein Hain aus sechs Staemmen, nach rechts enger
         # gestellt - dadurch zieht der Blick nach rechts, wohin man laeuft.
-        for x, w, lean in ((22, 26, 0.01), (108, 34, -0.015), (206, 22, 0.02),
-                           (300, 30, 0.0), (398, 24, -0.01), (470, 30, 0.015)):
+        staemme = ((22, 26, 0.01), (108, 34, -0.015), (206, 22, 0.02),
+                   (300, 30, 0.0), (398, 24, -0.01), (470, 30, 0.015))
+        for x, w, lean in staemme:
             trunk(c, x, 0, H, w, col, rng, lean=lean, flare=2.4)
 
         # Ein Dach aus Zweigen, das den oberen Rand schliesst.
@@ -258,18 +384,35 @@ def hain(layer: int) -> Canvas:
         conifer_bough(c, -24, 14, 176, 48, col, rng, 1, needles, sub=1)
         conifer_bough(c, 536, 20, 168, 54, col, rng, -1, needles, sub=1)
 
+        # Was an den Staemmen haengt: Baumschwaemme in Gruppen, Moos in
+        # den Astgabeln, Ranken davor. Erst das macht aus sechs Balken
+        # einen Wald.
+        for x, w, _ in staemme:
+            for _ in range(rng.int(1, 4)):
+                y = rng.range(60, H - 50)
+                seite = 1 if rng.chance(0.5) else -1
+                baumschwamm(c, x + seite * w * 0.38, y, rng.range(5, 11),
+                            shade(col, 0.06), seite)
+            moosbart(c, x - w * 0.4, rng.range(30, 90), w * 0.8,
+                     rng.range(10, 26), mix(col, needles, 0.35), rng)
+        for x in (66, 172, 254, 352, 436):
+            ranke(c, x, rng.range(-6, 30), rng.range(70, 190),
+                  mix(col, needles, 0.5), rng, blatt=0.75)
+
         # Zapfen in drei Laengen - nie auf gleicher Hoehe.
         cone_on_chain(c, 152, 0, 96, 11, shade(col, -0.14), accent)
         cone_on_chain(c, 336, 0, 52, 8, shade(col, -0.14), accent)
         cone_on_chain(c, 428, 0, 132, 13, shade(col, -0.14), accent)
 
         # Unterholz an den Stammfuessen, damit sie nicht abgeschnitten wirken.
-        for x in (22, 108, 206, 300, 398, 470):
+        for x, _, _ in staemme:
             c.blob(x + rng.range(-8, 8), H - 6, rng.range(16, 30),
                    shade(col, -0.18), rng, lumps=6, squash=0.5)
+            farnbueschel(c, x + rng.range(-16, 16), H - 4, rng.range(20, 38),
+                         shade(col, -0.10), rng)
         return c
 
-    if layer == 2:
+    if layer == 3:
         col = mix(far, P.FOREGROUND, 0.70)
         # Nahe Staemme: nur zwei, dafuer riesig - sie rahmen links und rechts.
         trunk(c, 54, 0, H, 92, col, rng, lean=0.012, flare=2.6)
@@ -283,12 +426,27 @@ def hain(layer: int) -> Canvas:
         conifer_bough(c, 86, 22, 196, 66, col, rng, 1, needles, sub=1)
         conifer_bough(c, 500, 4, 170, 58, col, rng, -1, needles, sub=1)
 
+        # In dieser Naehe traegt jeder Stamm sichtbar etwas: schwere
+        # Schwaemme in Staffeln, Moos ueber dem Ast, Ranken davor.
+        for x, w in ((54, 92), (452, 108), (322, 44)):
+            for k in range(rng.int(2, 5)):
+                seite = 1 if rng.chance(0.5) else -1
+                baumschwamm(c, x + seite * w * 0.42, rng.range(40, H - 60),
+                            rng.range(9, 18), shade(col, 0.05), seite)
+        moosbart(c, 96, 30, 96, 34, mix(col, needles, 0.3), rng)
+        moosbart(c, 400, 16, 84, 28, mix(col, needles, 0.3), rng)
+        for x in (30, 118, 300, 344, 476):
+            ranke(c, x, rng.range(-10, 20), rng.range(90, 220),
+                  mix(col, needles, 0.42), rng, blatt=0.6)
+
         cone_on_chain(c, 236, 0, 150, 15, shade(col, 0.05), accent)
         cone_on_chain(c, 392, 0, 84, 12, shade(col, 0.05), accent)
 
         # Wurzelwerk am Boden.
         for x, r in ((54, 46), (452, 52), (322, 30)):
             c.blob(x, H - 4, r, col, rng, lumps=8, squash=0.42)
+            farnbueschel(c, x + rng.range(-30, 30), H - 2, rng.range(30, 54),
+                         shade(col, -0.06), rng)
         return c
 
     return c
@@ -375,6 +533,24 @@ def kathedrale(layer: int) -> Canvas:
         return c
 
     if layer == 1:
+        # Die Ferne des Kirchenschiffs: eine Flucht von Arkaden, die sich
+        # nach hinten verliert. Keine Details, nur Boegen als Wert - sie
+        # geben dem Raum die Laenge, die eine einzelne Wand nie hat.
+        dunst = mix(far, sky, 0.36)
+        tiefer = mix(far, sky, 0.20)
+        c.rect(0, 0, W, 40, tiefer)
+        for i in range(7):
+            bx = 34 + i * 76
+            c.gothic_arch(bx, 40, 58, 150, dunst)
+            c.gothic_arch(bx, 48, 44, 136, tiefer)
+            c.rect(bx - 34, 30, 8, 210, dunst)
+        c.rect(0, 236, W, H - 236, dunst)
+        for i in range(24):
+            c.blob(i * 22 + rng.range(-8, 8), 240, rng.range(12, 24),
+                   tiefer, rng, lumps=4, squash=0.5)
+        return c
+
+    if layer == 2:
         wall = mix(far, P.FOREGROUND, 0.30)
         stone = shade(wall, -0.34)
         glass = mix(sky, accent, 0.42)
@@ -411,7 +587,7 @@ def kathedrale(layer: int) -> Canvas:
         cone_on_chain(c, 318, 0, 142, 11, shade(wall, -0.26), accent)
         return c
 
-    if layer == 2:
+    if layer == 3:
         col = mix(far, P.FOREGROUND, 0.72)
         # Zwei schwere Buendelpfeiler am Rand - sie rahmen und schneiden an.
         for x, w in ((-4, 74), (500, 82)):
@@ -465,6 +641,25 @@ def grotten(layer: int) -> Canvas:
         return c
 
     if layer == 1:
+        # Die ferne Hoehlenwand: ein Feld aus Nadeln, das oben und unten
+        # ineinandergreift und nach hinten im Dunst verschwindet.
+        dunst = mix(far, sky, 0.34)
+        tiefer = mix(far, sky, 0.18)
+        c.rough_edge(0, 0, W, 18, dunst, seed=61)
+        c.rect(0, 0, W, 8, dunst)
+        c.rough_edge(0, H - 26, W, 22, dunst, seed=67)
+        c.rect(0, H - 8, W, 8, dunst)
+        for i in range(22):
+            x = i * 24 + int(hash01(i, 3) * 15)
+            spire(x, 6, 20 + hash01(i, 9) * 70, 8 + hash01(i, 17) * 16,
+                  tiefer if i % 2 else dunst, down=True)
+        for i in range(16):
+            x = i * 33 + int(hash01(i, 23) * 18)
+            spire(x, H - 4, 16 + hash01(i, 29) * 58, 7 + hash01(i, 31) * 14,
+                  tiefer if i % 2 else dunst, down=False)
+        return c
+
+    if layer == 2:
         col = mix(far, P.FOREGROUND, 0.34)
         # Decke und Boden greifen ineinander - eine Grotte, kein Zimmer.
         c.rough_edge(0, 0, W, 26, col, seed=11)
@@ -480,7 +675,7 @@ def grotten(layer: int) -> Canvas:
             c.glow(206 + dx, H - 10 - ln, 20, (accent[0], accent[1], accent[2], 40))
         return c
 
-    if layer == 2:
+    if layer == 3:
         col = mix(far, P.FOREGROUND, 0.72)
         c.rect(0, 0, W, 22, col)
         c.rough_edge(0, 22, W, 16, col, seed=29)
@@ -508,6 +703,24 @@ def dissonanz(layer: int) -> Canvas:
         return c
 
     if layer == 1:
+        # Die Ferne: eine Skyline aus abgebrochenen Pfeilern, alle gekippt,
+        # keiner ganz. Nur Umriss, kein Detail.
+        dunst = mix(far, P.FOREGROUND, 0.20)
+        tiefer = mix(far, P.FOREGROUND, 0.34)
+        for i in range(20):
+            x = i * 27 + int(hash01(i, 5) * 16)
+            w = 10 + hash01(i, 13) * 22
+            hoehe = 70 + hash01(i, 19) * 170
+            lean = (hash01(i, 23) - 0.5) * 0.3
+            col_i = tiefer if i % 3 == 0 else dunst
+            for y in range(int(hoehe)):
+                t = y / hoehe
+                ww = w * (0.7 + 0.3 * t)
+                c.rect(int(x + lean * y - ww / 2), H - y, max(2, int(ww)), 1, col_i)
+        c.rect(0, H - 18, W, 18, tiefer)
+        return c
+
+    if layer == 2:
         col = mix(far, P.FOREGROUND, 0.38)
         # Alles steht schief. Die Pfeiler sind dieselben wie in der
         # Kathedrale - nur gekippt und gebrochen.
@@ -529,7 +742,7 @@ def dissonanz(layer: int) -> Canvas:
         cone_on_chain(c, 130, 0, 96, 13, shade(col, -0.1), accent)
         return c
 
-    if layer == 2:
+    if layer == 3:
         col = mix(far, P.FOREGROUND, 0.74)
         for x, w, lean, height in ((-10, 74, 0.05, 288), (206, 44, -0.2, 150),
                                    (505, 80, -0.04, 288)):
@@ -689,6 +902,21 @@ def tempel(layer: int) -> Canvas:
         return c
 
     if layer == 1:
+        # Zwischen Wand und Saeulen liegt noch ein Gang. Man sieht ihn
+        # nicht als Raum, nur als eine zweite, tiefere Reihe - und genau
+        # daran merkt man, dass der Tempel weitergeht.
+        col = mix(stein, hexc("#07080e"), 0.55)
+        for x in range(-30, W + 40, 68):
+            for y in range(52, 232):
+                halb = 6 + (y - 52) / 180 * 1.5
+                c.rect(int(x - halb), y, int(halb * 2), 1, col)
+            c.rect(x - 10, 44, 20, 8, mix(col, stein_hi, 0.14))
+            c.rect(x - 11, 232, 22, 8, mix(col, stein_hi, 0.10))
+        c.rect(0, 36, W, 8, col)
+        c.rect(0, 240, W, 10, col)
+        return c
+
+    if layer == 2:
         # Eine Reihe Saeulen, weit hinten, mit Kapitell und Sockel.
         col = mix(stein, wand, 0.35)
         for x in (46, 148, 250, 352, 454):
@@ -708,7 +936,7 @@ def tempel(layer: int) -> Canvas:
         c.rect(0, 20, W, 3, hexc("#0a0c14"))
         return c
 
-    if layer == 2:
+    if layer == 3:
         # Nahe Saeulen: nur zwei, dafuer schwer. Sie rahmen das Bild.
         col = mix(stein, hexc("#05060c"), 0.45)
         for x in (18, 494):
@@ -764,12 +992,12 @@ def in_dunst(c: Canvas, hoehe: int = 72) -> Canvas:
 def build() -> None:
     atlas = Atlas("backdrops", padding=2, max_width=512)
     for region in REGIONS:
-        for layer in range(3):
+        for layer in range(SCHICHTEN):
             bild = BUILDERS[region](layer)
             # Der Himmel selbst bleibt deckend - hinter ihm liegt nichts
             # mehr, was durchscheinen koennte.
             if layer > 0:
-                bild = in_dunst(bild, 64 + layer * 24)
+                bild = in_dunst(bild, 52 + layer * 20)
             atlas.add(f"{region}_bg{layer}", bild, pivot=(0, 0),
                       parallax=PARALLAX[layer])
         atlas.add(f"{region}_fg", in_dunst(foreground(region), 56),
@@ -778,7 +1006,7 @@ def build() -> None:
     # Der Tempel ist keine Region, aber eine Kulisse. Er bekommt keinen
     # Dunst nach oben: hinter ihm ist Wand, kein Himmel, und eine Wand
     # loest sich nicht auf.
-    for layer in range(3):
+    for layer in range(SCHICHTEN):
         atlas.add(f"tempel_bg{layer}", tempel(layer), pivot=(0, 0),
                   parallax=PARALLAX[layer])
     atlas.add("tempel_fg", in_dunst(foreground("kathedrale"), 40),

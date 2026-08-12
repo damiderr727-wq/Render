@@ -58,6 +58,7 @@ public final class RoomRenderer {
         breakableNodes.removeAll()
 
         buildBackdrop(room: room)
+        buildSockel(room: room)
         buildTerrain(room: room)
         scatterEdgeProps(room: room)
         scatterHangProps(room: room)
@@ -82,10 +83,13 @@ public final class RoomRenderer {
         sky.zPosition = -10
         layers.backdrop.addChild(sky)
 
-        for layer in 0..<3 {
+        // Vier Schichten, nicht drei. Die unterste traegt nur noch Werte
+        // ohne Form - der Hintergrund des Hintergrunds. Ohne sie sitzen
+        // die erkennbaren Silhouetten direkt auf dem Himmel.
+        for layer in 0..<4 {
             let name = "\(region)_bg\(layer)"
             guard let info = atlas.frame(name) else { continue }
-            let factor = atlas.parallaxFactors[name] ?? [0.15, 0.35, 0.6][layer]
+            let factor = atlas.parallaxFactors[name] ?? [0.0, 0.06, 0.14, 0.27][layer]
 
             // Genug Kacheln, um den ganzen Raum abzudecken.
             let container = SKNode()
@@ -105,7 +109,7 @@ public final class RoomRenderer {
                 // Die Schichten sitzen bewusst weit zurueck. Ein Hintergrund,
                 // der so kraeftig ist wie das Spielgeschehen davor, macht
                 // Gegner unsichtbar - vorn gehoert der hellste Wert hin.
-                sprite.alpha = [0.42, 0.54, 0.70][layer]
+                sprite.alpha = [1.0, 0.46, 0.58, 0.74][layer]
 
                 // Jede zweite Kachel gespiegelt. Aneinandergereiht stiess
                 // sonst die rechte Kante der Schicht auf ihre eigene linke,
@@ -135,6 +139,43 @@ public final class RoomRenderer {
             guard let factor = container.userData?["parallax"] as? Double else { continue }
             container.position = CGPoint(x: cameraPosition.x * (1 - factor),
                                          y: cameraPosition.y * (1 - factor) * 0.5)
+        }
+    }
+
+    /// Der Unterbau der Plattformen.
+    ///
+    /// In den Vorbildern schwebt keine Plattform - jede sitzt auf einer
+    /// Konsole, und dahinter liegt eine abgeschattete Ebene. Unsere waren
+    /// Bretter in der Luft. Der Sockel haengt unter der Plattform heraus
+    /// und liegt hinter dem Gelaende.
+    private func buildSockel(room: Room) {
+        let region = room.region.rawValue
+        for ty in 0..<room.height {
+            var tx = 0
+            while tx < room.width {
+                guard room.tile(tx, ty) == .platform else { tx += 1; continue }
+                let start = tx
+                while tx < room.width, room.tile(tx, ty) == .platform { tx += 1 }
+
+                // Ein einziger Sockel in der Mitte reichte nur fuer kurze
+                // Plattformen. Ueber zwanzig Kacheln hinweg sass darunter
+                // ein handbreiter Klumpen und links und rechts davon
+                // schwebte das Brett weiter. Also alle drei Kacheln einer -
+                // sie ueberlappen sich und ergeben eine durchgehende Masse.
+                let breite = tx - start
+                let anzahl = max(1, Int((Double(breite) / 3.0).rounded()))
+                for k in 0..<anzahl {
+                    let mitte = Double(start)
+                        + Double(breite) * (Double(k) + 0.5) / Double(anzahl)
+                    let node = atlas.sprite(
+                        "sockel_\(region)_\((Int(mitte) &* 7 &+ ty &* 3 &+ k &* 5) % 3)")
+                    node.anchorPoint = CGPoint(x: 0.5, y: 1.0)
+                    node.position = CGPoint(x: mitte * tileSize,
+                                            y: -Double(ty) * tileSize - 4)
+                    node.zPosition = -1
+                    layers.terrain.addChild(node)
+                }
+            }
         }
     }
 
@@ -446,12 +487,20 @@ public final class RoomRenderer {
         return skyColor(for: Region(rawValue: kulisse) ?? fallback)
     }
 
+    /// Die Farbe hinter allen Schichten.
+    ///
+    /// Sie muss dem oberen Ende des Himmelsverlaufs entsprechen, den
+    /// `gen_backdrops.py` in Schicht 0 zeichnet. Vorher war sie deutlich
+    /// heller, weil Schicht 0 halbdurchsichtig darueberlag und sich mit
+    /// ihr mischte. Seit Schicht 0 deckend ist, sieht man diese Farbe nur
+    /// noch ueber ihrem oberen Rand - in hohen Raeumen - und dort wuerde
+    /// jede Abweichung als waagerechte Kante quer durchs Bild laufen.
     private func skyColor(for region: Region) -> SKColor {
         switch region {
-        case .hain: return SKColor(red: 0.49, green: 0.55, blue: 0.58, alpha: 1)
-        case .kathedrale: return SKColor(red: 0.56, green: 0.55, blue: 0.63, alpha: 1)
-        case .grotten: return SKColor(red: 0.56, green: 0.64, blue: 0.71, alpha: 1)
-        case .dissonanz: return SKColor(red: 0.43, green: 0.32, blue: 0.35, alpha: 1)
+        case .hain: return SKColor(red: 0.224, green: 0.278, blue: 0.294, alpha: 1)
+        case .kathedrale: return SKColor(red: 0.231, green: 0.220, blue: 0.314, alpha: 1)
+        case .grotten: return SKColor(red: 0.200, green: 0.255, blue: 0.310, alpha: 1)
+        case .dissonanz: return SKColor(red: 0.200, green: 0.149, blue: 0.165, alpha: 1)
         }
     }
 

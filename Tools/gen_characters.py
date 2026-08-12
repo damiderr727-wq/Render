@@ -269,6 +269,126 @@ def _draw_klinge(c: Canvas, *, cx: int, base: float, height: float, phase: float
            (rosa[0], rosa[1], rosa[2], 40))
 
 
+def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
+                  schwung: float, lean: float) -> None:
+    """
+    Der Schlag: die Klinge verlaesst den Ruecken und faehrt einen Bogen.
+
+    Der erste Fehler war, dass die Klinge waehrend des Schlags *auf ihrem
+    Ruecken liegen blieb*. Sie hat sich nach vorn geneigt und ein wenig
+    geleuchtet, und die Waffe hat nichts getan.
+
+    Der zweite Fehler war der Nachzieher: fuenf blassere Kopien der
+    Klinge auf frueheren Winkeln. Das liest sich nicht als Bewegung,
+    sondern als Faecher aus Stoecken. Eine Klinge, die durch die Luft
+    faehrt, hinterlaesst keine Klingen - sie hinterlaesst eine
+    **gewischte Flaeche**, und die wird hier zwischen zwei Winkeln
+    gefuellt, aussen hell und nach innen auslaufend.
+
+    Dazu ist die Klinge im Schlag kuerzer als auf dem Ruecken. Sie fuehrt
+    sie mit ausgestrecktem Arm, nicht ueber dem Kopf - eine Fechterin,
+    keine Holzfaellerin.
+
+    Der dritte Fehler war der Massstab. Die Figur ist knapp vierzig Pixel
+    hoch; auf dieser Groesse *kann* eine Klinge keinen Schlag erzaehlen -
+    sie ist zwei Pixel breit und dreht sich um wenige Grad pro Bild. Was
+    man sieht, ist immer nur der **Bogen**. Beim Vorbild ist der Nagel
+    kaum zu erkennen, die weisse Sichel dagegen fuellt den halben
+    Bildschirm, und genau deshalb liest man den Schlag sofort.
+
+    Also andersherum gebaut als vorher: zuerst der Bogen, gross, mit
+    gleichmaessiger Dicke und einer hellen Vorderkante; die Klinge liegt
+    danach auf seiner Vorderkante und ist nur noch die Begruendung. Der
+    Bogen beginnt weit hinter der Klinge und endet an ihr - vorne hell
+    und geschlossen, hinten duenn und offen. Er startet ausserdem
+    ausserhalb ihrer Silhouette: ein Bogen, der durch die Figur laeuft,
+    sieht aus wie ein Strich quer durchs Bild.
+
+    `schwung` 0 = ausgeholt, 1 = durchgezogen.
+    """
+    S = HERO_SCALE
+    rosa = mix(hexc("#ff7ad0"), P.CLOAK, 0.14)
+    rosa_hi = mix(rosa, P.BONE, 0.55)
+    rosa_lo = mix(rosa, P.CLOAK, 0.5)
+
+    # Der Drehpunkt ist die Schulter, nicht die Hand: von dort geht der
+    # Bogen aus, und nur deshalb liegt sein Mittelpunkt ruhig, waehrend
+    # sich alles andere bewegt.
+    dreh_x = cx + 0.6 * S + lean * 0.4
+    dreh_y = base - height * 0.60
+
+    # Von schraeg oben hinten nach vorn unten. In Leinwandkoordinaten
+    # zeigt +y nach unten, also ist -1.85 rad oben-hinten und +0.42
+    # vorn-leicht-unten.
+    a0, a1 = -1.85, 0.42
+    t = schwung ** 0.78
+    winkel = a0 + (a1 - a0) * t
+
+    # Der Arm streckt sich erst im Durchzug. Bei voller Reichweite schon
+    # im Ausholen stand die Spitze ueber dem oberen Bildrand und wurde
+    # abgeschnitten - und ein angeschnittener Schlag liest sich nicht.
+    reichweite = height * (0.46 + 0.18 * t)
+
+    # --- Der Bogen.
+    # Zum Schluss klingt er ab: im letzten Bild soll die ausgestreckte
+    # Klinge stehen, nicht noch einmal dieselbe Sichel.
+    verblassen = 1.0 if t < 0.80 else 1.0 - (t - 0.80) / 0.20 * 0.62
+    if t > 0.06:
+        # Er zieht einen festen Winkelbetrag hinter sich her, statt bis
+        # zum Anfang zurueckzureichen: sonst steht im letzten Bild ein
+        # halber Kreis um sie herum.
+        schleppe = min(t, 0.62)
+        r_innen, r_aussen = reichweite * 0.70, reichweite * 1.00
+        schritte = 46
+        for k in range(schritte):
+            u = k / (schritte - 1)          # 0 = Ende der Schleppe, 1 = Klinge
+            a = a0 + (a1 - a0) * (t - schleppe * (1 - u))
+            ax, ay = math.cos(a), math.sin(a)
+            # Vorn ist der Bogen dick und deckend, hinten duenn und blass.
+            dicke = 0.30 + 0.70 * u ** 0.9
+            r0 = r_aussen - (r_aussen - r_innen) * dicke
+            deckung = int((230 * u ** 1.35 + 12) * verblassen)
+            i = r0
+            while i <= r_aussen:
+                px, py = dreh_x + ax * i, dreh_y + ay * i
+                v = (i - r0) / max(1.0, r_aussen - r0)
+                # Aussen heller: die Vorderkante der Sichel traegt das Licht.
+                col = mix(rosa, P.BONE, 0.10 + v * 0.55 + u * 0.25)
+                c.blend(int(px), int(py), (col[0], col[1], col[2], deckung))
+                i += 0.5
+            # Die Vorderkante noch einmal, deckend - sie ist die Linie,
+            # an der das Auge den Schlag festmacht.
+            if u > 0.55 and verblassen > 0.7:
+                for r in (r_aussen, r_aussen - 0.6):
+                    c.set(int(dreh_x + ax * r), int(dreh_y + ay * r),
+                          mix(P.BONE, rosa_hi, 0.35))
+
+    # --- Die Klinge, auf der Vorderkante des Bogens.
+    ax, ay = math.cos(winkel), math.sin(winkel)
+    hand = reichweite * 0.24
+    for i in range(int(hand), int(reichweite)):
+        v = max(0.0, (i - hand) / (reichweite - hand))
+        w = (1.9 - 1.5 * v ** 0.8) * S
+        px, py = dreh_x + ax * i, dreh_y + ay * i
+        for dq in range(-int(w), int(w) + 1):
+            qx, qy = px - ay * dq, py + ax * dq
+            c.set(int(qx), int(qy),
+                  (rosa_hi if dq >= int(w) else rosa) if dq > 0 else rosa_lo)
+
+    # Faust, Parierstueck, Knauf - drei Punkte, mehr traegt die Groesse nicht.
+    fx, fy = dreh_x + ax * hand, dreh_y + ay * hand
+    c.ellipse(fx, fy, 1.6 * S, 1.6 * S, P.BONE_SH)
+    for k in (-2, -1, 1, 2):
+        c.set(int(fx - ay * k), int(fy + ax * k), rosa_lo)
+    for i in range(int(2.5 * S)):
+        c.set(int(fx - ax * (i + 1)), int(fy - ay * (i + 1)),
+              mix(rosa_lo, P.CLOAK, 0.35))
+
+    spitze = (dreh_x + ax * reichweite, dreh_y + ay * reichweite)
+    c.set(int(spitze[0]), int(spitze[1]), mix(rosa_hi, P.BONE, 0.7))
+    c.glow(spitze[0], spitze[1], 5 * S, (rosa[0], rosa[1], rosa[2], 55))
+
+
 def _draw_beine(c: Canvas, *, cx: int, base: float, height: float, phase: float,
                 lean: float, leg_phase: float | None, leg_spread: float,
                 crouch: float, settle: float, smear: float) -> None:
@@ -817,6 +937,9 @@ def draw_heroine(
     smear: float = 0.0,       # waagerechtes Verwischen (Herzschlag)
     split: float = 0.0,       # Resonanz zieht die Gestalt auseinander
     whip: float = 0.0,        # Ausschlag beim Schlag
+    # Der Schlag selbst: 0 ausgeholt, 1 durchgezogen. `None` heisst, die
+    # Klinge bleibt auf dem Ruecken.
+    schwung: float | None = None,
     settle: float = 0.0,      # Absinken (Rast, Landung)
     aim: float = 0.0,
     glow: float = 1.0,
@@ -848,9 +971,12 @@ def draw_heroine(
                       height=height, phase=phase, lean=lean, smear=smear,
                       split=split, sway=sway, hinter=True)
 
-    # Die Klinge liegt auf ihrem Ruecken, also hinter allem anderen.
-    _draw_klinge(c, cx=cx, base=base, height=height, phase=phase,
-                 lean=lean, sway=sway)
+    # Die Klinge liegt auf ihrem Ruecken, also hinter allem anderen -
+    # ausser sie schlaegt gerade zu. Dann kommt sie ganz zum Schluss
+    # nach vorn (siehe unten).
+    if schwung is None:
+        _draw_klinge(c, cx=cx, base=base, height=height, phase=phase,
+                     lean=lean, sway=sway)
 
     # --- Die Beine --------------------------------------------------------
     #
@@ -973,6 +1099,10 @@ def draw_heroine(
     if alpha_body < 255:
         for i in range(len(c.px)):
             c.px[i][3] = int(c.px[i][3] * alpha_body / 255)
+    if schwung is not None:
+        _draw_schwung(c, cx=cx, base=base, height=height,
+                      schwung=schwung, lean=lean)
+
     return c
 
 
@@ -1129,19 +1259,19 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     anims["melee"] = [
         draw_heroine(instrument=instrument, garment=garment,
                      signatur=laut("melee"), phase=0.1, lean=-2.4, whip=-0.55,
-                     stretch=1.10, settle=-1, glow=0.9),
+                     stretch=1.10, settle=-1, glow=0.9, schwung=0.0),
         draw_heroine(instrument=instrument, garment=garment,
                      signatur=laut("melee"), phase=0.9, lean=1.2, whip=0.35,
-                     stretch=1.02, smear=0.5, glow=1.4),
+                     stretch=1.02, smear=0.5, glow=1.4, schwung=0.30),
         draw_heroine(instrument=instrument, garment=garment,
                      signatur=laut("melee"), phase=1.7, lean=3.8, whip=0.95,
-                     stretch=0.90, smear=0.85, glow=1.8),
+                     stretch=0.90, smear=0.85, glow=1.8, schwung=0.66),
         draw_heroine(instrument=instrument, garment=garment,
                      signatur=laut("melee"), phase=2.4, lean=2.6, whip=0.55,
-                     stretch=0.96, smear=0.25, glow=1.3),
+                     stretch=0.96, smear=0.25, glow=1.3, schwung=0.88),
         draw_heroine(instrument=instrument, garment=garment,
                      signatur=laut("melee"), phase=3.0, lean=1.0, whip=0.15,
-                     stretch=1.02, glow=1.1),
+                     stretch=1.02, glow=1.1, schwung=1.0),
     ]
 
     # Fernkampf: sie zieht sich zusammen und stoesst den Ton aus.

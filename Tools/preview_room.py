@@ -103,11 +103,11 @@ def render(room_id: str) -> Image.Image:
         canvas.paste(sky_img.crop((0, 0, sky_img.width, 1)).resize((w * TS, h * TS)),
                      (0, 0))
 
-    for layer in range(3):
+    for layer in range(4):
         img, _ = backdrops.frame(f"{kulisse}_bg{layer}")
         if img is None:
             continue
-        alpha = [0.42, 0.54, 0.70][layer]
+        alpha = [1.0, 0.46, 0.58, 0.74][layer]
         faded = img.copy()
         faded.putalpha(faded.getchannel("A").point(lambda v: int(v * alpha)))
         oben = h * TS - img.height
@@ -117,6 +117,30 @@ def render(room_id: str) -> Image.Image:
         gespiegelt = faded.transpose(Image.FLIP_LEFT_RIGHT)
         for i, ox in enumerate(range(0, w * TS, img.width)):
             canvas.alpha_composite(gespiegelt if i % 2 else faded, (ox, oben))
+
+    # Der Unterbau der Plattformen - vor dem Gelaende gezeichnet, damit
+    # er dahinter liegt. Ohne ihn schweben Plattformen als Bretter in der
+    # Luft, und genau daran erkennt man ein Kachelbild.
+    for y in range(h):
+        x = 0
+        while x < w:
+            if tiles[y][x] != "=":
+                x += 1
+                continue
+            start = x
+            while x < w and tiles[y][x] == "=":
+                x += 1
+            # Alle drei Kacheln einer, damit auch lange Plattformen
+            # durchgehend auf etwas sitzen - genau wie im Spiel.
+            breite = x - start
+            anzahl = max(1, round(breite / 3))
+            for k in range(anzahl):
+                mitte = start + breite * (k + 0.5) / anzahl
+                img, pivot = tile_atlas.frame(
+                    f"sockel_{region}_{(int(mitte) * 7 + y * 3 + k * 5) % 3}")
+                if img is not None:
+                    canvas.alpha_composite(
+                        img, (int(mitte * TS - img.width / 2), int(y * TS + 4)))
 
     # Gelaende
     for y in range(h):

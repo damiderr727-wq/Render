@@ -27,6 +27,14 @@ REGIONS = ["hain", "kathedrale", "grotten", "dissonanz"]
 
 TILE_OVERHANG = 8   # Platz ueber der Kachel fuer Bewuchs, der ueberhaengt
 
+# Und dasselbe nach unten. Eine Bodenmasse, unter der Luft ist, endete
+# bisher an einer geraden Kante mit ein paar Zapfen darauf - ein Brett.
+# In den Vorbildern haengt unter jeder freiliegenden Unterseite etwas:
+# Wurzeln, Moos, abgebrochener Fels. Der Platz dafuer muss in der Kachel
+# stehen, sonst wird er am Raster abgeschnitten.
+TILE_UNDERHANG = 12
+TILE_H = TS + TILE_OVERHANG + TILE_UNDERHANG
+
 
 def tile_solid(region: str, variant: int, edges: str) -> Canvas:
     """
@@ -42,7 +50,7 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
     'l' links, 'r' rechts.
     """
     body, edge, accent = P.REGIONS[region][:3]
-    c = Canvas(TS, TS + TILE_OVERHANG)
+    c = Canvas(TS, TILE_H)
     top = TILE_OVERHANG
     rng = Rng(1000 + variant * 7919 + (sum(map(ord, region)) * 131) % 4096)
 
@@ -156,13 +164,54 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
                     rx += 1 if rng.chance(0.5) else -1
 
     if "b" in edges:
-        c.rect(0, top + TS - 1, TS, 1, shade(body, -0.45))
-        # Ausgefranste Unterkante mit einzelnen Zapfen.
+        # Die Unterkante bekommt dieselbe Behandlung wie der Kamm, nur
+        # andersherum: ein unregelmaessiges Profil statt einer Linie, und
+        # darunter haengt etwas in den Unterhang hinein.
+        boden = top + TS
+        saum = _crest_profile(variant + 90, amplitude=3)
         for x in range(TS):
-            if hash01(x * 3, variant + 40) > 0.62:
-                c.set(x, top + TS - 2, shade(body, -0.32))
-                if hash01(x, 51) > 0.7:
-                    c.set(x, top + TS - 3, shade(body, -0.22))
+            k = saum[x]
+            for i in range(k):
+                c.set(x, boden + i, mix(shade(body, -0.34), shade(body, -0.52),
+                                        i / max(1, k)))
+            c.set(x, boden + k - 1 if k else boden - 1, shade(body, -0.55))
+
+        if region == "hain":
+            # Wurzeln. Sie sind das, was einen Erdvorsprung von einem
+            # Brett unterscheidet - unterschiedlich lang, leicht driftend,
+            # und die laengsten haengen frei.
+            wurzel = mix(shade(body, -0.42), edge, 0.10)
+            for x in range(TS):
+                if hash01(x * 7 + variant * 29, 61) > 0.52:
+                    continue
+                laenge = 2 + hash01(x, variant + 7) * (TILE_UNDERHANG - 3)
+                drift = (hash01(x, 71) - 0.5) * 0.5
+                px = float(x)
+                for i in range(int(laenge)):
+                    t = i / max(1.0, laenge)
+                    px += drift
+                    c.set(int(px), boden + saum[x] + i,
+                          mix(wurzel, P.INK, 0.15 + t * 0.55))
+        elif region == "grotten":
+            for x in range(0, TS, 3):
+                if hash01(x, variant + 31) > 0.55:
+                    ln = 2 + int(hash01(x, 41) * 7)
+                    for i in range(ln):
+                        c.set(x, boden + saum[x] + i,
+                              mix(accent, shade(body, -0.5), 0.3 + i / ln * 0.6))
+        elif region == "dissonanz":
+            for x in range(TS):
+                if hash01(x * 5, variant + 17) > 0.66:
+                    ln = 2 + int(hash01(x, 13) * 6)
+                    for i in range(ln):
+                        c.set(x, boden + saum[x] + i,
+                              mix(P.ROT_DIM, P.INK, 0.2 + i / ln * 0.7))
+        else:
+            # Kathedrale: kein Bewuchs, aber abgebrochener Stein.
+            for x in range(TS):
+                if hash01(x * 3, variant + 23) > 0.7:
+                    c.set(x, boden + saum[x], shade(body, -0.5))
+                    c.set(x, boden + saum[x] + 1, shade(body, -0.58))
     # Seitenkanten nur angedeutet: eine durchgezogene Linie ueber mehrere
     # Kacheln hinweg liest sich sofort als Raster.
     if "l" in edges:
@@ -389,6 +438,147 @@ def tile_spike(region: str) -> Canvas:
             c.rect(x0, TS - 3 - y, w, 1, col)
         c.set(bx, TS - 3 - h, mix(P.ROT, P.WARM, 0.5))
     c.glow(TS / 2, TS - 8, 10, (P.ROT[0], P.ROT[1], P.ROT[2], 34))
+    return c
+
+
+def sockel(region: str, variant: int) -> Canvas:
+    """
+    Der Unterbau einer Plattform.
+
+    In den Vorbildern schwebt keine Plattform. Jede sitzt auf etwas: auf
+    einem gewachsenen Vorsprung, einer Konsole, einem Wurzelballen - und
+    dahinter liegt noch eine abgeschattete Ebene. Unsere Plattformen waren
+    Bretter in der Luft, und genau daran erkennt man ein Kachelbild.
+
+    Der erste Anlauf machte daraus ueberall dieselbe Konsole: 40 Pixel
+    hoch, symmetrisch, nach unten spitz zulaufend. Im Raum las sich das
+    als haengender Zapfen, nicht als Unterbau - schmaler als die
+    Plattform, hoeher als breit, und in jeder Region gleich. Drei Regeln
+    kamen daraus:
+
+      Breiter als hoch. Ein Unterbau traegt, er baumelt nicht.
+      Unsymmetrisch. Zwei Spiegelhaelften ergeben immer einen Trichter.
+      Regionseigen. Im Hain ist es ein Wurzelballen aus Erde, im Stein
+      eine Konsole, im Kristall ein Absatz - nicht dreimal dasselbe.
+
+    Der Sockel wird hinter die Plattform gesetzt (Ursprung oben Mitte) und
+    haengt unter ihr heraus.
+    """
+    body, edge, accent = P.REGIONS[region][:3]
+    breite, hoehe = 54, 26
+    c = Canvas(breite, hoehe)
+    cx = breite / 2
+    rng = Rng(2400 + variant * 617 + sum(map(ord, region)) * 29)
+
+    fels = shade(body, -0.10)
+    fels_hi = mix(fels, edge, 0.30)
+    fels_lo = shade(body, -0.40)
+
+    # Die abgeschattete Platte dahinter - der eigentliche Trick. Sie ist
+    # breiter als der Koerper und verliert nach unten die Deckkraft, damit
+    # der Hintergrund an dieser Stelle zurueckfaellt.
+    for y in range(hoehe):
+        halb = 25 - y * 0.55
+        if halb < 2:
+            break
+        a = int(96 * (1 - y / hoehe) ** 0.8)
+        c.rect(int(cx - halb), y, int(halb * 2), 1,
+               (fels_lo[0], fels_lo[1], fels_lo[2], a))
+
+    # Die Silhouette: eine Unterkante, die ueber die Breite frei laeuft.
+    # Links und rechts endet sie flach, in der Mitte haengt die Masse am
+    # tiefsten - aber nicht mittig.
+    #
+    # Die Kurve braucht ein Plateau. Mit einer spitzen Glocke wurde der
+    # Sockel ein Dreieck, und ein Dreieck unter einem Brett sieht aus wie
+    # ein ausgeschnittenes Stueck Papier. Ein hoher Exponent haelt die
+    # Mitte flach und laesst sie erst an den Enden schnell abfallen - das
+    # ist ein Klumpen, kein Keil.
+    schwer = 0.34 + variant * 0.16          # wo der Ballen am dicksten ist
+    unten = []
+    for x in range(breite):
+        u = x / (breite - 1)
+        d = abs(u - schwer) / max(schwer, 1 - schwer)
+        h = (1 - d ** 3.2) * (hoehe - 5)
+        # Zwei ungleiche Wellen brechen die Kurve auf, damit man sie nicht
+        # mehr als Kurve liest.
+        h *= 0.80 + 0.13 * math.sin(u * 9.0 + variant) \
+             + 0.07 * math.sin(u * 23.0 + variant * 2.1)
+        h += hash01(x * 5, variant * 13) * 3.0 - 1.0
+        unten.append(max(0, min(hoehe - 1, int(h))))
+
+    for x in range(breite):
+        tief = unten[x]
+        for y in range(tief):
+            t = y / max(1, tief)
+            q = (x - cx) / (breite / 2)
+            # Licht von rechts oben: die rechte Flanke bleibt hell, nach
+            # unten faellt alles in den Schatten.
+            hell = max(0.0, 0.55 - abs(q - 0.35) * 0.9) * (1 - t) ** 0.8
+            c.set(x, y, mix(fels_lo, fels_hi, min(1.0, 0.25 + hell)))
+        if tief:
+            c.set(x, tief - 1, shade(fels_lo, -0.20))
+
+    if region == "hain":
+        # Erdballen: Wurzeln, die aus der Unterkante heraushaengen, und
+        # eingelagerte Steine. Das Gras oben liefert die Plattform selbst.
+        wurzel = mix(fels_lo, P.INK, 0.35)
+        for _ in range(rng.int(4, 7)):
+            x = rng.int(6, breite - 7)
+            if unten[x] < 5:
+                continue
+            laenge = rng.range(4, 11)
+            drift = rng.range(-0.35, 0.35)
+            for i in range(int(laenge)):
+                px = x + drift * i + math.sin(i * 0.6) * 1.2
+                c.set(int(px), unten[x] + i, wurzel)
+                if i < laenge * 0.4:
+                    c.set(int(px) + 1, unten[x] + i, mix(wurzel, fels, 0.4))
+        for _ in range(rng.int(2, 4)):
+            px, py = rng.int(8, breite - 9), rng.int(4, hoehe - 10)
+            if py < unten[px] - 3:
+                r = rng.range(1.6, 3.0)
+                c.ellipse(px, py, r, r * 0.78, shade(fels, -0.20))
+                c.ellipse(px + 0.5, py - 0.6, r * 0.6, r * 0.5, mix(fels, edge, 0.25))
+    elif region == "kathedrale":
+        # Eine Konsole: zwei Absaetze und eine Einrollung, aber nur auf
+        # einer Seite - eine Kragsteinkonsole ist nie symmetrisch.
+        for y0, w in ((5, 21), (11, 15)):
+            c.rect(int(cx - w), y0, w * 2, 1, mix(fels_hi, accent, 0.16))
+            c.rect(int(cx - w), y0 + 1, w * 2, 1, fels_lo)
+        mx, my = cx + (4 if variant % 2 else -5), hoehe - 9
+        for i in range(24):
+            a = i / 24 * math.tau * 1.2
+            rr = 4.2 * (1 - i / 40)
+            c.set(int(mx + math.cos(a) * rr), int(my + math.sin(a) * rr * 0.8),
+                  mix(fels_hi, accent, 0.14))
+    elif region == "grotten":
+        # Kristallnadeln, die unter dem Absatz hervorstehen.
+        for _ in range(rng.int(2, 4)):
+            x = rng.int(8, breite - 9)
+            if unten[x] < 6:
+                continue
+            ln = rng.int(4, 9)
+            for i in range(ln):
+                t = i / ln
+                w = max(1, int(2.4 * (1 - t)))
+                c.rect(x - w // 2, unten[x] - 2 + i, w, 1,
+                       mix(accent, fels_lo, 0.3 + t * 0.5))
+    else:
+        # Dissonanz: die Faeule frisst sich von unten in den Sockel.
+        for x in range(breite):
+            if unten[x] > 4 and hash01(x * 3, variant) > 0.6:
+                d = rng.int(2, 5)
+                for i in range(d):
+                    c.set(x, unten[x] - 1 - i,
+                          mix(P.ROT_DIM, fels_lo, 0.3 + i / d * 0.6))
+
+    # Der Lichtsaum an der Oberkante, wo die Plattform aufliegt - er
+    # verbindet Sockel und Plattform zu einem Stueck.
+    for x in range(breite):
+        if unten[x] > 1:
+            c.set(x, 0, mix(fels_hi, accent, 0.22))
+            c.set(x, 1, fels_hi)
     return c
 
 
@@ -1045,7 +1235,7 @@ def build() -> None:
             for v in range(6):
                 tiles.add(f"{region}_solid_{edges or 'mid'}_{v}",
                           tile_solid(region, v, edges),
-                          pivot=(0, TILE_OVERHANG / (TS + TILE_OVERHANG)))
+                          pivot=(0, TILE_OVERHANG / TILE_H))
         for v in range(4):
             for name, (a, b) in SLOPE_KINDS.items():
                 tiles.add(f"{region}_slope_{name}_{v}", tile_slope(region, v, a, b),
@@ -1077,6 +1267,9 @@ def build() -> None:
             tiles.add_sequence(f"edge_{region}_{v}",
                                [edge_prop(region, v, f, 6) for f in range(6)],
                                pivot=(0.5, 1.0), fps=4)
+            # Der Unterbau einer Plattform: dahinter und darunter.
+            if v < 3:
+                tiles.add(f"sockel_{region}_{v}", sockel(region, v), pivot=(0.5, 0.0))
             # Dasselbe fuer die Decke, aufgehaengt an der Oberkante.
             tiles.add_sequence(f"hang_{region}_{v}",
                                [hang_prop(region, v, f, 6) for f in range(6)],

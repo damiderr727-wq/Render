@@ -116,6 +116,71 @@ public struct Bestiarium: Sendable {
             schwelle: 5),
     ]
 
+    // MARK: - Die Grossen
+    //
+    // Ein Boss gehoert ins Bestiarium, aber nicht nach derselben Regel.
+    //
+    // Bei den Kreaturen ist Verstehen eine Frage der Menge: man begegnet
+    // einer Gabelmaus dreimal, und beim dritten Mal weiss man, was sie
+    // tut. Einem Boss begegnet man einmal. Dieselbe Regel wuerde
+    // bedeuten, dass sein Eintrag nie aufgeht - oder dass er nach einem
+    // einzigen Kampf so vollstaendig dasteht wie der einer Motte, der
+    // vier Begegnungen gekostet hat.
+    //
+    // Darum: **gesehen, sobald man den Raum betritt** - man weicht ihm ja
+    // nicht aus - und **verstanden, sobald er liegt.** Nicht die Anzahl
+    // zaehlt, sondern der Ausgang.
+    public struct GrosserEintrag: Sendable {
+        public let art: Boss.Art
+        public let name: String
+        public let titel: String
+        public let verhalten: [String]
+        public let deutung: [String]
+
+        public var maxHealth: Int { art.health }
+    }
+
+    public static let grosse: [GrosserEintrag] = [
+        GrosserEintrag(
+            art: .auftakt,
+            name: "DER GROSSE AUFTAKT",
+            titel: "WAS VOR DEM ERSTEN TON KAM",
+            verhalten: [
+                "Haengt an vier Faeden und schlaegt seinen Schatten auf den",
+                "Boden, lange nachdem er ihn angesagt hat. Wer zusieht,",
+                "statt zu hetzen, kommt an ihm vorbei.",
+            ],
+            deutung: [
+                "Ein Auftakt ist der Schlag *vor* dem ersten Ton - nichts",
+                "als Vorbereitung. Dieser hier hat nie aufgehoert",
+                "vorzubereiten, weil nach ihm nichts mehr kam.",
+            ]),
+        GrosserEintrag(
+            art: .kantor,
+            name: "DER VERSTIMMTE KANTOR",
+            titel: "DER DAS MASS HIELT",
+            verhalten: [
+                "Pfeift, ruft und schlaegt - und alles davon im Takt, den",
+                "er selbst vorgibt. Wer seinen Takt trifft, trifft ihn.",
+            ],
+            deutung: [
+                "Er hat die Welt gestimmt, solange es eine Welt gab, die",
+                "sich stimmen liess. Was danach kam, hat er weiter",
+                "gestimmt.",
+            ]),
+    ]
+
+    public static func grosser(fuer art: Boss.Art) -> GrosserEintrag? {
+        grosse.first { $0.art == art }
+    }
+
+    /// Der Stand eines Bosseintrags. Eigene Regel, siehe oben.
+    public static func stand(fuer art: Boss.Art, in save: SaveState) -> Stand {
+        if save.erlegt["boss_" + art.rawValue] ?? 0 > 0 { return .verstanden }
+        if save.gesehen.contains("boss_" + art.rawValue) { return .gesehen }
+        return .unbekannt
+    }
+
     public static func eintrag(fuer art: EnemyKind) -> Eintrag? {
         eintraege.first { $0.art == art }
     }

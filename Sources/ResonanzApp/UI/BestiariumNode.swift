@@ -76,11 +76,19 @@ public final class BestiariumNode: SKNode {
         isHidden = true
     }
 
+    /// Wie viele Zeilen die Liste hat: Kreaturen, dann die Grossen.
+    ///
+    /// Beide stehen in derselben Liste und werden mit demselben Index
+    /// durchgeblaettert - ein zweites Menue fuer zwei Eintraege waere
+    /// mehr Bedienung als Inhalt. Was sie unterscheidet, ist die Regel,
+    /// nach der sie aufgehen, und die steht im Bestiarium selbst.
+    private var zeilen: Int { Bestiarium.eintraege.count + Bestiarium.grosse.count }
+
     /// Blaettern. Gibt zurueck, ob sich etwas geaendert hat.
     @discardableResult
     public func blaettern(_ richtung: Int, save: SaveState) -> Bool {
         guard offen, richtung != 0 else { return false }
-        let anzahl = Bestiarium.eintraege.count
+        let anzahl = zeilen
         let neu = (auswahl + richtung + anzahl) % anzahl
         guard neu != auswahl else { return false }
         auswahl = neu
@@ -94,8 +102,11 @@ public final class BestiariumNode: SKNode {
         liste.removeAllChildren()
         seite.removeAllChildren()
 
-        let verstanden = Bestiarium.verstanden(in: save)
-        let zaehler = beschriftung("\(verstanden) / \(Bestiarium.eintraege.count)",
+        let verstandenGross = Bestiarium.grosse.filter {
+            Bestiarium.stand(fuer: $0.art, in: save) == .verstanden
+        }.count
+        let verstanden = Bestiarium.verstanden(in: save) + verstandenGross
+        let zaehler = beschriftung("\(verstanden) / \(zeilen)",
                                    groesse: 7, farbe: SKColor(white: 0.5, alpha: 1),
                                    ausrichtung: .left)
         zaehler.position = CGPoint(x: 0, y: 0)
@@ -119,6 +130,38 @@ public final class BestiariumNode: SKNode {
                                      groesse: 8, farbe: farbe, ausrichtung: .left)
             zeile.position = CGPoint(x: 0, y: -22 - CGFloat(i) * 14)
             liste.addChild(zeile)
+        }
+
+        // Die Grossen stehen unter einem Strich - sie gehen nach einer
+        // anderen Regel auf, und das soll man der Liste ansehen.
+        let trenner = SKSpriteNode(color: SKColor(white: 0.3, alpha: 1),
+                                   size: CGSize(width: 96, height: 1))
+        trenner.anchorPoint = CGPoint(x: 0, y: 0.5)
+        trenner.position = CGPoint(
+            x: 0, y: -24 - CGFloat(Bestiarium.eintraege.count) * 14)
+        liste.addChild(trenner)
+
+        for (k, gross) in Bestiarium.grosse.enumerated() {
+            let i = Bestiarium.eintraege.count + k
+            let stand = Bestiarium.stand(fuer: gross.art, in: save)
+            let gewaehlt = i == auswahl
+            let text = stand == .unbekannt ? "- - - - -" : gross.name
+            let farbe: SKColor
+            switch stand {
+            case .unbekannt: farbe = SKColor(white: 0.28, alpha: 1)
+            case .gesehen: farbe = SKColor(white: 0.62, alpha: 1)
+            case .verstanden: farbe = SKColor(red: 0.94, green: 0.62, blue: 0.55, alpha: 1)
+            }
+            let zeile = beschriftung((gewaehlt ? "> " : "  ") + text,
+                                     groesse: 8, farbe: farbe, ausrichtung: .left)
+            zeile.position = CGPoint(x: 0, y: -30 - CGFloat(i) * 14)
+            liste.addChild(zeile)
+        }
+
+        if auswahl >= Bestiarium.eintraege.count {
+            zeichneGrossen(Bestiarium.grosse[auswahl - Bestiarium.eintraege.count],
+                           save: save)
+            return
         }
 
         let eintrag = Bestiarium.eintraege[auswahl]
@@ -163,6 +206,72 @@ public final class BestiariumNode: SKNode {
         }
 
         var y: CGFloat = -74
+        for zeile in eintrag.verhalten {
+            let label = beschriftung(zeile, groesse: 7,
+                                     farbe: SKColor(white: 0.74, alpha: 1),
+                                     ausrichtung: .left)
+            label.position = CGPoint(x: 0, y: y)
+            seite.addChild(label)
+            y -= 12
+        }
+
+        guard stand == .verstanden else { return }
+        y -= 8
+        for zeile in eintrag.deutung {
+            let label = beschriftung(zeile, groesse: 7,
+                                     farbe: SKColor(red: 0.78, green: 0.72, blue: 0.58,
+                                                    alpha: 1),
+                                     ausrichtung: .left)
+            label.position = CGPoint(x: 0, y: y)
+            seite.addChild(label)
+            y -= 12
+        }
+    }
+
+    /// Die Seite eines Bosses.
+    ///
+    /// Sie zeigt keine Zaehlung "2 von 4" - die gibt es hier nicht. Statt
+    /// dessen steht da, ob er noch steht.
+    private func zeichneGrossen(_ eintrag: Bestiarium.GrosserEintrag,
+                                save: SaveState) {
+        let stand = Bestiarium.stand(fuer: eintrag.art, in: save)
+        guard stand != .unbekannt else {
+            let hinweis = beschriftung("NOCH NICHT BEGEGNET", groesse: 8,
+                                       farbe: SKColor(white: 0.34, alpha: 1),
+                                       ausrichtung: .left)
+            hinweis.position = CGPoint(x: 0, y: -60)
+            seite.addChild(hinweis)
+            return
+        }
+
+        let bild = atlas.sprite("\(eintrag.art.rawValue)_idle_2")
+        bild.setScale(1.4)
+        bild.anchorPoint = CGPoint(x: 0, y: 1)
+        bild.position = CGPoint(x: 0, y: -6)
+        seite.addChild(bild)
+
+        let rot = SKColor(red: 0.94, green: 0.62, blue: 0.55, alpha: 1)
+        let name = beschriftung(eintrag.name, groesse: 10, farbe: rot,
+                                ausrichtung: .left)
+        name.position = CGPoint(x: 92, y: -14)
+        seite.addChild(name)
+
+        let titel = beschriftung(eintrag.titel, groesse: 7,
+                                 farbe: SKColor(white: 0.55, alpha: 1),
+                                 ausrichtung: .left)
+        titel.position = CGPoint(x: 92, y: -28)
+        seite.addChild(titel)
+
+        let zustand = stand == .verstanden
+            ? "Leben \(eintrag.maxHealth)     ERLEGT"
+            : "Leben \(eintrag.maxHealth)     STEHT NOCH"
+        let werte = beschriftung(zustand, groesse: 7,
+                                 farbe: SKColor(white: 0.66, alpha: 1),
+                                 ausrichtung: .left)
+        werte.position = CGPoint(x: 92, y: -44)
+        seite.addChild(werte)
+
+        var y: CGFloat = -92
         for zeile in eintrag.verhalten {
             let label = beschriftung(zeile, groesse: 7,
                                      farbe: SKColor(white: 0.74, alpha: 1),

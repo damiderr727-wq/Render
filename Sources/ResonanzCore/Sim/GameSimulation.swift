@@ -144,7 +144,14 @@ public final class GameSimulation {
             // hat das Bestiarium den Eintrag - nur noch nicht seinen Inhalt.
             save.gesehen.insert(kind.rawValue)
         }
-        if let b = room.data.boss { save.gesehen.insert(b.type) }
+        // Ein Boss gilt als gesehen, sobald man seinen Raum betritt -
+        // ihm weicht man ja nicht aus. Der Schluessel bekommt ein
+        // Praefix, damit er nicht mit einer gleichnamigen Kreatur
+        // kollidiert.
+        if let b = room.data.boss {
+            save.gesehen.insert(b.type)
+            save.gesehen.insert("boss_" + b.type)
+        }
 
         for p in room.data.pickups {
             let key = "\(room.id)/\(p.id)"
@@ -268,6 +275,13 @@ public final class GameSimulation {
     /// soll auch so bleiben. Sie meldet nur, dass sie gefallen ist.
     private func zaehleErlegte(events: inout [GameEvent]) {
         var neu: [GameEvent] = []
+        // Der Boss zaehlt nach einer eigenen Regel: nicht wie oft, sondern
+        // ob. Einem Boss begegnet man einmal.
+        if events.contains(where: { if case .bossDefeated = $0 { return true }
+                                    return false }),
+           let art = boss?.art {
+            save.erlegt["boss_" + art.rawValue] = 1
+        }
         for event in events {
             guard case .enemyKilled(let art, _) = event,
                   let kind = EnemyKind(rawValue: art),

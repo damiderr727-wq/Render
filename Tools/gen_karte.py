@@ -218,15 +218,25 @@ def beschriften(bild: Image.Image, raum: dict, ox: int, oy: int) -> None:
 # Hohlraum der Raeume abgeleitet, nur geglaettet und angeraut. Wer die
 # gezeichnete Karte neben die technische legt, sieht dieselbe Welt.
 
-PAPIER = hexc("#e3d5b4")
-TINTE = hexc("#2b2118")
-TINTE_HELL = hexc("#6b5a44")
+# Die Karte ist dunkel, nicht hell.
+#
+# Der erste Anlauf war Tinte auf Pergament, und das war der falsche
+# Gedanke: eine Karte auf hellem Grund macht aus einer Hoehlenwelt eine
+# Wanderkarte. Die Vorbilder machen es umgekehrt - fast schwarzer Grund,
+# und die Gebiete leuchten daraus hervor, jedes in seiner eigenen Farbe.
+# Damit liest sich die Karte wie das Spiel: Licht in einer dunklen Welt.
+GRUND = hexc("#080b14")
+GRUND_HELL = hexc("#141b2c")
+TINTE = hexc("#e8eef6")
+TINTE_HELL = hexc("#7d8ba4")
 
+# Jedes Gebiet hat eine Leuchtfarbe und eine dunklere Fuellung. Der Umriss
+# leuchtet, die Flaeche bleibt zurueck - sonst blendet die Karte.
 WASCHUNG = {
-    "hain": hexc("#7d9668"),
-    "kathedrale": hexc("#8f7ea6"),
-    "grotten": hexc("#6d92ad"),
-    "dissonanz": hexc("#b26a63"),
+    "hain": (hexc("#8fd8a0"), hexc("#16301f")),
+    "kathedrale": (hexc("#b9a6ef"), hexc("#211a35")),
+    "grotten": (hexc("#7fd4f0"), hexc("#122736")),
+    "dissonanz": (hexc("#f08a7a"), hexc("#2e1418")),
 }
 
 
@@ -305,33 +315,32 @@ def zeichne_raum_kunst(bild: Image.Image, raum: dict, ox: float, oy: float,
     punkte += [(ox + x * m, oy + (unten[x] + 1) * m) for x in reversed(range(breite))]
     punkte = zittern(punkte, m * 0.55, saat)
 
-    # Die Waschung wird eine Spur groesser als der Umriss angelegt und
-    # dann weichgezeichnet - so laeuft die Farbe ueber die Tintenlinie
-    # hinaus, wie es Farbe auf Papier eben tut.
-    farbe = WASCHUNG[raum["region"]]
-    wasch = Image.new("RGBA", bild.size, (0, 0, 0, 0))
-    ImageDraw.Draw(wasch, "RGBA").polygon(punkte, fill=(*farbe[:3], 96))
-    wasch = wasch.filter(ImageFilter.GaussianBlur(m * 0.5))
-    bild.alpha_composite(wasch)
+    leucht, fuellung = WASCHUNG[raum["region"]]
+
+    # Erst ein Schein nach aussen: der Raum leuchtet in den schwarzen
+    # Grund hinein, statt scharf darin zu liegen.
+    schein = Image.new("RGBA", bild.size, (0, 0, 0, 0))
+    ImageDraw.Draw(schein, "RGBA").polygon(punkte, fill=(*leucht[:3], 70))
+    bild.alpha_composite(schein.filter(ImageFilter.GaussianBlur(m * 1.6)))
+
+    # Dann die Flaeche, dunkel und ruhig.
+    flaeche = Image.new("RGBA", bild.size, (0, 0, 0, 0))
+    ImageDraw.Draw(flaeche, "RGBA").polygon(punkte, fill=(*fuellung[:3], 246))
+    bild.alpha_composite(flaeche)
 
     z = ImageDraw.Draw(bild, "RGBA")
-    # Die Tinte wird zweimal gezogen, leicht versetzt: eine Hand trifft
-    # die eigene Linie nie genau, und genau das sieht man.
-    for versatz, breite_l, alpha in ((0.0, max(2, int(m * 0.45)), 210),
-                                     (m * 0.22, max(1, int(m * 0.25)), 90)):
-        linie = [(x + versatz, y + versatz * 0.6) for x, y in punkte]
-        z.line(linie + [linie[0]], fill=(*TINTE[:3], alpha), width=breite_l,
-               joint="curve")
+    # Der Umriss ist die Lichtquelle: zweimal gezogen, innen hell, aussen
+    # als weicher Saum.
+    z.line(punkte + [punkte[0]], fill=(*leucht[:3], 120),
+           width=max(3, int(m * 0.8)), joint="curve")
+    z.line(punkte + [punkte[0]], fill=(*leucht[:3], 255),
+           width=max(1, int(m * 0.32)), joint="curve")
 
-    # Schraffur am Boden: kurze Striche unter der Unterkante. Das ist die
-    # eine Geste, die eine Umrisszeichnung nach Hoehle aussehen laesst.
-    for x in range(2, breite - 2, 3):
-        if hash01(x, saat + 7) > 0.45:
-            hx = ox + x * m
-            hy = oy + (unten[x] + 1) * m
-            laenge = m * (0.6 + hash01(saat, x) * 0.9)
-            z.line([hx, hy, hx - laenge * 0.4, hy + laenge],
-                   fill=(*TINTE_HELL[:3], 120), width=max(1, int(m * 0.16)))
+    # Der Boden bekommt eine hellere Kante als die Decke: so sieht man,
+    # wo in einem Raum gelaufen wird.
+    boden = [(ox + x * m, oy + (unten[x] + 1) * m) for x in range(breite)]
+    z.line(zittern(boden, m * 0.3, saat + 5), fill=(*leucht[:3], 200),
+           width=max(2, int(m * 0.5)), joint="curve")
 
     return punkte
 
@@ -350,31 +359,19 @@ def build_kunst() -> None:
     breite = int((maxx - minx) * m) + rand * 2
     hoehe = int((maxy - miny) * m) + rand * 2 + 70
 
-    bild = Image.new("RGBA", (breite, hoehe), PAPIER)
+    bild = Image.new("RGBA", (breite, hoehe), GRUND)
 
-    # Papier: Koernung, ein paar Flecken, dunkle Raender. Ohne das bleibt
-    # es eine Zeichnung auf Weiss, und Weiss gibt es auf Papier nicht.
-    korn = Image.new("RGBA", (breite, hoehe), (0, 0, 0, 0))
-    kz = ImageDraw.Draw(korn, "RGBA")
-    for i in range(breite * hoehe // 900):
-        x = int(hash01(i, 3) * breite)
-        y = int(hash01(i, 11) * hoehe)
-        t = hash01(i, 29)
-        kz.point((x, y), fill=(90, 70, 45, int(14 + t * 26)))
-    for i in range(90):
+    # Der Grund ist nicht einfach schwarz: ein paar sehr dunkle Schwaden
+    # darin geben ihm Tiefe, ohne dass etwas darauf ablenkt.
+    dunst = Image.new("RGBA", (breite, hoehe), (0, 0, 0, 0))
+    dz = ImageDraw.Draw(dunst, "RGBA")
+    for i in range(70):
         x = hash01(i, 41) * breite
         y = hash01(i, 53) * hoehe
-        r = 12 + hash01(i, 67) * 46
-        kz.ellipse([x - r, y - r, x + r, y + r], fill=(120, 96, 60, 10))
-    bild.alpha_composite(korn.filter(ImageFilter.GaussianBlur(0.6)))
-
-    vignette = Image.new("RGBA", (breite, hoehe), (0, 0, 0, 0))
-    vz = ImageDraw.Draw(vignette, "RGBA")
-    for i in range(26):
-        a = int(4 + i * 1.6)
-        vz.rectangle([i * 3, i * 3, breite - 1 - i * 3, hoehe - 1 - i * 3],
-                     outline=(70, 52, 30, a), width=3)
-    bild.alpha_composite(vignette.filter(ImageFilter.GaussianBlur(9)))
+        r = 60 + hash01(i, 67) * 200
+        dz.ellipse([x - r, y - r * 0.5, x + r, y + r * 0.5],
+                   fill=(*GRUND_HELL[:3], 26))
+    bild.alpha_composite(dunst.filter(ImageFilter.GaussianBlur(40)))
 
     z = ImageDraw.Draw(bild, "RGBA")
     ort = {rid: (rand + (pos[rid][0] - minx) * m,
@@ -398,7 +395,9 @@ def build_kunst() -> None:
                  (zx + raeume[ziel]["width"] / 2 * m,
                   zy + raeume[ziel]["height"] / 2 * m))
             gesperrt = bool(tuer.get("requires"))
-            # Gesperrte Wege gestrichelt: der Kartograf kam da nicht durch.
+            leucht = WASCHUNG[raum["region"]][0]
+            # Gesperrte Wege gestrichelt: da kam man beim ersten Mal nicht
+            # durch.
             schritte = max(2, int(math.dist(a, b) / (m * 2)))
             for k in range(schritte):
                 if gesperrt and k % 2:
@@ -406,7 +405,7 @@ def build_kunst() -> None:
                 t0, t1 = k / schritte, (k + 1) / schritte
                 z.line([a[0] + (b[0] - a[0]) * t0, a[1] + (b[1] - a[1]) * t0,
                         a[0] + (b[0] - a[0]) * t1, a[1] + (b[1] - a[1]) * t1],
-                       fill=(*TINTE_HELL[:3], 110), width=max(1, int(m * 0.3)))
+                       fill=(*leucht[:3], 90), width=max(1, int(m * 0.3)))
 
     for i, (rid, raum) in enumerate(sorted(raeume.items())):
         ox, oy = ort[rid]
@@ -419,21 +418,22 @@ def build_kunst() -> None:
         ox, oy = ort[rid]
         for bank in raum.get("benches", []):
             bx, by = ox + bank["x"] * m, oy + bank["y"] * m
-            z.line([bx - m, by, bx + m, by], fill=TINTE, width=max(2, int(m * 0.4)))
-            z.line([bx - m * 0.7, by, bx - m * 0.7, by + m * 0.8], fill=TINTE,
+            gabel = hexc("#ffe9a8")
+            z.line([bx - m, by, bx + m, by], fill=gabel, width=max(2, int(m * 0.4)))
+            z.line([bx - m * 0.7, by, bx - m * 0.7, by + m * 0.8], fill=gabel,
                    width=max(1, int(m * 0.3)))
-            z.line([bx + m * 0.7, by, bx + m * 0.7, by + m * 0.8], fill=TINTE,
+            z.line([bx + m * 0.7, by, bx + m * 0.7, by + m * 0.8], fill=gabel,
                    width=max(1, int(m * 0.3)))
-            z.line([bx, by, bx, by - m * 1.3], fill=TINTE, width=max(1, int(m * 0.3)))
+            z.line([bx, by, bx, by - m * 1.3], fill=gabel, width=max(1, int(m * 0.3)))
             z.ellipse([bx - m * 0.5, by - m * 2.1, bx + m * 0.5, by - m * 1.1],
-                      outline=TINTE, width=max(1, int(m * 0.25)))
+                      outline=gabel, width=max(1, int(m * 0.25)))
         if raum.get("boss"):
             b = raum["boss"]
             bx, by = ox + b["x"] * m, oy + b["y"] * m
             for k in range(3):
                 rr = m * (1.6 + k * 1.5)
                 z.ellipse([bx - rr, by - rr, bx + rr, by - rr + rr * 2],
-                          outline=(*hexc("#8e2f36")[:3], 150 - k * 40),
+                          outline=(*hexc("#ff6a5c")[:3], 210 - k * 55),
                           width=max(1, int(m * 0.3)))
 
     # Beschriftung: Raumnamen klein an den Umriss, Regionsnamen gross und
@@ -442,7 +442,7 @@ def build_kunst() -> None:
     for rid, raum in sorted(raeume.items()):
         ox, oy = ort[rid]
         z.text((ox + 3, oy - m * 2.6), f'{rid}  {raum["name"].title()}',
-               fill=(*TINTE[:3], 205), font=klein)
+               fill=(*TINTE_HELL[:3], 235), font=klein)
 
     gross = schrift(max(16, int(m * 5.2)), fett=True)
     for region, name in REGIONSNAMEN.items():
@@ -455,7 +455,8 @@ def build_kunst() -> None:
         cy = min(ort[r][1] for r in drin) - m * 8
         marke = Image.new("RGBA", (int(len(name) * m * 4), int(m * 9)), (0, 0, 0, 0))
         ImageDraw.Draw(marke, "RGBA").text((0, 0), name,
-                                           fill=(*TINTE[:3], 120), font=gross)
+                                           fill=(*WASCHUNG[region][0][:3], 190),
+                                           font=gross)
         marke = marke.rotate(-4, expand=True, resample=Image.BICUBIC)
         bild.alpha_composite(marke, (int(cx - marke.width / 2),
                                      int(cy - marke.height / 2)))
@@ -463,8 +464,7 @@ def build_kunst() -> None:
     kopf = schrift(max(20, int(m * 6)), fett=True)
     z.text((rand, 26), "RESONANZ", fill=TINTE, font=kopf)
     z.text((rand, 26 + int(m * 7)),
-           "Aufgezeichnet, so weit die Gaenge trugen.  "
-           "Gestrichelt: verschlossen.  Gabel: eine Bank.",
+           "Die ganze Welt.  Gestrichelt: verschlossen.  Gabel: eine Bank.",
            fill=(*TINTE_HELL[:3], 220), font=klein)
 
     AUS_KUNST.parent.mkdir(exist_ok=True)

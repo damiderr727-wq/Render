@@ -100,7 +100,10 @@ public final class RoomRenderer {
                 sprite.anchorPoint = CGPoint(x: 0, y: 0)
                 sprite.position = CGPoint(x: CGFloat(column) * info.size.width,
                                           y: -Double(room.height) * tileSize)
-                sprite.alpha = [0.55, 0.7, 0.85][layer]
+                // Die Schichten sitzen bewusst weit zurueck. Ein Hintergrund,
+                // der so kraeftig ist wie das Spielgeschehen davor, macht
+                // Gegner unsichtbar - vorn gehoert der hellste Wert hin.
+                sprite.alpha = [0.42, 0.54, 0.70][layer]
 
                 // Jede zweite Kachel gespiegelt. Aneinandergereiht stiess
                 // sonst die rechte Kante der Schicht auf ihre eigene linke,

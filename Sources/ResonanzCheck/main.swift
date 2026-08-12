@@ -19,10 +19,75 @@ let red = "\u{001B}[31m"
 let dim = "\u{001B}[2m"
 let reset = "\u{001B}[0m"
 
+/// Zeigt einen Raum so, wie die Physikpruefung ihn sieht.
+///
+/// Wenn eine Tuer als unerreichbar gemeldet wird, ist die Frage nie "ob",
+/// sondern "wo bricht der Weg ab" - und das laesst sich aus einer
+/// Fehlermeldung nicht ablesen. Diese Ansicht malt den Raum aus und
+/// markiert jede Standflaeche danach, ob die Figur sie erreicht:
+///
+///     resonanz-check --zeige A5
+///
+///   +  erreichbar      x  Standflaeche ohne Weg dorthin
+///   T  Tuer            o  Eingang
+func zeige(_ room: Room, alle: Set<Ability>) {
+    let progression = Progression(abilities: alle, kerne: Set(Kern.allCases))
+    let probe = ReachabilityProbe(room: room, progression: progression)
+    let targets = ReachabilityProbe.targets(for: room)
+    let result = probe.run(from: ReachabilityProbe.origins(for: room), targets: targets)
+
+    print("\n\(room.id)  \(room.data.name)   \(room.width)x\(room.height)")
+    var zeilen: [[Character]] = []
+    for ty in 0..<room.height {
+        var zeile: [Character] = []
+        for tx in 0..<room.width {
+            let tile = room.tile(tx, ty)
+            if tile.isStandable, ty > 0, room.tile(tx, ty - 1) == .air || tile.isSlope {
+                zeile.append(result.reachableTiles.contains(ty * room.width + tx) ? "+" : "x")
+            } else if tile == .air {
+                zeile.append(" ")
+            } else {
+                zeile.append("#")
+            }
+        }
+        zeilen.append(zeile)
+    }
+    for door in room.data.doors {
+        for tx in door.x..<(door.x + door.w) where tx < room.width {
+            for ty in door.y..<(door.y + door.h) where ty < room.height {
+                zeilen[ty][tx] = "T"
+            }
+        }
+    }
+    for spawn in room.data.spawns.values {
+        let tx = Int(spawn.x), ty = Int(spawn.y)
+        if tx >= 0, tx < room.width, ty >= 0, ty < room.height { zeilen[ty][tx] = "o" }
+    }
+    for (i, zeile) in zeilen.enumerated() {
+        print(String(format: "%3d ", i) + String(zeile))
+    }
+    for t in result.unreached {
+        print("  nicht erreicht: \(t.name)  \(t.area)")
+    }
+}
+
 func run() throws -> Int32 {
     let catalog = try WorldCatalog()
     let rooms = try catalog.loadAll()
     let byID = Dictionary(uniqueKeysWithValues: rooms.map { ($0.id, $0) })
+
+    if let i = CommandLine.arguments.firstIndex(of: "--zeige"),
+       i + 1 < CommandLine.arguments.count,
+       let room = byID[CommandLine.arguments[i + 1]] {
+        var alle: Set<Ability> = []
+        for r in rooms {
+            for p in r.data.pickups where p.kind == "ability" {
+                if let a = Ability(rawValue: p.id) { alle.insert(a) }
+            }
+        }
+        zeige(room, alle: alle)
+        return 0
+    }
 
     print("RESONANZ - Raumpruefung gegen die Spielphysik")
     print(String(repeating: "-", count: 62))

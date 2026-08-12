@@ -133,7 +133,7 @@
    "kind": "crystal",
    "size": 2,
    "x": 8,
-   "y": 36
+   "y": 17
   },
   {
    "kind": "crystal",
@@ -219,7 +219,7 @@
  "lore": [
   {
    "x": 14,
-   "y": 36,
+   "y": 17,
    "text": "GANZ UNTEN LIEGT DER TON, DEN NIEMAND SINGT. MAN SCHLAEGT IHN."
   }
  ]

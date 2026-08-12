@@ -106,7 +106,7 @@
  "benches": [
   {
    "x": 9,
-   "y": 44
+   "y": 8
   }
  ],
  "enemies": [
@@ -150,7 +150,7 @@
    "kind": "crystal",
    "size": 2,
    "x": 14,
-   "y": 44
+   "y": 8
   },
   {
    "kind": "crystal",

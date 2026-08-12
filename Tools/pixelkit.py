@@ -88,14 +88,22 @@ class Palette:
         # Der Dunst ist kalt, das Holz ist warm. Dieser eine Gegensatz
         # traegt mehr als jede zusaetzliche Farbe: kuehler Hintergrund,
         # warme Masse davor - und ein einziger warmer Akzent im Licht.
+        # Der Himmel war zu hell. Er lag heller da als alles, was davor
+        # steht, und damit verschwanden Gegner und Figur darin - genau
+        # das, was in den Vorbildern nie passiert. Dort ist der Grund
+        # dunkel, und das Spielgeschehen ist das Hellste im Bild.
+        #
+        # Also: Himmel und Ferne deutlich abgedunkelt. Der warme Akzent
+        # bleibt, wo er ist - er ist jetzt der einzige helle Wert und
+        # traegt darum das ganze Bild.
         "hain": (hexc("#16211d"), hexc("#79a78c"), hexc("#ffc46b"),
-                 hexc("#7d8d95"), hexc("#6b4f3c")),
+                 hexc("#39474b"), hexc("#33261d")),
         "kathedrale": (hexc("#1b1824"), hexc("#8c7ba0"), hexc("#ffd08a"),
-                       hexc("#8f8ba0"), hexc("#5a4148")),
+                       hexc("#3b3850"), hexc("#2c2024")),
         "grotten": (hexc("#141d28"), hexc("#6a9bc0"), hexc("#9ee0ff"),
-                    hexc("#8ea3b5"), hexc("#3c4a66")),
+                    hexc("#33414f"), hexc("#1e2738")),
         "dissonanz": (hexc("#1d1116"), hexc("#a04d5c"), hexc("#ff8a5c"),
-                      hexc("#6e5158"), hexc("#54303a")),
+                      hexc("#33262a"), hexc("#2a181d")),
     }
 
     # Vordergrund - fast schwarz, in jeder Region gleich.

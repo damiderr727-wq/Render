@@ -101,7 +101,7 @@ def render(room_id: str) -> Image.Image:
         img, _ = backdrops.frame(f"{region}_bg{layer}")
         if img is None:
             continue
-        alpha = [0.55, 0.7, 0.85][layer]
+        alpha = [0.42, 0.54, 0.70][layer]
         faded = img.copy()
         faded.putalpha(faded.getchannel("A").point(lambda v: int(v * alpha)))
         oben = h * TS - img.height

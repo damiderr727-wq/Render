@@ -483,13 +483,23 @@ def hain(layer: int) -> Canvas:
         # Nur Luft. Kein Stamm, keine Silhouette, keine Kante - alles, was
         # eine Form hat, steht eine Schicht davor. Diese hier bewegt sich
         # ueberhaupt nicht, sie ist der Grund, auf dem der Wald liegt.
+        # Oben dunkel, nach unten heller.
+        #
+        # Andersherum war es falsch, und man sah es sofort in hohen
+        # Raeumen: ueber der Kulisse stand ein grosses helles Feld, und
+        # das ganze obere Drittel eines Raumes war schlicht grau. Nachts
+        # ist der Himmel oben am dunkelsten; hell wird es dort, wo Dunst
+        # zwischen den Staemmen steht, also unten.
         if not OHNE_VERLAUF:
-            c.dither_v(0, 0, W, H, sky, mix(far, sky, 0.35), levels=7)
+            c.dither_v(0, 0, W, H, mix(far, P.FOREGROUND, 0.52), sky, levels=7)
 
         # Die letzte gehaltene Note steht als bleiche Scheibe im Wald.
-        c.glow(392, 74, 62, (255, 250, 235, 30), power=1.6)
-        c.ellipse(392, 74, 17, 17, mix(sky, (255, 255, 255, 255), 0.55))
-        c.ellipse(388, 70, 13, 13, mix(sky, (255, 255, 255, 255), 0.75))
+        # Sie haengt hoch: dort sind die Kulissenschichten in ihre obersten
+        # Reihen hinein durchsichtig gezeichnet, und der Mond steht
+        # zwischen ihnen statt mitten in einem Stamm.
+        c.glow(392, 34, 74, (255, 250, 235, 26), power=1.7)
+        c.ellipse(392, 34, 13, 13, mix(sky, (255, 255, 255, 255), 0.62))
+        c.ellipse(389, 31, 10, 10, mix(sky, (255, 255, 255, 255), 0.82))
 
         light_shaft(c, 250, 34, (255, 246, 220), 22)
         light_shaft(c, 330, 20, (255, 246, 220), 16)
@@ -719,7 +729,7 @@ def kathedrale(layer: int) -> Canvas:
         # Nur Luft und Licht. Die Architektur steht eine Schicht davor -
         # eine frei schwebende Rose im Dunst sieht aufgeklebt aus.
         if not OHNE_VERLAUF:
-            c.dither_v(0, 0, W, H, sky, mix(far, sky, 0.30), levels=7)
+            c.dither_v(0, 0, W, H, mix(far, P.FOREGROUND, 0.45), sky, levels=7)
         light_shaft(c, 196, 52, accent, 26)
         light_shaft(c, 318, 30, accent, 18)
         motes(c, 240, rng, accent, alpha=(10, 38))
@@ -825,7 +835,7 @@ def grotten(layer: int) -> Canvas:
 
     if layer == 0:
         if not OHNE_VERLAUF:
-            c.dither_v(0, 0, W, H, sky, mix(far, sky, 0.25), levels=7)
+            c.dither_v(0, 0, W, H, mix(far, P.FOREGROUND, 0.42), sky, levels=7)
         # Ferne Kristalladern leuchten durch den Fels.
         for x, y, r in ((88, 190, 34), (300, 120, 46), (430, 210, 28)):
             c.glow(x, y, r * 2.2, (accent[0], accent[1], accent[2], 26), power=1.8)
@@ -889,7 +899,7 @@ def dissonanz(layer: int) -> Canvas:
 
     if layer == 0:
         if not OHNE_VERLAUF:
-            c.dither_v(0, 0, W, H, sky, mix(far, P.FOREGROUND, 0.3), levels=6)
+            c.dither_v(0, 0, W, H, mix(far, P.FOREGROUND, 0.55), sky, levels=6)
         # Kein Blickfang, kein Licht - nur ein Glimmen tief unten.
         c.glow(256, 300, 200, (accent[0], accent[1], accent[2], 30), power=1.4)
         motes(c, 160, rng, accent, alpha=(8, 30))
@@ -1210,7 +1220,18 @@ def dunstverlauf(himmel: Canvas) -> list[tuple[int, int, int]]:
         mitte = len(zeile) // 2
         verlauf.append(tuple(sorted(px[k] for px in zeile)[mitte]
                              for k in range(3)))
-    return verlauf
+
+    # Und dann senkrecht glaetten. Der Verlauf ist gerastert gezeichnet,
+    # also springen benachbarte Zeilen zwischen zwei Werten hin und her.
+    # Der Median greift einen davon heraus, und wenn dieser Streifen
+    # nachher ueber die ganze Raumhoehe gedehnt wird, werden aus dem
+    # Sprung waagerechte Balken quer durchs Bild.
+    weich = []
+    for y in range(len(verlauf)):
+        fenster = verlauf[max(0, y - 4):y + 5]
+        weich.append(tuple(sum(f[k] for f in fenster) // len(fenster)
+                           for k in range(3)))
+    return weich
 
 
 def in_ferne(bild: Canvas, verlauf, menge: float) -> Canvas:

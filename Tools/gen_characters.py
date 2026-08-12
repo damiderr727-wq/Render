@@ -21,7 +21,17 @@ OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Res
 # Die Groesse der Figur an einer Stelle. Alles andere leitet sich davon ab,
 # damit man sie im Ganzen groesser oder kleiner ziehen kann, ohne dass die
 # Verhaeltnisse auseinanderlaufen.
-HERO_SCALE = 1.3
+# Wie gross die Heldin gegenueber der Welt steht.
+#
+# Eine Kachel misst 16 Pixel; bei 1.3 war die Figur rund 26 Pixel hoch,
+# also nicht einmal zwei Kacheln. Im Vorbild steht die Figur zweieinhalb
+# bis drei Kacheln hoch im Bild, und das ist der Grund, warum dort eine
+# Halle gross wirkt und ein Gang eng: man hat einen Massstab.
+#
+# Die Trefferflaeche bleibt davon unberuehrt. Ein Bild, das etwas groesser
+# ist als sein Koerper, ist der Normalfall - die Figur soll den Raum
+# fuellen, nicht das Rechteck.
+HERO_SCALE = 1.75
 HERO_W, HERO_H = int(round(28 * HERO_SCALE)), int(round(30 * HERO_SCALE))
 BODY_H = 20.0 * HERO_SCALE
 
@@ -320,7 +330,12 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # Von schraeg oben hinten nach vorn unten. In Leinwandkoordinaten
     # zeigt +y nach unten, also ist -1.85 rad oben-hinten und +0.42
     # vorn-leicht-unten.
-    a0, a1 = -2.15, 0.78
+    # Der Bogen liegt *vor* ihr, nicht um sie herum. Bei fast zweihundert
+    # Grad Spannweite lief er ueber ihren Kopf hinweg bis hinter ihren
+    # Ruecken und schloss sich zu einem Ring - und ein Ring ist keine
+    # Bewegungsrichtung. Von knapp ueber dem Kopf nach vorn unten sind es
+    # rund hundertfuenfzig Grad, und die liest man als einen Zug.
+    a0, a1 = -1.72, 0.86
     t = schwung ** 0.78
     winkel = a0 + (a1 - a0) * t
 
@@ -328,6 +343,11 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # im Ausholen stand die Spitze ueber dem oberen Bildrand und wurde
     # abgeschnitten - und ein angeschnittener Schlag liest sich nicht.
     reichweite = height * (0.46 + 0.18 * t)
+
+    # Der Bogen ist nicht so lang wie die Klinge, sondern deutlich
+    # laenger. Beim Vorbild misst die Sichel gut das Doppelte der Figur -
+    # sie ist das eigentliche Bild, die Waffe nur ihr Anlass.
+    bogen_r = height * (0.72 + 0.26 * t)
 
     # --- Der Bogen.
     # Zum Schluss klingt er ab: im letzten Bild soll die ausgestreckte
@@ -346,9 +366,15 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
         # Klinge im Vorbild kennt, und sie ist der ganze Grund, warum man
         # dort einen Schlag sieht und keinen Wisch. Der Aussenradius
         # bleibt darum fest; nur der Innenradius wandert.
-        schleppe = min(t, 0.78)
-        r_innen, r_aussen = reichweite * 0.60, reichweite * 1.00
-        schritte = 56
+        # Und sie ist **duenn**. Das war der letzte Fehler: eine Sichel,
+        # die vierzig Prozent ihres Radius dick ist, ist eine Mondsichel,
+        # keine Klingenspur. Beim Vorbild misst die dickste Stelle keine
+        # zehn Prozent, laeuft ueber ihre ganze Laenge zu zwei Nadeln aus
+        # und ist dabei halb durchsichtig - man sieht den Raum dahinter.
+        schleppe = min(t, 0.74)
+        r_aussen = bogen_r
+        max_dicke = bogen_r * 0.11
+        schritte = 84
 
         # Erst sammeln, dann setzen. Wird beim Abtasten direkt gemischt,
         # trifft die Bahn manche Pixel zweimal und andere einmal, und die
@@ -369,39 +395,62 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
             # Linse: null an den Enden, am dicksten kurz vor der Klinge.
             # Im Ausholen ist sie zusaetzlich flacher - eine Sichel in
             # voller Dicke ueber einem Viertel Bogen ist ein Klumpen.
-            dicke = math.sin(math.pi * min(1.0, u ** 0.72)) ** 0.55
-            dicke *= 0.45 + 0.55 * t
-            r0 = r_aussen - (r_aussen - r_innen) * dicke
-            deckung = int((90 + 150 * u ** 1.1) * verblassen)
+            dicke = math.sin(math.pi * min(1.0, u ** 0.62)) ** 0.75
+            dicke *= 0.55 + 0.45 * t
+            r0 = r_aussen - max_dicke * dicke
+            # Halb durchsichtig, und an den Spitzen fast nichts: eine
+            # Sichel, die ueberall gleich deckt, ist ein Aufkleber.
+            deckung = int((60 + 130 * math.sin(math.pi * min(1.0, u ** 0.6)) ** 0.5)
+                          * verblassen)
             i = r0
             while i <= r_aussen:
-                v = (i - r0) / max(1.0, r_aussen - r0)
+                v = (i - r0) / max(0.6, r_aussen - r0)
                 # Aussen heller: die Vorderkante der Sichel traegt das Licht.
                 auftragen(dreh_x + ax * i, dreh_y + ay * i,
-                          mix(rosa, P.BONE, 0.10 + v * 0.55 + u * 0.25), deckung)
-                i += 0.4
-            # Die Aussenkante durchgehend, deckend - sie ist die Linie,
-            # an der das Auge den Schlag festmacht, und sie laeuft ueber
-            # die ganze Sichel, nicht nur ueber ihr vorderes Drittel.
-            if dicke > 0.06 and verblassen > 0.7:
-                for r in (r_aussen, r_aussen - 0.5):
+                          mix(rosa, (255, 255, 255, 255), 0.34 + v * 0.52),
+                          deckung)
+                i += 0.35
+            # Die Aussenkante durchgehend - sie ist die Linie, an der das
+            # Auge den Schlag festmacht, und sie laeuft ueber die ganze
+            # Sichel, nicht nur ueber ihr vorderes Drittel.
+            if dicke > 0.05 and verblassen > 0.7:
+                kante = int(215 * math.sin(math.pi * min(1.0, u ** 0.6)) ** 0.35)
+                for r in (r_aussen, r_aussen - 0.45):
                     auftragen(dreh_x + ax * r, dreh_y + ay * r,
-                              mix(P.BONE, rosa_hi, 0.25 + (1 - u) * 0.35), 255)
+                              mix(P.BONE, (255, 255, 255, 255), 0.45), kante)
 
         for (px, py), (col, deckung) in flaeche.items():
             c.blend(px, py, (col[0], col[1], col[2], deckung))
 
     # --- Die Klinge, auf der Vorderkante des Bogens.
+    #
+    # Duenn, lang, halb durchsichtig. Sie ist aus Klang erstarrt, kein
+    # geschmiedetes Eisen: was man sehen soll, ist eine helle Kante und
+    # ein Schimmer daneben, nicht ein Balken. Vorher war sie fast vier
+    # Pixel breit und deckend - damit stand sie als kraeftigster
+    # Gegenstand im Bild und nahm der Sichel den Rang ab.
     ax, ay = math.cos(winkel), math.sin(winkel)
-    hand = reichweite * 0.24
-    for i in range(int(hand), int(reichweite)):
-        v = max(0.0, (i - hand) / (reichweite - hand))
-        w = (1.9 - 1.5 * v ** 0.8) * S
+    hand = reichweite * 0.20
+    spitze = reichweite * 1.12
+    kern = mix(rosa_hi, P.BONE, 0.45)
+    i = hand
+    while i < spitze:
+        v = max(0.0, (i - hand) / (spitze - hand))
+        w = (1.15 - 0.95 * v ** 0.7) * S
         px, py = dreh_x + ax * i, dreh_y + ay * i
-        for dq in range(-int(w), int(w) + 1):
-            qx, qy = px - ay * dq, py + ax * dq
-            c.set(int(qx), int(qy),
-                  (rosa_hi if dq >= int(w) else rosa) if dq > 0 else rosa_lo)
+        q = -w
+        while q <= w:
+            qx, qy = px - ay * q, py + ax * q
+            rand = abs(q) / max(0.4, w)
+            # Die Schneide (aussen, zur Sichel hin) traegt das Licht, der
+            # Ruecken verliert sich.
+            if q > 0:
+                col, a = kern, int(230 - rand * 70)
+            else:
+                col, a = rosa_lo, int(150 - rand * 90)
+            c.blend(int(qx), int(qy), (col[0], col[1], col[2], max(0, a)))
+            q += 0.5
+        i += 0.5
 
     # Faust, Parierstueck, Knauf - drei Punkte, mehr traegt die Groesse nicht.
     fx, fy = dreh_x + ax * hand, dreh_y + ay * hand
@@ -412,9 +461,9 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
         c.set(int(fx - ax * (i + 1)), int(fy - ay * (i + 1)),
               mix(rosa_lo, P.CLOAK, 0.35))
 
-    spitze = (dreh_x + ax * reichweite, dreh_y + ay * reichweite)
-    c.set(int(spitze[0]), int(spitze[1]), mix(rosa_hi, P.BONE, 0.7))
-    c.glow(spitze[0], spitze[1], 5 * S, (rosa[0], rosa[1], rosa[2], 55))
+    sx, sy = dreh_x + ax * spitze, dreh_y + ay * spitze
+    c.set(int(sx), int(sy), mix(rosa_hi, P.BONE, 0.7))
+    c.glow(sx, sy, 5 * S, (rosa[0], rosa[1], rosa[2], 55))
 
 
 def _draw_beine(c: Canvas, *, cx: int, base: float, height: float, phase: float,
@@ -982,9 +1031,20 @@ def draw_heroine(
     hair_sway: float = 0.0, cloak_sway: float = 0.0, cloak_lift: float = 0.0,
     crouch: float = 0.0,
 ) -> Canvas:
-    c = Canvas(HERO_W, HERO_H)
-    cx = HERO_W // 2
-    base = GROUND - settle
+    # Der Schlag braucht mehr Platz als die Figur. Die Sichel misst weit
+    # mehr als eine Koerperhoehe, und auf der Leinwand der Ruhebilder
+    # wurde sie oben und rechts abgeschnitten - ein angeschnittener
+    # Bogen liest sich als Balken, nicht als Schlag. Der Rand kommt nur
+    # dazu, wenn geschlagen wird; alle anderen Bilder bleiben so gross
+    # wie bisher.
+    #
+    # Der Ursprung im Atlas ist unten Mitte. Deshalb darf der Rand links
+    # und rechts nur gleich gross sein, und oben beliebig - dann sitzt
+    # die Figur weiter genau auf ihren Fuessen.
+    rand = int(BODY_H * 0.85) if schwung is not None else 0
+    c = Canvas(HERO_W + rand * 2, HERO_H + rand)
+    cx = HERO_W // 2 + rand
+    base = GROUND + rand - settle
 
     kind = instrument or "leier"
     height = (BODY_H + (BODY_H * 0.10 if kind == "floete" else 0.0)) * stretch - settle * 0.6

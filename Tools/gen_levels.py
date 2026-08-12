@@ -61,12 +61,44 @@ def _treppenfrei(hoehen: dict[int, int], x0: int, x1: int) -> dict[int, int]:
     for x in range(x1 - 2, x0 - 1, -1):             # und zurueck
         d[x] = min(d[x], d[x + 1] + 1)
 
+    # Und dann in Stufen von zwei Spalten legen.
+    #
+    # Ein Schraegenpaar braucht links und rechts je zwei gleiche Spalten,
+    # sonst passt es nicht. Eine Decke, die Spalte fuer Spalte um eine
+    # Kachel faellt, hat aber ueberall Laeufe der Laenge eins - und blieb
+    # deshalb eine Treppe, obwohl kein einziger Sprung groesser als eine
+    # Kachel war. Das war der Rest, der nach der Begradigung stehen blieb.
+    #
+    # Die Decke darf jetzt hoechstens eine Kachel pro *zwei* Spalten
+    # fallen. Das ist genau die Steigung, die ein Schraegenpaar darstellt,
+    # und damit ist jede Stufe im Raum eine, die sich glaetten laesst.
+    paare = [(k, min(d[k], d[k + 1] if k + 1 < x1 else d[k]))
+             for k in range(x0, x1, 2)]
+    for i in range(1, len(paare)):
+        k, h = paare[i]
+        paare[i] = (k, min(h, paare[i - 1][1] + 1))
+    for i in range(len(paare) - 2, -1, -1):
+        k, h = paare[i]
+        paare[i] = (k, min(h, paare[i + 1][1] + 1))
+    for k, h in paare:
+        d[k] = h
+        if k + 1 < x1:
+            d[k + 1] = h
+
     # Einzelne Spalten auf eigener Hoehe verbreitern, wieder nach oben.
+    # Eine Spalte, die allein steht, ist ein Lauf der Laenge eins - und an
+    # so einem Lauf kann die Glaettung kein Schraegenpaar setzen, weil
+    # links und rechts davon je zwei gleiche Spalten stehen muessen. Also
+    # weg damit, in beide Richtungen: eine einzelne Kerbe wird verbreitert,
+    # ein einzelner Zapfen abgetragen.
     for _ in range(4):
         ruhig = True
         for x in range(x0 + 1, x1 - 1):
             if d[x] < d[x - 1] and d[x] < d[x + 1]:
                 d[x - 1 if d[x - 1] <= d[x + 1] else x + 1] = d[x]
+                ruhig = False
+            elif d[x] > d[x - 1] and d[x] > d[x + 1]:
+                d[x] = max(d[x - 1], d[x + 1])
                 ruhig = False
         if ruhig:
             break
@@ -85,6 +117,11 @@ class Room:
         # bricht damit: er liegt im Hain und sieht aus wie gebaut.
         self.backdrop: str | None = None
         self.grid = [[AIR] * w for _ in range(h)]
+        # Wo `hoehle` die Decke hingelegt hat, Spalte fuer Spalte: die
+        # oberste Luftzeile. Die Glaettung braucht das, weil sie die
+        # Deckenlinie sonst aus dem fertigen Gitter zurueckrechnen muesste
+        # - und dann haelt sie jeden Tropfstein fuer die Decke.
+        self.deckenprofil: dict[int, int] = {}
         self.doors: list[dict] = []
         self.spawns: dict[str, dict] = {}
         self.benches: list[dict] = []
@@ -293,6 +330,15 @@ class Room:
         unter: list[int | None] = [None] * self.w
 
         for x in range(1, self.w - 1):
+            # Wo `hoehle` gebaut hat, steht die Deckenlinie schon fest.
+            # Sie aus dem Gitter zurueckzurechnen ginge auch - nur haelt
+            # so eine Suche jeden Tropfstein fuer die Decke und zerlegt
+            # den Lauf, an dem die Schraege sitzen soll.
+            if x in self.deckenprofil:
+                d = self.deckenprofil[x]
+                if 0 < d <= self.h - 2 and self.grid[d - 1][x] == SOLID:
+                    unter[x] = d - 1
+                continue
             for y in range(self.h - 2, 0, -1):
                 if self.grid[y][x] != SOLID or self.grid[y + 1][x] != AIR:
                     continue
@@ -318,10 +364,18 @@ class Room:
                 continue
             if a1 - a0 + 1 < min_run or b1 - b0 + 1 < min_run:
                 continue
-            if hb > ha:                              # Decke steigt nach rechts
-                ty, paar = ha, (CEIL_UP_LOW, CEIL_UP_HIGH)
-            else:                                    # Decke faellt nach rechts
+            # `unter` ist ein Zeilenindex, und Zeilen zaehlen nach unten:
+            # ein *groesserer* Wert heisst, die Decke haengt tiefer. Hier
+            # stand das Gegenteil, und deshalb bekam jede Stufe das Paar
+            # der Gegenrichtung - die Schraegen liefen andersherum als die
+            # Decke, an der sie sassen.
+            #
+            # Die Schraege sitzt immer in der *unteren* der beiden Zeilen;
+            # darueber steht Fels.
+            if hb > ha:                              # Decke faellt nach rechts
                 ty, paar = hb, (CEIL_DOWN_HIGH, CEIL_DOWN_LOW)
+            else:                                    # Decke steigt nach rechts
+                ty, paar = ha, (CEIL_UP_LOW, CEIL_UP_HIGH)
             for k, ch in enumerate(paar):
                 tx = a1 + k
                 self.set(tx, ty, ch)
@@ -427,6 +481,7 @@ class Room:
         for x in range(x0, x1):
             b, d = b_roh[x], decke[x]
             hoehen[x] = (b, d)
+            self.deckenprofil[x] = d
             self.fill(x, b, 1, self.h - b)
             self.fill(x, 0, 1, d)
 
@@ -438,12 +493,20 @@ class Room:
             # einer Luecke. Zwei Kacheln breit oben, eine unten: eine
             # einzelne Kachelsaeule ist kein Fels, sondern ein Strich.
             #
-            # Nur wo die Decke ueber beide Spalten gleich hoch liegt.
-            # Sonst steht die zweite Spalte an einer Stufe, hat Luft
-            # ueber sich - und bekommt vom Kachelsatz eine Oberkante mit
-            # Gras. Gras, das unter der Decke nach oben waechst.
-            if (zacken and luft >= 11 and hash01(x, seed) < zacken
-                    and hoehen.get(x + 1, (0, -1))[1] == d):
+            # Nur wo die Decke ueber vier Spalten hinweg flach liegt.
+            #
+            # Zwei Gruende. Erstens bekommt eine Spalte an einer Stufe
+            # Luft ueber sich und damit vom Kachelsatz eine Oberkante mit
+            # Gras - Gras, das unter der Decke nach oben waechst.
+            # Zweitens, und wichtiger: ein Tropfstein an einer Stufe
+            # blockiert die Glaettung. Sie sieht dann nicht mehr die
+            # Decke, sondern den Zapfen, der Lauf reisst an dieser Spalte
+            # auseinander, und die Stufe daneben bleibt eine Stufe. So
+            # blieb die halbe Decke eine Treppe, obwohl das Profil laengst
+            # begradigt war.
+            flach = all(hoehen.get(x + k, (0, -1))[1] == d
+                        for k in (-1, 1, 2))
+            if zacken and luft >= 11 and flach and hash01(x, seed) < zacken:
                 laenge = min(2 + int(hash01(x, seed + 1) * 3), luft - 7)
                 if laenge >= 2:
                     self.fill(x, d, 2, laenge - 1)

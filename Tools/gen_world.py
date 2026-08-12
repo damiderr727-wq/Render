@@ -363,6 +363,81 @@ SLOPE_KINDS = {
 }
 
 
+def deckenschraege(region: str, variant: int,
+                   fall_start: float, fall_end: float) -> Canvas:
+    """
+    Eine Schraege fuer die Decke - eigenes Bild, keine gekippte Bodenkachel.
+
+    Gekippt sah man es sofort: eine Bodenschraege traegt ihr Licht auf der
+    Oberkante und darauf Gras. Kopfueber haengt das Gras dann *unter* der
+    Decke und die hellste Linie im Bild liegt an ihrer Unterkante - Licht
+    von unten, in einem Wald, in dem es von oben kommt.
+
+    An einer Decke ist es umgekehrt: die Unterkante ist die dunkelste
+    Linie im Bild, denn dahinter ist Fels und darunter Luft. Was daran
+    haengt, haengt herunter und ist dunkel.
+
+    `fall_start`/`fall_end` sagen, wie tief der Fels an linker und rechter
+    Kante herunterreicht: 0 gar nicht, 1 die ganze Kachel.
+    """
+    body, edge, accent = P.REGIONS[region][:3]
+    c = Canvas(TS, TS + TILE_UNDERHANG)
+    rng = Rng(3300 + variant * 811 + sum(map(ord, region)) * 17)
+
+    for x in range(TS):
+        u = x / (TS - 1)
+        fall = fall_start + (fall_end - fall_start) * u
+        # Weiche Enden, damit der Uebergang zur flachen Decke keinen Knick hat.
+        bogen = math.sin(u * math.pi) * 0.05 * (1 if fall_end > fall_start else -1)
+        kante = int(round((fall + bogen) * TS))
+        kante = max(0, min(TS, kante + int(hash01(x * 7 + variant * 23, 5) * 2)))
+        if kante <= 0:
+            continue
+
+        for y in range(kante):
+            t = y / max(1, kante)
+            # Nach unten hin dunkler: die Masse liegt im eigenen Schatten.
+            c.set(x, y, mix(body, shade(body, -0.34), 0.18 + t * 0.52))
+        # Die Unterkante als dunkelste Linie, darueber ein schmaler
+        # Schimmer - das ist alles an Licht, was hier hingehoert.
+        c.set(x, kante - 1, shade(body, -0.55))
+        if kante >= 3:
+            c.set(x, kante - 2, shade(body, -0.30))
+            c.set(x, kante - 3, mix(body, edge, 0.10))
+
+        # Was herunterhaengt: kurz, dunkel, unregelmaessig.
+        if region == "hain":
+            if hash01(x * 5 + variant * 31, 41) < 0.34:
+                laenge = 1 + int(hash01(x, variant + 3) * 4)
+                for i in range(laenge):
+                    c.set(x, kante + i,
+                          mix(shade(body, -0.45), P.INK, 0.2 + i / laenge * 0.5))
+        elif region == "grotten":
+            if hash01(x * 3, variant + 9) > 0.82:
+                laenge = 2 + int(hash01(x, 13) * 4)
+                for i in range(laenge):
+                    c.set(x, kante + i,
+                          mix(accent, shade(body, -0.5), 0.35 + i / laenge * 0.55))
+        elif region == "dissonanz":
+            if hash01(x * 5, variant + 7) > 0.74:
+                for i in range(2 + int(hash01(x, 3) * 3)):
+                    c.set(x, kante + i, mix(P.ROT_DIM, P.INK, 0.3 + i * 0.2))
+
+    # Ein paar laengere Zapfen, damit die Kante nicht gleichmaessig franst.
+    if region in ("hain", "grotten"):
+        for _ in range(rng.int(0, 2)):
+            x = rng.int(2, TS - 3)
+            u = x / (TS - 1)
+            kante = int(round((fall_start + (fall_end - fall_start) * u) * TS))
+            if kante < 3:
+                continue
+            for i in range(rng.int(3, TILE_UNDERHANG)):
+                w = 2 if i < 2 else 1
+                c.rect(x, kante + i, w, 1,
+                       mix(shade(body, -0.5), P.INK, 0.25 + i * 0.06))
+    return c
+
+
 def edge_prop(region: str, variant: int, frame: int = 0, frames: int = 1) -> Canvas:
     """
     Eine Requisite fuer die Bodenkante: Stein, Wurzelknaeuel, Reisig.
@@ -512,12 +587,15 @@ def sockel(region: str, variant: int) -> Canvas:
         for y in range(tief):
             t = y / max(1, tief)
             q = (x - cx) / (breite / 2)
-            # Licht von rechts oben: die rechte Flanke bleibt hell, nach
-            # unten faellt alles in den Schatten.
-            hell = max(0.0, 0.55 - abs(q - 0.35) * 0.9) * (1 - t) ** 0.8
-            c.set(x, y, mix(fels_lo, fels_hi, min(1.0, 0.25 + hell)))
+            # Licht von rechts oben, aber sparsam: der Sockel liegt unter
+            # der Plattform und damit im Schatten. Ein Zwischenstand hat
+            # ihn innen aufgehellt, und dann las er sich als *zweite*
+            # Platte, die unter der ersten klebt, statt als ihre
+            # Unterseite. Was eine Plattform traegt, ist dunkler als sie.
+            hell = max(0.0, 0.34 - abs(q - 0.35) * 0.7) * (1 - t) ** 1.3
+            c.set(x, y, mix(fels_lo, fels, min(1.0, 0.10 + hell)))
         if tief:
-            c.set(x, tief - 1, shade(fels_lo, -0.20))
+            c.set(x, tief - 1, shade(fels_lo, -0.30))
 
     if region == "hain":
         # Erdballen: Wurzeln, die aus der Unterkante heraushaengen, und
@@ -573,12 +651,9 @@ def sockel(region: str, variant: int) -> Canvas:
                     c.set(x, unten[x] - 1 - i,
                           mix(P.ROT_DIM, fels_lo, 0.3 + i / d * 0.6))
 
-    # Der Lichtsaum an der Oberkante, wo die Plattform aufliegt - er
-    # verbindet Sockel und Plattform zu einem Stueck.
-    for x in range(breite):
-        if unten[x] > 1:
-            c.set(x, 0, mix(fels_hi, accent, 0.22))
-            c.set(x, 1, fels_hi)
+    # Kein Lichtsaum an der Oberkante. Dort liegt die Plattform auf; eine
+    # helle Linie an dieser Stelle zieht genau die Fuge nach, die man
+    # nicht sehen soll - und aus zwei Teilen werden sichtbar zwei Teile.
     return c
 
 
@@ -691,6 +766,28 @@ def gedreht(c: Canvas, viertel: int) -> Canvas:
                 out.set(c.w - 1 - x, c.h - 1 - y, px)
             else:                   # 270 Grad
                 out.set(y, c.w - 1 - x, px)
+    return out
+
+
+def gekippt(c: Canvas) -> Canvas:
+    """
+    Spiegelt eine Kachel an der Waagerechten - oben wird unten.
+
+    Der Unterschied zu `gedreht(c, 2)` ist genau eine Achse, und genau
+    daran hing der Deckenfehler: eine Drehung um 180 Grad spiegelt
+    *auch* links und rechts. Eine Bodenschraege, die nach rechts
+    ansteigt, wird dabei zu einer Deckenschraege, die nach **links**
+    faellt. Die Decke lief also durchweg gegen ihre eigene Richtung.
+
+    Was am Boden unten Fels ist, ist an der Decke oben Fels - mehr
+    passiert beim Umbau einer Schraege nicht.
+    """
+    out = Canvas(c.w, c.h)
+    for y in range(c.h):
+        for x in range(c.w):
+            px = c.get(x, y)
+            if px[3]:
+                out.set(x, c.h - 1 - y, px)
     return out
 
 
@@ -1263,11 +1360,14 @@ def build() -> None:
             # Deckenschraegen: dieselbe Schraege, senkrecht gespiegelt. Was
             # am Boden unten Fels ist, ist an der Decke oben Fels - und
             # damit hoert die Decke auf, eine Treppe zu sein.
-            for aus, ein in (("downhigh", "uplow"), ("downlow", "uphigh"),
-                             ("uplow", "downhigh"), ("uphigh", "downlow")):
-                a, b = SLOPE_KINDS[ein]
+            # Deckenschraegen. `fall` sagt, wie tief der Fels herunterreicht:
+            # faellt die Decke nach rechts, waechst er nach rechts.
+            for aus, (fa, fb) in (("downhigh", (0.0, 0.5)),
+                                  ("downlow", (0.5, 1.0)),
+                                  ("uplow", (1.0, 0.5)),
+                                  ("uphigh", (0.5, 0.0))):
                 tiles.add(f"{region}_ceil_{aus}_{v}",
-                          gedreht(tile_slope(region, v, a, b), 2), pivot=(0, 0))
+                          deckenschraege(region, v, fa, fb), pivot=(0, 0))
         for cap in ("mid", "l", "r", "lr"):
             for v in range(4):
                 tiles.add(f"{region}_platform_{cap}_{v}",

@@ -54,6 +54,153 @@ SCHULTER_T = 0.56
 GROUND = HERO_H - 1  # unterste Pixelzeile = Fussboden
 
 
+
+# ------------------------------------------------------------------ Masken
+#
+# Die Maske ist das Einzige an ihr, was nicht schwingt. Sie haelt die
+# Form, in der der Klang gerade steht - und darum entscheidet sie, was
+# Cadence kann. Nicht der Mantel: der Mantel ist Stoff.
+#
+# Es gibt so viele Masken wie Anlagen, und man erkennt sie am Schnitt der
+# Augen. Regeln fuer alle:
+#
+#   * Loecher, keine gemalten Augen. Ein Loch liest sich auf zehn Pixel
+#     Kopfhoehe sofort als Blick.
+#   * Kantig und schraeg. Zwei runde Punkte nebeneinander sind niedlich;
+#     das war der erste Anlauf, und niedlich soll sie nicht sein.
+#   * Eine Braue darueber. Ohne den dunklen Strich schwimmt jedes Auge in
+#     der hellen Flaeche.
+#   * Nie symmetrisch bis ins Letzte. Ein Gesicht, dessen Haelften genau
+#     gleich sind, wirkt gestanzt.
+
+MASKEN = ("stimmgabel", "leier", "trommel", "floete",
+          "metronom", "glocke", "orgelpfeife", "bruch")
+
+
+def _augenloch(c: Canvas, x: float, y: float, laenge: float, breite: float,
+               winkel: float, funke=None) -> None:
+    """Ein schraeger Schlitz mit Braue darueber."""
+    ax, ay = math.cos(winkel), math.sin(winkel)
+    nx, ny = -ay, ax
+    n = max(2, int(laenge * 2))
+    for i in range(n + 1):
+        t = i / n
+        # In der Mitte am breitesten, an beiden Enden spitz - eine
+        # Mandel, kein Balken.
+        w = breite * math.sin(math.pi * (0.10 + t * 0.80)) ** 0.6
+        px, py = x + ax * laenge * (t - 0.5), y + ay * laenge * (t - 0.5)
+        q = -w
+        while q <= w:
+            c.set(int(px + nx * q), int(py + ny * q), P.INK)
+            q += 0.5
+        # Die Braue: eine Reihe darueber, etwas dunkler als die Maske.
+        c.set(int(px + nx * (-w - 1)), int(py + ny * (-w - 1)),
+              mix(P.INK, P.BONE_LO, 0.45))
+    if funke is not None:
+        c.set(int(x), int(y), funke)
+
+
+def _maske_zeichnung(c: Canvas, *, art: str, mx: float, my: float, mr: float,
+                     phase: float, grund, schatten) -> None:
+    """
+    Zeichnet die Augen und die Zeichnung der jeweiligen Maske.
+
+    `mr` ist der halbe Durchmesser der Maskenflaeche. Alles hier rechnet
+    in Vielfachen davon, damit die Masken mitwachsen, wenn sich die
+    Verhaeltnisse der Figur wieder aendern.
+    """
+    rosa = hexc("#ff7ad0")
+    funke = mix(rosa, (255, 255, 255, 255), 0.30)
+    zu = math.sin(phase * 0.8) > 0.93
+    ritz = mix(grund, schatten, 0.75)
+
+    if zu:
+        # Geschlossen: bei jeder Maske nur zwei kurze Striche.
+        for seite in (-1, 1):
+            for dx in range(-1, 2):
+                c.set(int(mx + seite * mr * 0.46) + dx, int(my), schatten)
+        return
+
+    if art == "stimmgabel":
+        # Zwei lange, steil nach innen fallende Schlitze und eine Kerbe
+        # in der Stirn - der Spalt zwischen den Zinken.
+        for seite in (-1, 1):
+            _augenloch(c, mx + seite * mr * 0.46 + mr * 0.10, my,
+                       mr * 0.52, 0.8, seite * 0.62, funke)
+        for i in range(int(mr * 0.75)):
+            c.set(int(mx + mr * 0.06), int(my - mr * 0.55 - i), ritz)
+
+    elif art == "leier":
+        # Ein hohes Auge und ein schmales: sie hoert auf zwei Ohren
+        # verschieden. Darunter drei feine Saitenritzen.
+        _augenloch(c, mx - mr * 0.40, my, mr * 0.42, 1.1, 0.48, funke)
+        _augenloch(c, mx + mr * 0.48, my - mr * 0.06, mr * 0.50, 0.7, -0.30, funke)
+        for k in range(3):
+            for i in range(int(mr * 0.5)):
+                c.set(int(mx - mr * 0.3 + k * mr * 0.30), int(my + mr * 0.42 + i), ritz)
+
+    elif art == "trommel":
+        # Ein einziger waagerechter Sehschlitz ueber die ganze Breite.
+        for dx in range(-int(mr * 0.66), int(mr * 0.66) + 1):
+            q = abs(dx) / max(1.0, mr * 0.66)
+            hoehe = 2 if q < 0.72 else 1
+            for dy in range(hoehe):
+                c.set(int(mx) + dx, int(my) + dy, P.INK)
+            c.set(int(mx) + dx, int(my) - 1, mix(P.INK, P.BONE_LO, 0.45))
+        c.set(int(mx - mr * 0.42), int(my), funke)
+        c.set(int(mx + mr * 0.46), int(my), funke)
+
+    elif art == "floete":
+        # Zwei runde Loecher, und darunter zwei kleine - Grifflocher.
+        for seite in (-1, 1):
+            _augenloch(c, mx + seite * mr * 0.44 + mr * 0.10, my,
+                       mr * 0.30, 1.2, seite * 0.25, funke)
+        for k in (-1, 1):
+            c.set(int(mx + k * mr * 0.24), int(my + mr * 0.50), P.INK)
+
+    elif art == "metronom":
+        # Ein einziger schraeger Schlitz quer ueber das ganze Gesicht.
+        _augenloch(c, mx + mr * 0.04, my - mr * 0.02, mr * 1.05, 0.9, 0.42, None)
+        c.set(int(mx - mr * 0.42), int(my - mr * 0.20), funke)
+        c.set(int(mx + mr * 0.48), int(my + mr * 0.18), funke)
+
+    elif art == "glocke":
+        # Zwei grosse, nach aussen gezogene Augen unter einer schweren
+        # Braue, die ueber beide durchlaeuft.
+        for seite in (-1, 1):
+            _augenloch(c, mx + seite * mr * 0.44 + mr * 0.08, my + mr * 0.04,
+                       mr * 0.46, 1.2, seite * 0.34, funke)
+        for dx in range(-int(mr * 0.82), int(mr * 0.82) + 1):
+            q = dx / max(1.0, mr * 0.82)
+            c.set(int(mx) + dx, int(my - mr * 0.46 - abs(q) * mr * 0.12),
+                  mix(P.INK, P.BONE_LO, 0.35))
+
+    elif art == "orgelpfeife":
+        # Drei senkrechte Schlitze verschiedener Hoehe - ein Register.
+        for k, (ver, hoch) in enumerate(((-0.52, 0.74), (0.02, 1.00), (0.52, 0.58))):
+            _augenloch(c, mx + ver * mr + mr * 0.06, my,
+                       mr * hoch * 0.58, 0.7, math.pi / 2 + 0.10, None)
+        c.set(int(mx + 0.02 * mr + mr * 0.06), int(my), funke)
+
+    elif art == "bruch":
+        # Ein Auge ist noch da. Wo das andere war, ist die Maske
+        # zersprungen.
+        _augenloch(c, mx + mr * 0.48, my, mr * 0.48, 1.0, -0.40, funke)
+        for k in range(5):
+            w = -2.5 + k * 0.55
+            for i in range(int(mr * (0.5 + 0.5 * hash01(k, 3)))):
+                c.set(int(mx - mr * 0.40 + math.cos(w) * i),
+                      int(my + math.sin(w) * i), P.INK if i < 2 else ritz)
+
+    else:
+        for seite in (-1, 1):
+            _augenloch(c, mx + seite * mr * 0.46 + mr * 0.10, my,
+                       mr * 0.44, 0.9, seite * 0.42, funke)
+
+    c.glow(mx, my, 3.2 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 55))
+
+
+
 # ------------------------------------------------------------------ Heldin
 #
 # Cadence hat keinen Koerper, sie hat eine Gestalt.
@@ -507,328 +654,239 @@ def _draw_klinge(c: Canvas, *, cx: int, base: float, height: float, phase: float
     """
     Die Schallklinge auf ihrem Ruecken.
 
-    Sie ist das einzige Rosa an ihr - und das mit Absicht: alles andere ist
-    kalt und blass, also traegt genau ein Gegenstand die Gegenfarbe, und
-    man sieht schon an der Silhouette, dass sie bewaffnet ist. Kristall,
-    nicht Metall: die Klinge ist gewachsen wie die Nadeln, an denen sie
-    geht.
+    Kein geschmiedetes Schwert, sondern ein **gewachsener Kristall**, und
+    der Unterschied liegt in drei Dingen:
+
+      duenn        Ueber die ganze Laenge kaum breiter als drei Pixel.
+                   Ein Zwischenstand war fuenf breit und lief kaum zu -
+                   das war eine Latte mit Griff.
+      durchsichtig Sie deckt nicht. Was hinter ihr liegt, scheint durch,
+                   und deshalb liegt sie auch nicht als Balken vor der
+                   Figur, sondern *in* ihr.
+      unregelmaessig  Kein glatter Rand. Ein Kristall waechst in Stufen:
+                   die Kanten springen um einen halben Pixel, mal
+                   breiter, mal schmaler, und genau diese Sprunghaftigkeit
+                   unterscheidet ihn von Metall. Vorher war sie glatt
+                   geschliffen wie eine Klinge aus der Schmiede - und
+                   damit war das ganze Thema weg.
+
+    Rosa bleibt sie: alles andere an ihr ist gruen, also traegt genau ein
+    Gegenstand die Gegenfarbe.
     """
     S = HERO_SCALE
-    # Etwas dunkler als ihre Augen: die Klinge ist rosa, aber sie ist nicht
-    # das Erste, was man ansieht.
-    rosa = mix(hexc("#ff7ad0"), P.CLOAK, 0.46)
-    rosa_hi = mix(rosa, P.BONE, 0.46)
-    rosa_lo = mix(rosa, P.CLOAK, 0.70)
-    griff = mix(P.CLOAK, P.INK, 0.45)
+    rosa = mix(hexc("#ff7ad0"), P.CLOAK, 0.30)
+    rosa_hi = mix(rosa, P.BONE, 0.62)
+    rosa_lo = mix(rosa, P.CLOAK, 0.62)
+    griff = mix(P.CLOAK, P.INK, 0.40)
 
-    # Schraeg ueber den Ruecken: Griff oben an der Schulter, Spitze unten
-    # hinten. Vorher lag sie andersherum - Knauf am Guertel, Spitze ueber
-    # dem Kopf -, und so trage niemand ein Schwert: man kaeme nicht dran.
-    # Der Griff gehoert dorthin, wo die Hand hinlangt.
-    # Fast senkrecht am Ruecken, deutlich links neben der Mitte. Sie
-    # schaut nach rechts, ihr Ruecken liegt also links - und der Kopf ist
-    # inzwischen so gross, dass alles innerhalb einer Kopfbreite von der
-    # Mitte schlicht dahinter verschwindet. Ein Zwischenstand hatte das
-    # Parierstueck genau dort: sichtbar blieb ein heller Querbalken vor
-    # der Brust, der aussah wie ein Gurt, und unten eine rosa Spitze.
-    # Dieselbe Schraege ueber den Ruecken wie vorher, nur umgekehrt
-    # herum: Knauf oben hinter der linken Schulter, Blatt nach unten
-    # rechts zur Huefte. Vorher zeigte die Spitze nach oben ueber den
-    # Kopf - da kaeme keine Hand hin.
-    #
-    # Senkrecht neben sie gestellt hat sie ausgesehen wie ein Brett, das
-    # zufaellig danebensteht: sie muss die Gestalt kreuzen, sonst traegt
-    # sie niemand.
+    # Schraeg ueber den Ruecken: Knauf oben hinter der Schulter, Spitze
+    # nach unten vorbei an der Huefte.
     a = math.pi - 0.75
     mx = cx - 1.0 * S + lean * 0.3
     my = base - 0.52 * height
     ax, ay = math.cos(a), math.sin(a)
+    nx, ny = -ay, ax
 
-    # Lang und schmal. Vorher war sie zweiundzwanzig Pixel lang und sieben
-    # breit - drei zu eins, und in diesem Verhaeltnis liest sich nichts
-    # mehr als Waffe. Es sah aus wie ein rosa Lappen, der ihr am Ruecken
-    # haengt, und weil er in ihrer Silhouette den meisten Platz einnahm,
-    # wurde die ganze Gestalt davon unfoermig.
-    #
-    # Ein Schwert ist ungefaehr zehnmal so lang wie breit, hat ein
-    # Parierstueck quer dazu und einen Griff dahinter. Erst diese drei
-    # Teile machen aus einem Strich eine Waffe.
-    # Lang genug, um ein Schwert zu sein, kurz genug, um nicht die Figur
-    # zu sein: ueber die volle Koerperhoehe hinaus war sie der groesste
-    # Gegenstand im Bild und zog allen Blick auf sich.
-    laenge = height * 0.48
-    breit = 1.15 * S
+    laenge = height * 0.56
+    breit = 0.92 * S
 
-    # Griff und Knauf, unterhalb des Parierstuecks.
-    for i in range(int(4.2 * S)):
-        d = i + 1.5
+    # --- Griff: kurz, dunkel, ohne Knauf. Ein Kristall braucht keinen.
+    for i in range(int(3.0 * S)):
+        d = i + 1.0
         c.set(int(mx - ax * d), int(my - ay * d), griff)
-        if i < 2:
-            c.set(int(mx - ax * d - ay), int(my - ay * d + ax), griff)
-    knauf = (mx - ax * (4.2 * S + 1.5), my - ay * (4.2 * S + 1.5))
-    c.ellipse(knauf[0], knauf[1], 1.1 * S, 1.1 * S, mix(rosa_lo, P.BONE, 0.30))
 
-    # Das Parierstueck: quer zur Klinge, kurz, mit abgesenkten Enden.
-    for k in range(-int(2.4 * S), int(2.4 * S) + 1):
-        q = abs(k) / max(1.0, 2.4 * S)
-        px = mx - ay * k - ax * q * 1.4
-        py = my + ax * k - ay * q * 1.4
-        c.set(int(px), int(py), rosa_lo if q > 0.55 else mix(rosa_hi, P.BONE, 0.2))
+    # --- Das Parierstueck --------------------------------------------------
+    #
+    # Zwei kurze Auswuechse quer zur Klinge, gewachsen statt montiert -
+    # und in ihrer Farbe. Ein Zwischenstand hat hier `_scherbe` benutzt,
+    # und die zeichnet im gruenen Kristall der Figur: heraus kam ein
+    # waagerechter Balken quer ueber ihre Huefte, der aussah wie ein
+    # Guertel.
+    for seite in (-1, 1):
+        laengs = 1.5 * S
+        n = max(2, int(laengs * 2))
+        for i in range(n + 1):
+            u = i / n
+            w = a + seite * (math.pi / 2 - 0.30)
+            px = mx + math.cos(w) * laengs * u
+            py = my + math.sin(w) * laengs * u
+            deck = 0.85 - 0.35 * u
+            col = rosa_hi if u < 0.4 else rosa
+            c.blend(int(px), int(py), (col[0], col[1], col[2], int(255 * deck)))
 
-    # Das Blatt: zum Ende hin schmaler, mit heller Schneide vorn und
-    # dunklem Ruecken - ohne diesen Unterschied bleibt es ein Balken.
+    # --- Das Blatt ---------------------------------------------------------
+    #
+    # Die Breite folgt keiner glatten Kurve, sondern springt: eine
+    # Grundverjuengung, darauf ein Sprung je nach Position. So bekommt
+    # der Rand Stufen, wie sie ein Kristall beim Wachsen bildet.
     i = 0.0
     while i < laenge:
         v = i / laenge
-        w = breit * (1.0 - 0.72 * v ** 1.35)
+        stufe = int(v * 7)                       # sieben Wachstumsstufen
+        sprung = (hash01(stufe * 11 + 3, 1) - 0.5) * 0.55
+        w = breit * (1.0 - 0.62 * v ** 1.15 + sprung)
+        w = max(0.55, w)
+
         px, py = mx + ax * i, my + ay * i
         q = -w
         while q <= w:
             qx, qy = px - ay * q, py + ax * q
             rand = q / max(0.4, w)
-            if rand > 0.55:
-                col = rosa_hi                       # Schneide
-            elif rand < -0.45:
-                col = rosa_lo                       # Ruecken
+            if rand > 0.50:
+                col, deck = rosa_hi, 0.92           # Schneide
+            elif rand < -0.42:
+                col, deck = rosa_lo, 0.52           # Ruecken
             else:
-                col = rosa                          # Mittelgrat
-            c.set(int(qx), int(qy), col)
+                col, deck = rosa, 0.66              # Mittelgrat
+            # Nach vorn wird sie durchsichtiger: die Spitze vergeht fast.
+            deck *= 1.0 - 0.30 * v
+            c.blend(int(qx), int(qy), (col[0], col[1], col[2], int(255 * deck)))
             q += 0.5
+
         # Ein Glanz laeuft die Schneide hinauf.
-        if abs(v - (0.5 + 0.5 * math.sin(phase * 1.4 + sway))) < 0.08:
-            c.set(int(px - ay * w), int(py + ax * w), mix(rosa_hi, P.BONE, 0.6))
+        if abs(v - (0.5 + 0.5 * math.sin(phase * 1.4 + sway))) < 0.07:
+            c.blend(int(px - ay * w), int(py + ax * w),
+                    (*mix(rosa_hi, P.BONE, 0.6)[:3], 230))
         i += 0.5
 
-    c.set(int(mx + ax * laenge), int(my + ay * laenge), mix(rosa_hi, P.BONE, 0.4))
-    c.glow(mx + ax * laenge * 0.55, my + ay * laenge * 0.55, 5 * S,
-           (rosa[0], rosa[1], rosa[2], 30))
+    # Die Spitze bleibt hell - dort bricht das Licht.
+    c.blend(int(mx + ax * laenge), int(my + ay * laenge),
+            (*mix(rosa_hi, P.BONE, 0.5)[:3], 210))
+    c.glow(mx + ax * laenge * 0.5, my + ay * laenge * 0.5, 4 * S,
+           (rosa[0], rosa[1], rosa[2], 22))
 
 
 def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
                   schwung: float, lean: float) -> None:
     """
-    Der Schlag: die Klinge verlaesst den Ruecken und faehrt einen Bogen.
+    Der Schlag: eine Peitsche, kein Zirkelbogen.
 
-    Der erste Fehler war, dass die Klinge waehrend des Schlags *auf ihrem
-    Ruecken liegen blieb*. Sie hat sich nach vorn geneigt und ein wenig
-    geleuchtet, und die Waffe hat nichts getan.
+    Der letzte Stand war ein Ellipsenausschnitt - gleichmaessig gekruemmt,
+    gleichmaessig dick, an beiden Enden gleich. Geometrisch sauber und als
+    Bewegung tot: ein Kreisbogen sieht an jeder Stelle gleich aus, also
+    erzaehlt er nicht, wo die Bewegung herkommt und wohin sie geht.
 
-    Der zweite Fehler war der Nachzieher: fuenf blassere Kopien der
-    Klinge auf frueheren Winkeln. Das liest sich nicht als Bewegung,
-    sondern als Faecher aus Stoecken. Eine Klinge, die durch die Luft
-    faehrt, hinterlaesst keine Klingen - sie hinterlaesst eine
-    **gewischte Flaeche**, und die wird hier zwischen zwei Winkeln
-    gefuellt, aussen hell und nach innen auslaufend.
+    Eine Peitsche macht das Gegenteil. Sie hat
 
-    Dazu ist die Klinge im Schlag kuerzer als auf dem Ruecken. Sie fuehrt
-    sie mit ausgestrecktem Arm, nicht ueber dem Kopf - eine Fechterin,
-    keine Holzfaellerin.
+      einen **Ansatz**, dick und fast gerade, dort wo die Hand ist,
+      einen **Bauch**, der weit nach vorn ausholt,
+      und eine **Spitze**, die sich zurueckrollt und duenn ausleckt.
 
-    Der dritte Fehler war der Massstab. Die Figur ist knapp vierzig Pixel
-    hoch; auf dieser Groesse *kann* eine Klinge keinen Schlag erzaehlen -
-    sie ist zwei Pixel breit und dreht sich um wenige Grad pro Bild. Was
-    man sieht, ist immer nur der **Bogen**. Beim Vorbild ist der Nagel
-    kaum zu erkennen, die weisse Sichel dagegen fuellt den halben
-    Bildschirm, und genau deshalb liest man den Schlag sofort.
+    Die Kruemmung ist also nicht konstant, sondern nimmt zum Ende hin
+    stark zu - genau das liest man als Schnellen. Umgesetzt als Kurve mit
+    wachsendem Winkelzuwachs: jeder Schritt dreht ein Stueck mehr als der
+    davor, und die Schrittlaenge nimmt zugleich ab. Das ist eine
+    logarithmische Spirale, und sie ist die Form, die eine schnellende
+    Bewegung in der Natur immer annimmt.
 
-    Also andersherum gebaut als vorher: zuerst der Bogen, gross, mit
-    gleichmaessiger Dicke und einer hellen Vorderkante; die Klinge liegt
-    danach auf seiner Vorderkante und ist nur noch die Begruendung. Der
-    Bogen beginnt weit hinter der Klinge und endet an ihr - vorne hell
-    und geschlossen, hinten duenn und offen. Er startet ausserdem
-    ausserhalb ihrer Silhouette: ein Bogen, der durch die Figur laeuft,
-    sieht aus wie ein Strich quer durchs Bild.
-
-    `schwung` 0 = ausgeholt, 1 = durchgezogen.
+    `schwung` 0 = ausgeholt, 1 = durchgezogen. Der Ausschlag laeuft nach
+    vorn, und die Spitze rollt dabei ein.
     """
     S = HERO_SCALE
     rosa = mix(hexc("#ff7ad0"), P.CLOAK, 0.14)
-    rosa_hi = mix(rosa, P.BONE, 0.55)
+    rosa_hi = mix(rosa, P.BONE, 0.62)
     rosa_lo = mix(rosa, P.CLOAK, 0.5)
 
-    # Der Drehpunkt ist die Schulter, nicht die Hand: von dort geht der
-    # Bogen aus, und nur deshalb liegt sein Mittelpunkt ruhig, waehrend
-    # sich alles andere bewegt.
-    dreh_x = cx + 0.6 * S + lean * 0.4
-    dreh_y = base - height * 0.52
-
-    # Ein Schlag zur Seite ist keine Kopie des Schlags nach oben.
-    #
-    # Der letzte Stand holte weit ueber den Kopf aus und zog nach vorn
-    # unten durch. Das ist der Bogen fuer einen Hieb *nach oben* - fuer
-    # den Hieb zur Seite steht er zu hoch und ist zu rund. Zur Seite
-    # gehoert eine lange, flache Sichel auf Brusthoehe, die weit nach
-    # vorn reicht und sich kaum kruemmt.
-    #
-    # Die Kruemmung kommt darum nicht mehr von einem Kreis, sondern von
-    # einer Ellipse: waagerecht weit, senkrecht flach. Derselbe
-    # Winkelbereich ergibt damit eine gestreckte Sichel statt eines
-    # Kreisbogens.
-    a0, a1 = -0.98, 0.82
     t = schwung ** 0.78
-    winkel = a0 + (a1 - a0) * t
+    schritte = 120
 
-    # Der Arm streckt sich erst im Durchzug. Bei voller Reichweite schon
-    # im Ausholen stand die Spitze ueber dem oberen Bildrand und wurde
-    # abgeschnitten - und ein angeschnittener Schlag liest sich nicht.
-    reichweite = height * (0.46 + 0.18 * t)
+    # Der Ansatz sitzt an der Hand, auf Brusthoehe, leicht vor ihr.
+    hand_x = cx + 2.2 * S + lean * 0.5
+    hand_y = base - height * 0.46
 
-    # Der Bogen ist nicht so lang wie die Klinge, sondern deutlich
-    # laenger. Beim Vorbild misst die Sichel gut das Doppelte der Figur -
-    # sie ist das eigentliche Bild, die Waffe nur ihr Anlass.
+    start_winkel = -1.05 + t * 0.42
+    # Wie stark sie sich einrollt. Der erste Anlauf hat sich hier
+    # verrechnet: der Zuwachs galt pro Schritt, und bei hundertzwanzig
+    # Schritten waren das fast vier volle Umdrehungen - aus der Peitsche
+    # wurde ein Schneckenhaus. Ueber die ganze Laenge soll sie etwa eine
+    # Dreiviertelwendung machen: weit nach vorn, und die Spitze kommt
+    # zurueck. Mehr ist kein Schlag mehr, sondern eine Spirale.
+    gesamt_wendung = 1.45 + 2.05 * t
+    einrollen = gesamt_wendung / (schritte * 1.175)
+    laenge = height * (1.10 + 0.80 * t)
+
+    punkte = []
+    x, y, w = hand_x, hand_y, start_winkel
+    for i in range(schritte):
+        u = i / (schritte - 1)
+        ds = laenge / schritte * (1.55 - 1.05 * u)
+        w += einrollen * (0.35 + 1.65 * u)
+        x += math.cos(w) * ds
+        y += math.sin(w) * ds
+        punkte.append((x, y, u))
+
+    # --- Die Flaeche -------------------------------------------------------
     #
-    # Waagerecht weit, senkrecht flach: das macht aus dem Kreisbogen die
-    # langgezogene Sichel.
-    # Gross im Radius, klein im Winkel: so wird eine Sichel lang und
-    # flach statt kurz und rund. Die Bogenlaenge ist Radius mal Winkel,
-    # die Kruemmung ist eins durch Radius - beides zieht in dieselbe
-    # Richtung, sobald man den Radius aufmacht und den Winkel zumacht.
-    bogen_rx = height * (1.02 + 0.42 * t)
-    bogen_ry = height * (0.78 + 0.32 * t)
+    # Dick am Ansatz, spitz am Ende, senkrecht zur Laufrichtung gefuellt.
+    # Die Punkte kommen in eine Tabelle, damit sich ueberlappende
+    # Schritte nicht zu einem Schachbrett aufaddieren.
+    flaeche = {}
+    max_dicke = height * 0.135
+    for k in range(len(punkte) - 1):
+        px, py, u = punkte[k]
+        qx, qy, _ = punkte[k + 1]
+        dx, dy = qx - px, qy - py
+        laengs = math.hypot(dx, dy) or 1.0
+        nx, ny = -dy / laengs, dx / laengs
 
-    # --- Der Bogen.
-    # Zum Schluss klingt er ab: im letzten Bild soll die ausgestreckte
-    # Klinge stehen, nicht noch einmal dieselbe Sichel.
-    verblassen = 1.0 if t < 0.93 else 1.0 - (t - 0.93) / 0.07 * 0.55
-    if t > 0.06:
-        # Er zieht einen festen Winkelbetrag hinter sich her, statt bis
-        # zum Anfang zurueckzureichen: sonst steht im letzten Bild ein
-        # halber Kreis um sie herum.
-        # Eine Sichel, keine Schleifspur.
-        #
-        # Der Unterschied steckt im Querschnitt. Eine Spur ist hinten
-        # duenn und vorn dick, laeuft also in eine stumpfe Kante aus.
-        # Eine Sichel ist in der Mitte am breitesten und laeuft nach
-        # *beiden* Seiten spitz zu - das ist die Form, die man von der
-        # Klinge im Vorbild kennt, und sie ist der ganze Grund, warum man
-        # dort einen Schlag sieht und keinen Wisch. Der Aussenradius
-        # bleibt darum fest; nur der Innenradius wandert.
-        # Und sie ist **duenn**. Das war der letzte Fehler: eine Sichel,
-        # die vierzig Prozent ihres Radius dick ist, ist eine Mondsichel,
-        # keine Klingenspur. Beim Vorbild misst die dickste Stelle keine
-        # zehn Prozent, laeuft ueber ihre ganze Laenge zu zwei Nadeln aus
-        # und ist dabei halb durchsichtig - man sieht den Raum dahinter.
-        schleppe = min(t, 0.88)
-        max_dicke = height * 0.115
-        schritte = 96
+        # Die Peitsche wickelt sich ab: am Anfang ist nur der Ansatz da.
+        sichtbar = min(1.0, max(0.0, (t * 1.35 - u * 0.85) * 2.4))
+        if sichtbar <= 0:
+            continue
+        dicke = max_dicke * (0.30 + 0.95 * math.sin(math.pi * min(1.0, u * 0.62 + 0.14)) ** 1.2)
+        dicke *= (1 - u) ** 0.85
+        dicke = max(0.6, dicke)
 
-        # Erst sammeln, dann setzen. Wird beim Abtasten direkt gemischt,
-        # trifft die Bahn manche Pixel zweimal und andere einmal, und die
-        # Sichel bekommt ein Schachbrettmuster. Pro Pixel zaehlt nur der
-        # hoechste Wert, den die Bahn dort erreicht.
-        flaeche: dict[tuple[int, int], tuple[tuple, int]] = {}
+        j = -dicke
+        while j <= dicke:
+            e = abs(j) / dicke
+            xi, yi = int(px + nx * j), int(py + ny * j)
+            if j > dicke * 0.35:
+                col, deck = rosa_hi, 0.95
+            elif j > -dicke * 0.30:
+                col, deck = rosa, 0.72
+            else:
+                col, deck = rosa_lo, 0.42
+            deck *= sichtbar * (1.0 - 0.55 * u) * (1.0 - 0.45 * e ** 2)
+            alt = flaeche.get((xi, yi))
+            if alt is None or alt[1] < deck:
+                flaeche[(xi, yi)] = (col, deck)
+            j += 0.5
 
-        def auftragen(px: float, py: float, col, deckung: int) -> None:
-            schluessel = (int(px), int(py))
-            vorher = flaeche.get(schluessel)
-            if vorher is None or deckung > vorher[1]:
-                flaeche[schluessel] = (col, deckung)
+    for (xi, yi), (col, deck) in flaeche.items():
+        c.blend(xi, yi, (col[0], col[1], col[2], int(255 * min(1.0, deck))))
 
-        for k in range(schritte):
-            u = k / (schritte - 1)          # 0 = hintere Spitze, 1 = Klinge
-            a = a0 + (a1 - a0) * (t - schleppe * (1 - u))
-            ax, ay = math.cos(a), math.sin(a)
-            # Linse: null an den Enden, am dicksten kurz vor der Klinge.
-            # Im Ausholen ist sie zusaetzlich flacher - eine Sichel in
-            # voller Dicke ueber einem Viertel Bogen ist ein Klumpen.
-            dicke = math.sin(math.pi * min(1.0, u ** 0.62)) ** 0.75
-            dicke *= 0.55 + 0.45 * t
-            # Die Dicke wird *senkrecht zur Bahn* abgetragen, nicht auf
-            # dem Radius. Bei einer Ellipse zeigt der Radius nicht nach
-            # aussen, und eine Sichel, die entlang des Radius dick wird,
-            # ist an den Enden breit und in der Mitte schmal - genau
-            # verkehrt herum.
-            # Die Normale einer Ellipse ist nicht ihr Radius. Sie ist
-            # proportional zu (ry*cos a, rx*sin a) - der Tangente ueber
-            # Kreuz. Ein Zwischenstand hat hier die Tangente selbst
-            # genommen und die Dicke damit *entlang* der Bahn abgetragen:
-            # die Sichel blieb ein Haarstrich, weil die Dicke in sich
-            # selbst hineinlief.
-            nx, ny = ax * bogen_ry, ay * bogen_rx
-            nl = math.hypot(nx, ny) or 1.0
-            nx, ny = -nx / nl, -ny / nl
-            px0, py0 = dreh_x + ax * bogen_rx, dreh_y + ay * bogen_ry
-            # Halb durchsichtig, und an den Spitzen fast nichts: eine
-            # Sichel, die ueberall gleich deckt, ist ein Aufkleber.
-            deckung = int((70 + 155 * math.sin(math.pi * min(1.0, u ** 0.6)) ** 0.5)
-                          * verblassen)
-            d = 0.0
-            tiefe = max_dicke * dicke
-            while d <= tiefe:
-                v = 1.0 - d / max(0.6, tiefe)
-                # Aussen heller: die Vorderkante der Sichel traegt das Licht.
-                auftragen(px0 + nx * d, py0 + ny * d,
-                          mix(rosa, (255, 255, 255, 255), 0.34 + v * 0.52),
-                          deckung)
-                d += 0.35
-            # Die Aussenkante durchgehend - sie ist die Linie, an der das
-            # Auge den Schlag festmacht, und sie laeuft ueber die ganze
-            # Sichel, nicht nur ueber ihr vorderes Drittel.
-            if dicke > 0.05 and verblassen > 0.7:
-                kante = int(215 * math.sin(math.pi * min(1.0, u ** 0.6)) ** 0.35)
-                for e in (0.0, 0.45):
-                    auftragen(px0 - nx * e, py0 - ny * e,
-                              mix(P.BONE, (255, 255, 255, 255), 0.45), kante)
+    # Ganz am Ende ein heller Punkt mit Schein: dort knallt sie.
+    if t > 0.25:
+        sx, sy, _ = punkte[-1]
+        c.blend(int(sx), int(sy), (*mix(rosa_hi, P.BONE, 0.7)[:3], 235))
+        c.glow(sx, sy, 4.5 * S, (rosa[0], rosa[1], rosa[2], int(70 * t)))
 
-        for (px, py), (col, deckung) in flaeche.items():
-            c.blend(px, py, (col[0], col[1], col[2], deckung))
-
-    # --- Die Klinge, auf der Vorderkante des Bogens.
+    # --- Die Klinge selbst -------------------------------------------------
     #
-    # Duenn, lang, halb durchsichtig. Sie ist aus Klang erstarrt, kein
-    # geschmiedetes Eisen: was man sehen soll, ist eine helle Kante und
-    # ein Schimmer daneben, nicht ein Balken. Vorher war sie fast vier
-    # Pixel breit und deckend - damit stand sie als kraeftigster
-    # Gegenstand im Bild und nahm der Sichel den Rang ab.
-    ax, ay = math.cos(winkel), math.sin(winkel)
-    hand = reichweite * 0.16
-    # Laenger und mit Koerper. Als reine Nadel war sie zwar nicht mehr der
-    # kraeftigste Gegenstand im Bild - aber auch kein Schwert mehr,
-    # sondern ein Zahnstocher. Ein Blatt braucht Breite am Ansatz, eine
-    # Verjuengung ueber seine Laenge und eine Spitze, die kurz ist.
-    spitze = reichweite * 1.42
-    kern = mix(rosa_hi, P.BONE, 0.45)
-    breit = 1.45 * S
-
-    # Parierstueck quer zur Klinge - erst daran erkennt man, wo die Waffe
-    # aufhoert und die Hand anfaengt.
-    for k in range(-int(2.2 * S), int(2.2 * S) + 1):
-        px, py = dreh_x + ax * hand - ay * k, dreh_y + ay * hand + ax * k
-        c.blend(int(px), int(py), (rosa_lo[0], rosa_lo[1], rosa_lo[2], 210))
-
+    # Sie liegt auf dem ersten Stueck der Peitsche und ist nur noch die
+    # Begruendung fuer die Flaeche. Kurz, duenn, durchsichtig, mit
+    # denselben Wachstumsstufen wie auf dem Ruecken.
+    reichweite = height * (0.40 + 0.22 * t)
+    ax, ay = math.cos(start_winkel), math.sin(start_winkel)
+    hand = reichweite * 0.14
     i = hand
-    while i < spitze:
-        v = max(0.0, (i - hand) / (spitze - hand))
-        w = breit * (1.0 - 0.78 * v ** 1.5)
-        px, py = dreh_x + ax * i, dreh_y + ay * i
+    while i < reichweite:
+        v = (i - hand) / max(1.0, reichweite - hand)
+        w = 1.25 * S * (1.0 - 0.68 * v ** 1.2)
+        stufe = int(v * 6)
+        w = max(0.5, w + (hash01(stufe * 11 + 3, 1) - 0.5) * 0.5 * S)
+        px, py = hand_x + ax * i, hand_y + ay * i
         q = -w
         while q <= w:
             qx, qy = px - ay * q, py + ax * q
             rand = q / max(0.4, w)
-            # Die Schneide (aussen, zur Sichel hin) traegt das Licht, der
-            # Ruecken verliert sich.
-            if rand > 0.5:
-                col, a = kern, int(235 - abs(rand) * 40)
-            elif rand < -0.4:
-                col, a = rosa_lo, int(145 - abs(rand) * 60)
-            else:
-                col, a = rosa, int(200 - abs(rand) * 40)
-            c.blend(int(qx), int(qy), (col[0], col[1], col[2], max(0, a)))
+            col = rosa_hi if rand > 0.45 else (rosa if rand > -0.45 else rosa_lo)
+            c.blend(int(qx), int(qy), (col[0], col[1], col[2], int(215 - 60 * v)))
             q += 0.5
         i += 0.5
-
-    # Faust, Parierstueck, Knauf - drei Punkte, mehr traegt die Groesse nicht.
-    fx, fy = dreh_x + ax * hand, dreh_y + ay * hand
-    c.ellipse(fx, fy, 1.6 * S, 1.6 * S, P.BONE_SH)
-    for k in (-2, -1, 1, 2):
-        c.set(int(fx - ay * k), int(fy + ax * k), rosa_lo)
-    for i in range(int(2.5 * S)):
-        c.set(int(fx - ax * (i + 1)), int(fy - ay * (i + 1)),
-              mix(rosa_lo, P.CLOAK, 0.35))
-
-    sx, sy = dreh_x + ax * spitze, dreh_y + ay * spitze
-    c.set(int(sx), int(sy), mix(rosa_hi, P.BONE, 0.7))
-    c.glow(sx, sy, 5 * S, (rosa[0], rosa[1], rosa[2], 55))
+    c.blend(int(hand_x + ax * reichweite), int(hand_y + ay * reichweite),
+            (*mix(rosa_hi, P.BONE, 0.6)[:3], 235))
 
 
 def _draw_beine(c: Canvas, *, cx: int, base: float, height: float, phase: float,
@@ -1683,42 +1741,19 @@ def draw_heroine(
                 aa = int(240 * (1 - u * 0.42))
                 c.blend(int(fx) + dx, int(fy), (col[0], col[1], col[2], aa))
 
-    # --- Die Augen --------------------------------------------------------
-    #
-    # Zwei dunkle Loecher in der hellen Maske, und in jedem ein rosa
-    # Funken. Ein Loch liest sich auf zehn Pixel Kopfhoehe sofort als
-    # Blick; ein gemaltes Auge nicht.
-    #
-    # Sie blinzelt selten und kurz. Ein Blinzeln, das man erwartet, ist
-    # Mechanik; eines, das man verpasst, ist Leben.
-    rosa = hexc("#ff7ad0")
-    zu = math.sin(phase * 0.8) > 0.93
-    #
-    # Schmal und schraeg. Ein erster Anlauf machte sie drei Pixel breit
-    # und setzte sie eng nebeneinander - das las sich als grinsender
-    # Mund mit Zaehnen, nicht als Blick.
-    ay_ = kopf_y - mr * 0.10
-    abstand = max(3.0, mr * 0.98)
-    hoehe = max(2, int(mr * 0.52))
-    for seite in (-1, 1):
-        ex = kopf_x + seite * abstand * 0.5 + mr * 0.16
-        if zu:
-            # Geschlossen: ein waagerechter Strich bleibt stehen.
-            for dx in range(-1, 1):
-                c.set(int(ex) + dx, int(ay_), maske_lo)
-            continue
-        for dy in range(hoehe):
-            # Nach aussen unten geneigt - das gibt dem Blick eine Richtung.
-            versatz = int(seite * dy * 0.34)
-            c.set(int(ex) + versatz, int(ay_) + dy, P.INK)
-            if dy == 0:
-                c.set(int(ex) + versatz - seite, int(ay_), mix(P.INK, maske_lo, 0.4))
-        c.set(int(ex), int(ay_), mix(rosa, (255, 255, 255, 255), 0.30))
-        c.glow(ex, ay_, 2.4 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 75))
+    _maske_zeichnung(c, art=kind, mx=kopf_x, my=kopf_y, mr=mr, phase=phase,
+                     grund=maske, schatten=maske_lo)
 
-    # --- Der Kern ---------------------------------------------------------
-    _draw_kern(c, kern=kind, cx=cx, base=base, height=height,
-               phase=phase, lean=lean, glow=glow, mid=mid, signatur=signatur)
+    # Der Kern wird nicht mehr als Gegenstand an sie geheftet.
+    #
+    # Frueher steckte an ihrer Brust eine Scherbe des Instruments - ein
+    # Stueck Glockenrand, der Arm eines Metronoms. Das war genau die
+    # Loesung, die man nimmt, wenn einem nichts einfaellt: hier die
+    # Figur, und da klebt das Instrument drauf. Man sah eine Frau mit
+    # einem Ding.
+    #
+    # Was der Kern ist, steht ihr jetzt im Gesicht: jede Anlage hat ihre
+    # eigene Maske, und die ist kein Anhaengsel, sondern ihr Kopf.
 
     if glow > 0:
         c.glow(cx, base - height * 0.45, 11,

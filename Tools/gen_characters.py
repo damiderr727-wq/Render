@@ -79,40 +79,104 @@ MASKEN = ("stimmgabel", "leier", "trommel", "floete",
 
 def _augenloch(c: Canvas, x: float, y: float, laenge: float, breite: float,
                winkel: float, funke=None) -> None:
-    """Ein schraeger Schlitz mit Braue darueber."""
+    """
+    Eine Oeffnung im Kristall - kein aufgemaltes Auge.
+
+    Der Unterschied liegt am Rand. Ein Loch in einer Platte hat eine
+    Kante, und die Kante faengt Licht: auf der Lichtseite ein heller
+    Saum, auf der Gegenseite ein dunkler. Ohne diese zwei Reihen sieht
+    ein schwarzer Fleck aus wie Farbe, nicht wie eine Oeffnung - und
+    genau daran hat der erste Anlauf gekrankt, der aussah, als truege sie
+    eine Sonnenbrille.
+    """
     ax, ay = math.cos(winkel), math.sin(winkel)
     nx, ny = -ay, ax
     n = max(2, int(laenge * 2))
+    saum = mix(KRISTALL_HELL, P.BONE, 0.35)
     for i in range(n + 1):
         t = i / n
         # In der Mitte am breitesten, an beiden Enden spitz - eine
-        # Mandel, kein Balken.
-        w = breite * math.sin(math.pi * (0.10 + t * 0.80)) ** 0.6
+        # Spaltflaeche, kein Balken.
+        w = breite * math.sin(math.pi * (0.08 + t * 0.84)) ** 0.55
         px, py = x + ax * laenge * (t - 0.5), y + ay * laenge * (t - 0.5)
         q = -w
         while q <= w:
             c.set(int(px + nx * q), int(py + ny * q), P.INK)
             q += 0.5
-        # Die Braue: eine Reihe darueber, etwas dunkler als die Maske.
-        c.set(int(px + nx * (-w - 1)), int(py + ny * (-w - 1)),
-              mix(P.INK, P.BONE_LO, 0.45))
+        # Oben die helle Bruchkante, unten der Schatten der Wandung.
+        c.set(int(px + nx * (-w - 1)), int(py + ny * (-w - 1)), saum)
+        c.set(int(px + nx * (w + 1)), int(py + ny * (w + 1)),
+              mix(KRISTALL_TIEF, P.INK, 0.45))
     if funke is not None:
         c.set(int(x), int(y), funke)
+
+
+def _ritzung(c: Canvas, punkte, farbe) -> None:
+    """Eine eingeritzte Linie im Kristall: die Zeichnung der Maske."""
+    for i in range(len(punkte) - 1):
+        x0, y0 = punkte[i]
+        x1, y1 = punkte[i + 1]
+        n = max(1, int(max(abs(x1 - x0), abs(y1 - y0)) * 2))
+        for k in range(n + 1):
+            t = k / n
+            c.set(int(x0 + (x1 - x0) * t), int(y0 + (y1 - y0) * t), farbe)
+
+
+def _facetten(c: Canvas, mx: float, my: float, mr: float) -> None:
+    """
+    Der Schliff der Maske.
+
+    Sie ist aus demselben Stoff wie ihre Beine und ihre Arme: Klang, der
+    zum Stillstand gekommen ist. Das muss man sehen, sonst ist die Maske
+    eine Plastikschale, die zufaellig vor ihrem Gesicht haengt.
+
+    Drei Kanten reichen: eine helle ueber der Wange, eine zweite kuerzere
+    daneben, und eine dunkle Spaltlinie, die schraeg durch die untere
+    Haelfte laeuft. Mehr wird bei zehn Pixeln Kopfhoehe zu Rauschen.
+    """
+    hell = mix(KRISTALL_HELL, P.BONE, 0.25)
+    tief = mix(KRISTALL_TIEF, P.BONE_LO, 0.45)
+    _ritzung(c, [(mx + mr * 0.52, my - mr * 0.72),
+                 (mx + mr * 0.78, my + mr * 0.10),
+                 (mx + mr * 0.52, my + mr * 0.78)], hell)
+    _ritzung(c, [(mx - mr * 0.70, my - mr * 0.30),
+                 (mx - mr * 0.58, my + mr * 0.28)], tief)
+    _ritzung(c, [(mx - mr * 0.40, my + mr * 0.62),
+                 (mx + mr * 0.24, my + mr * 0.86)], tief)
+
+
+MASKEN = ("stimmgabel", "leier", "trommel", "floete",
+          "metronom", "glocke", "orgelpfeife", "bruch")
 
 
 def _maske_zeichnung(c: Canvas, *, art: str, mx: float, my: float, mr: float,
                      phase: float, grund, schatten) -> None:
     """
-    Zeichnet die Augen und die Zeichnung der jeweiligen Maske.
+    Augen und Zeichnung der jeweiligen Maske.
 
-    `mr` ist der halbe Durchmesser der Maskenflaeche. Alles hier rechnet
-    in Vielfachen davon, damit die Masken mitwachsen, wenn sich die
+    Acht Masken, und jede zeigt, **wie ihr Klang sich verhaelt** - nicht,
+    wie das Instrument aussieht. Das ist der Unterschied, an dem der
+    vorige Anlauf gescheitert ist: dort steckte ein Stueck Glockenrand an
+    ihrer Brust, hier stand das Instrument als Umriss im Gesicht, und
+    beides ist dasselbe Missverstaendnis. Man klebt nicht den Gegenstand
+    an die Figur; man zeigt, was er tut.
+
+    Also: die Trommel als Druckringe, das Metronom als Zickzack, die
+    Orgelpfeife als stehende Saeule, der Bruch als Riss. Alles als feine
+    Ritzung im Kristall, in seiner eigenen Farbe - nie als schwarze
+    Zeichnung auf hellem Grund, sonst wird die Maske ein Piktogramm.
+
+    `mr` ist der halbe Durchmesser der Maskenflaeche. Alles rechnet in
+    Vielfachen davon, damit die Masken mitwachsen, wenn sich die
     Verhaeltnisse der Figur wieder aendern.
     """
     rosa = hexc("#ff7ad0")
     funke = mix(rosa, (255, 255, 255, 255), 0.30)
     zu = math.sin(phase * 0.8) > 0.93
-    ritz = mix(grund, schatten, 0.75)
+    ritz = mix(KRISTALL_MITTEL, P.BONE, 0.30)
+    tief = mix(KRISTALL_TIEF, P.BONE_LO, 0.40)
+
+    _facetten(c, mx, my, mr)
 
     if zu:
         # Geschlossen: bei jeder Maske nur zwei kurze Striche.
@@ -122,83 +186,89 @@ def _maske_zeichnung(c: Canvas, *, art: str, mx: float, my: float, mr: float,
         return
 
     if art == "stimmgabel":
-        # Zwei lange, steil nach innen fallende Schlitze und eine Kerbe
-        # in der Stirn - der Spalt zwischen den Zinken.
+        # Der stehende Ton: zwei senkrechte Rillen, die nicht abklingen.
         for seite in (-1, 1):
-            _augenloch(c, mx + seite * mr * 0.46 + mr * 0.10, my,
-                       mr * 0.52, 0.8, seite * 0.62, funke)
-        for i in range(int(mr * 0.75)):
-            c.set(int(mx + mr * 0.06), int(my - mr * 0.55 - i), ritz)
+            _augenloch(c, mx + seite * mr * 0.48 + mr * 0.08, my,
+                       mr * 0.50, 0.7, seite * 0.66, funke)
+        for k in (-1, 1):
+            _ritzung(c, [(mx + k * mr * 0.16, my + mr * 0.34),
+                         (mx + k * mr * 0.16, my + mr * 0.92)], ritz)
 
     elif art == "leier":
-        # Ein hohes Auge und ein schmales: sie hoert auf zwei Ohren
-        # verschieden. Darunter drei feine Saitenritzen.
-        _augenloch(c, mx - mr * 0.40, my, mr * 0.42, 1.1, 0.48, funke)
-        _augenloch(c, mx + mr * 0.48, my - mr * 0.06, mr * 0.50, 0.7, -0.30, funke)
+        # Ein Dreiklang: drei Boegen, die nebeneinander stehenbleiben.
+        _augenloch(c, mx - mr * 0.42, my, mr * 0.40, 0.9, 0.50, funke)
+        _augenloch(c, mx + mr * 0.50, my - mr * 0.06, mr * 0.48, 0.6, -0.32, funke)
         for k in range(3):
-            for i in range(int(mr * 0.5)):
-                c.set(int(mx - mr * 0.3 + k * mr * 0.30), int(my + mr * 0.42 + i), ritz)
+            r = mr * (0.28 + k * 0.20)
+            _ritzung(c, [(mx - r * 0.7, my + mr * 0.42),
+                         (mx, my + mr * 0.42 + r * 0.5),
+                         (mx + r * 0.7, my + mr * 0.42)], ritz)
 
     elif art == "trommel":
-        # Ein einziger waagerechter Sehschlitz ueber die ganze Breite.
-        for dx in range(-int(mr * 0.66), int(mr * 0.66) + 1):
-            q = abs(dx) / max(1.0, mr * 0.66)
-            hoehe = 2 if q < 0.72 else 1
-            for dy in range(hoehe):
-                c.set(int(mx) + dx, int(my) + dy, P.INK)
-            c.set(int(mx) + dx, int(my) - 1, mix(P.INK, P.BONE_LO, 0.45))
-        c.set(int(mx - mr * 0.42), int(my), funke)
-        c.set(int(mx + mr * 0.46), int(my), funke)
+        # Druckringe: der Ton breitet sich waagerecht aus.
+        _augenloch(c, mx - mr * 0.44, my, mr * 0.34, 0.8, 0.20, funke)
+        _augenloch(c, mx + mr * 0.48, my, mr * 0.34, 0.8, -0.20, funke)
+        for k in range(3):
+            b = mr * (0.30 + k * 0.26)
+            for dx in range(-int(b), int(b) + 1):
+                q = dx / max(1.0, b)
+                c.set(int(mx) + dx, int(my + mr * 0.56 + (1 - q * q) * mr * 0.18),
+                      ritz if k % 2 == 0 else tief)
 
     elif art == "floete":
-        # Zwei runde Loecher, und darunter zwei kleine - Grifflocher.
+        # Eine einzige gerade Luftsaeule, vom Scheitel bis zum Kinn.
         for seite in (-1, 1):
-            _augenloch(c, mx + seite * mr * 0.44 + mr * 0.10, my,
-                       mr * 0.30, 1.2, seite * 0.25, funke)
-        for k in (-1, 1):
-            c.set(int(mx + k * mr * 0.24), int(my + mr * 0.50), P.INK)
+            _augenloch(c, mx + seite * mr * 0.46 + mr * 0.08, my,
+                       mr * 0.28, 1.0, seite * 0.28, funke)
+        _ritzung(c, [(mx + mr * 0.04, my - mr * 0.78),
+                     (mx + mr * 0.04, my + mr * 0.92)], ritz)
 
     elif art == "metronom":
-        # Ein einziger schraeger Schlitz quer ueber das ganze Gesicht.
-        _augenloch(c, mx + mr * 0.04, my - mr * 0.02, mr * 1.05, 0.9, 0.42, None)
-        c.set(int(mx - mr * 0.42), int(my - mr * 0.20), funke)
-        c.set(int(mx + mr * 0.48), int(my + mr * 0.18), funke)
+        # Der Takt: ein Zickzack quer ueber die Maske, gleiche Ausschlaege.
+        _augenloch(c, mx - mr * 0.40, my - mr * 0.10, mr * 0.42, 0.7, 0.55, funke)
+        _augenloch(c, mx + mr * 0.50, my + mr * 0.06, mr * 0.42, 0.7, 0.55, funke)
+        zick = []
+        for k in range(5):
+            zick.append((mx - mr * 0.72 + k * mr * 0.36,
+                         my + mr * 0.52 + (mr * 0.26 if k % 2 else -mr * 0.06)))
+        _ritzung(c, zick, ritz)
 
     elif art == "glocke":
-        # Zwei grosse, nach aussen gezogene Augen unter einer schweren
-        # Braue, die ueber beide durchlaeuft.
+        # Der Nachhall: ein weiter Bogen, der die ganze Maske umfasst.
         for seite in (-1, 1):
-            _augenloch(c, mx + seite * mr * 0.44 + mr * 0.08, my + mr * 0.04,
-                       mr * 0.46, 1.2, seite * 0.34, funke)
-        for dx in range(-int(mr * 0.82), int(mr * 0.82) + 1):
-            q = dx / max(1.0, mr * 0.82)
-            c.set(int(mx) + dx, int(my - mr * 0.46 - abs(q) * mr * 0.12),
-                  mix(P.INK, P.BONE_LO, 0.35))
+            _augenloch(c, mx + seite * mr * 0.44 + mr * 0.06, my + mr * 0.02,
+                       mr * 0.44, 1.0, seite * 0.36, funke)
+        for dx in range(-int(mr * 0.86), int(mr * 0.86) + 1):
+            q = dx / max(1.0, mr * 0.86)
+            c.set(int(mx) + dx, int(my - mr * 0.52 - (1 - q * q) * mr * 0.22), tief)
+            c.set(int(mx) + dx, int(my + mr * 0.66 + (1 - q * q) * mr * 0.20), ritz)
 
     elif art == "orgelpfeife":
-        # Drei senkrechte Schlitze verschiedener Hoehe - ein Register.
-        for k, (ver, hoch) in enumerate(((-0.52, 0.74), (0.02, 1.00), (0.52, 0.58))):
-            _augenloch(c, mx + ver * mr + mr * 0.06, my,
-                       mr * hoch * 0.58, 0.7, math.pi / 2 + 0.10, None)
-        c.set(int(mx + 0.02 * mr + mr * 0.06), int(my), funke)
+        # Ein Register: drei stehende Saeulen verschiedener Laenge.
+        _augenloch(c, mx - mr * 0.44, my, mr * 0.34, 0.7, 0.30, funke)
+        _augenloch(c, mx + mr * 0.48, my, mr * 0.34, 0.7, -0.30, funke)
+        for k, hoch in enumerate((0.62, 0.98, 0.44)):
+            px = mx + (k - 1) * mr * 0.34 + mr * 0.06
+            _ritzung(c, [(px, my + mr * 0.94),
+                         (px, my + mr * 0.94 - mr * hoch)], ritz)
 
     elif art == "bruch":
         # Ein Auge ist noch da. Wo das andere war, ist die Maske
-        # zersprungen.
-        _augenloch(c, mx + mr * 0.48, my, mr * 0.48, 1.0, -0.40, funke)
-        for k in range(5):
-            w = -2.5 + k * 0.55
-            for i in range(int(mr * (0.5 + 0.5 * hash01(k, 3)))):
-                c.set(int(mx - mr * 0.40 + math.cos(w) * i),
-                      int(my + math.sin(w) * i), P.INK if i < 2 else ritz)
+        # zersprungen - der Riss laeuft weiter bis zum Rand.
+        _augenloch(c, mx + mr * 0.48, my, mr * 0.44, 0.9, -0.42, funke)
+        _ritzung(c, [(mx - mr * 0.86, my - mr * 0.42),
+                     (mx - mr * 0.34, my - mr * 0.04),
+                     (mx - mr * 0.60, my + mr * 0.44),
+                     (mx - mr * 0.16, my + mr * 0.92)], P.INK)
+        _ritzung(c, [(mx - mr * 0.34, my - mr * 0.04),
+                     (mx + mr * 0.06, my - mr * 0.62)], tief)
 
     else:
         for seite in (-1, 1):
-            _augenloch(c, mx + seite * mr * 0.46 + mr * 0.10, my,
-                       mr * 0.44, 0.9, seite * 0.42, funke)
+            _augenloch(c, mx + seite * mr * 0.46 + mr * 0.08, my,
+                       mr * 0.40, 0.8, seite * 0.44, funke)
 
-    c.glow(mx, my, 3.2 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 55))
-
+    c.glow(mx, my, 3.2 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 45))
 
 
 # ------------------------------------------------------------------ Heldin
@@ -783,9 +853,12 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     vorn, und die Spitze rollt dabei ein.
     """
     S = HERO_SCALE
-    rosa = mix(hexc("#ff7ad0"), P.CLOAK, 0.14)
-    rosa_hi = mix(rosa, P.BONE, 0.62)
-    rosa_lo = mix(rosa, P.CLOAK, 0.5)
+    # Fast weiss in der Mitte, rosa an den Raendern. Beim Vorbild ist der
+    # Schnitt ein Lichtstrich, keine farbige Flaeche - die Farbe steht nur
+    # noch am Saum.
+    kern_hell = mix(hexc("#ff7ad0"), (255, 255, 255, 255), 0.88)
+    rosa = mix(hexc("#ff7ad0"), (255, 255, 255, 255), 0.45)
+    rosa_lo = mix(hexc("#ff7ad0"), P.CLOAK, 0.22)
 
     t = schwung ** 0.78
     schritte = 120
@@ -820,8 +893,19 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # Dick am Ansatz, spitz am Ende, senkrecht zur Laufrichtung gefuellt.
     # Die Punkte kommen in eine Tabelle, damit sich ueberlappende
     # Schritte nicht zu einem Schachbrett aufaddieren.
+    # --- Das Querprofil ist eine Linse, kein Schwanz ------------------------
+    #
+    # Der letzte Stand war am Ansatz am dicksten und lief nach hinten
+    # aus - das ist die Form eines Kometenschweifs, und beim Vorbild ist
+    # nichts davon zu sehen. Dort ist der Schnitt eine **Sichel**: an
+    # beiden Enden spitz, in der Mitte am breitesten, und ueber die ganze
+    # Laenge duenn. Sie ist ein Strich, den jemand mit Schwung gezogen
+    # hat, kein Gegenstand, der durchs Bild fliegt.
+    #
+    # Darum ist die Dicke jetzt ein Sinus ueber die Laufstrecke, und der
+    # Hoechstwert ist nur noch halb so gross wie vorher.
     flaeche = {}
-    max_dicke = height * 0.135
+    max_dicke = height * 0.050
     for k in range(len(punkte) - 1):
         px, py, u = punkte[k]
         qx, qy, _ = punkte[k + 1]
@@ -829,38 +913,46 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
         laengs = math.hypot(dx, dy) or 1.0
         nx, ny = -dy / laengs, dx / laengs
 
-        # Die Peitsche wickelt sich ab: am Anfang ist nur der Ansatz da.
-        sichtbar = min(1.0, max(0.0, (t * 1.35 - u * 0.85) * 2.4))
+        # Die Sichel zieht sich auf: am Anfang steht nur ihr Anfang da.
+        sichtbar = min(1.0, max(0.0, (t * 1.30 - u * 0.80) * 2.6))
         if sichtbar <= 0:
             continue
-        dicke = max_dicke * (0.30 + 0.95 * math.sin(math.pi * min(1.0, u * 0.62 + 0.14)) ** 1.2)
-        dicke *= (1 - u) ** 0.85
-        dicke = max(0.6, dicke)
+        dicke = max_dicke * math.sin(math.pi * u) ** 0.40
+        if dicke < 0.32:
+            continue
 
         j = -dicke
         while j <= dicke:
-            e = abs(j) / dicke
+            e = abs(j) / max(0.3, dicke)
             xi, yi = int(px + nx * j), int(py + ny * j)
-            if j > dicke * 0.35:
-                col, deck = rosa_hi, 0.95
-            elif j > -dicke * 0.30:
-                col, deck = rosa, 0.72
+            # Mitte weiss, Saum rosa: ein Lichtstrich mit farbigem Rand.
+            # Der Kern nimmt den groessten Teil ein: bei zwei Pixeln
+            # halber Breite bleibt fuer einen Saum sonst nichts uebrig,
+            # und aus dem Lichtstrich wird wieder ein rosa Schlauch.
+            if e < 0.62:
+                col, deck = kern_hell, 1.00
+            elif e < 0.86:
+                col, deck = rosa, 0.88
             else:
-                col, deck = rosa_lo, 0.42
-            deck *= sichtbar * (1.0 - 0.55 * u) * (1.0 - 0.45 * e ** 2)
+                col, deck = rosa_lo, 0.55
+            deck *= sichtbar * (1.0 - 0.30 * u)
             alt = flaeche.get((xi, yi))
             if alt is None or alt[1] < deck:
                 flaeche[(xi, yi)] = (col, deck)
-            j += 0.5
+            j += 0.4
 
     for (xi, yi), (col, deck) in flaeche.items():
         c.blend(xi, yi, (col[0], col[1], col[2], int(255 * min(1.0, deck))))
 
-    # Ganz am Ende ein heller Punkt mit Schein: dort knallt sie.
-    if t > 0.25:
-        sx, sy, _ = punkte[-1]
-        c.blend(int(sx), int(sy), (*mix(rosa_hi, P.BONE, 0.7)[:3], 235))
-        c.glow(sx, sy, 4.5 * S, (rosa[0], rosa[1], rosa[2], int(70 * t)))
+    # Ein weicher Schein hinter der Sichel - beim Vorbild glimmt die Luft
+    # um den Schnitt herum, und das ist die halbe Wucht.
+    if t > 0.15:
+        for k in range(0, len(punkte), 14):
+            gx, gy, u = punkte[k]
+            if u > 0.95 or t * 1.30 - u * 0.80 <= 0:
+                continue
+            c.glow(gx, gy, 3.4 * S,
+                   (rosa[0], rosa[1], rosa[2], int(22 * t * math.sin(math.pi * u) ** 0.5)))
 
     # --- Die Klinge selbst -------------------------------------------------
     #
@@ -881,12 +973,12 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
         while q <= w:
             qx, qy = px - ay * q, py + ax * q
             rand = q / max(0.4, w)
-            col = rosa_hi if rand > 0.45 else (rosa if rand > -0.45 else rosa_lo)
+            col = kern_hell if rand > 0.45 else (rosa if rand > -0.45 else rosa_lo)
             c.blend(int(qx), int(qy), (col[0], col[1], col[2], int(215 - 60 * v)))
             q += 0.5
         i += 0.5
     c.blend(int(hand_x + ax * reichweite), int(hand_y + ay * reichweite),
-            (*mix(rosa_hi, P.BONE, 0.6)[:3], 235))
+            (*kern_hell[:3], 240))
 
 
 def _draw_beine(c: Canvas, *, cx: int, base: float, height: float, phase: float,

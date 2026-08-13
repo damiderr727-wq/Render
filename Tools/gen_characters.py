@@ -136,14 +136,13 @@ KRISTALL = hexc("#5fd6b4")          # Lichtseite
 KRISTALL_MITTEL = hexc("#2e8a84")   # Koerperton
 KRISTALL_TIEF = hexc("#12363f")     # Schattenseite
 
-# Ihre Maske und ihr Gewand haben eigene Werte, nicht die der Welt.
+# Ihr Gewand hat eigene Werte, nicht die der Welt.
 #
-# Solange beides aus `P.BONE` und `P.CLOAK` kam, hing Cadence an der
-# Palette der Kulisse: wird der Hain heller, wird auch sie heller, und
-# der Abstand, von dem ihre Silhouette lebt, geht verloren. Sie ist das
-# hellste und zugleich das dunkelste Ding im Bild - das muss man
+# Solange es aus `P.CLOAK` und `P.STONE` gemischt war, hing Cadence an
+# der Palette der Kulisse: wird der Hain heller, wird auch sie heller,
+# und der Abstand, von dem ihre Silhouette lebt, geht verloren. Sie ist
+# das hellste und zugleich das dunkelste Ding im Bild - das muss man
 # einstellen koennen, ohne den Wald anzufassen.
-MASKE_GRUND = hexc("#f2ece0")       # warmer Knochen, nicht kaltes Weiss
 GEWAND_TIEF = hexc("#0d1220")       # wohin alle Stoffe gezogen werden
 
 
@@ -1562,7 +1561,7 @@ def draw_heroine(
     # Dagegen hilft kein anderer Farbwert, sondern nur ein anderer Umriss.
     # Also drei Teile statt einem:
     #
-    #   1. eine helle Maske, klar begrenzt, mit zwei dunklen Augenloechern
+    #   1. ein heller Kopf, klar begrenzt, mit zwei dunklen Augenloechern
     #   2. ein Kranz aus Kristallsplittern, der ringsum aus ihr heraussteht
     #   3. die Flamme darueber
     #
@@ -1609,14 +1608,23 @@ def draw_heroine(
                  kopf_y + math.sin(w) * kopf_r * 0.42,
                  lang, 0.85 * HERO_SCALE, w, glanz=0.20 + 0.35 * hash01(k, 7))
 
-    # --- Die Maske ---------------------------------------------------------
+    # --- Der Kopf ----------------------------------------------------------
     #
-    # Hell, hart begrenzt, ein wenig laenger als breit, zum Kinn hin
-    # schmaler. Sie ist das Hellste an der ganzen Figur - was man von ihr
-    # zuerst sieht, soll ihr Gesicht sein.
-    maske = mix(MASKE_GRUND, KRISTALL_HELL, 0.28)
-    maske_lo = mix(maske, KRISTALL_MITTEL, 0.55)
-    maske_kante = mix(maske, MASKE_GRUND, 0.5)
+    # Kein aufgesetztes Weiss mehr.
+    #
+    # Eine helle Platte vor dem Gesicht war zwei Anlaeufe lang die
+    # Loesung - erst als Knochenmaske, dann waermer getoent. Beides
+    # bleibt ein Fremdkoerper: ein zweites Material, das sie sich
+    # vorhaelt. Sie ist aber durchgehend derselbe Stoff, vom Fuss bis zum
+    # Scheitel, und der Kopf ist nur die Stelle, an der er am duennsten
+    # ist und das meiste Licht durchlaesst.
+    #
+    # Also derselbe Kristall wie ueberall, nur zwei Stufen heller als der
+    # Rumpf. Hell genug, dass das Auge zuerst dorthin geht; nicht so
+    # hell, dass eine Maske daraus wird.
+    maske = mix(KRISTALL_HELL, KRISTALL, 0.22)
+    maske_lo = mix(KRISTALL, KRISTALL_MITTEL, 0.45)
+    maske_kante = mix(KRISTALL_HELL, KRISTALL, 0.55)
     mr = kopf_r * 0.80
     for dy in range(-int(mr * 1.12) - 1, int(mr * 1.06) + 2):
         v = dy / (mr * 1.12) if dy < 0 else dy / (mr * 1.06)

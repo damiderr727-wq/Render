@@ -851,113 +851,94 @@ def _draw_klinge(c: Canvas, *, cx: int, base: float, height: float, phase: float
 def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
                   schwung: float, lean: float) -> None:
     """
-    Der Schlag: eine Peitsche, kein Zirkelbogen.
+    Der Schlag: ein Kreisbogen um die Schulter.
 
-    Der letzte Stand war ein Ellipsenausschnitt - gleichmaessig gekruemmt,
-    gleichmaessig dick, an beiden Enden gleich. Geometrisch sauber und als
-    Bewegung tot: ein Kreisbogen sieht an jeder Stelle gleich aus, also
-    erzaehlt er nicht, wo die Bewegung herkommt und wohin sie geht.
+    Zwei Anlaeufe daneben, und beide aus demselben Grund - ich habe die
+    Kurve interessanter gemacht, als sie sein darf.
 
-    Eine Peitsche macht das Gegenteil. Sie hat
+      Der erste war eine Ellipse mit gleichbleibender Dicke: eine Bahn,
+      kein Schnitt.
+      Der zweite war eine logarithmische Spirale, dick am Ansatz und
+      nach hinten auslaufend. Die rollt sich ein und wird zum
+      Schneckenhaus oder zum Kometenschweif, je nachdem wie stark man
+      dreht - und beim Vorbild passiert nichts davon.
 
-      einen **Ansatz**, dick und fast gerade, dort wo die Hand ist,
-      einen **Bauch**, der weit nach vorn ausholt,
-      und eine **Spitze**, die sich zurueckrollt und duenn ausleckt.
+    Beim Vorbild ist es das Einfachste, was es gibt: ein **Stueck
+    Kreis**, geschlagen um ihre Schulter. Beide Enden laufen spitz aus,
+    in der Mitte ist er am dicksten, und ueber die Bilder wandert er von
+    oben vorn nach unten vorn durch. Mehr ist da nicht. Die Wucht kommt
+    nicht aus der Form, sondern daraus, dass der Bogen weit ist, duenn
+    ist und fast weiss leuchtet.
 
-    Die Kruemmung ist also nicht konstant, sondern nimmt zum Ende hin
-    stark zu - genau das liest man als Schnellen. Umgesetzt als Kurve mit
-    wachsendem Winkelzuwachs: jeder Schritt dreht ein Stueck mehr als der
-    davor, und die Schrittlaenge nimmt zugleich ab. Das ist eine
-    logarithmische Spirale, und sie ist die Form, die eine schnellende
-    Bewegung in der Natur immer annimmt.
-
-    `schwung` 0 = ausgeholt, 1 = durchgezogen. Der Ausschlag laeuft nach
-    vorn, und die Spitze rollt dabei ein.
+    `schwung` 0 = ausgeholt, 1 = durchgezogen.
     """
     S = HERO_SCALE
-    # Fast weiss in der Mitte, rosa an den Raendern. Beim Vorbild ist der
-    # Schnitt ein Lichtstrich, keine farbige Flaeche - die Farbe steht nur
-    # noch am Saum.
+    # Fast weiss in der Mitte, rosa nur am Saum: beim Vorbild ist der
+    # Schnitt ein Lichtstrich, keine farbige Flaeche.
     kern_hell = mix(hexc("#ff7ad0"), (255, 255, 255, 255), 0.88)
     rosa = mix(hexc("#ff7ad0"), (255, 255, 255, 255), 0.45)
     rosa_lo = mix(hexc("#ff7ad0"), P.CLOAK, 0.22)
 
     t = schwung ** 0.78
-    schritte = 120
 
-    # Der Ansatz sitzt an der Hand, auf Brusthoehe, leicht vor ihr.
-    hand_x = cx + 2.2 * S + lean * 0.5
-    hand_y = base - height * 0.46
+    # Der Drehpunkt ist die Schulter. Von dort geht der Arm, also auch
+    # der Bogen - liegt er woanders, sieht der Schlag geworfen aus.
+    dreh_x = cx + 0.6 * S + lean * 0.4
+    dreh_y = base - height * 0.55
 
-    start_winkel = -1.05 + t * 0.42
-    # Wie stark sie sich einrollt. Der erste Anlauf hat sich hier
-    # verrechnet: der Zuwachs galt pro Schritt, und bei hundertzwanzig
-    # Schritten waren das fast vier volle Umdrehungen - aus der Peitsche
-    # wurde ein Schneckenhaus. Ueber die ganze Laenge soll sie etwa eine
-    # Dreiviertelwendung machen: weit nach vorn, und die Spitze kommt
-    # zurueck. Mehr ist kein Schlag mehr, sondern eine Spirale.
-    gesamt_wendung = 1.45 + 2.05 * t
-    einrollen = gesamt_wendung / (schritte * 1.175)
-    laenge = height * (1.10 + 0.80 * t)
+    # Von oben vorn nach unten vorn. Beide Winkel liegen auf der
+    # Blickseite; ein Bogen, der hinter ihr anfaengt, laeuft durch die
+    # Figur hindurch und liest sich als Strich quer durchs Bild.
+    a_auf, a_ab = -1.32, 1.02
+    a_spitze = a_auf + (a_ab - a_auf) * t     # wo die Klinge gerade steht
 
-    punkte = []
-    x, y, w = hand_x, hand_y, start_winkel
-    for i in range(schritte):
-        u = i / (schritte - 1)
-        ds = laenge / schritte * (1.55 - 1.05 * u)
-        w += einrollen * (0.35 + 1.65 * u)
-        x += math.cos(w) * ds
-        y += math.sin(w) * ds
-        punkte.append((x, y, u))
+    # Wie viel vom Bogen stehenbleibt. Er zieht einen festen Winkelbetrag
+    # hinter sich her, statt bis zum Anfang zurueckzureichen - sonst
+    # steht im letzten Bild ein halber Kreis um sie herum.
+    schleppe = 1.45
+    a0 = max(a_auf, a_spitze - schleppe)
+    if a_spitze - a0 < 0.06:
+        return
 
-    # --- Die Flaeche -------------------------------------------------------
-    #
-    # Dick am Ansatz, spitz am Ende, senkrecht zur Laufrichtung gefuellt.
-    # Die Punkte kommen in eine Tabelle, damit sich ueberlappende
-    # Schritte nicht zu einem Schachbrett aufaddieren.
-    # --- Das Querprofil ist eine Linse, kein Schwanz ------------------------
-    #
-    # Der letzte Stand war am Ansatz am dicksten und lief nach hinten
-    # aus - das ist die Form eines Kometenschweifs, und beim Vorbild ist
-    # nichts davon zu sehen. Dort ist der Schnitt eine **Sichel**: an
-    # beiden Enden spitz, in der Mitte am breitesten, und ueber die ganze
-    # Laenge duenn. Sie ist ein Strich, den jemand mit Schwung gezogen
-    # hat, kein Gegenstand, der durchs Bild fliegt.
-    #
-    # Darum ist die Dicke jetzt ein Sinus ueber die Laufstrecke, und der
-    # Hoechstwert ist nur noch halb so gross wie vorher.
+    radius = height * (0.86 + 0.26 * t)
+    max_dicke = height * 0.062
+
+    # Zum Schluss klingt er ab: im letzten Bild soll die ausgestreckte
+    # Klinge stehen, nicht noch einmal derselbe Bogen.
+    verblassen = 1.0 if t < 0.90 else 1.0 - (t - 0.90) / 0.10 * 0.5
+
+    # Gesammelt wird in einer Tabelle: ueberlappende Schritte wuerden
+    # sich sonst zu einem Schachbrett aufaddieren.
     flaeche = {}
-    max_dicke = height * 0.050
-    for k in range(len(punkte) - 1):
-        px, py, u = punkte[k]
-        qx, qy, _ = punkte[k + 1]
-        dx, dy = qx - px, qy - py
-        laengs = math.hypot(dx, dy) or 1.0
-        nx, ny = -dy / laengs, dx / laengs
+    n = 150
+    for i in range(n + 1):
+        u = i / n                              # 0 hinteres Ende .. 1 Spitze
+        w = a0 + (a_spitze - a0) * u
+        px = dreh_x + math.cos(w) * radius
+        py = dreh_y + math.sin(w) * radius
+        # Die Normale zeigt vom Drehpunkt weg.
+        nx, ny = math.cos(w), math.sin(w)
 
-        # Die Sichel zieht sich auf: am Anfang steht nur ihr Anfang da.
-        sichtbar = min(1.0, max(0.0, (t * 1.30 - u * 0.80) * 2.6))
-        if sichtbar <= 0:
-            continue
-        dicke = max_dicke * math.sin(math.pi * u) ** 0.40
-        if dicke < 0.32:
+        # Linsenprofil: an beiden Enden null, in der Mitte am dicksten.
+        # Der Bauch liegt etwas vorn, damit die Spitze schlanker wirkt
+        # als das Ende - so sieht man, wohin er laeuft.
+        dicke = max_dicke * math.sin(math.pi * u) ** 0.50
+        if dicke < 0.35:
             continue
 
         j = -dicke
         while j <= dicke:
             e = abs(j) / max(0.3, dicke)
             xi, yi = int(px + nx * j), int(py + ny * j)
-            # Mitte weiss, Saum rosa: ein Lichtstrich mit farbigem Rand.
             # Der Kern nimmt den groessten Teil ein: bei zwei Pixeln
-            # halber Breite bleibt fuer einen Saum sonst nichts uebrig,
-            # und aus dem Lichtstrich wird wieder ein rosa Schlauch.
-            if e < 0.62:
+            # halber Breite bleibt fuer einen Saum sonst nichts uebrig.
+            if e < 0.60:
                 col, deck = kern_hell, 1.00
-            elif e < 0.86:
-                col, deck = rosa, 0.88
+            elif e < 0.85:
+                col, deck = rosa, 0.85
             else:
-                col, deck = rosa_lo, 0.55
-            deck *= sichtbar * (1.0 - 0.30 * u)
+                col, deck = rosa_lo, 0.50
+            deck *= verblassen * (0.55 + 0.45 * u)   # hinten blasser
             alt = flaeche.get((xi, yi))
             if alt is None or alt[1] < deck:
                 flaeche[(xi, yi)] = (col, deck)
@@ -966,28 +947,27 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     for (xi, yi), (col, deck) in flaeche.items():
         c.blend(xi, yi, (col[0], col[1], col[2], int(255 * min(1.0, deck))))
 
-    # Ein weicher Schein hinter der Sichel - beim Vorbild glimmt die Luft
-    # um den Schnitt herum, und das ist die halbe Wucht.
-    if t > 0.15:
-        for k in range(0, len(punkte), 14):
-            gx, gy, u = punkte[k]
-            if u > 0.95 or t * 1.30 - u * 0.80 <= 0:
-                continue
-            c.glow(gx, gy, 3.4 * S,
-                   (rosa[0], rosa[1], rosa[2], int(22 * t * math.sin(math.pi * u) ** 0.5)))
+    # Ein weicher Schein laengs des Bogens - beim Vorbild glimmt die Luft
+    # um den Schnitt, und das ist die halbe Wucht.
+    for i in range(0, 6):
+        u = 0.25 + i * 0.15
+        w = a0 + (a_spitze - a0) * u
+        c.glow(dreh_x + math.cos(w) * radius, dreh_y + math.sin(w) * radius,
+               3.6 * S, (rosa[0], rosa[1], rosa[2], int(30 * verblassen)))
 
     # --- Die Klinge selbst -------------------------------------------------
     #
-    # Sie liegt auf dem ersten Stueck der Peitsche und ist nur noch die
-    # Begruendung fuer die Flaeche. Kurz, duenn, durchsichtig, mit
-    # denselben Wachstumsstufen wie auf dem Ruecken.
-    reichweite = height * (0.40 + 0.22 * t)
-    ax, ay = math.cos(start_winkel), math.sin(start_winkel)
-    hand = reichweite * 0.14
-    i = hand
+    # Sie liegt auf der Spitze des Bogens und ist nur noch die Begruendung
+    # fuer die Flaeche. Kurz, duenn, durchsichtig, mit denselben
+    # Wachstumsstufen wie auf dem Ruecken.
+    hand_x = dreh_x + math.cos(a_spitze) * (radius * 0.18)
+    hand_y = dreh_y + math.sin(a_spitze) * (radius * 0.18)
+    reichweite = radius * 0.74
+    ax, ay = math.cos(a_spitze), math.sin(a_spitze)
+    i = 0.0
     while i < reichweite:
-        v = (i - hand) / max(1.0, reichweite - hand)
-        w = 1.25 * S * (1.0 - 0.68 * v ** 1.2)
+        v = i / reichweite
+        w = 1.15 * S * (1.0 - 0.70 * v ** 1.2)
         stufe = int(v * 6)
         w = max(0.5, w + (hash01(stufe * 11 + 3, 1) - 0.5) * 0.5 * S)
         px, py = hand_x + ax * i, hand_y + ay * i
@@ -1787,30 +1767,29 @@ def draw_heroine(
             col = KRISTALL_MITTEL if dx * 1 > -hw * 0.2 else KRISTALL_TIEF
             c.set(int(hx) + dx, int(y), col)
 
-    # --- Der Kranz ---------------------------------------------------------
-    #
-    # Sieben Splitter, ungleich lang, um den oberen Halbkreis verteilt.
-    # Sie liegen *hinter* der Maske, also zuerst.
-    for k in range(7):
-        w = -math.pi + 0.30 + k * (math.pi - 0.60) / 6
-        w += math.sin(phase * 1.2 + k) * 0.05
-        lang = kopf_r * (0.62 + 0.46 * hash01(k * 13 + 5, 2))
-        # Die beiden waagerechten aussen bleiben kuerzer, sonst wird der
-        # Kopf breiter als die Schultern.
-        lang *= 0.62 + 0.38 * abs(math.sin(w))
-        _scherbe(c,
-                 kopf_x + math.cos(w) * kopf_r * 0.42,
-                 kopf_y + math.sin(w) * kopf_r * 0.42,
-                 lang, 0.85 * HERO_SCALE, w, glanz=0.20 + 0.35 * hash01(k, 7))
-
     # --- Die Maske ---------------------------------------------------------
     #
-    # Hell, hart begrenzt, ein wenig laenger als breit, zum Kinn hin
-    # schmaler. Sie ist das Hellste an der ganzen Figur - was man von ihr
-    # zuerst sieht, soll ihr Gesicht sein.
-    maske = mix(MASKE_GRUND, KRISTALL_HELL, 0.30)
-    maske_lo = mix(maske, KRISTALL_MITTEL, 0.55)
-    maske_kante = mix(maske, P.BONE, 0.5)
+    # Sie ist kein Vorsatz, sondern ihr Gesicht.
+    #
+    # Ein Zwischenstand hat sie aus Knochenweiss gemalt und den Kranz
+    # dahinter gesetzt. Damit war sie ein zweites Material, hart
+    # abgegrenzt, sichtbar davorgehalten - eine Larve, die jemand
+    # aufgesetzt hat. Sie ist aber aus demselben Stoff wie ihre Beine und
+    # ihre Arme, nur an der hellsten Stelle der Reihe: derselbe Kristall,
+    # nur dort, wo er am duennsten ist und das meiste Licht durchlaesst.
+    #
+    # Darum drei Dinge anders:
+    #
+    #   1. Ihre Farben sind das obere Ende der Kristallreihe, nicht ein
+    #      eigener Ton daneben.
+    #   2. Der Rand laeuft in den Kopf aus statt gegen ihn zu stossen:
+    #      die aeusserste Reihe ist eine Stufe dunkler, dann erst kommt
+    #      die Flaeche.
+    #   3. Der Kranz waechst aus ihr heraus statt hinter ihr zu sitzen -
+    #      er wird darum jetzt danach gezeichnet, verwurzelt am Rand.
+    maske = mix(KRISTALL_HELL, (255, 255, 255, 255), 0.30)
+    maske_lo = KRISTALL
+    maske_kante = mix(KRISTALL_HELL, KRISTALL, 0.45)
     mr = kopf_r * 0.80
     for dy in range(-int(mr * 1.12) - 1, int(mr * 1.06) + 2):
         v = dy / (mr * 1.12) if dy < 0 else dy / (mr * 1.06)
@@ -1827,10 +1806,27 @@ def draw_heroine(
             if q < -0.55:
                 col = maske_lo                    # Schattenseite hinten
             elif abs(dx) > hw - 1.1:
-                col = maske_kante                 # harte Kante
+                col = maske_kante                 # weiche Kante zum Kopf
             else:
                 col = maske
             c.set(int(kopf_x) + dx, int(y), col)
+
+    # --- Der Kranz ---------------------------------------------------------
+    #
+    # Sieben Splitter, ungleich lang, um den oberen Halbkreis verteilt.
+    # Sie sitzen auf dem Rand der Maske und zeigen nach aussen: was aus
+    # ihr herauswaechst, gehoert zu ihr; was dahinter steht, ist Zubehoer.
+    for k in range(7):
+        w = -math.pi + 0.30 + k * (math.pi - 0.60) / 6
+        w += math.sin(phase * 1.2 + k) * 0.05
+        lang = kopf_r * (0.62 + 0.46 * hash01(k * 13 + 5, 2))
+        # Die beiden waagerechten aussen bleiben kuerzer, sonst wird der
+        # Kopf breiter als die Schultern.
+        lang *= 0.62 + 0.38 * abs(math.sin(w))
+        _scherbe(c,
+                 kopf_x + math.cos(w) * mr * 1.00,
+                 kopf_y + math.sin(w) * mr * 1.00,
+                 lang, 0.85 * HERO_SCALE, w, glanz=0.20 + 0.35 * hash01(k, 7))
 
     # --- Die Flamme ueber der Maske ---------------------------------------
     #

@@ -55,221 +55,6 @@ GROUND = HERO_H - 1  # unterste Pixelzeile = Fussboden
 
 
 
-# ------------------------------------------------------------------ Masken
-#
-# Die Maske ist das Einzige an ihr, was nicht schwingt. Sie haelt die
-# Form, in der der Klang gerade steht - und darum entscheidet sie, was
-# Cadence kann. Nicht der Mantel: der Mantel ist Stoff.
-#
-# Es gibt so viele Masken wie Anlagen, und man erkennt sie am Schnitt der
-# Augen. Regeln fuer alle:
-#
-#   * Loecher, keine gemalten Augen. Ein Loch liest sich auf zehn Pixel
-#     Kopfhoehe sofort als Blick.
-#   * Kantig und schraeg. Zwei runde Punkte nebeneinander sind niedlich;
-#     das war der erste Anlauf, und niedlich soll sie nicht sein.
-#   * Eine Braue darueber. Ohne den dunklen Strich schwimmt jedes Auge in
-#     der hellen Flaeche.
-#   * Nie symmetrisch bis ins Letzte. Ein Gesicht, dessen Haelften genau
-#     gleich sind, wirkt gestanzt.
-
-MASKEN = ("stimmgabel", "leier", "trommel", "floete",
-          "metronom", "glocke", "orgelpfeife", "bruch")
-
-
-def _augenloch(c: Canvas, x: float, y: float, laenge: float, breite: float,
-               winkel: float, funke=None) -> None:
-    """
-    Eine Oeffnung im Kristall - kein aufgemaltes Auge.
-
-    Der Unterschied liegt am Rand. Ein Loch in einer Platte hat eine
-    Kante, und die Kante faengt Licht: auf der Lichtseite ein heller
-    Saum, auf der Gegenseite ein dunkler. Ohne diese zwei Reihen sieht
-    ein schwarzer Fleck aus wie Farbe, nicht wie eine Oeffnung - und
-    genau daran hat der erste Anlauf gekrankt, der aussah, als truege sie
-    eine Sonnenbrille.
-    """
-    ax, ay = math.cos(winkel), math.sin(winkel)
-    nx, ny = -ay, ax
-    n = max(2, int(laenge * 2))
-    saum = mix(KRISTALL_HELL, MASKE_GRUND, 0.35)
-    for i in range(n + 1):
-        t = i / n
-        # In der Mitte am breitesten, an beiden Enden spitz - eine
-        # Spaltflaeche, kein Balken.
-        w = breite * math.sin(math.pi * (0.08 + t * 0.84)) ** 0.55
-        px, py = x + ax * laenge * (t - 0.5), y + ay * laenge * (t - 0.5)
-        q = -w
-        while q <= w:
-            c.set(int(px + nx * q), int(py + ny * q), P.INK)
-            q += 0.5
-        # Oben die helle Bruchkante, unten der Schatten der Wandung.
-        c.set(int(px + nx * (-w - 1)), int(py + ny * (-w - 1)), saum)
-        c.set(int(px + nx * (w + 1)), int(py + ny * (w + 1)),
-              mix(KRISTALL_TIEF, P.INK, 0.45))
-    if funke is not None:
-        c.set(int(x), int(y), funke)
-
-
-def _ritzung(c: Canvas, punkte, farbe) -> None:
-    """Eine eingeritzte Linie im Kristall: die Zeichnung der Maske."""
-    for i in range(len(punkte) - 1):
-        x0, y0 = punkte[i]
-        x1, y1 = punkte[i + 1]
-        n = max(1, int(max(abs(x1 - x0), abs(y1 - y0)) * 2))
-        for k in range(n + 1):
-            t = k / n
-            c.set(int(x0 + (x1 - x0) * t), int(y0 + (y1 - y0) * t), farbe)
-
-
-def _facetten(c: Canvas, mx: float, my: float, mr: float) -> None:
-    """
-    Der Schliff der Maske.
-
-    Sie ist aus demselben Stoff wie ihre Beine und ihre Arme: Klang, der
-    zum Stillstand gekommen ist. Das muss man sehen, sonst ist die Maske
-    eine Plastikschale, die zufaellig vor ihrem Gesicht haengt.
-
-    Drei Kanten reichen: eine helle ueber der Wange, eine zweite kuerzere
-    daneben, und eine dunkle Spaltlinie, die schraeg durch die untere
-    Haelfte laeuft. Mehr wird bei zehn Pixeln Kopfhoehe zu Rauschen.
-    """
-    hell = mix(KRISTALL_HELL, MASKE_GRUND, 0.25)
-    tief = mix(KRISTALL_TIEF, P.BONE_LO, 0.45)
-    _ritzung(c, [(mx + mr * 0.52, my - mr * 0.72),
-                 (mx + mr * 0.78, my + mr * 0.10),
-                 (mx + mr * 0.52, my + mr * 0.78)], hell)
-    _ritzung(c, [(mx - mr * 0.70, my - mr * 0.30),
-                 (mx - mr * 0.58, my + mr * 0.28)], tief)
-    _ritzung(c, [(mx - mr * 0.40, my + mr * 0.62),
-                 (mx + mr * 0.24, my + mr * 0.86)], tief)
-
-
-MASKEN = ("stimmgabel", "leier", "trommel", "floete",
-          "metronom", "glocke", "orgelpfeife", "bruch")
-
-
-def _maske_zeichnung(c: Canvas, *, art: str, mx: float, my: float, mr: float,
-                     phase: float, grund, schatten) -> None:
-    """
-    Augen und Zeichnung der jeweiligen Maske.
-
-    Acht Masken, und jede zeigt, **wie ihr Klang sich verhaelt** - nicht,
-    wie das Instrument aussieht. Das ist der Unterschied, an dem der
-    vorige Anlauf gescheitert ist: dort steckte ein Stueck Glockenrand an
-    ihrer Brust, hier stand das Instrument als Umriss im Gesicht, und
-    beides ist dasselbe Missverstaendnis. Man klebt nicht den Gegenstand
-    an die Figur; man zeigt, was er tut.
-
-    Also: die Trommel als Druckringe, das Metronom als Zickzack, die
-    Orgelpfeife als stehende Saeule, der Bruch als Riss. Alles als feine
-    Ritzung im Kristall, in seiner eigenen Farbe - nie als schwarze
-    Zeichnung auf hellem Grund, sonst wird die Maske ein Piktogramm.
-
-    `mr` ist der halbe Durchmesser der Maskenflaeche. Alles rechnet in
-    Vielfachen davon, damit die Masken mitwachsen, wenn sich die
-    Verhaeltnisse der Figur wieder aendern.
-    """
-    rosa = hexc("#ff7ad0")
-    funke = mix(rosa, (255, 255, 255, 255), 0.30)
-    zu = math.sin(phase * 0.8) > 0.93
-    ritz = mix(KRISTALL_MITTEL, P.BONE, 0.30)
-    tief = mix(KRISTALL_TIEF, P.BONE_LO, 0.40)
-
-    _facetten(c, mx, my, mr)
-
-    if zu:
-        # Geschlossen: bei jeder Maske nur zwei kurze Striche.
-        for seite in (-1, 1):
-            for dx in range(-1, 2):
-                c.set(int(mx + seite * mr * 0.46) + dx, int(my), schatten)
-        return
-
-    if art == "stimmgabel":
-        # Der stehende Ton: zwei senkrechte Rillen, die nicht abklingen.
-        for seite in (-1, 1):
-            _augenloch(c, mx + seite * mr * 0.48 + mr * 0.08, my,
-                       mr * 0.50, 0.7, seite * 0.66, funke)
-        for k in (-1, 1):
-            _ritzung(c, [(mx + k * mr * 0.16, my + mr * 0.34),
-                         (mx + k * mr * 0.16, my + mr * 0.92)], ritz)
-
-    elif art == "leier":
-        # Ein Dreiklang: drei Boegen, die nebeneinander stehenbleiben.
-        _augenloch(c, mx - mr * 0.42, my, mr * 0.40, 0.9, 0.50, funke)
-        _augenloch(c, mx + mr * 0.50, my - mr * 0.06, mr * 0.48, 0.6, -0.32, funke)
-        for k in range(3):
-            r = mr * (0.28 + k * 0.20)
-            _ritzung(c, [(mx - r * 0.7, my + mr * 0.42),
-                         (mx, my + mr * 0.42 + r * 0.5),
-                         (mx + r * 0.7, my + mr * 0.42)], ritz)
-
-    elif art == "trommel":
-        # Druckringe: der Ton breitet sich waagerecht aus.
-        _augenloch(c, mx - mr * 0.44, my, mr * 0.34, 0.8, 0.20, funke)
-        _augenloch(c, mx + mr * 0.48, my, mr * 0.34, 0.8, -0.20, funke)
-        for k in range(3):
-            b = mr * (0.30 + k * 0.26)
-            for dx in range(-int(b), int(b) + 1):
-                q = dx / max(1.0, b)
-                c.set(int(mx) + dx, int(my + mr * 0.56 + (1 - q * q) * mr * 0.18),
-                      ritz if k % 2 == 0 else tief)
-
-    elif art == "floete":
-        # Eine einzige gerade Luftsaeule, vom Scheitel bis zum Kinn.
-        for seite in (-1, 1):
-            _augenloch(c, mx + seite * mr * 0.46 + mr * 0.08, my,
-                       mr * 0.28, 1.0, seite * 0.28, funke)
-        _ritzung(c, [(mx + mr * 0.04, my - mr * 0.78),
-                     (mx + mr * 0.04, my + mr * 0.92)], ritz)
-
-    elif art == "metronom":
-        # Der Takt: ein Zickzack quer ueber die Maske, gleiche Ausschlaege.
-        _augenloch(c, mx - mr * 0.40, my - mr * 0.10, mr * 0.42, 0.7, 0.55, funke)
-        _augenloch(c, mx + mr * 0.50, my + mr * 0.06, mr * 0.42, 0.7, 0.55, funke)
-        zick = []
-        for k in range(5):
-            zick.append((mx - mr * 0.72 + k * mr * 0.36,
-                         my + mr * 0.52 + (mr * 0.26 if k % 2 else -mr * 0.06)))
-        _ritzung(c, zick, ritz)
-
-    elif art == "glocke":
-        # Der Nachhall: ein weiter Bogen, der die ganze Maske umfasst.
-        for seite in (-1, 1):
-            _augenloch(c, mx + seite * mr * 0.44 + mr * 0.06, my + mr * 0.02,
-                       mr * 0.44, 1.0, seite * 0.36, funke)
-        for dx in range(-int(mr * 0.86), int(mr * 0.86) + 1):
-            q = dx / max(1.0, mr * 0.86)
-            c.set(int(mx) + dx, int(my - mr * 0.52 - (1 - q * q) * mr * 0.22), tief)
-            c.set(int(mx) + dx, int(my + mr * 0.66 + (1 - q * q) * mr * 0.20), ritz)
-
-    elif art == "orgelpfeife":
-        # Ein Register: drei stehende Saeulen verschiedener Laenge.
-        _augenloch(c, mx - mr * 0.44, my, mr * 0.34, 0.7, 0.30, funke)
-        _augenloch(c, mx + mr * 0.48, my, mr * 0.34, 0.7, -0.30, funke)
-        for k, hoch in enumerate((0.62, 0.98, 0.44)):
-            px = mx + (k - 1) * mr * 0.34 + mr * 0.06
-            _ritzung(c, [(px, my + mr * 0.94),
-                         (px, my + mr * 0.94 - mr * hoch)], ritz)
-
-    elif art == "bruch":
-        # Ein Auge ist noch da. Wo das andere war, ist die Maske
-        # zersprungen - der Riss laeuft weiter bis zum Rand.
-        _augenloch(c, mx + mr * 0.48, my, mr * 0.44, 0.9, -0.42, funke)
-        _ritzung(c, [(mx - mr * 0.86, my - mr * 0.42),
-                     (mx - mr * 0.34, my - mr * 0.04),
-                     (mx - mr * 0.60, my + mr * 0.44),
-                     (mx - mr * 0.16, my + mr * 0.92)], P.INK)
-        _ritzung(c, [(mx - mr * 0.34, my - mr * 0.04),
-                     (mx + mr * 0.06, my - mr * 0.62)], tief)
-
-    else:
-        for seite in (-1, 1):
-            _augenloch(c, mx + seite * mr * 0.46 + mr * 0.08, my,
-                       mr * 0.40, 0.8, seite * 0.44, funke)
-
-    c.glow(mx, my, 3.2 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 45))
-
 
 # ------------------------------------------------------------------ Heldin
 #
@@ -358,7 +143,7 @@ KRISTALL_TIEF = hexc("#12363f")     # Schattenseite
 # der Abstand, von dem ihre Silhouette lebt, geht verloren. Sie ist das
 # hellste und zugleich das dunkelste Ding im Bild - das muss man
 # einstellen koennen, ohne den Wald anzufassen.
-MASKE_GRUND = hexc("#eef6ec")       # kuehler als Knochen, fast weiss
+MASKE_GRUND = hexc("#f2ece0")       # warmer Knochen, nicht kaltes Weiss
 GEWAND_TIEF = hexc("#0d1220")       # wohin alle Stoffe gezogen werden
 
 
@@ -773,13 +558,30 @@ def _draw_klinge(c: Canvas, *, cx: int, base: float, height: float, phase: float
 
     # Schraeg ueber den Ruecken: Knauf oben hinter der Schulter, Spitze
     # nach unten vorbei an der Huefte.
-    a = math.pi - 0.75
-    mx = cx - 1.0 * S + lean * 0.3
-    my = base - 0.52 * height
+    # Steiler und laenger.
+    #
+    # Sie lag flach ueber dem Ruecken, und flach heisst: die Laenge geht
+    # in die Breite der Leinwand, und die ist neunundvierzig Pixel. Bei
+    # anderthalbfacher Laenge haette die Spitze links herausgestanden.
+    # Aufgerichtet nimmt sie stattdessen die Hoehe in Anspruch, und davon
+    # ist reichlich da - so misst sie jetzt drei Viertel ihrer
+    # Koerperhoehe statt der Haelfte, ohne dass die Leinwand wachsen muss.
+    # Steil genug fuer die Laenge, schraeg genug, dass beide Enden aus
+    # ihrer Silhouette herausschauen: der Knauf oben rechts neben dem
+    # Kopf, die Spitze unten links neben der Huefte. Dazwischen liegt sie
+    # hinter ihr, und das ist richtig so - ein Schwert auf dem Ruecken
+    # sieht man nicht ganz.
+    #
+    # Genau senkrecht war der erste Versuch, und da verschwand sie
+    # komplett hinter dem Rumpf; flach ueber dem Ruecken war der zweite,
+    # und dann geht die Laenge in die Breite der Leinwand.
+    a = math.pi / 2 + 0.62
+    mx = cx + 3.0 * S + lean * 0.3
+    my = base - 0.80 * height
     ax, ay = math.cos(a), math.sin(a)
     nx, ny = -ay, ax
 
-    laenge = height * 0.56
+    laenge = height * 0.78
     breit = 0.92 * S
 
     # --- Griff: kurz, dunkel, ohne Knauf. Ein Kristall braucht keinen.
@@ -1766,6 +1568,13 @@ def draw_heroine(
     #
     # Der Kranz bricht die runde Silhouette auf. Was Zacken hat, kann
     # keine Kapuze sein.
+    #
+    # Danach kam ein Anlauf mit acht verschiedenen Masken - je eine pro
+    # Kern, mit eingeritzten Zeichnungen, geschliffenen Facetten und dem
+    # Kranz auf dem Maskenrand statt dahinter. Das Ergebnis war ein
+    # Gesicht voller Narben und Spalten mit Splittern quer darueber, und
+    # damit sah sie aus wie aus einem Horrorspiel. Eine Figur braucht ein
+    # Gesicht, das man wiedererkennt, nicht acht.
     schulter_y = base - SCHULTER_T * height
     schulter_x = cx + lean * SCHULTER_T + math.sin(SCHULTER_T * 2.6 + phase) * 1.1
 
@@ -1784,29 +1593,30 @@ def draw_heroine(
             col = KRISTALL_MITTEL if dx * 1 > -hw * 0.2 else KRISTALL_TIEF
             c.set(int(hx) + dx, int(y), col)
 
+    # --- Der Kranz ---------------------------------------------------------
+    #
+    # Sieben Splitter, ungleich lang, um den oberen Halbkreis verteilt.
+    # Sie liegen *hinter* der Maske, also zuerst.
+    for k in range(7):
+        w = -math.pi + 0.30 + k * (math.pi - 0.60) / 6
+        w += math.sin(phase * 1.2 + k) * 0.05
+        lang = kopf_r * (0.62 + 0.46 * hash01(k * 13 + 5, 2))
+        # Die beiden waagerechten aussen bleiben kuerzer, sonst wird der
+        # Kopf breiter als die Schultern.
+        lang *= 0.62 + 0.38 * abs(math.sin(w))
+        _scherbe(c,
+                 kopf_x + math.cos(w) * kopf_r * 0.42,
+                 kopf_y + math.sin(w) * kopf_r * 0.42,
+                 lang, 0.85 * HERO_SCALE, w, glanz=0.20 + 0.35 * hash01(k, 7))
+
     # --- Die Maske ---------------------------------------------------------
     #
-    # Sie ist kein Vorsatz, sondern ihr Gesicht.
-    #
-    # Ein Zwischenstand hat sie aus Knochenweiss gemalt und den Kranz
-    # dahinter gesetzt. Damit war sie ein zweites Material, hart
-    # abgegrenzt, sichtbar davorgehalten - eine Larve, die jemand
-    # aufgesetzt hat. Sie ist aber aus demselben Stoff wie ihre Beine und
-    # ihre Arme, nur an der hellsten Stelle der Reihe: derselbe Kristall,
-    # nur dort, wo er am duennsten ist und das meiste Licht durchlaesst.
-    #
-    # Darum drei Dinge anders:
-    #
-    #   1. Ihre Farben sind das obere Ende der Kristallreihe, nicht ein
-    #      eigener Ton daneben.
-    #   2. Der Rand laeuft in den Kopf aus statt gegen ihn zu stossen:
-    #      die aeusserste Reihe ist eine Stufe dunkler, dann erst kommt
-    #      die Flaeche.
-    #   3. Der Kranz waechst aus ihr heraus statt hinter ihr zu sitzen -
-    #      er wird darum jetzt danach gezeichnet, verwurzelt am Rand.
-    maske = mix(KRISTALL_HELL, (255, 255, 255, 255), 0.30)
-    maske_lo = KRISTALL
-    maske_kante = mix(KRISTALL_HELL, KRISTALL, 0.45)
+    # Hell, hart begrenzt, ein wenig laenger als breit, zum Kinn hin
+    # schmaler. Sie ist das Hellste an der ganzen Figur - was man von ihr
+    # zuerst sieht, soll ihr Gesicht sein.
+    maske = mix(MASKE_GRUND, KRISTALL_HELL, 0.28)
+    maske_lo = mix(maske, KRISTALL_MITTEL, 0.55)
+    maske_kante = mix(maske, MASKE_GRUND, 0.5)
     mr = kopf_r * 0.80
     for dy in range(-int(mr * 1.12) - 1, int(mr * 1.06) + 2):
         v = dy / (mr * 1.12) if dy < 0 else dy / (mr * 1.06)
@@ -1823,27 +1633,10 @@ def draw_heroine(
             if q < -0.55:
                 col = maske_lo                    # Schattenseite hinten
             elif abs(dx) > hw - 1.1:
-                col = maske_kante                 # weiche Kante zum Kopf
+                col = maske_kante                 # harte Kante
             else:
                 col = maske
             c.set(int(kopf_x) + dx, int(y), col)
-
-    # --- Der Kranz ---------------------------------------------------------
-    #
-    # Sieben Splitter, ungleich lang, um den oberen Halbkreis verteilt.
-    # Sie sitzen auf dem Rand der Maske und zeigen nach aussen: was aus
-    # ihr herauswaechst, gehoert zu ihr; was dahinter steht, ist Zubehoer.
-    for k in range(7):
-        w = -math.pi + 0.30 + k * (math.pi - 0.60) / 6
-        w += math.sin(phase * 1.2 + k) * 0.05
-        lang = kopf_r * (0.62 + 0.46 * hash01(k * 13 + 5, 2))
-        # Die beiden waagerechten aussen bleiben kuerzer, sonst wird der
-        # Kopf breiter als die Schultern.
-        lang *= 0.62 + 0.38 * abs(math.sin(w))
-        _scherbe(c,
-                 kopf_x + math.cos(w) * mr * 1.00,
-                 kopf_y + math.sin(w) * mr * 1.00,
-                 lang, 0.85 * HERO_SCALE, w, glanz=0.20 + 0.35 * hash01(k, 7))
 
     # --- Die Flamme ueber der Maske ---------------------------------------
     #
@@ -1874,8 +1667,39 @@ def draw_heroine(
                 aa = int(240 * (1 - u * 0.42))
                 c.blend(int(fx) + dx, int(fy), (col[0], col[1], col[2], aa))
 
-    _maske_zeichnung(c, art=kind, mx=kopf_x, my=kopf_y, mr=mr, phase=phase,
-                     grund=maske, schatten=maske_lo)
+    # --- Die Augen --------------------------------------------------------
+    #
+    # Zwei dunkle Loecher in der hellen Maske, und in jedem ein rosa
+    # Funken. Ein Loch liest sich auf zehn Pixel Kopfhoehe sofort als
+    # Blick; ein gemaltes Auge nicht.
+    #
+    # Sie blinzelt selten und kurz. Ein Blinzeln, das man erwartet, ist
+    # Mechanik; eines, das man verpasst, ist Leben.
+    rosa = hexc("#ff7ad0")
+    zu = math.sin(phase * 0.8) > 0.93
+    #
+    # Schmal und schraeg. Ein erster Anlauf machte sie drei Pixel breit
+    # und setzte sie eng nebeneinander - das las sich als grinsender
+    # Mund mit Zaehnen, nicht als Blick.
+    ay_ = kopf_y - mr * 0.10
+    abstand = max(3.0, mr * 0.98)
+    hoehe = max(2, int(mr * 0.52))
+    for seite in (-1, 1):
+        ex = kopf_x + seite * abstand * 0.5 + mr * 0.16
+        if zu:
+            # Geschlossen: ein waagerechter Strich bleibt stehen.
+            for dx in range(-1, 1):
+                c.set(int(ex) + dx, int(ay_), maske_lo)
+            continue
+        for dy in range(hoehe):
+            # Nach aussen unten geneigt - das gibt dem Blick eine Richtung.
+            versatz = int(seite * dy * 0.34)
+            c.set(int(ex) + versatz, int(ay_) + dy, P.INK)
+            if dy == 0:
+                c.set(int(ex) + versatz - seite, int(ay_), mix(P.INK, maske_lo, 0.4))
+        c.set(int(ex), int(ay_), mix(rosa, (255, 255, 255, 255), 0.30))
+        c.glow(ex, ay_, 2.4 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 75))
+
 
     # Der Kern wird nicht mehr als Gegenstand an sie geheftet.
     #

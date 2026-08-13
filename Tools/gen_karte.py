@@ -43,6 +43,7 @@ REGIONSFARBEN = {
     "kathedrale": (P.REGIONS["kathedrale"][0], P.REGIONS["kathedrale"][1]),
     "grotten": (P.REGIONS["grotten"][0], P.REGIONS["grotten"][1]),
     "dissonanz": (P.REGIONS["dissonanz"][0], P.REGIONS["dissonanz"][1]),
+    "bruecke": (P.REGIONS["bruecke"][0], P.REGIONS["bruecke"][1]),
 }
 
 REGIONSNAMEN = {

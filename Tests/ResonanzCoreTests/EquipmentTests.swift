@@ -347,9 +347,20 @@ final class EquipmentTests: XCTestCase {
                 gefunden[pickup.id, default: 0] += 1
             }
         }
-        for equipment in EquipmentCatalog.all where equipment.id != EquipmentCatalog.ohne.id {
+        // Ladenware ist die Ausnahme: sie liegt absichtlich nirgends,
+        // sondern wird im Dorf gekauft. Ein Laden, der verkauft, was man
+        // ohnehin findet, waere eine Strafgebuehr fuers Suchen.
+        let imLaden = Set(Laden.waren.compactMap { ware -> String? in
+            if case .equipment(let id) = ware.inhalt { return id }
+            return nil
+        })
+        for equipment in EquipmentCatalog.all
+        where equipment.id != EquipmentCatalog.ohne.id && !imLaden.contains(equipment.id) {
             XCTAssertEqual(gefunden[equipment.id], 1,
                            "\(equipment.id) muss genau einmal in der Welt liegen")
+        }
+        for id in imLaden {
+            XCTAssertNil(gefunden[id], "\(id) gehoert in den Laden, nicht in die Welt")
         }
         XCTAssertNil(gefunden[EquipmentCatalog.ohne.id],
                      "Ohne alles faengt sie an - das liegt nirgends herum")
@@ -380,7 +391,11 @@ final class EquipmentTests: XCTestCase {
                 }
             }
         }
-        for s in SiegelKatalog.all {
+        let siegelImLaden = Set(Laden.waren.compactMap { ware -> String? in
+            if case .siegel(let id) = ware.inhalt { return id }
+            return nil
+        })
+        for s in SiegelKatalog.all where !siegelImLaden.contains(s.id) {
             XCTAssertEqual(siegel[s.id], 1, "\(s.id) muss genau einmal liegen")
         }
         for k in KlingenKatalog.all where k.id != KlingenKatalog.schlicht.id {

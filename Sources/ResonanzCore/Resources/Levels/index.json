@@ -91,6 +91,10 @@
     {
      "door": "R",
      "to": "A10"
+    },
+    {
+     "door": "B",
+     "to": "A17"
     }
    ]
   },
@@ -307,6 +311,38 @@
     {
      "door": "N",
      "to": "A3"
+    }
+   ]
+  },
+  {
+   "id": "A17",
+   "name": "DIE HAENGEBRUECKE",
+   "region": "hain",
+   "music": "hain",
+   "width": 78,
+   "height": 30,
+   "connections": [
+    {
+     "door": "D",
+     "to": "A4"
+    },
+    {
+     "door": "R",
+     "to": "A18"
+    }
+   ]
+  },
+  {
+   "id": "A18",
+   "name": "DAS DORF DER LETZTEN STIMMEN",
+   "region": "hain",
+   "music": "hain",
+   "width": 62,
+   "height": 24,
+   "connections": [
+    {
+     "door": "L",
+     "to": "A17"
     }
    ]
   },

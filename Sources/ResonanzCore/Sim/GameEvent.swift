@@ -61,6 +61,10 @@ public enum GameEvent: Sendable {
     case enemyKilled(kind: String, position: Vec2)
     /// Ein Bestiariumseintrag hat sich ganz geoeffnet.
     case bestiariumEintrag(Bestiarium.Eintrag)
+    /// Eine Kreatur hat ihre Stimme zurueckgelassen.
+    case stimmen(gewonnen: Int, gesamt: Int)
+    /// Im Dorf gekauft.
+    case gekauft(Laden.Ware, rest: Int)
     /// Ein Treffer hat die Klangkette veraendert - fuer Anzeige und Klang.
     case klangkette(Klangkette.Wirkung, glieder: Int)
     case playerDied

@@ -67,6 +67,23 @@ public enum EnemyKind: String, Sendable, CaseIterable {
         default: return Tuning.resonancePerKill
         }
     }
+
+    /// Wie viele Stimmen sie zuruecklaesst.
+    ///
+    /// Was schwerer zu erlegen ist, laesst mehr zurueck - aber nicht
+    /// proportional zum Leben. Sonst wird das Dorf zu einer Frage der
+    /// Geduld: wer lange genug dieselbe Kreatur erschlaegt, kauft alles.
+    /// Der Abstand zwischen der kleinsten und der groessten Beute ist
+    /// darum knapp drei zu eins, nicht zehn zu eins.
+    public var stimmenReward: Int {
+        switch self {
+        case .gabelmaus: return 2
+        case .klangmotte: return 3
+        case .dissonanzknospe: return 3
+        case .echoscherbe: return 4
+        case .stilleschreiter: return 5
+        }
+    }
 }
 
 public final class Enemy {

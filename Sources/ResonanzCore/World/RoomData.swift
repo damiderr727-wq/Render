@@ -93,7 +93,8 @@ public struct RoomData: Codable, Sendable {
                 backdrop: String? = nil, tiles: [String], doors: [Door],
                 spawns: [String: SpawnPoint], benches: [Placement],
                 enemies: [EnemySpawn], pickups: [PickupSpawn],
-                decor: [DecorSpawn], lore: [LoreSpawn], boss: BossSpawn?) {
+                decor: [DecorSpawn], lore: [LoreSpawn], boss: BossSpawn?,
+                npcs: [NPCSpawn] = []) {
         self.id = id
         self.name = name
         self.region = region
@@ -111,6 +112,29 @@ public struct RoomData: Codable, Sendable {
         self.decor = decor
         self.lore = lore
         self.boss = boss
+        self.npcs = npcs
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        region = try c.decode(Region.self, forKey: .region)
+        music = try c.decode(String.self, forKey: .music)
+        width = try c.decode(Int.self, forKey: .width)
+        height = try c.decode(Int.self, forKey: .height)
+        darkness = try c.decodeIfPresent(Double.self, forKey: .darkness) ?? 0
+        backdrop = try c.decodeIfPresent(String.self, forKey: .backdrop)
+        tiles = try c.decode([String].self, forKey: .tiles)
+        doors = try c.decode([Door].self, forKey: .doors)
+        spawns = try c.decode([String: SpawnPoint].self, forKey: .spawns)
+        benches = try c.decodeIfPresent([Placement].self, forKey: .benches) ?? []
+        enemies = try c.decodeIfPresent([EnemySpawn].self, forKey: .enemies) ?? []
+        pickups = try c.decodeIfPresent([PickupSpawn].self, forKey: .pickups) ?? []
+        decor = try c.decodeIfPresent([DecorSpawn].self, forKey: .decor) ?? []
+        lore = try c.decodeIfPresent([LoreSpawn].self, forKey: .lore) ?? []
+        boss = try c.decodeIfPresent(BossSpawn.self, forKey: .boss)
+        npcs = try c.decodeIfPresent([NPCSpawn].self, forKey: .npcs) ?? []
     }
     public let tiles: [String]
     public let doors: [Door]
@@ -121,6 +145,21 @@ public struct RoomData: Codable, Sendable {
     public let decor: [DecorSpawn]
     public let lore: [LoreSpawn]
     public let boss: BossSpawn?
+
+    /// Wer im Raum steht und angesprochen werden kann.
+    ///
+    /// Mit Rueckfallwert gelesen: aeltere Raumdaten kennen das Feld
+    /// nicht, und ein Raum ohne Bewohner ist kein Fehler.
+    public let npcs: [NPCSpawn]
+
+    public struct NPCSpawn: Codable, Sendable {
+        /// Wer. Bestimmt Bild und was beim Ansprechen passiert.
+        public let id: String
+        public let x: Double
+        public let y: Double
+        /// Was er sagt, wenn man ihn anspricht und sonst nichts passiert.
+        public let text: String?
+    }
 }
 
 /// Der Weltindex: alle Raeume, Startpunkt, Verbindungen.

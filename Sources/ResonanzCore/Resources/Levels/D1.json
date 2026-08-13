@@ -62,6 +62,7 @@
  "pickups": [],
  "decor": [],
  "lore": [],
+ "npcs": [],
  "boss": {
   "type": "kantor",
   "x": 42,

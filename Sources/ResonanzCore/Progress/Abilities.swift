@@ -194,6 +194,15 @@ public struct SaveState: Codable, Sendable, Equatable {
     public var erlegt: [String: Int]
     /// Wem man ueberhaupt schon begegnet ist - auch ohne sie zu erlegen.
     public var gesehen: Set<String>
+    /// Stimmen: was eine gefallene Kreatur zurücklaesst.
+    ///
+    /// Die Welt hat sich selbst gesungen, und was davon uebrig ist,
+    /// steckt in ihren Bewohnern. Wer eine erlegt, bekommt den Rest -
+    /// und im Dorf nimmt man das als Zahlung, weil es das Einzige ist,
+    /// was dort noch jemand braucht.
+    public var stimmen: Int
+    /// Was im Dorf schon gekauft wurde. Jede Ware liegt genau einmal da.
+    public var gekauft: Set<String>
     public var playTime: Double
 
     public init(roomID: String = "A1",
@@ -204,6 +213,8 @@ public struct SaveState: Codable, Sendable, Equatable {
                 collected: Set<String> = [],
                 erlegt: [String: Int] = [:],
                 gesehen: Set<String> = [],
+                stimmen: Int = 0,
+                gekauft: Set<String> = [],
                 playTime: Double = 0) {
         self.version = Self.currentVersion
         self.roomID = roomID
@@ -214,6 +225,8 @@ public struct SaveState: Codable, Sendable, Equatable {
         self.collected = collected
         self.erlegt = erlegt
         self.gesehen = gesehen
+        self.stimmen = stimmen
+        self.gekauft = gekauft
         self.playTime = playTime
     }
 
@@ -235,6 +248,8 @@ public struct SaveState: Codable, Sendable, Equatable {
         collected = try c.decodeIfPresent(Set<String>.self, forKey: .collected) ?? []
         erlegt = try c.decodeIfPresent([String: Int].self, forKey: .erlegt) ?? [:]
         gesehen = try c.decodeIfPresent(Set<String>.self, forKey: .gesehen) ?? []
+        stimmen = try c.decodeIfPresent(Int.self, forKey: .stimmen) ?? 0
+        gekauft = try c.decodeIfPresent(Set<String>.self, forKey: .gekauft) ?? []
         playTime = try c.decodeIfPresent(Double.self, forKey: .playTime) ?? 0
     }
 }

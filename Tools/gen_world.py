@@ -1278,6 +1278,7 @@ SIGIL_TINTS = {
 EQUIPMENT_SIGILS = {
     "mantel": (4, P.BONE_SH),
     "lauschband": (2, P.AMBER),
+    "flickmantel": (6, hexc("#9a8f7a")),
     "enge_fassung": (1, P.GOLD),
     "offene_fassung": (9, P.GLOW),
     "schlagfassung": (2, P.ROT),
@@ -1370,6 +1371,8 @@ SIEGEL_SIGILS = {
     "glockenmund": (2, hexc("#e8c76a")),
     "spiegelgrund": (2, hexc("#9fe8ff")),
     "taubwerk": (3, hexc("#5c6470")),
+    "hoerrohr": (1, hexc("#c9a86a")),
+    "muenzsiegel": (2, hexc("#e0c060")),
 }
 
 

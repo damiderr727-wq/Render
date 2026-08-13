@@ -176,11 +176,31 @@ public enum SiegelKatalog {
                + "EIN STUECK DAVON AM GUERTEL TUT DASSELBE.",
         modifiers: Modifiers(rangedDamage: 0.86, cohesion: 1.35))
 
+    // --- Nur im Dorf zu haben ---------------------------------------
+    //
+    // Diese beiden liegen nirgends in der Welt. Ein Laden, der verkauft,
+    // was man ohnehin findet, ist eine Strafgebuehr fuers Suchen.
+
+    /// Das Hoerrohr: man sieht Gegner nicht besser, man sieht sie eher.
+    public static let hoerrohr = Siegel(
+        id: "hoerrohr", name: "HOERROHR", kerben: 1,
+        summary: "FERNKLANG TRAEGT WEITER UND KOSTET WENIGER",
+        flavour: "MAN HOERT DAMIT NICHTS BESSER. MAN HOERT NUR FRUEHER.",
+        modifiers: Modifiers(rangedRange: 1.20, rangedCost: 0.85))
+
+    /// Das Muenzsiegel: mehr Stimmen von jedem, der faellt.
+    public static let muenzsiegel = Siegel(
+        id: "muenzsiegel", name: "MUENZSIEGEL", kerben: 2,
+        summary: "GEFALLENE LASSEN MEHR STIMMEN ZURUECK",
+        flavour: "WER ES TRAEGT, BEKOMMT MEHR FUER SEINE ARBEIT. "
+               + "DER HAENDLER VERKAUFT ES TROTZDEM.",
+        modifiers: Modifiers())
+
     public static let all: [Siegel] = [
         nachhall, dauerton, bruchstein, federstaub, windschliff, hohlklang, stille,
         scherbenherz, bleisiegel, taubesOhr, pilgerstab,
         kreiselsiegel, nadelsiegel, wurzelmark, stammklang, glockenmund,
-        spiegelgrund, taubwerk,
+        spiegelgrund, taubwerk, hoerrohr, muenzsiegel,
     ]
 
     public static func find(_ id: String) -> Siegel? {

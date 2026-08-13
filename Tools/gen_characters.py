@@ -61,28 +61,69 @@ GROUND = HERO_H - 1  # unterste Pixelzeile = Fussboden
 # druckt sie breit und schwer, die Floete spitzt sie zu. Man sieht also
 # an ihrer Silhouette, womit sie gerade spielt.
 
+# Die Umrisslinie der Gestalt, als Stuetzpunkte von der Huefte aufwaerts.
+#
+# Vorher stand hier eine einzige Glockenkurve: unten schmal, in der Mitte
+# dick, oben spitz. Das ist die Form einer Flamme - und genau deshalb sah
+# die Figur aus wie ein Laib. Eine Glocke hat keine Schulter, keinen Hals
+# und keinen Kopf; sie hat nur eine dickste Stelle.
+#
+# Eine Silhouette muss man auf zwanzig Pixel Hoehe *lesen* koennen, und
+# lesbar wird sie an ihren Einschnuerungen, nicht an ihrer Masse. Beim
+# Vorbild ist die Figur ebenso abstrakt wie diese hier - aber ihr Umriss
+# hat drei klare Marken: runder Kopf, Einschnitt darunter, breiter Umhang.
+# Das erkennt man als Schattenriss aus dem Augenwinkel.
+#
+# Also Stuetzpunkte statt Formel. Jeder ist eine Entscheidung:
+#
+#   0.00  Huefte - schmal, dort setzen die Beine an
+#   0.42  Brust  - die breiteste Stelle, hier sitzen die Schultern
+#   0.68  Hals   - der Einschnitt. Er allein macht aus der Masse zwei
+#                  Teile, und erst zwei Teile sind eine Gestalt.
+#   0.84  Kopf   - wieder breiter, aber schmaler als die Brust
+#   1.00  Krone  - laeuft aus; oben ist sie immer noch Flamme
+_UMRISS = [(0.00, 0.56), (0.20, 0.88), (0.42, 1.00), (0.56, 0.88),
+           (0.68, 0.44), (0.75, 0.68), (0.84, 0.76), (0.93, 0.54),
+           (1.00, 0.08)]
+
+
 def _profile(t: float, instrument: str) -> float:
     """
     Breite der Gestalt an der Stelle `t` (0 unten, 1 oben).
 
-    Eine Flamme ist unten schmal, hat tief unten ihren Bauch und laeuft
-    oben spitz aus. Das Instrument verschiebt diesen Bauch.
+    Das Instrument aendert nur noch zwei Dinge: wie breit sie insgesamt
+    ist und wie weit oben ihre Brust sitzt. Der Umriss selbst - Schulter,
+    Hals, Kopf - bleibt derselbe, denn er ist ihre Gestalt und nicht ihr
+    Werkzeug.
     """
     if instrument == "trommel":
-        a, low, high = 12.0, 0.30, 0.85    # schwer, breiter Bauch tief unten
+        a, schub = 11.4, -0.05     # schwer, Brust sitzt tiefer
     elif instrument == "floete":
-        a, low, high = 7.2, 0.55, 0.40     # schmal, hoch, spitz
+        a, schub = 7.6, 0.05       # schmal und hoch
     elif instrument == "leier":
-        a, low, high = 9.4, 0.38, 0.60     # ausgewogen
+        a, schub = 9.2, 0.0
     elif instrument == "glocke":
-        a, low, high = 11.4, 0.28, 0.90    # schwer, sitzt tief
+        a, schub = 10.8, -0.06
     elif instrument == "orgelpfeife":
-        a, low, high = 6.8, 0.60, 0.34     # sehr schlank, sehr hoch
+        a, schub = 7.2, 0.06
     elif instrument == "metronom":
-        a, low, high = 8.2, 0.44, 0.58     # aufrecht, schmal
+        a, schub = 8.4, 0.02
     else:
-        a, low, high = 8.6, 0.42, 0.55     # Stimmgabel: schlank, unauffaellig
-    return a * ((t * 1.1 + 0.06) ** low) * ((1 - t) ** high)
+        a, schub = 8.8, 0.0        # Stimmgabel
+
+    x = max(0.0, min(1.0, t))
+    for i in range(len(_UMRISS) - 1):
+        (t0, w0), (t1, w1) = _UMRISS[i], _UMRISS[i + 1]
+        # Die Brust und alles darunter wandert mit dem Instrument, der
+        # Kopf bleibt, wo er ist - sonst waechst ihr beim Wechsel der
+        # Trommel ein anderer Schaedel.
+        s0 = t0 + schub * (1 - t0) * (1 if t0 < 0.6 else 0)
+        s1 = t1 + schub * (1 - t1) * (1 if t1 < 0.6 else 0)
+        if s0 <= x <= s1:
+            u = (x - s0) / max(1e-6, s1 - s0)
+            u = u * u * (3 - 2 * u)          # weich zwischen den Marken
+            return a * (w0 + (w1 - w0) * u)
+    return a * _UMRISS[-1][1]
 
 
 # --------------------------------------------------------------- Fassungen
@@ -139,6 +180,9 @@ GARMENTS = {
         stoff=mix(mix(P.CLOAK, P.STONE, 0.55), P.BLOOM, 0.20), licht=P.BLOOM),
     # Kein Gewand, sondern ein Band: es deckt am wenigsten von allem, was
     # sie tragen kann, und haelt sie trotzdem zusammen.
+    "flickmantel": dict(
+        openings=6, cut="mantel", deckung=0.70,
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.62), P.WARM, 0.10), licht=P.BONE_SH),
     "lauschband": dict(
         openings=2, cut="cape", deckung=0.48,
         stoff=mix(mix(P.CLOAK, P.STONE, 0.45), P.AMBER, 0.12), licht=P.AMBER),

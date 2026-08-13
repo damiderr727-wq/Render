@@ -239,9 +239,21 @@ public enum EquipmentCatalog {
                + "HOEREN. ES HAT NICHTS GENUETZT - ABER ES HAELT.",
         modifiers: Modifiers(resonanceRegen: 1.35, cohesion: 1.05))
 
+    /// Der Flickmantel: aus drei Maenteln, die ihre Leute nicht mehr
+    /// brauchten. Nur im Dorf zu haben.
+    public static let flickmantel = Equipment(
+        id: "flickmantel",
+        name: "FLICKMANTEL",
+        openings: 6,
+        stil: .bogen,
+        summary: "MEHR OEFFNUNGEN ALS DER SCHLICHTE MANTEL, UND ER HAELT MEHR AUS",
+        flavour: "AUS DREI MAENTELN ZUSAMMENGESETZT, DIE NIEMAND MEHR "
+               + "GEBRAUCHT HAT. ER HAELT. FRAG NICHT, WIE.",
+        modifiers: Modifiers(moveSpeed: 0.97, cohesion: 1.15))
+
     public static let all: [Equipment] = [
         ohne, mantel, cape, chorpanzer, pfeifenharnisch, flimmerhemd, engeFassung, offeneFassung, schlagfassung, gerissenesGewand,
-        lauschband,
+        lauschband, flickmantel,
     ]
 
     public static func find(_ id: String) -> Equipment? {

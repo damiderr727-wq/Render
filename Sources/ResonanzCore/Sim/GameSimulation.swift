@@ -33,6 +33,10 @@ public enum Prompt: Sendable, Equatable {
     case bench
     case lore(String)
     case gate(Ability)
+    /// Jemand steht da und sagt etwas.
+    case npc(id: String, text: String)
+    /// Der Haendler im Dorf.
+    case haendler
 }
 
 /// Der gesamte Spielzustand. Enthaelt keine Darstellung und keinen Ton -
@@ -70,6 +74,10 @@ public final class GameSimulation {
     private var restTimer: Double = 0
     /// Der Ablauf an der Stimmgabel: aufloesen, schweben, zurueckfallen.
     public private(set) var einkehr = Einkehr()
+    /// Ob gerade der Laden offen ist.
+    public private(set) var ladenOffen = false
+    /// Welche Ware im Laden gerade gewaehlt ist.
+    public private(set) var ladenAuswahl = 0
     /// Angesammelter Zerfall im Bruch, in halben Kristallen.
     private var zerfall: Double = 0
     private var transitionCooldown: Double = 0
@@ -308,6 +316,15 @@ public final class GameSimulation {
                   let eintrag = Bestiarium.eintrag(fuer: kind) else { continue }
             let vorher = save.erlegt[art] ?? 0
             save.erlegt[art] = vorher + 1
+            // Was sie zuruecklaesst. Das Muenzsiegel legt einen drauf -
+            // es ist das einzige Siegel, das nicht auf den Kampf wirkt,
+            // sondern auf das, was danach kommt.
+            var stimmen = kind.stimmenReward
+            if save.progression.siegel.contains(where: { $0.id == "muenzsiegel" }) {
+                stimmen += Swift.max(1, stimmen / 2)
+            }
+            save.stimmen += stimmen
+            neu.append(.stimmen(gewonnen: stimmen, gesamt: save.stimmen))
             // Genau beim Ueberschreiten melden, nicht bei jedem weiteren.
             if vorher + 1 == eintrag.schwelle {
                 neu.append(.bestiariumEintrag(eintrag))
@@ -648,6 +665,21 @@ public final class GameSimulation {
             return
         }
 
+        if let npc = room.data.npcs.first(where: {
+            Vec2.entity($0.x, $0.y).distance(to: player.position) < 26
+        }) {
+            // Der Haendler ist der Einzige, bei dem etwas passiert. Alle
+            // anderen sagen nur etwas - und genau das ist der Punkt eines
+            // Dorfes: die meisten haben nichts anzubieten ausser sich.
+            if npc.id == "haendler" {
+                prompt = .haendler
+                if input.interactPressed { ladenOffen.toggle() }
+            } else {
+                prompt = .npc(id: npc.id, text: npc.text ?? "")
+            }
+            return
+        }
+
         if let entry = lore.first(where: { $0.position.distance(to: player.position) < 24 }) {
             prompt = .lore(entry.text)
             if input.interactPressed && !save.progression.readLore.contains(entry.key) {
@@ -674,6 +706,36 @@ public final class GameSimulation {
             }
         }
     }
+
+    // MARK: - Der Laden
+    //
+    // Er laeuft neben dem Spiel, nicht darin: solange er offen ist,
+    // bewegt sich nichts. Das ist Absicht - im Dorf soll man stehen
+    // bleiben.
+
+    /// Blaettert durch die Waren.
+    public func ladenBlaettern(_ richtung: Int) {
+        guard ladenOffen, !Laden.waren.isEmpty else { return }
+        let n = Laden.waren.count
+        ladenAuswahl = (ladenAuswahl + richtung + n) % n
+    }
+
+    /// Kauft, was gerade gewaehlt ist. Meldet, ob es geklappt hat.
+    @discardableResult
+    public func ladenKaufen(events: inout [GameEvent]) -> Bool {
+        guard ladenOffen, ladenAuswahl < Laden.waren.count else { return false }
+        let ware = Laden.waren[ladenAuswahl]
+        guard Laden.kaufe(ware, save: &save) else {
+            events.append(.sound(.outOfResonance))
+            return false
+        }
+        player.sync(progression: save.progression)
+        events.append(.sound(.pickup))
+        events.append(.gekauft(ware, rest: save.stimmen))
+        return true
+    }
+
+    public func ladenSchliessen() { ladenOffen = false }
 
     /// Der Name des Spawnpunkts, an dem nach dem Tod neu begonnen wird.
     /// Bevorzugt eine echte Tuer, sonst der Raumstart.

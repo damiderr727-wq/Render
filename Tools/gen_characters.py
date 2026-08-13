@@ -1719,10 +1719,16 @@ def draw_heroine(
         # Andersherum stimmt es: der Lidspalt sitzt unten innen, die
         # dunkle Kante steigt nach aussen.
         hell = mix(rosa, (255, 255, 255, 255), 0.30)
-        for dy in (1, 2):
-            c.set(int(ex) + seite * dy, int(ay_) - dy, P.INK)
+        links = min(int(ex), int(ex) - seite)
         for k in (0, 1):
             c.set(int(ex) - seite * k, int(ay_), hell)
+        # Beide dunklen Pixel stehen senkrecht ueber dem *linken* der
+        # beiden rosa - nicht schraeg nach aussen weg. Schraeg ergibt
+        # eine Treppe, und eine Treppe aus vier Pixeln liest sich als
+        # Zufall; die Ecke dagegen ist eine Form: ein Lidspalt mit einer
+        # Braue an einem Ende.
+        for dy in (1, 2):
+            c.set(links, int(ay_) - dy, P.INK)
         c.glow(ex, ay_, 2.4 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 75))
 
 

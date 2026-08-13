@@ -889,18 +889,23 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # Von oben vorn nach unten vorn. Beide Winkel liegen auf der
     # Blickseite; ein Bogen, der hinter ihr anfaengt, laeuft durch die
     # Figur hindurch und liest sich als Strich quer durchs Bild.
-    a_auf, a_ab = -1.32, 1.02
-    a_spitze = a_auf + (a_ab - a_auf) * t     # wo die Klinge gerade steht
+    a_auf, a_ab = -1.62, 1.34
+    a_spitze = a_auf + (a_ab - a_auf) * t     # wo die Sichel gerade steht
 
     # Wie viel vom Bogen stehenbleibt. Er zieht einen festen Winkelbetrag
     # hinter sich her, statt bis zum Anfang zurueckzureichen - sonst
-    # steht im letzten Bild ein halber Kreis um sie herum.
-    schleppe = 1.45
+    # steht im letzten Bild ein voller Kreis um sie herum. Zwei Radiant
+    # sind knapp ein Drittel Kreis: genug, dass man die Kruemmung sieht,
+    # zu wenig fuer einen Ring.
+    schleppe = 2.05
     a0 = max(a_auf, a_spitze - schleppe)
     if a_spitze - a0 < 0.06:
         return
 
-    radius = height * (0.86 + 0.26 * t)
+    # Weit draussen. Der Bogen soll vor ihr stehen, nicht an ihr kleben -
+    # bei knapp einem Koerper Abstand war er noch Teil der Figur, bei
+    # anderthalb ist er die Reichweite, die man ihm ansieht.
+    radius = height * (1.15 + 0.30 * t)
     max_dicke = height * 0.062
 
     # Zum Schluss klingt er ab: im letzten Bild soll die ausgestreckte
@@ -957,13 +962,22 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
 
     # --- Die Klinge selbst -------------------------------------------------
     #
-    # Sie liegt auf der Spitze des Bogens und ist nur noch die Begruendung
-    # fuer die Flaeche. Kurz, duenn, durchsichtig, mit denselben
-    # Wachstumsstufen wie auf dem Ruecken.
-    hand_x = dreh_x + math.cos(a_spitze) * (radius * 0.18)
-    hand_y = dreh_y + math.sin(a_spitze) * (radius * 0.18)
-    reichweite = radius * 0.74
-    ax, ay = math.cos(a_spitze), math.sin(a_spitze)
+    # Sie laeuft **nicht** am Bogen entlang.
+    #
+    # Vorher lagen beide auf demselben Strahl, und dadurch war der Bogen
+    # nur der verlaengerte Arm: eine Linie vom Koerper bis nach draussen,
+    # und die Sichel hing hinten dran wie eine Fahne an der Stange. Beim
+    # Vorbild ist der Schnitt ein eigenes Ding - er steht vor ihr im
+    # Raum, waehrend die Klinge irgendwo darunter durchgeht.
+    #
+    # Also folgt die Klinge dem Schwung nur gedaempft, und sie ist kurz.
+    # Sie zeigt, dass die Bewegung von ihr ausgeht; alles weitere erzaehlt
+    # der Bogen.
+    a_klinge = a_spitze * 0.45 + 0.12
+    hand_x = dreh_x + math.cos(a_klinge) * (height * 0.10)
+    hand_y = dreh_y + math.sin(a_klinge) * (height * 0.10)
+    reichweite = height * (0.42 + 0.14 * t)
+    ax, ay = math.cos(a_klinge), math.sin(a_klinge)
     i = 0.0
     while i < reichweite:
         v = i / reichweite
@@ -1600,7 +1614,10 @@ def draw_heroine(
     # Der Ursprung im Atlas ist unten Mitte. Deshalb darf der Rand links
     # und rechts nur gleich gross sein, und oben beliebig - dann sitzt
     # die Figur weiter genau auf ihren Fuessen.
-    rand = int(BODY_H * 0.85) if schwung is not None else 0
+    # Der Bogen misst inzwischen anderthalb Koerperhoehen im Radius. Bei
+    # 0.85 stand seine rechte Haelfte ueber dem Rand, und ein
+    # angeschnittener Schlag liest sich als Balken, nicht als Schnitt.
+    rand = int(BODY_H * 1.08) if schwung is not None else 0
     c = Canvas(HERO_W + rand * 2, HERO_H + rand)
     cx = HERO_W // 2 + rand
     base = GROUND + rand - settle

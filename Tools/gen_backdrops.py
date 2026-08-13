@@ -55,7 +55,7 @@ PARALLAX_VORN = 1.16
 HOCH = 560
 SCHICHTEN = len(PARALLAX)
 
-REGIONS = ["hain", "kathedrale", "grotten", "dissonanz"]
+REGIONS = ["hain", "kathedrale", "grotten", "dissonanz", "bruecke"]
 
 # Schicht 0 wird beim Bau zweimal gebraucht: einmal ganz - daraus kommt
 # der Dunstverlauf - und einmal ohne ihren Verlauf, also nur Mond,
@@ -1034,6 +1034,87 @@ def dissonanz(layer: int) -> Canvas:
     return c
 
 
+# ---------------------------------------------------------- Die Bruecke
+
+def bruecke(layer: int) -> Canvas:
+    """
+    Die grosse Bruecke - das einzige Gebiet, das im Freien liegt.
+
+    Alles andere im Spiel hat eine Decke. Hier ist oben Himmel, unten
+    Nebel, und dazwischen steht ein Bauwerk, das groesser ist als alles,
+    was man bis dahin gesehen hat. Der Wechsel von "innen" zu "aussen"
+    ist der ganze Zweck des Gebiets - ein Ort wird nicht dadurch gross,
+    dass er weit ist, sondern dadurch, dass der davor eng war.
+    """
+    body, edge, accent, sky, far = P.REGIONS["bruecke"]
+    c = Canvas(W, H)
+    rng = Rng(6600 + layer * 19)
+
+    if layer == 0:
+        # Weiter Himmel, unten in Nebel. Hier ist es hell - zum ersten Mal.
+        if not OHNE_VERLAUF:
+            luftraum(c, [(0.00, hexc("#182234")), (0.34, hexc("#2c3b52")),
+                         (0.66, hexc("#4b5a72")), (0.88, hexc("#77839a")),
+                         (1.00, hexc("#9aa3b4"))])
+        # Eine bleiche Sonne hinter dem Dunst.
+        c.glow(340, 58, 92, (255, 240, 214, 30), power=1.6)
+        c.ellipse(340, 58, 15, 15, mix(sky, (255, 255, 255, 255), 0.55))
+        motes(c, 180, rng, (255, 246, 226), alpha=(8, 30))
+        return c
+
+    if layer == 1:
+        # Die Ferne: Bergruecken und der Nebel, in dem die Schlucht endet.
+        for k, (h0, ton) in enumerate(((0.62, 0.16), (0.70, 0.30))):
+            col = mix(far, sky, 0.62 - ton)
+            for x in range(W):
+                h = H * h0 + math.sin(x * 0.012 + k * 2.2) * 26 \
+                    + math.sin(x * 0.041 + k) * 11
+                for y in range(int(h), H):
+                    c.set(x, y, col)
+        # Und der Nebel darueber, der die Kante frisst.
+        for y in range(int(H * 0.58), H):
+            t = (y - H * 0.58) / (H * 0.42)
+            for x in range(0, W, 1):
+                if hash01(x, y) < 0.28 * (1 - t):
+                    c.blend(x, y, (200, 210, 224, 40))
+        return c
+
+    if layer == 2:
+        # Der Bogen des Bauwerks selbst - riesig, angeschnitten, und weit
+        # hinter dem Weg, auf dem man geht. Man sieht seine eigene Bruecke
+        # von der Seite.
+        col = mix(far, P.FOREGROUND, 0.34)
+        stein_hi = mix(col, edge, 0.30)
+        for bogen, (bx, br) in enumerate(((110, 96), (330, 112), (520, 88))):
+            for i in range(200):
+                a = math.pi + i / 200 * math.pi
+                x = bx + math.cos(a) * br
+                y = H * 0.62 + math.sin(a) * br * 0.72
+                for d in range(9):
+                    c.set(int(x), int(y + d), col if d else stein_hi)
+            # Die Pfeiler darunter.
+            for seite in (-1, 1):
+                px = int(bx + seite * br)
+                for y in range(int(H * 0.62), H):
+                    c.rect(px - 7, y, 14, 1, col)
+                    c.set(px + 6, y, stein_hi)
+        c.rect(0, int(H * 0.60), W, 7, col)
+        c.rect(0, int(H * 0.60), W, 2, stein_hi)
+        return c
+
+    if layer == 3:
+        # Nah: zwei angeschnittene Pfeilerkoepfe links und rechts, damit
+        # der Blick einen Rahmen hat.
+        col = mix(far, P.FOREGROUND, 0.68)
+        for x in (-10, 500):
+            masonry(c, x - 30, 0, 76, H, col, course=15, seed=int(x) + 3)
+            c.rect(x - 38, 40, 92, 12, shade(col, 0.12))
+            c.rect(x - 38, 52, 92, 3, shade(col, -0.24))
+        return c
+
+    return c
+
+
 # ------------------------------------------------------------ Vordergrund
 
 def foreground(region: str) -> Canvas:
@@ -1264,7 +1345,8 @@ def tempel(layer: int) -> Canvas:
 # --------------------------------------------------------------------- Bau
 
 BUILDERS = {"hain": hain, "kathedrale": kathedrale,
-            "grotten": grotten, "dissonanz": dissonanz}
+            "grotten": grotten, "dissonanz": dissonanz,
+            "bruecke": bruecke}
 
 
 def in_dunst(c: Canvas, hoehe: int = 72) -> Canvas:

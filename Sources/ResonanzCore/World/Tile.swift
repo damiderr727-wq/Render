@@ -161,6 +161,10 @@ public enum Region: String, Codable, Sendable, CaseIterable {
     case kathedrale
     case grotten
     case dissonanz
+    /// Die grosse Bruecke: kein Gang zwischen zwei Gebieten, sondern
+    /// eines. Sie liegt als Einziges im Freien, und man geht sie in
+    /// voller Laenge ab, statt sie zu ueberqueren.
+    case bruecke
 
     public var displayName: String {
         switch self {
@@ -168,6 +172,7 @@ public enum Region: String, Codable, Sendable, CaseIterable {
         case .kathedrale: return "KATHEDRALE DER FUGEN"
         case .grotten: return "RESONANZKAVERNEN"
         case .dissonanz: return "HERZ DER DISSONANZ"
+        case .bruecke: return "DIE GROSSE BRUECKE"
         }
     }
 }

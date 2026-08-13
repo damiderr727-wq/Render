@@ -94,7 +94,7 @@
     },
     {
      "door": "B",
-     "to": "A17"
+     "to": "E1"
     }
    ]
   },
@@ -315,12 +315,12 @@
    ]
   },
   {
-   "id": "A17",
-   "name": "DIE HAENGEBRUECKE",
-   "region": "hain",
-   "music": "hain",
-   "width": 78,
-   "height": 30,
+   "id": "E1",
+   "name": "DER BRUECKENKOPF",
+   "region": "bruecke",
+   "music": "bruecke",
+   "width": 52,
+   "height": 26,
    "connections": [
     {
      "door": "D",
@@ -328,21 +328,39 @@
     },
     {
      "door": "R",
-     "to": "A18"
+     "to": "E2"
     }
    ]
   },
   {
-   "id": "A18",
+   "id": "E2",
+   "name": "DIE GROSSE BRUECKE",
+   "region": "bruecke",
+   "music": "bruecke",
+   "width": 120,
+   "height": 26,
+   "connections": [
+    {
+     "door": "L",
+     "to": "E1"
+    },
+    {
+     "door": "R",
+     "to": "E3"
+    }
+   ]
+  },
+  {
+   "id": "E3",
    "name": "DAS DORF DER LETZTEN STIMMEN",
-   "region": "hain",
-   "music": "hain",
-   "width": 62,
+   "region": "bruecke",
+   "music": "bruecke",
+   "width": 64,
    "height": 24,
    "connections": [
     {
      "door": "L",
-     "to": "A17"
+     "to": "E2"
     }
    ]
   },

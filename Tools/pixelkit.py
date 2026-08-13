@@ -104,6 +104,12 @@ class Palette:
                     hexc("#33414f"), hexc("#1e2738")),
         "dissonanz": (hexc("#1d1116"), hexc("#a04d5c"), hexc("#ff8a5c"),
                       hexc("#33262a"), hexc("#2a181d")),
+        # Die grosse Bruecke: gehauener Stein, kein Fels. Der Ton ist
+        # kaelter und grauer als alles andere im Spiel - hier ist nichts
+        # gewachsen, hier hat jemand gebaut. Und der Himmel ist weit:
+        # das einzige Gebiet, das nicht innen liegt.
+        "bruecke": (hexc("#242730"), hexc("#9aa4b4"), hexc("#ffd9a0"),
+                    hexc("#46536a"), hexc("#2b3243")),
     }
 
     # Vordergrund - fast schwarz, in jeder Region gleich.

@@ -144,6 +144,23 @@ def scores() -> dict[str, dict]:
                  "notes": every(prelude_figure(16, 24, 0.50), 8)},
             ],
         },
+        "bruecke": {
+            # Die Bruecke ist das einzige Gebiet im Freien, und sie klingt
+            # danach: weit auseinanderliegende Toene, viel Luft dazwischen,
+            # kein Muster, das sich schnell schliesst. Dieselbe Air wie in
+            # den Kavernen, aber langsamer und nur mit zwei Stimmen - der
+            # Rest ist Wind.
+            "source": "BWV 1068 - Air, ins Freie gestellt",
+            "bpm": 40, "loop": 32,
+            "tracks": [
+                {"voice": "pad", "gain": 0.15, "layer": 0.0,
+                 "notes": seq(AIR_BASS, 0, 0, 0.45)},
+                {"voice": "bell", "gain": 0.13, "layer": 0.35,
+                 "notes": every(seq(AIR_MELODY, 0, 12, 0.55), 2)},
+                {"voice": "bass", "gain": 0.16, "layer": 0.55,
+                 "notes": seq(AIR_BASS, 0, -24, 0.75)},
+            ],
+        },
         "kathedrale": {
             "source": "BWV 578 - Fuge g-Moll",
             # Vier Stimmeneinsaetze im Abstand von acht Schlaegen - deshalb

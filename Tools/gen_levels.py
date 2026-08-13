@@ -1150,7 +1150,7 @@ def room_A4() -> Room:
     # Und nach oben rechts hinaus zur Haengebruecke: von der stillen
     # Kanzel geht es entweder in den Tempel oder ins Dorf.
     r.kamin(28, 10, 1, 14, seed=53, tuer_x=30)
-    r.shaft_door("B", 30, 4, "up", "A17", "D", requires="fluegelschlag")
+    r.shaft_door("B", 30, 4, "up", "E1", "D", requires="fluegelschlag")
     r.spawn_on("B", 34, 13, -1)
 
     r.crystal_on(6, 6, 2)
@@ -1722,100 +1722,150 @@ def room_A16() -> Room:
     return r
 
 
-def room_A17() -> Room:
-    """
-    Die Haengebruecke: der Weg ins Dorf, und der einzige, der frei liegt.
+# =====================================================================
+#  Region E - Die grosse Bruecke
+#
+#  Kein Gang zwischen zwei Gebieten, sondern eines.
+#
+#  Zuerst stand hier eine Haengebruecke mitten im Hain. Das war zweimal
+#  falsch: eine Bruecke aus Brettern ist kein Bauwerk, und ein Ort, der
+#  einem anderen Gebiet gehoert, ist kein Ort. Jetzt ist es eine eigene
+#  Gegend mit eigenem Stein, eigenem Himmel und eigener Farbe - gehauene
+#  Quader statt gewachsener Fels, und als einziges Gebiet im Spiel liegt
+#  es im Freien. Der Wechsel von "innen" zu "aussen" ist sein Zweck: ein
+#  Ort wird nicht dadurch gross, dass er weit ist, sondern dadurch, dass
+#  der davor eng war.
+# =====================================================================
 
-    Jeder andere Raum im Spiel ist innen - Wurzelgang, Grotte, Halle. Hier
-    laeuft man ueber einer Schlucht, hat nach beiden Seiten nichts als
-    Luft, und sieht zum ersten Mal, wie weit der Hain nach unten geht. Der
-    Wechsel von "eng" zu "offen" ist der ganze Zweck des Raums: ein Gebiet
-    wird nicht dadurch gross, dass es viele Raeume hat, sondern dadurch,
-    dass sie sich unterscheiden.
+def room_E1() -> Room:
     """
-    r = Room("A17", "DIE HAENGEBRUECKE", "hain", 78, 30)
+    Der Brueckenkopf: wo der Hain aufhoert und der Stein anfaengt.
+
+    Ein Torhaus, halb im Fels, halb gebaut. Man kommt aus dem Wald
+    herauf und steht zum ersten Mal unter offenem Himmel.
+    """
+    r = Room("E1", "DER BRUECKENKOPF", "bruecke", 52, 26)
     r.border()
 
-    # Ein Profil ueber den ganzen Raum, und *dann* die Schlucht
-    # hineingeschnitten.
-    #
-    # Zuerst standen hier zwei getrennte Hoehlenstuecke, links und rechts,
-    # mit nichts dazwischen. Das ergab an beiden Bruchstellen eine
-    # kerzengerade senkrechte Kante quer durch das Bild - die Decke hoerte
-    # mitten in der Luft auf. Ein Raum ist ein Raum, auch wenn in seiner
-    # Mitte der Boden fehlt.
-    boden = r.profil([(0, 20), (8, 21), (16, 20), (38, 21), (60, 20),
-                      (70, 21), (77, 20)], rauheit=0.5, seed=431)
-    kopf = r.profil([(0, 12), (20, 15), (40, 17), (60, 15), (77, 12)],
-                    rauheit=0.4, seed=439)
-    r.hoehle(1, 77, boden, kopf, seed=443, zacken=0.14)
+    boden = r.profil([(0, 20), (12, 20), (26, 19), (40, 18), (51, 18)],
+                     rauheit=0.4, seed=467)
+    kopf = r.profil([(0, 13), (14, 10), (28, 6), (40, 4), (51, 3)],
+                    rauheit=0.35, seed=479)
+    r.hoehle(1, 51, boden, kopf, seed=487, zacken=0.08)
 
-    # Die Schlucht: der Boden zwischen den Ufern faellt weg.
-    r.carve(18, 19, 42, r.h - 19)
+    # Das Tor: zwei schwere Pfeiler und ein Sturz darueber.
+    for x in (20, 34):
+        r.fill(x, 8, 3, 10)
+    r.fill(20, 6, 17, 2)
 
-    # Die Bruecke selbst: durchsteigbare Bretter, die in der Mitte
-    # durchhaengen. Ein waagerechter Steg waere ein Brett; erst der
-    # Durchhang macht daraus etwas, das an zwei Seilen haengt.
-    for x in range(17, 61):
-        u = (x - 17) / 43
-        y = 19 + int(round(math.sin(u * math.pi) * 3.4))
-        r.platform(x, y, 1)
+    r.ledge(6, 16, 7, 2)
+    r.platform(14, 13, 6)
 
-    # Die Pfosten an beiden Ufern, an denen sie haengt.
-    for x in (16, 61):
-        r.fill(x, 13, 1, 7)
+    r.shaft_door("D", 6, 4, "down", "A4", "B")
+    r.spawn_on("D", 11, 19, 1)
+    r.side_door("R", "right", "E2", "L", hint=18)
 
-    # Der Weg herauf kommt von unten aus der Kanzel - man steigt auf die
-    # Bruecke, statt auf sie zuzulaufen.
-    r.shaft_door("D", 8, 4, "down", "A4", "B")
-    r.spawn_on("D", 12, 19, 1)
-    r.side_door("R", "right", "A18", "L", hint=20)
+    r.bench_on(44, 17)
 
-    r.enemy("klangmotte", 30, 14)
-    r.enemy("klangmotte", 48, 12)
+    r.enemy_on("stilleschreiter", 28, 18, patrol=5)
 
-    r.crystal_on(6, 19, 2)
-    r.crystal_on(70, 19, 1)
-    r.scatter_decor(167, 8)
-
-    r.note_on(9, 19, "SIE HABEN DIE BRUECKE GESPANNT, ALS DER HAIN NOCH "
-                     "ZWEI SEITEN HATTE.")
+    r.crystal_on(16, 18, 1)
+    r.scatter_decor(179, 8, kinds=("crystal",))
+    r.note_on(24, 18, "AB HIER HAT JEMAND GEBAUT. "
+                      "MAN MERKT ES AN DEN GERADEN LINIEN.")
     return r
 
 
-def room_A18() -> Room:
+def room_E2() -> Room:
     """
-    Das Dorf der letzten Stimmen.
+    Die grosse Bruecke.
+
+    Der laengste Raum im Spiel, und der leerste. Links und rechts nichts
+    als Bruestung, darunter Nebel, darueber Himmel. Was hier passiert,
+    passiert auf einer Linie - man kann nicht ausweichen, nur vor oder
+    zurueck.
+    """
+    r = Room("E2", "DIE GROSSE BRUECKE", "bruecke", 120, 26)
+    r.border()
+
+    # Die Fahrbahn: eine lange, sehr flache Woelbung. Eine steinerne
+    # Bruecke haengt nicht durch, sie traegt sich selbst - also steigt sie
+    # zur Mitte hin und faellt wieder.
+    boden = r.profil([(0, 18), (30, 17), (60, 16), (90, 17), (119, 18)],
+                     rauheit=0.25, seed=491)
+    r.ground(1, 119, boden)
+
+    # Die Bruestung: eine niedrige Mauer mit Luecken, durch die man in
+    # die Schlucht sieht. Sie steht als Vordergrund vor dem Weg.
+    for x in range(2, 118, 9):
+        y = int(round(boden(x))) - 3
+        r.fill(x, y, 2, 3)
+
+    # Drei Torboegen ueber der Fahrbahn - der Massstab des Bauwerks.
+    for bx in (26, 60, 94):
+        for k, x in enumerate((bx - 6, bx + 5)):
+            r.fill(x, 2, 2, int(round(boden(x))) - 2)
+        r.fill(bx - 6, 1, 13, 2)
+
+    # Und drei Luecken in der Fahrbahn, wo Quader herausgebrochen sind.
+    # Die Luecken duerfen den unteren Rand nicht durchschlagen - ein Raum
+    # mit einem Loch im Rand ist ein Raum, aus dem man herausfaellt.
+    for x, w in ((40, 3), (72, 4), (104, 3)):
+        oben = int(round(boden(x)))
+        r.carve(x, oben, w, r.h - oben - 1)
+
+    r.side_door("L", "left", "E1", "R", hint=18)
+    r.side_door("R", "right", "E3", "L", hint=18)
+
+    r.enemy("klangmotte", 34, 12)
+    r.enemy("klangmotte", 68, 11)
+    r.enemy_on("gabelmaus", 50, 16, patrol=7)
+    r.enemy_on("stilleschreiter", 86, 16, patrol=6)
+
+    r.crystal_on(12, 16, 1)
+    r.crystal_on(108, 16, 1)
+    r.scatter_decor(181, 12, kinds=("crystal",))
+
+    r.note_on(20, 16, "HUNDERT SCHRITTE UEBER NICHTS. "
+                      "SIE HABEN GEWUSST, WIE MAN SO ETWAS BAUT.")
+    r.note_on(96, 16, "AM ANDEREN UFER SIND SIE GEBLIEBEN. "
+                      "NICHT WEIL ES DORT BESSER IST.")
+    return r
+
+
+def room_E3() -> Room:
+    """
+    Das Dorf am anderen Ufer.
 
     Ein Ort ohne Gegner - der erste im Spiel. Was hier steht, sind die,
     die geblieben sind, und sie haben nichts anzubieten ausser sich
     selbst. Nur einer handelt, und auch der verkauft nur drei Sachen.
 
     Ein Dorf, in dem alles zu haben ist, macht das Erkunden ueberfluessig.
-    Ein Dorf, in dem *nichts* zu haben ist, macht den Weg dorthin
+    Ein Dorf, in dem nichts zu haben ist, macht den Weg dorthin
     ueberfluessig. Drei Waren sind die Antwort auf beides.
     """
-    r = Room("A18", "DAS DORF DER LETZTEN STIMMEN", "hain", 62, 24)
+    r = Room("E3", "DAS DORF DER LETZTEN STIMMEN", "bruecke", 64, 24)
     r.border()
 
-    boden = r.profil([(0, 18), (14, 19), (28, 18), (42, 19), (61, 18)],
-                     rauheit=0.35, seed=457)
-    kopf = r.profil([(0, 9), (16, 12), (32, 13), (48, 11), (61, 9)],
-                    rauheit=0.35, seed=461)
-    r.hoehle(1, 61, boden, kopf, seed=463, zacken=0.06)
+    boden = r.profil([(0, 18), (14, 19), (28, 18), (44, 19), (63, 18)],
+                     rauheit=0.3, seed=499)
+    kopf = r.profil([(0, 5), (16, 9), (32, 11), (48, 9), (63, 5)],
+                    rauheit=0.3, seed=503)
+    r.hoehle(1, 63, boden, kopf, seed=509, zacken=0.05)
 
-    # Die Behausungen: Nischen im Fels, keine Haeuser. Wer hier wohnt,
-    # hat sich in den Hain hineingesetzt, nicht etwas daraufgebaut.
+    # Die Behausungen: Nischen im Mauerwerk, keine Haeuser. Wer hier
+    # wohnt, hat sich in die Bruecke hineingesetzt.
     r.nische(6, 11, 8, 7, seed=3)
     r.nische(22, 10, 9, 8, seed=5)
-    r.nische(40, 11, 8, 7, seed=7)
-    r.nische(52, 12, 7, 6, seed=11)
+    r.nische(42, 11, 8, 7, seed=7)
+    r.nische(54, 12, 7, 6, seed=11)
 
     r.ledge(18, 14, 5, 2)
     r.platform(34, 13, 6)
 
-    r.side_door("L", "left", "A17", "R", hint=18)
-    r.bench_on(50, 17)
+    r.side_door("L", "left", "E2", "R", hint=18)
+    r.bench_on(52, 17)
 
     # Der Haendler steht in der Mitte, die anderen daneben. Er ist der
     # Einzige, bei dem etwas passiert - alle anderen sagen nur etwas, und
@@ -1823,16 +1873,16 @@ def room_A18() -> Room:
     r.npc_on("haendler", 30, 17)
     r.npc_on("horcherin", 10, 17,
              "ICH HOERE SIE NOCH. NICHT LAUT - ABER SIE SIND NOCH DA.")
-    r.npc_on("alter", 44, 17,
+    r.npc_on("alter", 46, 17,
              "GEH NICHT IN DEN TEMPEL. ODER DOCH. "
              "ICH HABE AUFGEHOERT, LEUTEN ETWAS ZU RATEN.")
-    r.npc_on("kind", 56, 17,
+    r.npc_on("kind", 58, 17,
              "HAST DU EINE STIMME MITGEBRACHT? "
              "ICH SAMMLE SIE. NICHT ZUM TAUSCHEN - NUR SO.")
 
     r.crystal_on(16, 17, 2)
     r.crystal_on(38, 17, 1)
-    r.scatter_decor(173, 10)
+    r.scatter_decor(191, 10, kinds=("crystal",))
 
     r.note_on(24, 17, "WIR SIND NICHT GEBLIEBEN, WEIL ES HIER SICHER IST. "
                       "WIR SIND GEBLIEBEN, WEIL WIR HIER GEHOERT WERDEN.")
@@ -2474,7 +2524,7 @@ ROOMS = [
     room_A1, room_A2, room_A3, room_A4, room_A5,
     room_A6, room_A7, room_A8, room_A9, room_A10,
     room_A11, room_A12, room_A13, room_A14, room_A15, room_A16,
-    room_A17, room_A18,
+    room_E1, room_E2, room_E3,
     room_B1, room_B2, room_B3, room_B4,
     room_B5, room_B6, room_B7, room_B8,
     room_C1, room_C2, room_C3, room_C4, room_C5, room_C6,

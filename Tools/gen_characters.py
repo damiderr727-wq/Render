@@ -39,6 +39,10 @@ BODY_H = 20.0 * HERO_SCALE
 # Darunter ist sie fest, darueber loest sie sich auf - der Uebergang ist
 # das Interessanteste an ihr.
 LEG_T = 0.32
+# Wo der Leib aufhoert und die Kristallflamme anfaengt. Alles darunter ist
+# Gewand, alles darueber ist Kopf - und genau an dieser Linie sitzt der
+# groesste Helligkeitssprung der ganzen Figur.
+SCHULTER_T = 0.66
 GROUND = HERO_H - 1  # unterste Pixelzeile = Fussboden
 
 
@@ -85,6 +89,146 @@ GROUND = HERO_H - 1  # unterste Pixelzeile = Fussboden
 _UMRISS = [(0.00, 0.56), (0.20, 0.88), (0.42, 1.00), (0.56, 0.88),
            (0.68, 0.44), (0.75, 0.68), (0.84, 0.76), (0.93, 0.54),
            (1.00, 0.08)]
+
+
+# --------------------------------------------------------- Kristallflamme
+#
+# Die zweite Fassung ihrer Gestalt, und die erste, die stimmt.
+#
+# Bisher war sie eine blasse Flamme von unten bis oben, und darueber lag
+# ein Mantel. Beides in aehnlichen Werten, beides weich - deshalb las
+# sich die Figur als ein Stueck, egal wie fein der Umriss war.
+#
+# Jetzt sind es zwei Sachen, die nichts miteinander zu tun haben:
+#
+#   **Der Kopf ist die Flamme** - und sie ist aus Kristall. Einzelne
+#   Splitter, facettiert, mit harter Kante und hellem Grat, in Rosa. Das
+#   ist das Hellste an ihr und das Einzige, was leuchtet.
+#
+#   **Der Leib ist dunkel.** Ein zerfetztes Gewand, fast schwarz, ohne
+#   Eigenlicht. Es traegt die Flamme, es ist nicht selbst welche.
+#
+# Der Kontrast dazwischen macht die Silhouette: hell oben, dunkel unten,
+# und im Kopf ein Loch, in dem gar nichts ist. Das Loch ist ihr Gesicht -
+# nicht Augen, nicht Maske, sondern die Stelle, an der etwas fehlt.
+
+KRISTALL_HELL = hexc("#ffd4ef")
+KRISTALL = hexc("#f072bd")
+KRISTALL_MITTEL = hexc("#c8459a")
+KRISTALL_TIEF = hexc("#7d2464")
+LEIB = hexc("#33253f")
+LEIB_HI = hexc("#54406a")
+LEIB_TIEF = hexc("#170f1e")
+
+
+def _scherbe(c: Canvas, x: float, y: float, laenge: float, breite: float,
+             winkel: float, glanz: float = 1.0) -> None:
+    """
+    Ein Kristallsplitter: schmale Raute mit Grat und harter Kante.
+
+    Kein Dreieck und kein Strich. Was einen Kristall ausmacht, sind die
+    *Facetten* - eine helle Seite, eine dunkle, und dazwischen ein Grat.
+    Bei sechs Pixeln Breite reicht dafuer je eine Pixelreihe.
+    """
+    ax, ay = math.cos(winkel), math.sin(winkel)
+    nx, ny = -ay, ax
+    schritte = max(3, int(laenge * 2))
+    for i in range(schritte + 1):
+        t = i / schritte
+        # Bauch bei einem Drittel, dann spitz auslaufend.
+        w = breite * math.sin(math.pi * min(1.0, t * 0.62 + 0.06)) ** 0.7
+        px, py = x + ax * laenge * t, y + ay * laenge * t
+        q = -w
+        while q <= w:
+            u = q / max(0.5, w)
+            if u < -0.25:
+                col = KRISTALL_TIEF          # Schattenseite
+            elif u < 0.12:
+                col = mix(KRISTALL_MITTEL, KRISTALL, 0.5 + glanz * 0.3)
+            elif u < 0.5:
+                col = KRISTALL               # Grat
+            else:
+                col = mix(KRISTALL_HELL, KRISTALL, 1 - glanz)
+            c.set(int(px + nx * q), int(py + ny * q), col)
+            q += 0.5
+    # Die Spitze bleibt hell - dort bricht das Licht.
+    c.set(int(x + ax * laenge), int(y + ay * laenge), KRISTALL_HELL)
+
+
+def _kristallkrone(c: Canvas, *, cx: float, cy: float, breite: float,
+                   hoehe: float, phase: float, wut: float = 0.0) -> None:
+    """
+    Der Kopf: eine Krone aus Splittern, die zusammen eine Flamme ergibt.
+
+    Der mittlere Splitter ist der laengste, nach aussen werden sie
+    kuerzer und legen sich weiter zur Seite - das ergibt die Flammenform,
+    ohne dass irgendwo eine weiche Kante steht. Sie stehen leicht
+    ungleich, sonst wird daraus eine Krone im Wappensinn.
+    """
+    S = HERO_SCALE
+    anzahl = 7
+    for i in range(anzahl):
+        u = (i / (anzahl - 1)) * 2 - 1          # -1 links .. +1 rechts
+        # Nach aussen kuerzer und flacher gelegt.
+        laenge = hoehe * (1.0 - abs(u) ** 1.4 * 0.62)
+        laenge *= 0.9 + 0.2 * math.sin(phase * 1.6 + i * 1.7)
+        winkel = -math.pi / 2 + u * 0.95 + math.sin(phase + i) * 0.05
+        bx = cx + u * breite * 0.42
+        by = cy - abs(u) * breite * 0.10
+        _scherbe(c, bx, by, laenge, (1.35 - abs(u) * 0.45) * S, winkel,
+                 glanz=0.35 + 0.5 * (1 - abs(u)))
+
+    # Der Sockel, aus dem sie wachsen: eine flache Masse, die die
+    # Splitter zusammenhaelt. Ohne sie stehen sieben Nadeln nebeneinander.
+    for i in range(int(breite * 0.9)):
+        u = i / max(1.0, breite * 0.9) * 2 - 1
+        h = (1 - u * u) * hoehe * 0.30
+        for k in range(int(h)):
+            t = k / max(1.0, h)
+            c.set(int(cx + u * breite * 0.45), int(cy - k),
+                  mix(KRISTALL_MITTEL, KRISTALL, t * 0.7))
+
+    # Und das Loch. Es sitzt tief in der Krone, ist nicht ganz mittig und
+    # hat keine glatte Kante - es ist nichts, was jemand gebaut hat.
+    lx, ly = cx - 0.4 * S, cy - hoehe * 0.14
+    lw, lh = 2.6 * S, 3.1 * S
+    for dy in range(-int(lh), int(lh) + 1):
+        for dx in range(-int(lw), int(lw) + 1):
+            e = (dx / lw) ** 2 + (dy / lh) ** 2
+            if e > 1.0:
+                continue
+            if e > 0.62 and hash01(dx * 3 + int(phase), dy * 5) > 0.55:
+                continue
+            c.set(int(lx + dx), int(ly + dy), hexc("#08040c"))
+    # Ein schmaler Saum, damit das Loch im Kristall sitzt und nicht
+    # dahinter.
+    # Ein harter heller Saum. Ohne ihn verschwindet das Loch im Kristall,
+    # und es ist ihr Gesicht - das Einzige, was man an ihr sucht.
+    for i in range(26):
+        a = i / 26 * math.tau
+        c.set(int(lx + math.cos(a) * (lw + 0.6)),
+              int(ly + math.sin(a) * (lh + 0.6)),
+              KRISTALL_HELL if math.sin(a) < 0.2 else KRISTALL_MITTEL)
+
+
+def _schwebende_splitter(c: Canvas, *, cx: float, cy: float, r: float,
+                         phase: float, anzahl: int = 6) -> None:
+    """
+    Was um sie herum in der Luft steht.
+
+    Kein Funkenflug: es sind dieselben Splitter wie in ihrem Kopf, nur
+    kleiner und weiter weg. Sie fallen nicht und steigen nicht - sie
+    haengen, und das ist unheimlicher als Bewegung.
+    """
+    S = HERO_SCALE
+    for i in range(anzahl):
+        a = i / anzahl * math.tau + phase * 0.25
+        d = r * (0.72 + 0.28 * math.sin(phase * 0.9 + i * 2.1))
+        px = cx + math.cos(a) * d * 1.25
+        py = cy + math.sin(a) * d * 0.85
+        laenge = (1.6 + 1.4 * hash01(i, 3)) * S
+        _scherbe(c, px, py + laenge / 2, laenge, 0.6 * S,
+                 -math.pi / 2 + math.sin(phase + i) * 0.5, glanz=0.6)
 
 
 def _profile(t: float, instrument: str) -> float:
@@ -153,44 +297,44 @@ GARMENTS = {
     #   cape     - haengt nur an der Schulter und schwirrt umher
     "mantel": dict(
         openings=4, cut="mantel", deckung=0.66,
-        stoff=mix(P.CLOAK, P.STONE, 0.55), licht=P.TRIM),
+        stoff=mix(mix(P.CLOAK, P.STONE, 0.55), LEIB, 0.62), licht=P.TRIM),
     "cape": dict(
         openings=6, cut="cape", deckung=0.72,
-        stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.BLOOM, 0.16), licht=P.BLOOM),
+        stoff=mix(mix(mix(P.CLOAK, P.STONE, 0.5), P.BLOOM, 0.16), LEIB, 0.62), licht=P.BLOOM),
     "enge_fassung": dict(
         openings=1, cut="harnisch", deckung=0.70,
-        stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.GOLD, 0.20), licht=P.GOLD),
+        stoff=mix(mix(mix(P.CLOAK, P.STONE, 0.5), P.GOLD, 0.20), LEIB, 0.62), licht=P.GOLD),
     "offene_fassung": dict(
         openings=9, cut="mantel", deckung=0.58,
-        stoff=mix(mix(P.CLOAK, P.STONE, 0.6), P.TRIM, 0.16), licht=P.TRIM),
+        stoff=mix(mix(mix(P.CLOAK, P.STONE, 0.6), P.TRIM, 0.16), LEIB, 0.62), licht=P.TRIM),
     "schlagfassung": dict(
         openings=2, cut="harnisch", deckung=0.66,
-        stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.ROT, 0.20), licht=P.ROT),
+        stoff=mix(mix(mix(P.CLOAK, P.STONE, 0.5), P.ROT, 0.20), LEIB, 0.62), licht=P.ROT),
     "gerissenes_gewand": dict(
         openings=14, cut="cape", deckung=0.60,
-        stoff=mix(mix(P.CLOAK, P.STONE, 0.6), P.WARM, 0.14), licht=P.AMBER),
+        stoff=mix(mix(mix(P.CLOAK, P.STONE, 0.6), P.WARM, 0.14), LEIB, 0.62), licht=P.AMBER),
     "chorpanzer": dict(
         openings=3, cut="harnisch", deckung=0.68,
-        stoff=mix(mix(P.CLOAK, P.STONE, 0.6), P.STONE_HI, 0.30), licht=P.TRIM),
+        stoff=mix(mix(mix(P.CLOAK, P.STONE, 0.6), P.STONE_HI, 0.30), LEIB, 0.62), licht=P.TRIM),
     "pfeifenharnisch": dict(
         openings=1, cut="harnisch", deckung=0.72,
-        stoff=mix(mix(P.CLOAK, P.STONE, 0.5), P.BILE, 0.16), licht=P.WARM),
+        stoff=mix(mix(mix(P.CLOAK, P.STONE, 0.5), P.BILE, 0.16), LEIB, 0.62), licht=P.WARM),
     "flimmerhemd": dict(
         openings=12, cut="mantel", deckung=0.60,
-        stoff=mix(mix(P.CLOAK, P.STONE, 0.55), P.BLOOM, 0.20), licht=P.BLOOM),
+        stoff=mix(mix(mix(P.CLOAK, P.STONE, 0.55), P.BLOOM, 0.20), LEIB, 0.62), licht=P.BLOOM),
     # Kein Gewand, sondern ein Band: es deckt am wenigsten von allem, was
     # sie tragen kann, und haelt sie trotzdem zusammen.
     "flickmantel": dict(
         openings=6, cut="mantel", deckung=0.70,
-        stoff=mix(mix(P.CLOAK, P.STONE, 0.62), P.WARM, 0.10), licht=P.BONE_SH),
+        stoff=mix(mix(mix(P.CLOAK, P.STONE, 0.62), P.WARM, 0.10), LEIB, 0.62), licht=P.BONE_SH),
     "lauschband": dict(
         openings=2, cut="cape", deckung=0.48,
-        stoff=mix(mix(P.CLOAK, P.STONE, 0.45), P.AMBER, 0.12), licht=P.AMBER),
+        stoff=mix(mix(mix(P.CLOAK, P.STONE, 0.45), P.AMBER, 0.12), LEIB, 0.62), licht=P.AMBER),
     # Der Bruch: kein Gefaess mehr, nur noch Fetzen an ihr. Was bleibt,
     # traegt nichts - es haengt nur noch dran.
     "bruch": dict(
         openings=99, cut="bruch", deckung=0.42,
-        stoff=mix(mix(P.CLOAK, P.ROT, 0.30), P.AMBER, 0.10), licht=P.AMBER),
+        stoff=mix(mix(mix(P.CLOAK, P.ROT, 0.30), P.AMBER, 0.10), LEIB, 0.62), licht=P.AMBER),
 }
 
 
@@ -244,8 +388,12 @@ def _draw_arme(c: Canvas, *, cx: int, base: float, height: float, phase: float,
     laenge = height * 0.30
 
     schritt = (leg_phase or 0.0) + math.pi
-    ader = mix(P.TRIM, P.BONE, 0.55)
-    schale = mix(P.CLOAK, P.STONE, 0.22)
+    # Die Arme gehoeren zum Leib, nicht zur Flamme. Vorher waren sie in
+    # ihrem alten blassen Ton gezeichnet und standen als zwei helle
+    # Striche quer vor dem dunklen Gewand - genau dort, wo die
+    # Silhouette am ruhigsten sein muss.
+    ader = mix(KRISTALL_MITTEL, LEIB_HI, 0.55)
+    schale = LEIB
 
     for seite in (-1, 1):
         vorn = seite > 0
@@ -605,8 +753,12 @@ def _draw_beine(c: Canvas, *, cx: int, base: float, height: float, phase: float,
         return
 
     schritt = leg_phase or 0.0
-    ader = mix(P.TRIM, P.BONE, 0.55)
-    schale = mix(P.CLOAK, P.STONE, 0.22)
+    # Die Arme gehoeren zum Leib, nicht zur Flamme. Vorher waren sie in
+    # ihrem alten blassen Ton gezeichnet und standen als zwei helle
+    # Striche quer vor dem dunklen Gewand - genau dort, wo die
+    # Silhouette am ruhigsten sein muss.
+    ader = mix(KRISTALL_MITTEL, LEIB_HI, 0.55)
+    schale = LEIB
     hueft_y = base - laenge
 
     for seite in (-1, 1):
@@ -1208,66 +1360,63 @@ def draw_heroine(
                            height=height, phase=phase, lean=lean, smear=smear,
                            split=split, sway=sway, hinter=False)
 
-    # --- Die Gestalt ------------------------------------------------------
-    hueft = base - LEG_T * height          # wo die Flamme aufsitzt
-    flamme = height * (1 - LEG_T)
-    # Unterhalb des Kragens deckt der Stoff ohnehin - dort wuerde die
-    # Flamme nur seitlich herausfransen.
-    ab = max(0.0, (kragen - LEG_T) / (1 - LEG_T) - 0.10)
-    steps = int(flamme) + 1
+    # --- Der Leib ---------------------------------------------------------
+    #
+    # Dunkel, deckend, ohne Eigenlicht. Er traegt die Flamme, er ist nicht
+    # selbst welche.
+    #
+    # Vorher stand hier eine helle Masse von der Huefte bis ueber den
+    # Kopf, halb durchsichtig, mit ausgefransten Raendern - und darueber
+    # ein Mantel in aehnlichem Wert. Zwei weiche Dinge in aehnlicher
+    # Helligkeit lesen sich immer als eines. Jetzt ist der Leib das
+    # Dunkelste an ihr und der Kopf das Hellste; dazwischen liegt der
+    # ganze Kontrast, den eine Silhouette braucht.
+    hueft = base - LEG_T * height
+    leib_h = height * (SCHULTER_T - LEG_T)
+    steps = int(leib_h) + 1
     for i in range(steps):
-        t = i / max(1, steps - 1)
-        if t < ab:
-            continue
-        y = hueft - t * flamme
+        t = i / max(1, steps - 1)                 # 0 Huefte .. 1 Schulter
+        tg = LEG_T + t * (SCHULTER_T - LEG_T)     # in Gesamthoehe
+        y = hueft - t * leib_h
 
-        w = _profile(t, kind) * (1 + smear * 0.5)
-        # Der Schlag treibt eine Welle durch sie hindurch.
-        w *= 1 + whip * math.sin(t * math.pi * 1.6) * 0.5
+        w = _profile((tg - LEG_T) / (1 - LEG_T), kind) * (1 + smear * 0.5)
+        w *= 1 + whip * math.sin(t * math.pi * 1.6) * 0.35
 
-        # Rueckgrat: Neigung, plus ein langsames Wehen.
-        sx = cx + lean * t + math.sin(t * 2.6 + phase) * (0.9 + t * 1.7)
+        sx = cx + lean * tg + math.sin(tg * 2.6 + phase) * (0.5 + tg * 0.9)
         sx += smear * 3.0 * (1 - t) * -1
-        # Resonanz zieht die Gestalt in waagerechte Baender auseinander.
         if split > 0:
-            sx += math.sin(t * 9.0 + phase * 2) * split * 4.0
+            sx += math.sin(t * 9.0 + phase * 2) * split * 3.0
 
         for dx in range(-int(w) - 1, int(w) + 2):
             d = abs(dx) / max(0.8, w)
             if d > 1:
                 continue
-            # Der Rand franst aus und flackert.
-            noise = hash01(int(sx) + dx, int(y) * 3 + int(phase * 6))
-            if d > 0.55 and noise < (d - 0.55) / 0.45 * 0.85:
-                continue
-            # Sie ist Klang, kein Fleisch: der Grund scheint durch sie
-            # hindurch. Dicht in der Mitte, duenner zum Rand und nach oben,
-            # wo sie ohnehin ausfranst.
-            if d < 0.34:
-                col = core
-                deckung = 0.86 - 0.20 * t
-            elif d < 0.68:
-                col = mid
-                deckung = 0.74 - 0.24 * t
+            # Der Saum franst aus - aber nur unten. Ein Gewand ist unten
+            # zerrissen und oben ganz, nicht ueberall gleich zerfetzt.
+            if t < 0.28 and d > 0.72:
+                if hash01(int(sx) + dx, int(y) * 3) < (d - 0.72) / 0.28 * 0.9:
+                    continue
+            q = dx / max(0.8, w)
+            if q > 0.55:
+                col = LEIB_HI                   # Licht von rechts
+            elif q < -0.55:
+                col = LEIB_TIEF
             else:
-                col = rim
-                deckung = 0.58 - 0.26 * t
-            a = int(255 * max(0.18, deckung))
-            c.set(int(sx) + dx, int(y), (col[0], col[1], col[2], a))
+                col = LEIB
+            c.set(int(sx) + dx, int(y), col)
 
-    # Funken. Sie steigen aus der Flamme auf, werden nach oben hin duenner
-    # und wehen mit ihrer Neigung mit - ein Kopf aus Feuer, der nichts
-    # absondert, sieht aus wie gemalter Rauch.
-    for k in range(9):
-        u = (k / 9 + phase * 0.22) % 1.0
-        fy = hueft - flamme * (0.55 + u * 0.75)
-        fx = cx + lean * (0.6 + u) + math.sin(u * 6.2 + phase * 2.4 + k) * (2 + u * 6)
-        if hash01(k * 3, int(phase * 7) + k) < 0.30:
-            continue
-        hell = mix(mid, P.AMBER, 0.25 + u * 0.5)
-        c.set(int(fx), int(fy), (hell[0], hell[1], hell[2], int(235 * (1 - u * 0.7))))
-        if u < 0.35:
-            c.set(int(fx), int(fy) + 1, (hell[0], hell[1], hell[2], 90))
+    # --- Der Kopf ---------------------------------------------------------
+    kopf_y = base - SCHULTER_T * height
+    kopf_x = cx + lean * SCHULTER_T + math.sin(SCHULTER_T * 2.6 + phase) * 1.1
+    _kristallkrone(c, cx=kopf_x, cy=kopf_y,
+                   breite=_profile(0.84, kind) * 1.05,
+                   hoehe=height * (1 - SCHULTER_T) * 1.42,
+                   phase=phase, wut=whip)
+
+    # Und die Splitter, die um sie herum in der Luft haengen.
+    _schwebende_splitter(c, cx=kopf_x, cy=kopf_y - height * 0.12,
+                         r=height * 0.42, phase=phase,
+                         anzahl=5 + int(signatur * 3))
 
     # --- Die Augen --------------------------------------------------------
     #

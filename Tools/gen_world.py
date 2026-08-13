@@ -20,7 +20,7 @@ from pixelkit import (Atlas, Canvas, Palette as P, Rng, bezier, hash01,
 OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Resources" / "Atlas"
 TS = 16  # Kachelgroesse
 
-REGIONS = ["hain", "kathedrale", "grotten", "dissonanz"]
+REGIONS = ["hain", "kathedrale", "grotten", "dissonanz", "bruecke"]
 
 
 # ----------------------------------------------------------------- Kacheln
@@ -67,7 +67,7 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
             col = mix(body, shade(body, -0.30), 0.22 + mottle - near_top)
             c.set(x, top + y, col)
 
-    if region == "kathedrale":
+    if region in ("kathedrale", "bruecke"):
         # Gemauerter Stein: Quader mit Fugen, versetzt gesetzt.
         for row in range(4):
             yy = top + row * 4

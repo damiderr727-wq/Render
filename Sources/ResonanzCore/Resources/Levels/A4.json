@@ -64,7 +64,7 @@
    "y": 0,
    "w": 4,
    "h": 1,
-   "target": "A17",
+   "target": "E1",
    "targetDoor": "D",
    "requires": "fluegelschlag"
   }

@@ -17,6 +17,14 @@
    "notes": 320
   },
   {
+   "id": "bruecke",
+   "source": "BWV 1068 - Air, ins Freie gestellt",
+   "bpm": 40,
+   "loop": 32,
+   "tracks": 3,
+   "notes": 25
+  },
+  {
    "id": "kathedrale",
    "source": "BWV 578 - Fuge g-Moll",
    "bpm": 74,

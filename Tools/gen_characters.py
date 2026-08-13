@@ -1695,9 +1695,13 @@ def draw_heroine(
     # Mund mit Zaehnen, nicht als Blick.
     ay_ = kopf_y - mr * 0.10
     abstand = max(3.0, mr * 0.98)
-    # Drei Pixel je Auge: unten innen der Funke, darueber zwei dunkle,
-    # die nach aussen wegsteigen.
-    hoehe = 3
+    # Vier Pixel je Auge: unten zwei rosa nebeneinander, darueber zwei
+    # dunkle, die nach aussen wegsteigen.
+    #
+    # Mit nur einem Funken war der helle Teil ein einzelner Punkt, und
+    # ein Punkt ist eine Pupille - das Auge wirkte klein und starr. Zwei
+    # nebeneinander machen daraus einen Lidspalt, in dem etwas leuchtet,
+    # und erst das sieht wach aus.
     for seite in (-1, 1):
         ex = kopf_x + seite * abstand * 0.5 + mr * 0.16
         if zu:
@@ -1712,16 +1716,13 @@ def draw_heroine(
         # haengenden Aussenwinkeln liest sich als truebselig oder als
         # nichts - jedenfalls nicht als wach.
         #
-        # Andersherum stimmt es: der Funke sitzt unten innen, der dunkle
-        # Pixel steigt nach aussen. Drei Pixel, und daraus wird ein
-        # kleines waches Tier statt eines leeren Blicks.
-        for dy in range(hoehe):
-            # Ein Pixel je Reihe nach aussen. `int()` schneidet zur Null
-            # hin ab - mit einem Faktor unter eins kam nie ein Versatz
-            # zustande, und die drei Pixel standen senkrecht uebereinander.
-            versatz = seite * dy
-            c.set(int(ex) + versatz, int(ay_) - dy, P.INK)
-        c.set(int(ex), int(ay_), mix(rosa, (255, 255, 255, 255), 0.30))
+        # Andersherum stimmt es: der Lidspalt sitzt unten innen, die
+        # dunkle Kante steigt nach aussen.
+        hell = mix(rosa, (255, 255, 255, 255), 0.30)
+        for dy in (1, 2):
+            c.set(int(ex) + seite * dy, int(ay_) - dy, P.INK)
+        for k in (0, 1):
+            c.set(int(ex) - seite * k, int(ay_), hell)
         c.glow(ex, ay_, 2.4 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 75))
 
 

@@ -38,11 +38,19 @@ BODY_H = 20.0 * HERO_SCALE
 # Wo die Flamme aufhoert und die Beine anfangen, als Anteil der Hoehe.
 # Darunter ist sie fest, darueber loest sie sich auf - der Uebergang ist
 # das Interessanteste an ihr.
-LEG_T = 0.32
+# Kurz. Eine Figur mit langen Beinen ist ein Mensch, und ein Mensch ist
+# sie ausdruecklich nicht - der Kristall setzt sich unten ab, er waechst
+# nicht zu Waden aus.
+LEG_T = 0.24
 # Wo der Leib aufhoert und die Kristallflamme anfaengt. Alles darunter ist
 # Gewand, alles darueber ist Kopf - und genau an dieser Linie sitzt der
 # groesste Helligkeitssprung der ganzen Figur.
-SCHULTER_T = 0.66
+#
+# Tief angesetzt: was oberhalb liegt, gehoert dem Kopf, und der soll fast
+# die Haelfte der Figur einnehmen. Bei 0.66 stand hier jemand mit
+# menschlichen Proportionen - lang, mit einem Kopf, der genau richtig sass
+# und deshalb gar nichts erzaehlte.
+SCHULTER_T = 0.52
 GROUND = HERO_H - 1  # unterste Pixelzeile = Fussboden
 
 
@@ -513,12 +521,27 @@ def _draw_klinge(c: Canvas, *, cx: int, base: float, height: float, phase: float
     rosa_lo = mix(rosa, P.CLOAK, 0.70)
     griff = mix(P.CLOAK, P.INK, 0.45)
 
-    # Schraeg ueber den Ruecken: Griff unten rechts, Spitze oben links.
-    # Die Stimmgabel steht nach oben rechts - die Klinge muss in die
-    # Gegenrichtung, sonst kreuzen sich beide zu einem Gestruepp.
-    a = -(math.pi - 1.00)
-    mx = cx + 0.8 * S + lean * 0.3
-    my = base - 0.42 * height
+    # Schraeg ueber den Ruecken: Griff oben an der Schulter, Spitze unten
+    # hinten. Vorher lag sie andersherum - Knauf am Guertel, Spitze ueber
+    # dem Kopf -, und so trage niemand ein Schwert: man kaeme nicht dran.
+    # Der Griff gehoert dorthin, wo die Hand hinlangt.
+    # Fast senkrecht am Ruecken, deutlich links neben der Mitte. Sie
+    # schaut nach rechts, ihr Ruecken liegt also links - und der Kopf ist
+    # inzwischen so gross, dass alles innerhalb einer Kopfbreite von der
+    # Mitte schlicht dahinter verschwindet. Ein Zwischenstand hatte das
+    # Parierstueck genau dort: sichtbar blieb ein heller Querbalken vor
+    # der Brust, der aussah wie ein Gurt, und unten eine rosa Spitze.
+    # Dieselbe Schraege ueber den Ruecken wie vorher, nur umgekehrt
+    # herum: Knauf oben hinter der linken Schulter, Blatt nach unten
+    # rechts zur Huefte. Vorher zeigte die Spitze nach oben ueber den
+    # Kopf - da kaeme keine Hand hin.
+    #
+    # Senkrecht neben sie gestellt hat sie ausgesehen wie ein Brett, das
+    # zufaellig danebensteht: sie muss die Gestalt kreuzen, sonst traegt
+    # sie niemand.
+    a = math.pi - 0.75
+    mx = cx - 1.0 * S + lean * 0.3
+    my = base - 0.52 * height
     ax, ay = math.cos(a), math.sin(a)
 
     # Lang und schmal. Vorher war sie zweiundzwanzig Pixel lang und sieben
@@ -533,8 +556,8 @@ def _draw_klinge(c: Canvas, *, cx: int, base: float, height: float, phase: float
     # Lang genug, um ein Schwert zu sein, kurz genug, um nicht die Figur
     # zu sein: ueber die volle Koerperhoehe hinaus war sie der groesste
     # Gegenstand im Bild und zog allen Blick auf sich.
-    laenge = height * 0.70
-    breit = 1.35 * S
+    laenge = height * 0.48
+    breit = 1.15 * S
 
     # Griff und Knauf, unterhalb des Parierstuecks.
     for i in range(int(4.2 * S)):
@@ -812,97 +835,76 @@ def _draw_beine(c: Canvas, *, cx: int, base: float, height: float, phase: float,
                 lean: float, leg_phase: float | None, leg_spread: float,
                 crouch: float, settle: float, smear: float) -> None:
     """
-    Zwei Beine aus Kristall.
+    Zwei kurze Kristallstuempfe, auf denen sie steht.
 
-    Vorher waren das zwei duenne Nadeln - konsequent gedacht, aber auf
-    zwanzig Pixel Hoehe liest sich das nicht als Figur, sondern als
-    Stativ. Sie braucht die gewohnte Form: Huefte, Oberschenkel, Knie,
-    Unterschenkel, Fuss. Nur besteht das alles aus Kristall, nicht aus
-    Fleisch - derselbe gruene Klang wie der Leib, nur erstarrt.
+    Ein Anlauf davor hatte richtige Beine: Oberschenkel, Knie, Wade,
+    Fuss. Das war zu viel Anatomie - damit stand da ein Mensch, und der
+    Kristall war nur noch eine Farbe darauf. Ein Anlauf davor hatte zwei
+    duenne Nadeln, und das war zu wenig: ein Stativ, keine Figur.
 
-    `leg_phase` treibt den Schritt. Ohne sie stehen beide still.
+    Dazwischen liegt das hier: kurz, gedrungen, nach unten schmaler,
+    unten eine kleine flache Kante als Stand. Kein Knie. Der Schritt
+    schwenkt den ganzen Stumpf aus der Huefte, so wie ein Stuhlbein
+    schwenkt, das man versetzt - nicht wie ein Bein, das sich beugt.
     """
     S = HERO_SCALE
     laenge = height * LEG_T - settle * 0.4
-    if laenge < 4:
+    if laenge < 3:
         return
 
     schritt = leg_phase or 0.0
     hueft_y = base - laenge
-    # Facetten statt Rundung: eine helle Vorderkante, ein mittlerer
-    # Koerper, eine dunkle Rueckseite. Drei Toene reichen, mehr wird bei
-    # dieser Groesse zu Matsch.
-    # Die Beine tragen, sie leuchten nicht: heller Ton nur als
-    # Vorderkante, der Koerper bleibt eine Stufe darunter. Sonst
-    # ziehen zwei helle Saeulen den Blick vom Kopf weg.
+    # Der Koerperton ist die Mittelstufe, hell nur als Vorderkante.
     hell, mitte, tief = KRISTALL, KRISTALL_MITTEL, KRISTALL_TIEF
 
     for seite in (-1, 1):
         takt = math.sin(schritt + (0 if seite > 0 else math.pi))
-        # Der Schritt hebt das Knie und traegt den Fuss nach vorn.
-        heben = max(0.0, takt) * laenge * 0.26
-        vor = takt * (1.9 + abs(lean) * 0.6) * S
+        heben = max(0.0, takt) * laenge * 0.30
+        vor = takt * (2.2 + abs(lean) * 0.6) * S
 
-        hx = cx + seite * (1.5 * S + leg_spread * 1.1) + lean * 0.35
+        hx = cx + seite * (1.7 * S + leg_spread * 1.1) + lean * 0.35
         fx = hx + vor
         fy = base - heben - crouch * 1.6
 
-        # Das Knie sitzt auf halber Hoehe und knickt nach vorn - beim
-        # Heben deutlicher als im Stand.
-        kx = hx + vor * 0.35 + seite * 0.5 + (heben / max(1.0, laenge)) * 2.4 * S
-        ky = hueft_y + (fy - hueft_y) * 0.48 - crouch * 0.8
-
-        n = max(5, int(laenge * 1.4))
+        n = max(4, int(laenge * 1.5))
         for i in range(n + 1):
             v = i / n                                   # 0 Huefte .. 1 Fuss
-            # Quadratische Bezier ueber das Knie: ein Bein hat einen Knick,
-            # keine Gerade.
-            u = 1 - v
-            x = u * u * hx + 2 * u * v * kx + v * v * fx - smear * 2.4 * v
-            y = u * u * hueft_y + 2 * u * v * ky + v * v * fy
+            # Gerade Strecke, kein Knick: der Stumpf schwenkt als Ganzes.
+            x = hx + (fx - hx) * v - smear * 2.2 * v
+            y = hueft_y + (fy - hueft_y) * v
 
-            # Oberschenkel breit, Knie schmal, Wade wieder etwas dicker,
-            # Knoechel duenn. Das ist die Silhouette, an der man ein Bein
-            # erkennt, auch wenn nur drei Pixel dafuer da sind.
-            if v < 0.48:
-                w = 2.05 - 0.95 * (v / 0.48)
-            else:
-                k = (v - 0.48) / 0.52
-                w = 1.10 + 0.55 * math.sin(k * math.pi) - 0.45 * k
-            w *= S * 0.62
+            # Oben dick, unten schmal - ein abgebrochener Zapfen.
+            w = (2.5 - 1.0 * v ** 0.8) * S * 0.60
 
             for dx in range(-int(w) - 1, int(w) + 2):
                 if abs(dx) > w + 0.35:
                     continue
                 q = dx * seite / max(0.7, w)
-                if q > 0.30:
-                    col = hell                       # Licht faellt von vorn
-                elif q > -0.40:
+                if q > 0.40:
+                    col = hell
+                elif q > -0.35:
                     col = mitte
                 else:
                     col = tief
-                # Waagerechte Bruchkanten alle paar Reihen: erst dadurch
-                # liest sich das Bein als Kristall und nicht als Rohr.
-                if int(y) % 4 == 0 and abs(q) < 0.75:
+                # Waagerechte Bruchkanten: daran liest man Kristall.
+                if int(y) % 3 == 0 and abs(q) < 0.75:
                     col = mix(col, KRISTALL_HELL, 0.30)
                 c.set(int(x) + dx, int(y), col)
 
-            # Ein Glanz wandert das Bein hinab - der Ton laeuft sichtbar
-            # durch den Kristall.
-            if abs(v - (0.5 + 0.5 * math.sin(phase * 1.8 - seite))) < 0.10:
+            # Ein Glanz wandert hinab - der Ton laeuft durch den Kristall.
+            if abs(v - (0.5 + 0.5 * math.sin(phase * 1.8 - seite))) < 0.12:
                 c.set(int(x), int(y), KRISTALL_HELL)
 
-        # Der Fuss: eine kurze, flache Kante, kein Punkt. Sie steht
-        # darauf, also muss man sehen, worauf.
-        fuss = max(1, int(1.5 * S))
+        # Unten eine kurze flache Kante. Kein Fuss mit Zehen, nur die
+        # Stelle, an der der Kristall den Boden beruehrt.
+        fuss = max(1, int(1.6 * S))
         for dx in range(-fuss, fuss + 1):
-            vorne = dx * seite > 0
-            c.set(int(fx) + dx, int(fy), hell if vorne else mitte)
+            c.set(int(fx) + dx, int(fy), hell if dx * seite > 0 else mitte)
             if abs(dx) < fuss:
                 c.set(int(fx) + dx, int(fy) - 1, tief)
 
     # Wo die Flamme in den Kristall uebergeht, glimmt die Naht.
-    for dx in range(-int(2.6 * S), int(2.6 * S) + 1):
+    for dx in range(-int(2.9 * S), int(2.9 * S) + 1):
         if hash01(cx + dx, int(hueft_y) + int(phase * 3)) > 0.5:
             c.set(cx + dx + int(lean * 0.3), int(hueft_y),
                   mix(KRISTALL_HELL, P.AMBER, 0.2))
@@ -935,8 +937,8 @@ def _draw_kern(c: Canvas, *, kern: str, cx: int, base: float, height: float,
     Damit sieht man einem Kern an, wie er klingt, bevor man ihn benutzt -
     und alle sieben gehoeren sichtbar zusammen.
     """
-    S = HERO_SCALE
-    t = 0.52
+    S = HERO_SCALE * 0.55
+    t = 0.34
     fy = base - t * height
     fx = cx + lean * t + math.sin(t * 2.6 + phase) * 1.2
 
@@ -1434,7 +1436,10 @@ def draw_heroine(
     height = (BODY_H + (BODY_H * 0.10 if kind == "floete" else 0.0)) * stretch - settle * 0.6
     top_y = base - height
 
-    core = mix(P.BONE, hexc("#dffaf2"), 0.55)
+    # Ihre Flamme ist gruen. Ein frueherer Kern war aus P.BONE
+    # gemischt und damit fast weiss - dann war die Krone das
+    # Hellste im Bild und zog allen Blick vom Gesicht weg.
+    core = mix(P.TRIM, hexc("#eafff8"), 0.45)
     mid = mix(P.TRIM, P.BONE, 0.35)
     rim = mix(P.TRIM, P.CLOAK, 0.45)
 
@@ -1485,7 +1490,12 @@ def draw_heroine(
         tg = LEG_T + t * (SCHULTER_T - LEG_T)
         y = hueft - t * leib_h
 
-        w = _profile((tg - LEG_T) / (1 - LEG_T), kind) * 0.60
+        # Kein Brustkorb, keine Taille, keine Schultern, die abfallen.
+        # `_profile` zeichnet einen menschlichen Umriss, und genau der
+        # war zu viel: sie ist ein Klang, der unten fest geworden ist,
+        # also unten breit und nach oben schmaler - eine Glocke, mehr
+        # nicht. Die Silhouette macht der Kopf, nicht der Rumpf.
+        w = _profile(0.30, kind) * (0.66 - 0.20 * t ** 1.3)
         w *= 1 + smear * 0.4
         w *= 1 + whip * math.sin(t * math.pi * 1.6) * 0.35
 
@@ -1565,7 +1575,7 @@ def draw_heroine(
     # `_profile` abgeleitet - das ist die Brustbreite, und damit war er
     # dreizehn Pixel dick und die Figur ein Pilz. Etwas zu gross soll er
     # sein, nicht doppelt so gross.
-    kopf_r = height * 0.135 * (1.0 + smear * 0.15)
+    kopf_r = height * 0.215 * (1.0 + smear * 0.15)
     kopf_y = schulter_y - kopf_r * 1.05 - 1.6
     kopf_x = cx + lean * 0.90 + math.sin(0.90 * 2.6 + phase) * 1.1
 
@@ -1614,12 +1624,13 @@ def draw_heroine(
 
     # Zwei Facettenkanten ueber Stirn und Wange - daran erkennt man, dass
     # der Kopf geschliffen ist und nicht gegossen.
-    for k in (-0.30, 0.34):
-        for i in range(int(kopf_r * 1.5)):
-            fy = kopf_y - kopf_r * 0.9 + i
-            fx = kopf_x + k * kopf_r * 2.0 + i * 0.28
-            if abs(fx - kopf_x) < kopf_r * 1.05:
-                c.set(int(fx), int(fy), mix(KRISTALL, KRISTALL_HELL, 0.5))
+    # Eine Facettenkante, und zwar am Rand. Ein Zwischenstand hatte zwei,
+    # und eine davon lief senkrecht mitten durchs Gesicht - das las sich
+    # als Narbe, nicht als Schliff.
+    for i in range(int(kopf_r * 1.3)):
+        fy = kopf_y - kopf_r * 0.75 + i
+        fx = kopf_x + kopf_r * 0.62 + i * 0.20
+        c.set(int(fx), int(fy), mix(KRISTALL, KRISTALL_HELL, 0.45))
 
     # --- Die Flamme auf dem Kopf ------------------------------------------
     #
@@ -1630,26 +1641,54 @@ def draw_heroine(
     # Schaedel nicht beruehrt, sieht aus wie Antennen. Und die Zungen
     # duerfen oben ausfransen, aber nicht in einzelne Pixel zerfallen,
     # die frei in der Luft stehen - das liest sich als Schmutz.
-    krone_y = kopf_y - kopf_r * 0.80
-    for k in range(5):
-        seite = (k - 2) / 2.0
-        lang = kopf_r * (1.55 - abs(seite) * 0.62) * (1.0 + aufloesung * 0.40)
-        neig = seite * 0.55 + math.sin(phase * 1.6 + k) * 0.14 + lean * 0.05
-        n = max(4, int(lang * 1.6))
+    krone_y = kopf_y - kopf_r * 0.86
+    # Vier Zungen, ungleich hoch, ungleich breit, ungleich verteilt - und
+    # jede laeuft spitz aus. Ein Zwischenstand hatte fuenf gleiche mit
+    # abgeflachtem Ende in gleichem Abstand: das war ein Zinnenkranz,
+    # keine Flamme. Was eine Flamme ausmacht, ist die Unregelmaessigkeit.
+    for k in range(4):
+        wurzel = (-0.52, -0.14, 0.24, 0.56)[k]
+        lang = kopf_r * (1.35, 1.00, 1.55, 0.86)[k]
+        lang *= 0.80 + 0.40 * hash01(k * 7 + 3, int(phase * 2.0))
+        lang *= 1.0 + aufloesung * 0.40
+        dick = kopf_r * (0.30, 0.24, 0.34, 0.22)[k]
+        neig = wurzel * 0.75 + math.sin(phase * 1.7 + k * 1.3) * 0.22 + lean * 0.05
+
+        n = max(5, int(lang * 2.0))
         for i in range(n + 1):
             u = i / n
-            fx = kopf_x + seite * kopf_r * 0.72 + neig * lang * u ** 1.4
+            # Die Zunge legt sich im Steigen zur Seite - eine gerade
+            # Flamme steht nicht, sie brennt nicht.
+            fx = kopf_x + wurzel * kopf_r + neig * lang * u ** 1.5
             fy = krone_y - lang * u
-            fw = max(0.8, kopf_r * (0.34 + aufloesung * 0.10) * (1 - u ** 1.25))
+            # Unten am Ansatz am breitesten, dann spitz bis auf null.
+            fw = dick * (1 - u) ** 0.65
             for dx in range(-int(fw) - 1, int(fw) + 2):
-                d = abs(dx) / max(0.6, fw)
+                d = abs(dx) / max(0.45, fw)
                 if d > 1:
                     continue
-                if u > 0.72 and hash01(int(fx) + dx, int(fy) + int(phase * 5)) < (u - 0.72) / 0.28 * 0.6:
+                if u > 0.78 and hash01(int(fx) + dx, int(fy) + int(phase * 5)) < (u - 0.78) / 0.22 * 0.55:
                     continue
-                col = core if d < 0.45 else (mid if d < 0.8 else rim)
-                a = int(240 * (1 - u * 0.45))
-                c.set(int(fx) + dx, int(fy), (col[0], col[1], col[2], a))
+                col = core if d < 0.5 else (mid if d < 0.85 else rim)
+                aa = int(245 * (1 - u * 0.40))
+                c.set(int(fx) + dx, int(fy), (col[0], col[1], col[2], aa))
+
+    # Der Ansatz wird geschlossen: sonst stehen vier Zungen einzeln auf
+    # dem Schaedel und sehen aus wie aufgesteckt.
+    # Die Breite folgt dem Schaedel an dieser Hoehe. Ein Zwischenstand
+    # nahm die volle Kopfbreite - auf Kronenhoehe ist der Schaedel aber
+    # nur halb so breit, und der Ansatz stand links und rechts hinaus wie
+    # eine Hutkrempe.
+    ansatz_w = kopf_r * 0.52
+    for dx in range(-int(ansatz_w), int(ansatz_w) + 1):
+        q = abs(dx) / max(1.0, ansatz_w)
+        # Der Ansatz folgt der Woelbung des Schaedels und sitzt darin,
+        # nicht darauf: sonst liegt ein heller Querbalken auf dem Kopf
+        # und die Figur traegt eine Krempe.
+        oben = krone_y + kopf_r * 0.26 * q * q
+        for dy in range(int(1 + (1 - q) * kopf_r * 0.26)):
+            col = mid if dy < 1 else rim
+            c.set(int(kopf_x) + dx, int(oben) + dy, col)
 
     # --- Die Augen --------------------------------------------------------
     #

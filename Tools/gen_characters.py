@@ -1622,9 +1622,13 @@ def draw_heroine(
     # Also derselbe Kristall wie ueberall, nur zwei Stufen heller als der
     # Rumpf. Hell genug, dass das Auge zuerst dorthin geht; nicht so
     # hell, dass eine Maske daraus wird.
-    maske = mix(KRISTALL_HELL, KRISTALL, 0.22)
-    maske_lo = mix(KRISTALL, KRISTALL_MITTEL, 0.45)
-    maske_kante = mix(KRISTALL_HELL, KRISTALL, 0.55)
+    # Zwei Stufen heller als der Rumpf, nicht acht. Bei 0.22 lag die
+    # Flaeche praktisch auf `KRISTALL_HELL`, und das ist beinahe Weiss -
+    # damit sah es weiter nach Maske aus, obwohl gar keine mehr da war.
+    # Der helle Ton gehoert an den Rand, nicht auf die Wange.
+    maske = mix(KRISTALL_HELL, KRISTALL, 0.58)
+    maske_lo = mix(KRISTALL, KRISTALL_MITTEL, 0.50)
+    maske_kante = mix(KRISTALL_HELL, KRISTALL, 0.22)
     mr = kopf_r * 0.80
     for dy in range(-int(mr * 1.12) - 1, int(mr * 1.06) + 2):
         v = dy / (mr * 1.12) if dy < 0 else dy / (mr * 1.06)
@@ -1691,7 +1695,9 @@ def draw_heroine(
     # Mund mit Zaehnen, nicht als Blick.
     ay_ = kopf_y - mr * 0.10
     abstand = max(3.0, mr * 0.98)
-    hoehe = max(2, int(mr * 0.52))
+    # Drei Pixel je Auge: unten innen der Funke, darueber zwei dunkle,
+    # die nach aussen wegsteigen.
+    hoehe = 3
     for seite in (-1, 1):
         ex = kopf_x + seite * abstand * 0.5 + mr * 0.16
         if zu:
@@ -1699,12 +1705,22 @@ def draw_heroine(
             for dx in range(-1, 1):
                 c.set(int(ex) + dx, int(ay_), maske_lo)
             continue
+        # Nach aussen **oben** geneigt.
+        #
+        # Vorher fiel der dunkle Pixel nach aussen unten weg. Das zieht
+        # die Augen an den Aussenkanten herunter, und ein Gesicht mit
+        # haengenden Aussenwinkeln liest sich als truebselig oder als
+        # nichts - jedenfalls nicht als wach.
+        #
+        # Andersherum stimmt es: der Funke sitzt unten innen, der dunkle
+        # Pixel steigt nach aussen. Drei Pixel, und daraus wird ein
+        # kleines waches Tier statt eines leeren Blicks.
         for dy in range(hoehe):
-            # Nach aussen unten geneigt - das gibt dem Blick eine Richtung.
-            versatz = int(seite * dy * 0.34)
-            c.set(int(ex) + versatz, int(ay_) + dy, P.INK)
-            if dy == 0:
-                c.set(int(ex) + versatz - seite, int(ay_), mix(P.INK, maske_lo, 0.4))
+            # Ein Pixel je Reihe nach aussen. `int()` schneidet zur Null
+            # hin ab - mit einem Faktor unter eins kam nie ein Versatz
+            # zustande, und die drei Pixel standen senkrecht uebereinander.
+            versatz = seite * dy
+            c.set(int(ex) + versatz, int(ay_) - dy, P.INK)
         c.set(int(ex), int(ay_), mix(rosa, (255, 255, 255, 255), 0.30))
         c.glow(ex, ay_, 2.4 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 75))
 

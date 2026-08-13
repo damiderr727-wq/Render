@@ -50,6 +50,7 @@ REGIONSNAMEN = {
     "kathedrale": "DIE KATHEDRALE DER FUGEN",
     "grotten": "DIE RESONANZKAVERNEN",
     "dissonanz": "DAS HERZ DER DISSONANZ",
+    "bruecke": "DIE GROSSE BRUECKE",
 }
 
 
@@ -273,6 +274,7 @@ WASCHUNG = {
     "kathedrale": (hexc("#b9a6ef"), hexc("#211a35")),
     "grotten": (hexc("#7fd4f0"), hexc("#122736")),
     "dissonanz": (hexc("#f08a7a"), hexc("#2e1418")),
+    "bruecke": (hexc("#b8c4d8"), hexc("#242b3a")),
 }
 
 

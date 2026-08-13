@@ -1371,6 +1371,70 @@ def _draw_cape(c: Canvas, *, kind: str, cx: int, base: float, height: float,
     c.set(int(sx), int(sy) + 1, mix(stoff, licht, 0.35))
 
 
+
+def _flaum(c: Canvas, *, cx: int, base: float, height: float, phase: float,
+           lean: float, aufloesung: float, glow: float) -> None:
+    """
+    Was staendig von ihr abgeht.
+
+    Sie ist Klang, und Klang bleibt nicht in seinen Grenzen. An den
+    Raendern loest sich fortwaehrend etwas: kleine Funken, die aufsteigen,
+    nach aussen treiben und vergehen. Ohne sie hat die Figur eine harte
+    Kante wie ein ausgestanztes Blech - mit ihnen bekommt sie einen
+    Flaum, und der Flaum ist der Unterschied zwischen einem Gegenstand
+    und etwas Lebendigem.
+
+    Drei Regeln, damit daraus kein Schneegestoeber wird:
+
+      * **Nie viele auf einmal.** Ein gutes Dutzend, und jeder einzelne
+        ist meistens halb durchsichtig. Was man zaehlen kann, ist zu
+        viel.
+      * **Jeder hat seinen eigenen Takt.** Alle zugleich aufblitzen zu
+        lassen ergibt ein Blinken; versetzt ergibt es ein Glimmen.
+      * **Sie muessen die Runde schliessen.** Die Bilder laufen im Kreis,
+        also laeuft auch jede Bahn genau einmal pro Runde durch - sonst
+        springt der Flaum beim Uebergang vom letzten Bild zum ersten.
+
+    Mit `aufloesung` werden es mehr und sie fliegen weiter: was von ihr
+    uebrig ist, haelt sich am Ende schlechter zusammen.
+    """
+    if glow <= 0:
+        return
+    anzahl = int(10 + 8 * aufloesung)
+    mitte_y = base - height * 0.50
+    hell = mix(KRISTALL_HELL, P.BONE, 0.25)
+
+    for k in range(anzahl):
+        # Startwinkel, Abstand und Versatz im Takt - alle drei fest je
+        # Funken, damit er in jedem Bild derselbe bleibt.
+        # Gleichmaessig rundum verteilt, nur leicht verwuerfelt. Reiner
+        # Zufall haeuft sich sichtbar: ein erster Anlauf zog alle Funken
+        # in dieselbe Ecke, und statt eines Flaums stand eine Wolke
+        # neben ihr.
+        a0 = k / anzahl * math.tau + hash01(k * 17 + 5, 3) * 0.6
+        r0 = 0.19 + 0.11 * hash01(k * 23 + 11, 7)
+        versatz = hash01(k * 31 + 3, 13)
+
+        u = (phase / math.tau + versatz) % 1.0        # 0 .. 1 in einer Runde
+        # Er steigt, treibt ein Stueck nach aussen und wird blasser. Nur
+        # ein Stueck: Flaum sitzt am Rand, er fliegt nicht davon.
+        a = a0 + u * 0.7
+        r = height * r0 * (1.0 + (0.20 + 0.35 * aufloesung) * u)
+        x = cx + math.cos(a) * r * 1.05 + lean * 0.5
+        y = mitte_y + math.sin(a) * r * 0.80 - u * height * 0.14
+
+        # Auftauchen und Vergehen: in der Mitte der Bahn am hellsten.
+        deck = math.sin(math.pi * u) ** 0.75
+        if deck < 0.10:
+            continue
+        a_wert = int(150 * deck * glow)
+        c.blend(int(x), int(y), (hell[0], hell[1], hell[2], a_wert))
+        # Jeder dritte zieht einen schwachen Schweif hinter sich her.
+        if k % 3 == 0:
+            c.blend(int(x), int(y) + 1,
+                    (P.TRIM[0], P.TRIM[1], P.TRIM[2], int(a_wert * 0.45)))
+
+
 def draw_heroine(
     *,
     instrument: str | None = "leier",
@@ -1742,6 +1806,11 @@ def draw_heroine(
     #
     # Was der Kern ist, steht ihr jetzt im Gesicht: jede Anlage hat ihre
     # eigene Maske, und die ist kein Anhaengsel, sondern ihr Kopf.
+
+    # Der Flaum kommt zum Schluss: er liegt vor allem anderen, auch vor
+    # dem Gewand, denn er geht von ihr ab und nicht durch sie hindurch.
+    _flaum(c, cx=cx, base=base, height=height, phase=phase, lean=lean,
+           aufloesung=aufloesung, glow=glow)
 
     if glow > 0:
         c.glow(cx, base - height * 0.45, 11,

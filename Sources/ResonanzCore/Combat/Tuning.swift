@@ -64,6 +64,22 @@ public enum Tuning {
     // MARK: Rueckstoss beim Aufprall auf Gegner von oben
     public static let pogoVelocity: Double = -330
 
+    /// Rueckstoss auf die Heldin, wenn sie in der Luft zur Seite trifft.
+    ///
+    /// Der Abpraller nach unten gab es laengst; zur Seite passierte
+    /// nichts. In den Vorbildern ist genau das der Grund, warum ein Kampf
+    /// in der Luft ein Kampf ist und kein Zielen: jeder Treffer stoesst
+    /// einen selbst zurueck, und man muss sich wieder heranarbeiten. Ohne
+    /// das haengt man vor einem Gegner und drueckt.
+    ///
+    /// Klein genug, dass man nicht aus dem Raum fliegt - es soll den
+    /// Schlag spuerbar machen, nicht die Bewegung uebernehmen.
+    public static let meleeRecoil: Double = 138
+    /// Wie lange die Steuerung danach nicht dagegenhaelt. Ohne diese
+    /// kurze Sperre schiebt der gehaltene Laufknopf den Rueckstoss sofort
+    /// wieder weg, und man spuert nichts.
+    public static let meleeRecoilLock: Double = 0.09
+
     // MARK: Kamera
     public static let cameraLookAhead: Double = 34
     public static let cameraSmoothing: Double = 0.11

@@ -520,7 +520,15 @@ public final class GameSimulation {
             player.registerMeleeHit(count: hits)
             events.append(.shake(profile.shape == .radial ? 4 : 2))
             events.append(.effect(.klingenschlag, hitbox.center, .zero))
-            if downward { player.pogo() }
+            if downward {
+                player.pogo()
+            } else {
+                // Zur Seite stoesst der Schlag auch sie - in der Luft.
+                // Erst dadurch ist ein Luftkampf ein Kampf und kein
+                // Zielen: man wird zurueckgeworfen und muss sich wieder
+                // heranarbeiten.
+                player.meleeRecoil(from: player.facing)
+            }
         }
     }
 

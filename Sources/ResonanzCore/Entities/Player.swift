@@ -378,6 +378,23 @@ public final class Player {
                         resonance + Tuning.resonancePerMeleeHit * Double(min(count, 3)))
     }
 
+    /// Nur fuer Tests: stellt sie auf festen Boden, ohne einen Raum zu
+    /// brauchen. Die Kollision setzt `onGround` sonst erst im Lauf.
+    func setzeAufBodenZumTesten() {
+        onGround = true
+    }
+
+    /// Rueckstoss zur Seite: der Schlag stoesst auch sie selbst.
+    ///
+    /// Nur in der Luft. Am Boden wuerde derselbe Stoss sie vom Gegner
+    /// wegschieben, und man kaeme nie zum zweiten Schlag - dort steht sie
+    /// fest und schlaegt weiter.
+    public func meleeRecoil(from richtung: Double) {
+        guard !onGround else { return }
+        velocity.x = -sign(richtung) * Tuning.meleeRecoil
+        controlLock = Swift.max(controlLock, Tuning.meleeRecoilLock)
+    }
+
     /// Abprallen, wenn nach unten geschlagen wurde (Hollow-Knight-Manier).
     public func pogo() {
         velocity.y = Tuning.pogoVelocity

@@ -1586,6 +1586,87 @@ def _hohlraum(c: Canvas, cx: float, cy: float, r: float, rand,
     c.set(int(cx), int(cy - r + 0.5), mix(saum, P.BONE, 0.35))
 
 
+# Wie gross die Kreaturen gegenueber der Heldin stehen.
+#
+# Die Heldin ist von 1.3 auf 1.75 gewachsen, die Kreaturen nicht - und
+# damit stimmte das Verhaeltnis nicht mehr: eine Gabelmaus stand knapp
+# ueber eine Kachel hoch neben einer Figur von zweieinhalb. Im Vorbild
+# ist der Unterschied da, aber kleiner; was einem im Weg steht, muss man
+# sehen, bevor man hineinlaeuft.
+KREATUR = 1.4
+
+
+class Gross:
+    """
+    Ein Massstab vor der Leinwand.
+
+    Die Kreaturen sind mit festen Koordinaten gezeichnet - Rumpfmitte bei
+    8.6, Kopf bei 15.4, Fuss bei 19. Diese Zahlen sind die Zeichnung; sie
+    alle von Hand mit einem Faktor zu versehen, waere fuenfmal dieselbe
+    fehleranfaellige Arbeit.
+
+    Stattdessen sitzt der Faktor *davor*: jede Koordinate und jeder
+    Radius wird beim Durchreichen multipliziert. Ellipsen, Linien und
+    Flaechen werden dadurch wirklich groesser gezeichnet und nicht
+    hochskaliert - das Pixelraster bleibt also das der Welt. Nur einzeln
+    gesetzte Punkte werden zu kleinen Bloecken, und das ist bei Punkten
+    genau richtig, weil sonst Luecken blieben.
+    """
+
+    def __init__(self, canvas, s: float):
+        self.roh = canvas
+        self.s = s
+        self.w = canvas.w
+        self.h = canvas.h
+
+    def _b(self, x: float) -> int:
+        return max(1, int(math.ceil(self.s)))
+
+    def set(self, x, y, col):
+        b = self._b(0)
+        self.roh.rect(int(x * self.s), int(y * self.s), b, b, col)
+
+    def blend(self, x, y, col):
+        b = self._b(0)
+        for j in range(b):
+            for i in range(b):
+                self.roh.blend(int(x * self.s) + i, int(y * self.s) + j, col)
+
+    def get(self, x, y):
+        return self.roh.get(int(x * self.s), int(y * self.s))
+
+    def rect(self, x, y, w, h, col):
+        self.roh.rect(int(x * self.s), int(y * self.s),
+                      max(1, int(round(w * self.s))),
+                      max(1, int(round(h * self.s))), col)
+
+    def ellipse(self, cx, cy, rx, ry, col):
+        self.roh.ellipse(cx * self.s, cy * self.s, rx * self.s, ry * self.s, col)
+
+    def ring(self, cx, cy, r, w, col):
+        self.roh.ring(cx * self.s, cy * self.s, r * self.s,
+                      max(1, int(round(w * self.s))), col)
+
+    def line(self, x0, y0, x1, y1, col):
+        self.roh.line(x0 * self.s, y0 * self.s, x1 * self.s, y1 * self.s, col)
+
+    def glow(self, cx, cy, r, col, power: float = 2.0):
+        self.roh.glow(cx * self.s, cy * self.s, r * self.s, col, power=power)
+
+    def stroke(self, pts, w0, w1, col):
+        self.roh.stroke([(x * self.s, y * self.s) for x, y in pts],
+                        w0 * self.s, w1 * self.s, col)
+
+    def blob(self, cx, cy, r, col, rng, lumps=6, squash=1.0):
+        self.roh.blob(cx * self.s, cy * self.s, r * self.s, col, rng,
+                      lumps=lumps, squash=squash)
+
+
+def kreatur_leinwand(w: int, h: int) -> "Gross":
+    """Eine Leinwand in Kreaturgroesse, mit dem Massstab davor."""
+    return Gross(Canvas(int(round(w * KREATUR)), int(round(h * KREATUR))), KREATUR)
+
+
 def draw_gabelmaus(phase: float) -> Canvas:
     """
     Gabelmaus - das erste, was einem im Hain begegnet.
@@ -1600,7 +1681,7 @@ def draw_gabelmaus(phase: float) -> Canvas:
     schnelle Bilder Lauf, zwei in denen sie fast steht und die Ohren
     zucken.
     """
-    c = Canvas(24, 20)
+    c = kreatur_leinwand(24, 20)
     base = 19
 
     sitz = max(0.0, math.cos(phase)) ** 2   # 1 = sitzt, 0 = rennt
@@ -1634,7 +1715,7 @@ def draw_gabelmaus(phase: float) -> Canvas:
     # Schnauze: ein kurzer Keil nach vorn, sonst endet der Kopf stumpf.
     _flaeche(c, [(kx + 1.2, ky - 1.4), (kx + 4.4, ky + 0.6),
                  (kx + 1.2, ky + 1.8)], fell)
-    _kante_licht(c, fell_hi, fell_lo)
+    _kante_licht(c.roh, fell_hi, fell_lo)
 
     # Flaum: der Umriss franst aus, sonst ist sie ein Stein mit Ohren.
     for i in range(20):
@@ -1693,9 +1774,9 @@ def draw_gabelmaus(phase: float) -> Canvas:
     _hohlraum(c, rx - 2.2, ry + 1.0, 1.2,
               mix(ader, P.CLOAK, 0.35), puls=abs(takt))
 
-    c.shadow_pass((0, 1), -0.2)
-    c.outline(hexc("#05060c", 210))
-    return c
+    c.roh.shadow_pass((0, 1), -0.2)
+    c.roh.outline(hexc("#05060c", 210))
+    return c.roh
 
 
 def draw_klangmotte(phase: float) -> Canvas:
@@ -1706,7 +1787,7 @@ def draw_klangmotte(phase: float) -> Canvas:
     uebereinander, die beim Schlag zusammenlaufen und beim Oeffnen
     auseinanderdriften. Was von ihr abfaellt, ist Staub aus alten Toenen.
     """
-    c = Canvas(26, 22)
+    c = kreatur_leinwand(26, 22)
     cx, cy = 13, 11
     flap = math.sin(phase)
     taumel = math.cos(phase * 1.3) * 0.9
@@ -1772,9 +1853,9 @@ def draw_klangmotte(phase: float) -> Canvas:
         c.set(int(cx + math.sin(phase + i * 2) * 3.5), int(my + 5 + t * 6),
               (P.BLOOM[0], P.BLOOM[1], P.BLOOM[2], int(170 * (1 - t))))
 
-    c.outline(hexc("#05060c", 200))
+    c.roh.outline(hexc("#05060c", 200))
     c.glow(cx, my, 10, (P.BLOOM[0], P.BLOOM[1], P.BLOOM[2], 34))
-    return c
+    return c.roh
 
 
 def draw_stilleschreiter(phase: float, sturm: float = 0.0) -> Canvas:
@@ -1787,7 +1868,7 @@ def draw_stilleschreiter(phase: float, sturm: float = 0.0) -> Canvas:
     seinen Platten steht ein kalter Rest, der beim Schritt aufblitzt.
     Sein Kopf ist eine heruntergezogene Haube ueber nichts.
     """
-    c = Canvas(30, 28)
+    c = kreatur_leinwand(30, 28)
     cx, base = 15, 27
     step = math.sin(phase)
     heben = abs(step) * 1.1
@@ -1817,7 +1898,7 @@ def draw_stilleschreiter(phase: float, sturm: float = 0.0) -> Canvas:
                  (cx + 8.0 + v, ky + 1), (cx + 5.5 + v, ky + 6),
                  (cx - 6.0 + v, ky + 6.5), (cx - 9.5 + v, ky + 2)],
              stein)
-    _kante_licht(c, stein_hi, stein_lo)
+    _kante_licht(c.roh, stein_hi, stein_lo)
 
     # Ruecken: drei Platten wie Deckel auf einem Kessel. In den Fugen
     # dazwischen steht der Rest Klang, den er noch nicht geschluckt hat -
@@ -1849,9 +1930,9 @@ def draw_stilleschreiter(phase: float, sturm: float = 0.0) -> Canvas:
     # der Haube verdeckt: dass ihm etwas fehlt, sieht man erst genau hin.
     _hohlraum(c, cx + 3, ky + 2.5, 2.4, fuge, puls=abs(step) * 0.5)
 
-    c.shadow_pass((0, 1), -0.22)
-    c.outline(hexc("#05060c", 225))
-    return c
+    c.roh.shadow_pass((0, 1), -0.22)
+    c.roh.outline(hexc("#05060c", 225))
+    return c.roh
 
 
 def draw_dissonanzknospe(phase: float, spucken: float = 0.0) -> Canvas:
@@ -1863,7 +1944,7 @@ def draw_dissonanzknospe(phase: float, spucken: float = 0.0) -> Canvas:
     stehen, die nicht zueinander passen. Genau das ist ein schiefer
     Akkord - man sieht ihn, bevor man ihn hoert.
     """
-    c = Canvas(24, 26)
+    c = kreatur_leinwand(24, 26)
     cx, base = 12, 25
     # Beim Spucken reisst sie weiter auf als im Atmen - und zuckt dabei
     # zusammen. Wer das einmal gesehen hat, weiss beim naechsten Mal,
@@ -1932,9 +2013,9 @@ def draw_dissonanzknospe(phase: float, spucken: float = 0.0) -> Canvas:
         c.glow(cx, ky, 12 * spucken, (P.ROT[0], P.ROT[1], P.ROT[2],
                                       int(70 * spucken)), power=1.8)
 
-    c.outline(hexc("#05060c", 210))
+    c.roh.outline(hexc("#05060c", 210))
     c.glow(cx, ky, 9, (P.ROT[0], P.ROT[1], P.ROT[2], int(24 + 44 * auf)))
-    return c
+    return c.roh
 
 
 def draw_echoscherbe(phase: float) -> Canvas:
@@ -1945,7 +2026,7 @@ def draw_echoscherbe(phase: float) -> Canvas:
     Scherbe stehen zwei blassere Kopien in aelteren Drehungen. Was man
     trifft, ist die scharfe vorne - die anderen sind schon vorbei.
     """
-    c = Canvas(20, 20)
+    c = kreatur_leinwand(20, 20)
     cx, cy = 10, 10
 
     def splitter(spin: float, gr: float, flaeche, kante, facette=None) -> None:
@@ -1972,7 +2053,7 @@ def draw_echoscherbe(phase: float) -> Canvas:
     _hohlraum(c, cx, cy, 2.0, P.GLOW, puls=abs(math.sin(phase * 2)))
 
     c.glow(cx, cy, 10, (P.GLOW[0], P.GLOW[1], P.GLOW[2], 44))
-    return c
+    return c.roh
 
 
 def draw_auftakt(phase: float, schlag: float = 0.0, wut: float = 0.0,

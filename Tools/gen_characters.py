@@ -92,7 +92,7 @@ def _augenloch(c: Canvas, x: float, y: float, laenge: float, breite: float,
     ax, ay = math.cos(winkel), math.sin(winkel)
     nx, ny = -ay, ax
     n = max(2, int(laenge * 2))
-    saum = mix(KRISTALL_HELL, P.BONE, 0.35)
+    saum = mix(KRISTALL_HELL, MASKE_GRUND, 0.35)
     for i in range(n + 1):
         t = i / n
         # In der Mitte am breitesten, an beiden Enden spitz - eine
@@ -134,7 +134,7 @@ def _facetten(c: Canvas, mx: float, my: float, mr: float) -> None:
     daneben, und eine dunkle Spaltlinie, die schraeg durch die untere
     Haelfte laeuft. Mehr wird bei zehn Pixeln Kopfhoehe zu Rauschen.
     """
-    hell = mix(KRISTALL_HELL, P.BONE, 0.25)
+    hell = mix(KRISTALL_HELL, MASKE_GRUND, 0.25)
     tief = mix(KRISTALL_TIEF, P.BONE_LO, 0.45)
     _ritzung(c, [(mx + mr * 0.52, my - mr * 0.72),
                  (mx + mr * 0.78, my + mr * 0.10),
@@ -346,10 +346,20 @@ _UMRISS = [(0.00, 0.56), (0.20, 0.88), (0.42, 1.00), (0.56, 0.88),
 # Anlauf hat alle vier aus P.BONE gemischt - das ergab vier fast weisse
 # Toene, und die Figur wurde ein heller Klumpen ohne Silhouette. Nur die
 # oberste Stufe ist hell; sie liegt auf Kanten, nicht auf Flaechen.
-KRISTALL_HELL = hexc("#cdfbe8")     # Glanzkante, sparsam
-KRISTALL = hexc("#6fd8bc")          # Lichtseite
-KRISTALL_MITTEL = hexc("#3d968f")   # Koerperton
-KRISTALL_TIEF = hexc("#1c4a53")     # Schattenseite
+KRISTALL_HELL = hexc("#d8fff0")     # Glanzkante, sparsam
+KRISTALL = hexc("#5fd6b4")          # Lichtseite
+KRISTALL_MITTEL = hexc("#2e8a84")   # Koerperton
+KRISTALL_TIEF = hexc("#12363f")     # Schattenseite
+
+# Ihre Maske und ihr Gewand haben eigene Werte, nicht die der Welt.
+#
+# Solange beides aus `P.BONE` und `P.CLOAK` kam, hing Cadence an der
+# Palette der Kulisse: wird der Hain heller, wird auch sie heller, und
+# der Abstand, von dem ihre Silhouette lebt, geht verloren. Sie ist das
+# hellste und zugleich das dunkelste Ding im Bild - das muss man
+# einstellen koennen, ohne den Wald anzufassen.
+MASKE_GRUND = hexc("#eef6ec")       # kuehler als Knochen, fast weiss
+GEWAND_TIEF = hexc("#0d1220")       # wohin alle Stoffe gezogen werden
 
 
 def _scherbe(c: Canvas, x: float, y: float, laenge: float, breite: float,
@@ -567,6 +577,18 @@ GARMENTS = {
         openings=99, cut="bruch", deckung=0.42,
         stoff=mix(mix(P.CLOAK, P.ROT, 0.30), P.AMBER, 0.10), licht=P.AMBER),
 }
+
+
+# Alle Stoffe eine Stufe tiefer.
+#
+# Sie sind aus `P.CLOAK` und `P.STONE` gemischt, und `P.STONE` ist der
+# Fels der Kulisse - dadurch lagen die Gewaender im selben Wertbereich wie
+# die Waende, vor denen sie steht. Die Figur hatte keinen dunklen Anteil
+# mehr, und ohne dunklen Anteil gibt es keine Silhouette. Der Farbton
+# jedes Stuecks bleibt erhalten, nur der Wert faellt.
+for _stueck in GARMENTS.values():
+    _stueck["stoff"] = mix(_stueck["stoff"], GEWAND_TIEF, 0.52)
+del _stueck
 
 
 def _garment_slits(openings: int) -> list[tuple[float, int, float]]:
@@ -1337,7 +1359,13 @@ def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
         return LEG_T
 
     starr = cut == "harnisch"
-    rows = max(2, int(height * (coverage - LEG_T * 0.78)))
+    # Wo der Saum sitzt, entscheidet, ob man eine Figur mit Beinen sieht
+    # oder einen Kegel. Er lag bei 0.78 der Beinlaenge - also knapp drei
+    # Pixel ueber dem Boden, und damit steckten die Beine bis fast unten
+    # im Stoff. Jetzt endet er *ueber* der Huefte: die Beine sind ganz
+    # frei, und das Kleidungsstueck ist eine Jacke, kein Rock.
+    SAUM = LEG_T * 1.12
+    rows = max(2, int(height * (coverage - SAUM)))
     # Der Bauch der Flamme gibt das Mass fuer den ganzen Schnitt.
     bauch = _profile(0.26, kind)
 
@@ -1345,7 +1373,7 @@ def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
         u = i / rows                      # 0 Saum, 1 Kragen
         # Der Saum endet ueber den Knien, sonst verdeckt er die Beine -
         # und dann steht sie wieder als Kegel da.
-        t = LEG_T * 0.78 + u * (coverage - LEG_T * 0.78)
+        t = SAUM + u * (coverage - SAUM)
         y = base - t * height
         hang = (1 - u) ** 2               # wie frei der Stoff haengt
         # Die Breite richtet sich nach der Flamme, nicht nach der Hoehe.
@@ -1370,7 +1398,7 @@ def _draw_garment(c: Canvas, *, garment: str, kind: str, cx: int, base: float,
             # Glockenform macht aus jeder Figur einen Kegel, und ein Kegel
             # ist nicht schlank. Nur der Saum darf nach hinten ausschlagen,
             # und zwar auf einer Seite, nicht rundum.
-            w = bauch * (0.62 + 0.10 * hang) + 0.6
+            w = bauch * (0.56 + 0.10 * hang) + 0.5
             if u < 0.20:
                 w *= 0.55 + 2.2 * u
         w *= 1 + smear * 0.20
@@ -1780,7 +1808,7 @@ def draw_heroine(
     # Hell, hart begrenzt, ein wenig laenger als breit, zum Kinn hin
     # schmaler. Sie ist das Hellste an der ganzen Figur - was man von ihr
     # zuerst sieht, soll ihr Gesicht sein.
-    maske = mix(P.BONE, KRISTALL_HELL, 0.35)
+    maske = mix(MASKE_GRUND, KRISTALL_HELL, 0.30)
     maske_lo = mix(maske, KRISTALL_MITTEL, 0.55)
     maske_kante = mix(maske, P.BONE, 0.5)
     mr = kopf_r * 0.80

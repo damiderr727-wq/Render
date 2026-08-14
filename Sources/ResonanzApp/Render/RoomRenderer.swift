@@ -203,16 +203,20 @@ public final class RoomRenderer {
         zeit += dt
         for container in layers.backdrop.children + layers.foreground.children {
             guard let factor = container.userData?["parallax"] as? Double else { continue }
-            var x = cameraPosition.x * (1 - factor)
+            // Durchgehend in Double gerechnet und erst am Ende gesetzt.
+            // Gemischt mit CGFloat haengt es an der impliziten Umwandlung,
+            // welchen Typ der Ausdruck bekommt - und die faellt auf jeder
+            // Plattform anders aus als hier gedacht.
+            var x = Double(cameraPosition.x) * (1 - factor)
             // Eigenlauf, auf eine Bandbreite zurueckgefaltet: sonst
             // waechst der Versatz ueber eine lange Sitzung ins
             // Unermessliche und das Band schiebt sich aus dem Raum.
             if let drift = container.userData?["drift"] as? Double, drift != 0,
                let breite = container.userData?["breite"] as? Double, breite > 0 {
-                x += CGFloat((drift * zeit).truncatingRemainder(dividingBy: breite))
+                x += (drift * zeit).truncatingRemainder(dividingBy: breite)
             }
-            container.position = CGPoint(x: x,
-                                         y: cameraPosition.y * (1 - factor) * 0.5)
+            container.position = CGPoint(
+                x: x, y: Double(cameraPosition.y) * (1 - factor) * 0.5)
         }
     }
 
@@ -416,6 +420,9 @@ public final class RoomRenderer {
         case .kathedrale: steigt = -0.4
         case .grotten: steigt = 1
         case .dissonanz: steigt = 0.3
+        // Ueber der Schlucht steht ein Aufwind. Als einziges Gebiet
+        // unter freiem Himmel traegt sie ihren Staub nach oben davon.
+        case .bruecke: steigt = 0.8
         }
 
         let anzahl = min(48, max(12, room.width * room.height / 90))
@@ -595,6 +602,9 @@ public final class RoomRenderer {
         case .kathedrale: return SKColor(red: 0.188, green: 0.153, blue: 0.192, alpha: 1)
         case .grotten: return SKColor(red: 0.137, green: 0.180, blue: 0.243, alpha: 1)
         case .dissonanz: return SKColor(red: 0.125, green: 0.078, blue: 0.098, alpha: 1)
+        // Das untere Ende des Tageshimmels aus `gen_backdrops.py`
+        // (#eef3ec). Hier ist es hell - als Einziges im Spiel.
+        case .bruecke: return SKColor(red: 0.933, green: 0.953, blue: 0.925, alpha: 1)
         }
     }
 
@@ -604,6 +614,7 @@ public final class RoomRenderer {
         case .kathedrale: return SKColor(red: 0.90, green: 0.70, blue: 1.00, alpha: 1)
         case .grotten: return SKColor(red: 0.56, green: 0.84, blue: 1.00, alpha: 1)
         case .dissonanz: return SKColor(red: 0.76, green: 0.25, blue: 0.37, alpha: 1)
+        case .bruecke: return SKColor(red: 1.00, green: 0.85, blue: 0.63, alpha: 1)
         }
     }
 }

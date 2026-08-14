@@ -72,8 +72,21 @@ public final class SoundBoard {
                            gain: 0.08, delaySeconds: Double(i) * 0.05)
             }
 
+        // Die beiden Angriffe kennen **jeden** Kern.
+        //
+        // Sie kannten drei - leier, trommel, floete -, und dabei ist es
+        // geblieben, waehrend die Reihe auf sieben gewachsen ist. Unter
+        // Linux faellt das nicht auf: dort wird diese ganze Datei nicht
+        // uebersetzt. Am iPad ist es ein Uebersetzungsfehler, und das ist
+        // die freundlichere Nachricht - ein `default` haette stattdessen
+        // vier Kerne stumm nach Leier klingen lassen.
         case .meleeSwing(let kern):
             switch kern {
+            case .stimmgabel:
+                // Zwei Zinken, ein sauberer Ton. Mehr kann sie nicht.
+                let note = nextComboNote()
+                synth.play(.bell, midi: note, duration: 0.34, gain: 0.11)
+                synth.noise(duration: 0.06, gain: 0.05, cutoff: 4200)
             case .leier:
                 let base = nextComboNote()
                 for (i, interval) in [0.0, 4, 7, 12].enumerated() {
@@ -87,10 +100,33 @@ public final class SoundBoard {
                 let note = nextComboNote(octave: 1)
                 synth.sweep(fromMidi: note - 3, toMidi: note, duration: 0.09, gain: 0.14)
                 synth.noise(duration: 0.07, gain: 0.05, cutoff: 5000)
+            case .metronom:
+                // Der Takt selbst: kein grosser Ton, sondern drei kleine
+                // in gleichem Abstand.
+                let note = nextComboNote()
+                for i in 0..<3 {
+                    synth.play(.pluck, midi: note, duration: 0.12, gain: 0.10,
+                               delaySeconds: Double(i) * 0.055)
+                }
+            case .glocke:
+                // Schwer und weit - er hallt nach, statt zu treffen.
+                let base = nextComboNote(octave: -1)
+                synth.play(.bell, midi: base, duration: 1.4, gain: 0.15)
+                synth.play(.bell, midi: base + 7, duration: 1.1, gain: 0.08,
+                           delaySeconds: 0.04)
+                synth.noise(duration: 0.2, gain: 0.08, cutoff: 1400, sweepTo: 300)
+            case .orgelpfeife:
+                // Ein einziger gerader Ton, der durch alles hindurchgeht.
+                let note = nextComboNote()
+                synth.play(.organ, midi: note, duration: 0.42, gain: 0.16)
+                synth.play(.organ, midi: note + 12, duration: 0.42, gain: 0.07)
             }
 
         case .rangedShot(let kern):
             switch kern {
+            case .stimmgabel:
+                let note = nextComboNote(octave: 1)
+                synth.sweep(fromMidi: note, toMidi: note + 2, duration: 0.24, gain: 0.11)
             case .leier:
                 let base = nextComboNote(octave: 1)
                 for (i, interval) in [0.0, 3, 7].enumerated() {
@@ -103,6 +139,21 @@ public final class SoundBoard {
             case .floete:
                 let note = nextComboNote(octave: 2)
                 synth.sweep(fromMidi: note, toMidi: note + 7, duration: 0.3, gain: 0.13)
+            case .metronom:
+                let note = nextComboNote(octave: 1)
+                for i in 0..<4 {
+                    synth.play(.pluck, midi: note, duration: 0.16, gain: 0.09,
+                               delaySeconds: Double(i) * 0.07)
+                }
+            case .glocke:
+                let base = nextComboNote()
+                synth.play(.bell, midi: base, duration: 1.8, gain: 0.14)
+                synth.sweep(fromMidi: base - 12, toMidi: base - 19,
+                            duration: 0.9, gain: 0.10, waveform: "triangle")
+            case .orgelpfeife:
+                let note = nextComboNote(octave: 1)
+                synth.play(.organ, midi: note, duration: 0.9, gain: 0.15)
+                synth.play(.organ, midi: note - 12, duration: 0.9, gain: 0.09)
             }
 
         case .hit(let strong):
@@ -116,8 +167,8 @@ public final class SoundBoard {
             // Quinte, Oktave. Man hoert die Kette wachsen, ohne die
             // Anzeige anzusehen - und beim vierten Glied ist sie oben,
             // hoerbar und ohne Zahl.
-            let stufen = [0, 4, 7, 12]
-            let grund = 72
+            let stufen = [0.0, 4, 7, 12]
+            let grund = 72.0
             let stufe = stufen[min(stufen.count - 1, max(0, glieder - 1))]
             synth.play(.bell, midi: grund + stufe, duration: 0.34,
                        gain: 0.09 + Double(glieder) * 0.02)

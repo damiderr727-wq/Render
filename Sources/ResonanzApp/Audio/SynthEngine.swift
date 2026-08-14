@@ -58,6 +58,25 @@ public final class SynthEngine {
         var glideTime: Double = 0
 
         var noiseState: UInt64 = 0x2545F4914F6CDD1D
+
+        /// Eine Stimme, die schon fertig ist - der Rueckfall, wenn eine
+        /// Wellenform nicht gebaut werden konnte.
+        ///
+        /// Sie stand als Erweiterung von `SynthEngine.ActiveVoice` am
+        /// Dateiende. `private` reicht in Swift bis in Erweiterungen
+        /// **desselben** Typs in derselben Datei - eine Erweiterung des
+        /// verschachtelten Typs ist etwas anderes, und damit kam sie an
+        /// ihren eigenen Speicher nicht heran. Innerhalb des Typs
+        /// stellt sich die Frage nicht.
+        static var silent: ActiveVoice {
+            var v = ActiveVoice(
+                partials: [], amplitude: 0, attack: 0.001, decay: 0.001,
+                sustain: 0, release: 0.001, holdDuration: 0,
+                cutoffStart: 1000, cutoffEnd: 1000,
+                baseFrequency: 440, targetFrequency: 440)
+            v.finished = true
+            return v
+        }
     }
 
     private struct PendingNote {
@@ -455,15 +474,4 @@ public final class SynthEngine {
     }
 }
 
-private extension SynthEngine.ActiveVoice {
-    static var silent: SynthEngine.ActiveVoice {
-        var v = SynthEngine.ActiveVoice(
-            partials: [], amplitude: 0, attack: 0.001, decay: 0.001, sustain: 0,
-            release: 0.001, holdDuration: 0,
-            cutoffStart: 1000, cutoffEnd: 1000,
-            baseFrequency: 440, targetFrequency: 440)
-        v.finished = true
-        return v
-    }
-}
 #endif

@@ -328,7 +328,7 @@ public final class Player {
             attackCooldown = profile.cooldown
             attackHasHit = false
             stateTime = 0
-            events.append(.sound(.meleeSwing))
+            events.append(.sound(.meleeSwing(kern)))
             return
         }
 

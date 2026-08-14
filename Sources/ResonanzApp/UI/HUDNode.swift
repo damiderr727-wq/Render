@@ -226,6 +226,10 @@ public final class HUDNode: SKNode {
                 promptLabel.text = "[F] LESEN"
             case .gate(let ability):
                 promptLabel.text = "HIER FEHLT: \(ability.displayName)"
+            case .npc:
+                promptLabel.text = "[F] ANSPRECHEN"
+            case .haendler:
+                promptLabel.text = "[F] HANDELN"
             }
         }
 
@@ -233,7 +237,9 @@ public final class HUDNode: SKNode {
             bossBar.alpha = 1
             bossFill.alpha = 1
             bossLabel.alpha = 1
-            bossLabel.text = "DER VERSTIMMTE KANTOR - SATZ \(boss.phase.rawValue)"
+            bossLabel.text = boss.art.zaehltSaetze
+                ? "\(boss.art.displayName) - SATZ \(boss.phase.rawValue)"
+                : boss.art.displayName
             bossFill.path = CGPath(rect: CGRect(x: -109, y: 1,
                                                 width: max(0, 218 * boss.healthFraction),
                                                 height: 1),

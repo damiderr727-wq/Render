@@ -105,6 +105,25 @@ public final class Boss {
             default: return [.klangmotte, .echoscherbe]
             }
         }
+
+        /// Was ueber der Lebensleiste steht.
+        ///
+        /// Dort stand fest "DER VERSTIMMTE KANTOR - SATZ n", auch ueber
+        /// dem Auftakt und den beiden Mini-Bossen. Ein Gegner, der unter
+        /// dem Namen eines anderen kaempft, ist kein Schoenheitsfehler:
+        /// die Leiste ist die einzige Stelle, an der das Spiel sagt,
+        /// gegen wen man gerade antritt.
+        public var displayName: String {
+            switch self {
+            case .auftakt: return "DER GROSSE AUFTAKT"
+            case .glockengeist: return "DER GLOCKENGEIST"
+            case .hallwaechter: return "DER HALLWAECHTER"
+            case .kantor: return "DER VERSTIMMTE KANTOR"
+            }
+        }
+
+        /// Mini-Bosse haben keine Saetze - sie haben einen Kampf.
+        public var zaehltSaetze: Bool { self == .kantor || self == .auftakt }
     }
 
     public let art: Art

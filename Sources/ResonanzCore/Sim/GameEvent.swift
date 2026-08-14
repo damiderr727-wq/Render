@@ -11,7 +11,10 @@ public enum SoundCue: Sendable, Equatable {
     case slamStart
     case slamLand
     case wallBreak
-    case meleeSwing
+    /// Auch der Nahkampf klingt nach dem gefuehrten Kern - die Waffe ist
+    /// der Schall, und ein Schlag, der bei jedem Kern gleich klingt,
+    /// nimmt ihm genau das.
+    case meleeSwing(Kern)
     case rangedShot(Kern)
     case hit(strong: Bool)
     /// Ein Treffer, der auf dem Schlag lag. `glieder` faerbt die Tonhoehe:

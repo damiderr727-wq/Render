@@ -24,6 +24,11 @@ public final class HUDNode: SKNode {
 
     private let kerben = SKNode()
     private let siegelLabel = SKLabelNode()
+    // Der gefuehrte Kern als Bild seines Pulses - kein Text. Was man
+    // schiesst, sieht man; wozu es einen Namen vorlesen.
+    private let kernIcon = SKSpriteNode()
+    private let kernRing = SKShapeNode()
+    private var lastKern = ""
     private var heartNodes: [SKShapeNode] = []
 
     // Die Klangkette. Sie war bisher unsichtbar - und eine Kampffunktion,
@@ -52,7 +57,7 @@ public final class HUDNode: SKNode {
         hearts.position = CGPoint(x: left + 10, y: top - 14)
         addChild(hearts)
 
-        resonanceBar.path = CGPath(roundedRect: CGRect(x: 0, y: 0, width: 64, height: 4),
+        resonanceBar.path = CGPath(roundedRect: CGRect(x: 0, y: 0, width: 64, height: 5),
                                    cornerWidth: 2, cornerHeight: 2, transform: nil)
         resonanceBar.strokeColor = SKColor(white: 1, alpha: 0.25)
         resonanceBar.fillColor = SKColor(white: 0, alpha: 0.35)
@@ -97,22 +102,41 @@ public final class HUDNode: SKNode {
             gliedNodes.append(glied)
         }
 
-        style(kernLabel, size: 8, color: glow)
+        // Der Kern: ein Ring, darin das Bild seines Pulses.
+        kernRing.path = CGPath(ellipseIn: CGRect(x: -9, y: -9, width: 18, height: 18),
+                               transform: nil)
+        kernRing.strokeColor = SKColor(white: 1, alpha: 0.28)
+        kernRing.fillColor = SKColor(white: 0, alpha: 0.30)
+        kernRing.lineWidth = 1
+        kernRing.position = CGPoint(x: left + 19, y: top - 47)
+        addChild(kernRing)
+        kernIcon.position = kernRing.position
+        addChild(kernIcon)
+
+        // Die Kerbenpunkte daneben, auf derselben Zeile.
+        kerben.position = CGPoint(x: left + 36, y: top - 47)
+        addChild(kerben)
+
+        // Nur im Bruch traegt das HUD noch ein Wort.
+        style(kernLabel, size: 8, color: rot)
         kernLabel.horizontalAlignmentMode = .left
-        kernLabel.position = CGPoint(x: left + 10, y: top - 42)
+        kernLabel.position = CGPoint(x: left + 36, y: top - 47)
+        kernLabel.alpha = 0
         addChild(kernLabel)
 
+        // Fassung und Siegel mit Namen: nur an der Stimmgabel, wo man
+        // sie wechseln kann. Im Spiel sind sie Daueranzeige gewesen -
+        // zwei Zeilen Text, die niemand liest und jeder sieht.
         style(equipmentLabel, size: 6, color: SKColor(white: 0.62, alpha: 1))
         equipmentLabel.horizontalAlignmentMode = .left
-        equipmentLabel.position = CGPoint(x: left + 10, y: top - 52)
+        equipmentLabel.position = CGPoint(x: left + 10, y: top - 64)
+        equipmentLabel.alpha = 0
         addChild(equipmentLabel)
-
-        kerben.position = CGPoint(x: left + 10, y: top - 62)
-        addChild(kerben)
 
         style(siegelLabel, size: 5, color: bloom)
         siegelLabel.horizontalAlignmentMode = .left
-        siegelLabel.position = CGPoint(x: left + 10, y: top - 72)
+        siegelLabel.position = CGPoint(x: left + 10, y: top - 74)
+        siegelLabel.alpha = 0
         addChild(siegelLabel)
 
         style(promptLabel, size: 7, color: SKColor(white: 0.85, alpha: 1))
@@ -187,7 +211,7 @@ public final class HUDNode: SKNode {
 
         let fraction = sim.player.resonance / max(1, sim.save.progression.maxResonance)
         resonanceFill.path = CGPath(roundedRect: CGRect(x: 1, y: 1,
-                                                        width: max(0, 62 * fraction), height: 2),
+                                                        width: max(0, 62 * fraction), height: 3),
                                     cornerWidth: 1, cornerHeight: 1, transform: nil)
         resonanceFill.fillColor = fraction < 0.2 ? rot : glow
 
@@ -195,16 +219,31 @@ public final class HUDNode: SKNode {
         updateKerben(progression: sim.save.progression)
         if sim.save.progression.gebrochen {
             // Im Bruch zaehlt nur noch eins: dass nichts mehr haelt.
-            kernLabel.text = "OHNE FASSUNG   ENTFESSELT"
-            kernLabel.fontColor = rot
-        } else {
-            kernLabel.text = "\(sim.player.kern.displayName)   "
-                           + sim.save.progression.equipment.stil.displayName
+            kernLabel.text = "ENTFESSELT"
+            kernLabel.alpha = 1
+            kernIcon.alpha = 0
+            kernRing.strokeColor = rot
+        } else if sim.player.kern.rawValue != lastKern {
+            lastKern = sim.player.kern.rawValue
+            kernLabel.alpha = 0
+            if let info = AtlasStore.shared.frame("note_\(lastKern)") {
+                kernIcon.texture = info.texture
+                kernIcon.size = info.size
+                kernIcon.alpha = 1
+                kernIcon.run(.sequence([.scale(to: 1.5, duration: 0.07),
+                                        .scale(to: 1.0, duration: 0.14)]))
+            }
         }
         let fassung = sim.save.progression.equipment
         equipmentLabel.text = sim.save.progression.gebrochen
             ? "SIE ZERSTREUT SICH"
             : "\(fassung.name)  \(fassung.openings) OEFFNUNGEN"
+        // Namen nur dort, wo man handeln kann: an der Stimmgabel.
+        let zeigeText: CGFloat = sim.player.isResting ? 1 : 0
+        if equipmentLabel.alpha != zeigeText {
+            equipmentLabel.run(.fadeAlpha(to: zeigeText, duration: 0.25))
+            siegelLabel.run(.fadeAlpha(to: zeigeText, duration: 0.25))
+        }
 
         // An der Stimmgabel darf sie sich neu fassen - nur dort.
         if sim.player.isResting {

@@ -61,10 +61,22 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
             # Ein gleichmaessiger Verlauf ueber die Kachelhoehe ergibt bei
             # Wiederholung waagerechte Streifen. Deshalb nur die obersten
             # Reihen aufhellen und den Rest fleckig halten.
-            near_top = max(0.0, 1 - y / 6) * 0.16
+            # Unter der beleuchteten Oberkante ist der Fels heller und
+            # wird nach unten hin dunkler. Vorher reichte die Aufhellung
+            # sechs Reihen weit und betrug sechzehn Hundertstel - auf
+            # fast schwarzem Grund also nichts. Jetzt geht sie ueber die
+            # ganze Kachelhoehe und mischt gegen die Kantenfarbe, damit
+            # man sie auch sieht.
+            # Nur wo wirklich eine Oberkante liegt. Eine vergrabene
+            # Kachel hat kein Licht von oben, und wenn sie es trotzdem
+            # bekommt, steht mitten in der Masse ein heller Kasten -
+            # genau an der Stelle, wo eine freiliegende Kachel an eine
+            # verdeckte stoesst.
+            oben = max(0.0, 1 - y / (TS * 0.85)) ** 1.4 if "t" in edges else 0.0
             mottle = (hash01(x * 3 + variant * 17, y * 5) * 0.5
                       + rng.next() * 0.5) * 0.13
-            col = mix(body, shade(body, -0.30), 0.22 + mottle - near_top)
+            col = mix(body, shade(body, -0.34), 0.30 + mottle)
+            col = mix(col, edge, 0.20 * oben)
             c.set(x, top + y, col)
 
     if region in ("kathedrale", "bruecke"):
@@ -114,18 +126,23 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
     # sieht statt einer Fuge.
     # Sparsam: zwei bis drei Risse je Kachel ergeben ueber eine Wand
     # hinweg ein Netz, und ein Netz ist wieder ein Muster.
-    _risse(c, top, body, rng, anzahl=rng.int(0, 2))
+    _risse(c, top, body, rng, anzahl=rng.int(1, 3), edge=edge)
 
     # Eine angedeutete Schichtung. Sie kippt je nach Variante, damit sich
     # ueber mehrere Kacheln keine Waagerechte bildet.
+    # Die Bandlage muss mit der Variante wandern, nicht nur die Neigung.
+    # Sonst liegen ueber eine ganze Wand hinweg alle Baender auf
+    # derselben Hoehe, und das Raster steht als Streifenmuster im Bild.
     neigung = (-0.35, 0.0, 0.28, -0.15, 0.4, -0.28, 0.12, 0.34)[variant % 8]
     for band in range(2):
-        y0 = 3 + band * 7 + int(hash01(variant, band) * 3)
+        y0 = 2 + band * 6 + int(hash01(variant * 13 + band * 7, 3) * 7)
         for x in range(TS):
             yy = top + int(y0 + neigung * (x - TS / 2))
             if top <= yy < top + TS - 1:
-                c.blend(x, yy, (*shade(body, -0.22)[:3], 90))
-                c.blend(x, yy + 1, (*shade(body, 0.10)[:3], 45))
+                # Dieselbe Rechnung wie bei den Rissen: die dunkle Seite
+                # darf relativ bleiben, die helle muss absolut sein.
+                c.blend(x, yy, (*shade(body, -0.40)[:3], 85))
+                c.blend(x, yy + 1, (*mix(body, edge, 0.20)[:3], 50))
 
     # ---- Kanten
 
@@ -257,16 +274,23 @@ def tile_solid(region: str, variant: int, edges: str) -> Canvas:
     return c
 
 
-def _risse(c: Canvas, top: int, body, rng: Rng, anzahl: int = 2) -> None:
+def _risse(c: Canvas, top: int, body, rng: Rng, anzahl: int = 2,
+           edge=None) -> None:
     """
     Risse durch die Masse - von Kante zu Kante, nie mittendrin endend.
 
     Ein Riss hat zwei Seiten: die eine liegt im Schatten, die andere
     faengt Licht. Ohne diesen Unterschied ist er ein Kritzel; mit ihm
     ist er eine Kluft, und die Masse bekommt Dicke.
+
+    Die helle Seite wird **gegen die Kantenfarbe** gemischt, nicht mit
+    `shade` aufgehellt. Der Fels ist fast schwarz - `shade(body, 0.12)`
+    hebt ihn dort um drei Zahlenwerte, und drei Zahlenwerte sieht
+    niemand. Deshalb war die ganze Rissarbeit im Spiel nicht zu sehen und
+    der Boden blieb eine schwarze Platte.
     """
-    dunkel = shade(body, -0.32)
-    hell = shade(body, 0.12)
+    dunkel = shade(body, -0.45)
+    hell = mix(body, edge, 0.28) if edge is not None else shade(body, 0.12)
     for _ in range(anzahl):
         # Start und Ziel auf zwei verschiedenen Kanten.
         seiten = [0, 1, 2, 3]

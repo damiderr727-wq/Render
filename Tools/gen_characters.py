@@ -1457,6 +1457,12 @@ def draw_heroine(
     # voll aufgedreht - sonst ist die Silhouette dauernd von Ringen und
     # Strahlen zugestellt, und man sieht nicht mehr, was gerade passiert.
     signatur: float = 0.35,
+    # Ob sie blinzeln darf. Im Sprung, im Schlag und im Sturz nicht:
+    # dort dauert die Animation drei bis fuenf Bilder, und ein Blinzeln
+    # trifft dann statistisch jedes zweite Mal genau eines davon. Was
+    # als seltenes Lebenszeichen gedacht war, wird so zu einem Zucken
+    # mitten im Schlag.
+    blinzeln: bool = True,
     # Wie weit sie schon zerfallen ist. 0 heisst: der Leib ist bis zur
     # Brust fester Kristall, nur der Kopf brennt. 1 heisst: von der
     # Huefte aufwaerts nur noch Schwingung. Der Spielstand schiebt das
@@ -1722,7 +1728,16 @@ def draw_heroine(
     for k in range(4):
         wurzel = (-0.46, -0.12, 0.22, 0.50)[k]
         lang = kopf_r * (0.95, 0.68, 1.12, 0.58)[k]
-        lang *= 0.82 + 0.36 * hash01(k * 7 + 3, int(phase * 2.0))
+        # Fest je Zunge, **nicht** je Bild.
+        #
+        # Hier stand `hash01(k * 7 + 3, int(phase * 2.0))`, und `int()`
+        # macht daraus Stufen: bei bestimmten Phasen springt jede Zunge
+        # auf eine neue Zufallslaenge. Innerhalb einer Animation sieht
+        # das nicht aus wie Flackern, sondern wie ein Fehler - die Krone
+        # zuckt zwischen zwei Bildern in eine voellig andere Form. Das
+        # Leben in der Flamme kommt aus der Neigung, die sauber mit
+        # `phase` laeuft; die Laenge bleibt.
+        lang *= 0.82 + 0.36 * hash01(k * 7 + 3, 5)
         lang *= 1.0 + aufloesung * 0.45
         dick = kopf_r * (0.26, 0.20, 0.30, 0.18)[k]
         neig = wurzel * 0.85 + math.sin(phase * 1.7 + k * 1.3) * 0.24 + lean * 0.05
@@ -1752,7 +1767,7 @@ def draw_heroine(
     # Sie blinzelt selten und kurz. Ein Blinzeln, das man erwartet, ist
     # Mechanik; eines, das man verpasst, ist Leben.
     rosa = hexc("#ff7ad0")
-    zu = math.sin(phase * 0.8) > 0.93
+    zu = blinzeln and math.sin(phase * 0.8) > 0.93
     #
     # Schmal und schraeg. Ein erster Anlauf machte sie drei Pixel breit
     # und setzte sie eng nebeneinander - das las sich als grinsender
@@ -1932,17 +1947,17 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     anims["jump"] = [
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("jump"), phase=0.6,
+                     signatur=laut("jump"), phase=0.0, blinzeln=False,
                      lean=1.6, stretch=1.30, smear=0.08, sway=-1.7,
                      leg_phase=1.2, leg_spread=0.6, crouch=1.4),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("jump"), phase=1.5,
+                     signatur=laut("jump"), phase=0.7, blinzeln=False,
                      lean=1.3, stretch=1.22, smear=0.04, sway=-1.1,
                      leg_phase=1.9, leg_spread=0.3, crouch=0.8),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("jump"), phase=2.4,
+                     signatur=laut("jump"), phase=1.4, blinzeln=False,
                      lean=1.0, stretch=1.12, sway=-0.5, glow=1.1,
                      leg_phase=2.6, crouch=0.3),
     ]
@@ -1951,7 +1966,7 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     anims["fall"] = [
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("fall"), phase=i * 1.4,
+                     signatur=laut("fall"), phase=i * 0.6, blinzeln=False,
                      lean=0.6, stretch=0.86 + i * 0.02, smear=0.18,
                      leg_phase=3.4 + i * 0.4, leg_spread=0.8,
                      sway=1.5 + math.sin(i * 1.9) * 0.5)
@@ -1962,17 +1977,17 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     anims["land"] = [
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("land"), phase=1.1,
+                     signatur=laut("land"), phase=0.0, blinzeln=False,
                      stretch=0.68, settle=3, smear=0.36, sway=2.1,
                      leg_spread=1.4, crouch=2.6),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("land"), phase=1.8,
+                     signatur=laut("land"), phase=0.7, blinzeln=False,
                      stretch=0.84, settle=1, smear=0.18, sway=1.2,
                      leg_spread=0.7, crouch=1.2),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("land"), phase=2.5,
+                     signatur=laut("land"), phase=1.4, blinzeln=False,
                      stretch=1.04, smear=0.05, sway=0.4),
     ]
 
@@ -1980,7 +1995,7 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     anims["dash"] = [
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("dash"), phase=i * 1.7, lean=4.0 - i,
+                     signatur=laut("dash"), phase=i * 0.5, blinzeln=False, lean=4.0 - i,
                      stretch=0.82, smear=0.9 - i * 0.2, split=0.5 - i * 0.15,
                      glow=1.4, alpha_body=235 - i * 30)
         for i in range(3)
@@ -1989,7 +2004,7 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     anims["wall"] = [
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("wall"), phase=i * 1.6,
+                     signatur=laut("wall"), phase=i * 0.6, blinzeln=False,
                      lean=-1.8, stretch=1.10 - i * 0.02, smear=0.1,
                      sway=-0.7 - i * 0.25)
         for i in range(3)
@@ -2008,23 +2023,23 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     anims["melee"] = [
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("melee"), phase=0.1, lean=-2.4, whip=-0.55,
+                     signatur=laut("melee"), phase=0.0, blinzeln=False, lean=-2.4, whip=-0.55,
                      stretch=1.10, settle=-1, glow=0.9, schwung=0.0),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("melee"), phase=0.9, lean=1.2, whip=0.35,
+                     signatur=laut("melee"), phase=0.6, blinzeln=False, lean=1.2, whip=0.35,
                      stretch=1.02, smear=0.5, glow=1.4, schwung=0.30),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("melee"), phase=1.7, lean=3.8, whip=0.95,
+                     signatur=laut("melee"), phase=1.2, blinzeln=False, lean=3.8, whip=0.95,
                      stretch=0.90, smear=0.85, glow=1.8, schwung=0.66),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("melee"), phase=2.4, lean=2.6, whip=0.55,
+                     signatur=laut("melee"), phase=1.8, blinzeln=False, lean=2.6, whip=0.55,
                      stretch=0.96, smear=0.25, glow=1.3, schwung=0.88),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("melee"), phase=3.0, lean=1.0, whip=0.15,
+                     signatur=laut("melee"), phase=2.4, blinzeln=False, lean=1.0, whip=0.15,
                      stretch=1.02, glow=1.1, schwung=1.0),
     ]
 
@@ -2033,19 +2048,19 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     anims["cast"] = [
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("cast"), phase=0.2, stretch=0.86,
+                     signatur=laut("cast"), phase=0.0, blinzeln=False, stretch=0.86,
                      lean=-1.4, settle=1, glow=0.9),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("cast"), phase=1.0, stretch=0.94,
+                     signatur=laut("cast"), phase=0.6, blinzeln=False, stretch=0.94,
                      lean=-0.4, glow=1.2),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("cast"), phase=1.8, stretch=1.18,
+                     signatur=laut("cast"), phase=1.2, blinzeln=False, stretch=1.18,
                      lean=1.4, split=0.32, glow=1.9),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("cast"), phase=2.9, stretch=1.04,
+                     signatur=laut("cast"), phase=1.8, blinzeln=False, stretch=1.04,
                      lean=0.4, split=0.10, glow=1.3),
     ]
 
@@ -2053,17 +2068,17 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
     anims["hurt"] = [
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("hurt"), phase=1.9, lean=-3.4,
+                     signatur=laut("hurt"), phase=0.0, blinzeln=False, lean=-3.4,
                      stretch=0.84, split=0.85, smear=0.45, sway=-2.2,
                      glow=0.4, alpha_body=195),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("hurt"), phase=2.9, lean=-2.2,
+                     signatur=laut("hurt"), phase=0.6, blinzeln=False, lean=-2.2,
                      stretch=0.90, split=0.45, smear=0.25, sway=-1.2,
                      glow=0.6, alpha_body=220),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
-                     signatur=laut("hurt"), phase=3.9, lean=-1.0,
+                     signatur=laut("hurt"), phase=1.2, blinzeln=False, lean=-1.0,
                      stretch=0.97, split=0.15, sway=-0.4,
                      glow=0.85, alpha_body=240),
     ]
@@ -2131,7 +2146,17 @@ def _flaeche(c: Canvas, punkte, farbe, kante=None) -> None:
             c.line(*punkte[i], *punkte[(i + 1) % len(punkte)], kante)
 
 
-def _kante_licht(c: Canvas, oben, unten) -> None:
+# Der Saum, den jedes Tier bekommt.
+#
+# Cadence ist kuehles Gruen und das Hellste im Bild. Damit ein Gegner
+# neben ihr lesbar bleibt, ohne mit ihr um dieselbe Farbe zu streiten,
+# faengt seine Oberkante **warmes** Licht: derselbe Wert, andere Seite
+# des Farbkreises. So trennt sich Gegner von Fels *und* von Heldin, und
+# man weiss auf einen Blick, was einem gehoert und was nicht.
+KREATUR_SAUM = mix(P.AMBER, P.BONE, 0.52)
+
+
+def _kante_licht(c: Canvas, oben, unten, warm: float = 0.42) -> None:
     """
     Legt Licht auf die Oberkante und Schatten unter die Unterkante.
 
@@ -2143,11 +2168,12 @@ def _kante_licht(c: Canvas, oben, unten) -> None:
     Wird mitten im Zeichnen gerufen: nur was bis dahin steht, bekommt
     Licht. Beine und Ohren, die danach kommen, bleiben unberuehrt.
     """
+    licht = mix(oben, KREATUR_SAUM, warm)
     for x in range(c.w):
         spalte = [y for y in range(c.h) if c.get(x, y)[3] > 40]
         if not spalte:
             continue
-        c.set(x, spalte[0], oben)
+        c.set(x, spalte[0], licht)
         if len(spalte) > 2:
             c.set(x, spalte[-1], unten)
 
@@ -2292,7 +2318,12 @@ def draw_gabelmaus(phase: float) -> Canvas:
     # Sie muss sich vom Hain abheben, und der Hain ist dunkelgruen. Ein zu
     # dunkles Fell verschwindet darin - der erste Gegner des Spiels darf
     # aber nie uebersehen werden.
-    fell = mix(P.CLOAK, P.STONE, 0.85)
+    # Der Hain ist dunkelgruen, `P.STONE` ist dunkelblau, und zwischen
+    # beiden liegen keine zwanzig Helligkeitswerte - im Bild war die Maus
+    # eine schwarze Kontur mit zwei leuchtenden Ohren. Der erste Gegner
+    # des Spiels darf nie uebersehen werden, also bekommt das Fell einen
+    # eigenen Wert deutlich ueber dem Fels.
+    fell = mix(P.STONE, P.STONE_HI, 0.85)
     fell_hi = mix(fell, P.BONE, 0.34)
     fell_lo = shade(fell, -0.38)
     ader = mix(P.TRIM, P.BONE, 0.5)
@@ -2475,8 +2506,11 @@ def draw_stilleschreiter(phase: float, sturm: float = 0.0) -> Canvas:
     # Ansage ist kein Gegner, sondern eine Falle.
     ky = base - 15 - heben + sturm * 3.0
 
-    stein = P.STONE
-    stein_hi = P.STONE_HI
+    # Dieselbe Rechnung wie bei der Gabelmaus: `P.STONE` liegt zu nah am
+    # Fels, vor dem er steht. Er bleibt der dunkelste Gegner - aber
+    # dunkel heisst lesbar dunkel, nicht schwarz auf schwarz.
+    stein = mix(P.STONE, P.STONE_HI, 0.55)
+    stein_hi = mix(P.STONE_HI, P.BONE_SH, 0.35)
     stein_lo = P.STONE_LO
     fuge = mix(P.GLOW_DIM, P.STONE, 0.55)
 
@@ -2641,16 +2675,23 @@ def draw_echoscherbe(phase: float) -> Canvas:
             c.line((pts[0][0] + pts[1][0]) / 2, (pts[0][1] + pts[1][1]) / 2,
                    cx, cy, facette)
 
+    # Sie trug bisher genau Cadences Gruen. Auf dem Bild sah das aus wie
+    # ein abgesprungenes Stueck von ihr - der Splitter gehoert aber der
+    # Welt, nicht ihr. Also derselbe Aufbau in Bernstein: kalt ist sie,
+    # warm ist alles, was ihr entgegenkommt.
+    scherbe_hell = mix(P.AMBER, P.BONE, 0.30)
+    scherbe_tief = mix(P.AMBER, P.INK2, 0.55)
+
     # Erst die Echos, dann die scharfe Scherbe darueber.
     for k in (2, 1):
-        blass = (P.GLOW_DIM[0], P.GLOW_DIM[1], P.GLOW_DIM[2], 54 - k * 14)
+        blass = (scherbe_tief[0], scherbe_tief[1], scherbe_tief[2], 58 - k * 14)
         splitter(phase - k * 0.5, 7.0 - k * 0.7, (0, 0, 0, 0), blass)
-    splitter(phase, 7.4, mix(P.GLOW_DIM, P.INK2, 0.62), P.GLOW,
-             facette=mix(P.GLOW_DIM, P.GLOW, 0.5))
+    splitter(phase, 7.4, mix(scherbe_tief, P.INK2, 0.55), scherbe_hell,
+             facette=mix(scherbe_tief, scherbe_hell, 0.5))
 
-    _hohlraum(c, cx, cy, 2.0, P.GLOW, puls=abs(math.sin(phase * 2)))
+    _hohlraum(c, cx, cy, 2.0, scherbe_hell, puls=abs(math.sin(phase * 2)))
 
-    c.glow(cx, cy, 10, (P.GLOW[0], P.GLOW[1], P.GLOW[2], 44))
+    c.glow(cx, cy, 10, (P.AMBER[0], P.AMBER[1], P.AMBER[2], 40))
     return c.roh
 
 

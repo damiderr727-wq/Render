@@ -1786,7 +1786,7 @@ def room_E2() -> Room:
     passiert auf einer Linie - man kann nicht ausweichen, nur vor oder
     zurueck.
     """
-    r = Room("E2", "DIE GROSSE BRUECKE", "bruecke", 120, 26)
+    r = Room("E2", "DIE GROSSE BRUECKE", "bruecke", 120, 34)
     r.border()
 
     # Die Fahrbahn: eine gerade Strecke. Punkt.
@@ -1802,30 +1802,38 @@ def room_E2() -> Room:
     # von ihm aus **sieht**: Himmel oben, Pfeiler unten, das eigene
     # Bauwerk von der Seite. Der Weg selbst hat gerade zu sein, damit man
     # dabei den Kopf heben kann.
+    #
     # Und sie ist ein **Belag**, kein Berg. `ground` fuellt von der
     # Oberflaeche bis zum unteren Raumrand mit Fels - unter der Fahrbahn
     # stand damit neun Kacheln hoch massives Gestein, und genau dort
-    # sollen die Pfeiler zu sehen sein, die das Ding tragen. Drei Kacheln
+    # sollen die Pfeiler zu sehen sein, die das Ding tragen. Zwei Kacheln
     # Dicke, darunter Luft und Kulisse.
     #
     # Herunterfallen kann man dabei nicht: der Belag laeuft ohne Luecke
     # von Wand zu Wand. Was darunter liegt, ist reine Aussicht.
-    r.fill(1, 17, 118, 2)
+    #
+    # Und der Raum ist vierunddreissig Kacheln hoch, nicht sechsundzwanzig.
+    # Jeder Raum ist von Fels umschlossen, auch dieser - aber ueber einer
+    # Bruecke am hellen Tag ist ein Felsdeckel eine Hoehlendecke, und
+    # sobald man sprang, schob er sich oben ins Bild. Acht Kacheln mehr
+    # Himmel, und die Kamera erreicht ihn nie: sie steht hoechstens neun
+    # Kacheln ueber dem Belag, der Deckel liegt fuenfundzwanzig darueber.
+    r.fill(1, 25, 118, 2)
 
-    r.side_door("L", "left", "E1", "R", hint=16)
-    r.side_door("R", "right", "E3", "L", hint=16)
+    r.side_door("L", "left", "E1", "R", hint=24)
+    r.side_door("R", "right", "E3", "L", hint=24)
 
-    r.enemy_on("steinfink", 34, 16)
-    r.enemy("klangmotte", 68, 11)
-    r.enemy_on("gabelmaus", 50, 16, patrol=7)
-    r.enemy_on("steinfink", 74, 16)
-    r.enemy_on("stilleschreiter", 86, 16, patrol=6)
+    r.enemy_on("steinfink", 34, 24)
+    r.enemy("klangmotte", 68, 19)
+    r.enemy_on("gabelmaus", 50, 24, patrol=7)
+    r.enemy_on("steinfink", 74, 24)
+    r.enemy_on("stilleschreiter", 86, 24, patrol=6)
 
-    r.crystal_on(12, 16, 1)
-    r.crystal_on(108, 16, 1)
+    r.crystal_on(12, 24, 1)
+    r.crystal_on(108, 24, 1)
     r.scatter_decor(181, 12, kinds=("crystal",))
 
-    r.note_on(20, 16, "HUNDERT SCHRITTE UEBER NICHTS. "
+    r.note_on(20, 24, "HUNDERT SCHRITTE UEBER NICHTS. "
                       "SIE HABEN GEWUSST, WIE MAN SO ETWAS BAUT.")
     r.note_on(96, 16, "AM ANDEREN UFER SIND SIE GEBLIEBEN. "
                       "NICHT WEIL ES DORT BESSER IST.")

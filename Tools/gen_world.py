@@ -810,6 +810,37 @@ def hang_prop(region: str, variant: int, frame: int = 0, frames: int = 1) -> Can
     # Auch Haengendes bewegt sich - unten am weitesten, oben gar nicht.
     schwung = math.sin(frame / max(1, frames) * math.tau + variant * 1.7)
 
+    if region == "bruecke":
+        # An einer Bruecke waechst nichts von der Decke.
+        #
+        # Der Rest des Spiels liegt unter Fels, und dort ist ein
+        # Tropfstein die Antwort auf eine waagerechte Kachelkante. Ueber
+        # der Schlucht steht offener Himmel, und dann sagen dieselben
+        # Zapfen und Wurzelbaerte etwas anderes: sie machen aus einer
+        # Bruecke am hellen Tag eine Hoehle. Was hier haengt, ist gebaut
+        # - eine Konsole, ein Ring mit Kette, ein abgebrochener Stumpf.
+        stein = mix(fels, edge, 0.22)
+        if kind == 0:
+            for i, b in enumerate((5, 4, 4, 3, 3, 2, 2)):
+                c.rect(cx - b, i, b * 2, 1, stein if i < 2 else fels)
+            c.rect(cx - 5, 0, 10, 1, mix(stein, edge, 0.45))
+        elif kind == 1:
+            c.rect(cx - 3, 0, 6, 2, stein)
+            for i in range(2, int(rng.range(9, 15))):
+                # Die Kette schwingt, der Haken nicht.
+                x = cx + schwung * ((i - 2) / 12) ** 2 * 2.4
+                c.set(int(round(x)), i, fels if i % 2 else mix(fels, P.INK, 0.4))
+        else:
+            breite = int(rng.range(7, 13))
+            for i in range(breite):
+                ln = 1 + int(rng.range(1, 4) + math.sin(i * 0.9 + variant) * 1.4)
+                for k in range(max(1, ln)):
+                    c.set(cx - breite // 2 + i, k,
+                          mix(fels, P.INK, 0.10 + k * 0.14))
+            c.rect(cx - breite // 2, 0, breite, 1, stein)
+        c.shadow_pass((0, 1), -0.20)
+        return c
+
     if kind == 0:
         # Ein Zapfen: breit an der Decke, spitz nach unten, leicht schief.
         laenge = rng.range(11, 22)

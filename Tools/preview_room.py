@@ -130,6 +130,11 @@ def render(room_id: str) -> Image.Image:
     # Schicht liegt.
     spawn = next(iter(room.get("spawns", {}).values()), None)
     blickpunkt = spawn["x"] * TS if spawn else w * TS / 2
+    # Und wo die Wolken haengen. Im Spiel laufen sie der Kamera senkrecht
+    # mit halber Rate nach (`updateParallax`), stehen also immer im
+    # gleichen Abstand ueber dem Spieler. Hier oben an den Raum genagelt
+    # standen sie in einem hohen Raum irgendwo in der Stratosphaere.
+    wolken_oben = int((spawn["y"] if spawn else h * 0.5) * TS * 0.485)
 
     for layer in range(4):
         img, _ = backdrops.frame(f"{kulisse}_bg{layer}")
@@ -170,7 +175,7 @@ def render(room_id: str) -> Image.Image:
                 if band is None:
                     continue
                 for ox in range(0, w * TS, band.width):
-                    canvas.alpha_composite(band, (ox, 0))
+                    canvas.alpha_composite(band, (ox, wolken_oben))
 
         # Jede zweite Kachel gespiegelt: sonst stoesst die rechte Kante der
         # Schicht auf ihre eigene linke, und alle 512 Pixel laeuft eine

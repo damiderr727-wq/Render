@@ -64,7 +64,7 @@
  "backdrop": null,
  "enemies": [
   {
-   "type": "dissonanzknospe",
+   "type": "taumler",
    "x": 24,
    "y": 12
   },

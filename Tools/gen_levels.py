@@ -27,6 +27,9 @@ def hash01(x: int, y: int = 0) -> float:
 OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Resources" / "Levels"
 
 AIR, SOLID, PLATFORM, SPIKE, DWALL = ".", "#", "=", "^", "D"
+# Der Balken: schmal wie eine Plattform, fest wie Fels. Von unten nicht
+# durchspringbar - damit wird jede Plattform wieder eine Entscheidung.
+BALKEN = "b"
 # Dornen zeigen in vier Richtungen. Wer sie alle als "^" schreibt,
 # bekommt an der Decke Dornen, die nach oben wachsen.
 SPIKE_DOWN, SPIKE_LEFT, SPIKE_RIGHT = "v", "<", ">"
@@ -170,6 +173,10 @@ class Room:
 
     def platform(self, x: int, y: int, w: int) -> "Room":
         return self.fill(x, y, w, 1, PLATFORM)
+
+    def balken(self, x: int, y: int, w: int) -> "Room":
+        """Fester Steg: begehbar von oben, undurchdringlich von unten."""
+        return self.fill(x, y, w, 1, BALKEN)
 
     def ledge(self, x: int, y: int, w: int, h: int = 2) -> "Room":
         return self.fill(x, y, w, h, SOLID)
@@ -369,7 +376,7 @@ class Room:
 
     def kamin(self, x: int, w: int, y_oben: int, y_unten: int,
               seed: int = 0, tuer_x: int | None = None,
-              abstand: int = 3) -> "Room":
+              abstand: int = 4) -> "Room":
         """
         Ein Kamin: senkrechter Schacht mit Sprossen darin.
 
@@ -411,7 +418,12 @@ class Room:
                 self.fill(x + (0 if seite == 0 else w - 1), j, 1, 1)
 
         tuer_x = x + (w - 4) // 2 if tuer_x is None else tuer_x
-        breite = max(4, min(6, w - 4))
+        # Schmale Sprossen im vollen Sprungabstand. Breite Bretter alle
+        # drei Kacheln waren der Plattform-Spam, den man ueberall sah:
+        # ein Kamin braucht Tritte, keine Regale. Drei Kacheln Auflage
+        # reichen zum Landen, und vier Kacheln Abstand sind genau ein
+        # Sprung - die Rechnung prueft der Erreichbarkeits-Beweis.
+        breite = max(3, min(4, w - 3))
 
         # Die Sprossen werden gleichmaessig ueber die Hoehe verteilt,
         # nicht von unten abgezaehlt. Zaehlt man ab, bleibt oben ein
@@ -429,7 +441,7 @@ class Room:
         for k in range(1, anzahl + 1):
             y = int(round(y_unten - spanne * k / anzahl))
             if k == anzahl:
-                self.platform(tuer_x, y, min(breite, 4))
+                self.platform(tuer_x, y, min(breite, 3))
             else:
                 sx = x + 1 if k % 2 else x + w - breite - 1
                 self.platform(sx, y, breite)
@@ -730,7 +742,7 @@ class Room:
         """
         # Schraegen zaehlen mit: auf einer Rampe steht man genauso wie auf
         # Fels, und wer das vergisst, setzt Gegner ueber Rampen ins Leere.
-        begehbar = (SOLID, PLATFORM, SLOPE_UP, SLOPE_DOWN,
+        begehbar = (SOLID, PLATFORM, BALKEN, SLOPE_UP, SLOPE_DOWN,
                     UP_LOW, UP_HIGH, DOWN_HIGH, DOWN_LOW)
         xi = max(0, min(self.w - 1, int(x)))
 
@@ -1080,7 +1092,7 @@ def room_A3() -> Room:
 
     # Der Weg hinauf nach rechts: drei Absaetze, jeder in Sprungweite.
     r.ledge(43, 19, 6, 2)
-    r.platform(50, 16, 5)
+    r.balken(50, 16, 4)
     r.ledge(54, 13, 8, 2)
 
     # Und zwei Dornengruben im Abstieg - die erste ist schmal, die zweite
@@ -1103,7 +1115,7 @@ def room_A3() -> Room:
     r.pickup("ability", "fluegelschlag", 58, 12)
 
     r.enemy_on("gabelmaus", 18, 12, patrol=5)
-    r.enemy_on("dissonanzknospe", 44, 14)
+    r.enemy_on("taumler", 44, 14)
     r.enemy("klangmotte", 48, 12)
 
     r.crystal_on(8, 8, 1)
@@ -1406,7 +1418,6 @@ def room_A8() -> Room:
     r.pickup_on("klinge", "gezackt", 44, 14)
 
     r.enemy("klangmotte", 20, 14)
-    r.enemy("klangmotte", 34, 11)
     r.enemy("klangmotte", 50, 9)
     r.enemy_on("gabelmaus", 32, 20, patrol=8)
     r.enemy_on("stilleschreiter", 70, 20, patrol=6)
@@ -1548,7 +1559,7 @@ def room_A14() -> Room:
     r.side_door("L", "left", "A11", "R", hint=6)
     r.side_door("R", "right", "A5", "L", hint=6)
 
-    r.enemy_on("dissonanzknospe", 24, 14)
+    r.enemy_on("taumler", 24, 14)
     r.enemy_on("gabelmaus", 38, 14, patrol=6)
 
     r.crystal_on(7, 14, 1)
@@ -2659,7 +2670,7 @@ def validate(rooms: dict[str, Room]) -> list[str]:
             if embedded(x, y):
                 problems.append(f"{r.id}: Spawn '{name}' steckt im Fels ({x},{y})")
             # Erlaubt ist ein Sturz von bis zu 16 Kacheln (Eintritt von oben).
-            if not any(r.grid[yy][x] in (SOLID, PLATFORM)
+            if not any(r.grid[yy][x] in (SOLID, PLATFORM, BALKEN)
                        for yy in range(y, min(r.h, y + 17))):
                 problems.append(f"{r.id}: Spawn '{name}' hat keinen Boden darunter")
 

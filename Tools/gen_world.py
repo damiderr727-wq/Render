@@ -440,6 +440,65 @@ def tile_platform(region: str, variant: int = 0, cap: str = "") -> Canvas:
     return c
 
 
+def tile_balken(region: str, variant: int, cap: str = "") -> Canvas:
+    """
+    Ein gebauter Balken: schmal wie eine Plattform, fest wie Fels.
+
+    Er muss auf einen Blick anders lesen als die offene Plattform, denn
+    er verhaelt sich anders - von unten kommt hier niemand durch. Die
+    Antwort ist die Bauweise: die Plattform ist gewachsen (Gras, Moos,
+    ausgefranste Enden), der Balken ist BEHAUEN - eine Steinplatte mit
+    Lagerfuge, darunter ein dunkler Kern mit Strebenkreuz. Gebautes
+    verspricht Verlaesslichkeit, und Verlaesslichkeit heisst hier:
+    er laesst dich nicht durch.
+    """
+    body, edge, accent = P.REGIONS[region][:3]
+    c = Canvas(TS, TS)
+    rng = Rng(4400 + variant * 31 + sum(map(ord, region)))
+
+    stein = mix(body, edge, 0.30)
+    stein_hell = mix(stein, edge, 0.45)
+    fuge = shade(stein, -0.38)
+    kern = shade(body, -0.28)
+
+    # Die Deckplatte: vier Reihen, oben eine Lichtkante.
+    for y in range(5):
+        for x in range(TS):
+            n = hash01(x * 7 + variant * 13, y * 5)
+            if y == 0:
+                col = mix(stein_hell, edge, 0.25 if n > 0.5 else 0.0)
+            elif y == 4:
+                col = fuge
+            else:
+                col = mix(stein, shade(stein, -0.12), n)
+            c.set(x, y, col)
+    # Eine senkrechte Plattenfuge, je Variante woanders.
+    fx = 4 + int(hash01(variant * 17, 3) * 8)
+    for y in range(4):
+        c.set(fx, y, fuge)
+
+    # Der Kern darunter: dunkel, mit einem Strebenkreuz.
+    for y in range(5, TS):
+        for x in range(TS):
+            n = hash01(x * 11 + variant * 7, y * 3)
+            c.set(x, y, mix(kern, shade(kern, -0.22), n * 0.7))
+    for i in range(TS):
+        y1 = 5 + int(i * (TS - 6) / (TS - 1))
+        c.set(i, y1, mix(kern, stein, 0.42))
+        c.set(TS - 1 - i, y1, mix(kern, stein, 0.30))
+    # Unterkante als Abschluss.
+    c.rect(0, TS - 1, TS, 1, shade(kern, -0.30))
+
+    # Enden: ein heller Randbalken, der das Bauteil abschliesst.
+    if "l" in cap:
+        c.rect(0, 0, 2, TS, stein)
+        c.rect(0, 0, 1, TS, stein_hell)
+    if "r" in cap:
+        c.rect(TS - 2, 0, 2, TS, stein)
+        c.rect(TS - 1, 0, 1, TS, mix(stein, shade(stein, -0.2), 0.5))
+    return c
+
+
 def tile_slope(region: str, variant: int, rise_start: float, rise_end: float) -> Canvas:
     """
     Eine Schraege. `rise_start`/`rise_end` geben die Oberflaeche an linker und
@@ -1597,6 +1656,10 @@ def build() -> None:
                 tiles.add(f"{region}_ceil_{aus}_{v}",
                           deckenschraege(region, v, fa, fb), pivot=(0, 0))
         for cap in ("mid", "l", "r", "lr"):
+            for v in range(3):
+                tiles.add(f"{region}_balken_{cap}_{v}",
+                          tile_balken(region, v, "" if cap == "mid" else cap),
+                          pivot=(0, 0))
             for v in range(4):
                 tiles.add(f"{region}_platform_{cap}_{v}",
                           tile_platform(region, v, "" if cap == "mid" else cap),

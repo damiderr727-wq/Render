@@ -7,6 +7,11 @@ public enum Tile: UInt8, Sendable, CaseIterable {
     case solid
     /// Von unten durchlaessig, von oben begehbar.
     case platform
+    /// Ein gebauter Balken: so schmal wie eine Plattform, aber fest -
+    /// von unten NICHT durchspringbar. Das ist der Unterschied, der
+    /// Plattformen wieder zu einer Entscheidung macht: die offene
+    /// laesst jeden Weg zu, der Balken versperrt einen.
+    case balken
     /// Dissonanzdornen am Boden - verletzen bei Beruehrung.
     case spike
     /// Dieselben Dornen, aber an der Decke haengend.
@@ -46,6 +51,7 @@ public enum Tile: UInt8, Sendable, CaseIterable {
         switch character {
         case "#": self = .solid
         case "=": self = .platform
+        case "b": self = .balken
         case "^": self = .spike
         case "v": self = .spikeDown
         case ">": self = .spikeRight
@@ -72,7 +78,7 @@ public enum Tile: UInt8, Sendable, CaseIterable {
     /// beim senkrechten Aufsetzen berechnet.
     public var isBlocking: Bool {
         switch self {
-        case .solid, .dissoWall,
+        case .solid, .dissoWall, .balken,
              .ceilDownHigh, .ceilDownLow, .ceilUpLow, .ceilUpHigh:
             // Deckenschraegen sperren wie Fels. Ihre Schraege ist eine
             // Sache des Bildes - unter dem Kopf zaehlt die ganze Kachel,

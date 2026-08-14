@@ -301,6 +301,12 @@ public final class RoomRenderer {
                     if room.tile(tx + 1, ty) != .platform { cap += "r" }
                     node = atlas.sprite("\(region)_platform_\(cap.isEmpty ? "mid" : cap)_"
                                         + "\(variante(tx, ty, 4, salz: 1))")
+                case .balken:
+                    var bcap = ""
+                    if room.tile(tx - 1, ty) != .balken { bcap += "l" }
+                    if room.tile(tx + 1, ty) != .balken { bcap += "r" }
+                    node = atlas.sprite("\(region)_balken_\(bcap.isEmpty ? "mid" : bcap)_"
+                                        + "\(variante(tx, ty, 3, salz: 4))")
                 case .spike, .spikeDown, .spikeLeft, .spikeRight:
                     node = atlas.sprite("\(region)_spike\(tile.hazardSuffix)")
                 case .ceilDownHigh, .ceilDownLow, .ceilUpLow, .ceilUpHigh:

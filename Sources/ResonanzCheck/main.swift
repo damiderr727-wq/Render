@@ -223,6 +223,7 @@ func drawMap(roomID: String, abilities: Set<Ability>) throws -> Int32 {
             switch room.tile(tx, ty) {
             case .solid: return "#"
             case .platform: return "="
+            case .balken: return "b"
             case .spike: return "^"
             case .spikeDown: return "v"
             case .spikeLeft: return "<"

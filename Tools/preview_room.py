@@ -24,7 +24,7 @@ RES = ROOT / "Sources" / "ResonanzCore" / "Resources"
 TS = 16
 
 KNOWN_EDGES = ['', 't', 'l', 'r', 'b', 'tl', 'tr', 'tb', 'lr', 'lb', 'rb', 'tlr', 'tlb', 'trb', 'lrb', 'tlrb']
-BLOCKING = {"#", "D"}
+BLOCKING = {"#", "D", "b"}
 SLOPES = {"/": "up", "\\": "down", "1": "uplow", "2": "uphigh",
           "3": "downhigh", "4": "downlow"}
 # Dornen in vier Ausrichtungen - dieselbe Kachel, nur gedreht.
@@ -227,6 +227,13 @@ def render(room_id: str) -> Image.Image:
                 if x == w - 1 or tiles[y][x + 1] != "=":
                     cap += "r"
                 name = f"{region}_platform_{cap or 'mid'}_{variante(x, y, 4, 1)}"
+            elif ch == "b":
+                cap = ""
+                if x == 0 or tiles[y][x - 1] != "b":
+                    cap += "l"
+                if x == w - 1 or tiles[y][x + 1] != "b":
+                    cap += "r"
+                name = f"{region}_balken_{cap or 'mid'}_{variante(x, y, 3, 4)}"
             elif ch in SPIKES:
                 name = f"{region}_spike{SPIKES[ch]}"
             elif ch == "D":

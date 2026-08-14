@@ -1768,6 +1768,7 @@ def room_E1() -> Room:
     r.bench_on(44, 17)
 
     r.enemy_on("stilleschreiter", 28, 18, patrol=5)
+    r.enemy_on("steinfink", 40, 18)
 
     r.crystal_on(16, 18, 1)
     r.scatter_decor(179, 8, kinds=("crystal",))
@@ -1817,9 +1818,10 @@ def room_E2() -> Room:
     r.side_door("L", "left", "E1", "R", hint=18)
     r.side_door("R", "right", "E3", "L", hint=18)
 
-    r.enemy("klangmotte", 34, 12)
+    r.enemy_on("steinfink", 34, 16)
     r.enemy("klangmotte", 68, 11)
     r.enemy_on("gabelmaus", 50, 16, patrol=7)
+    r.enemy_on("steinfink", 74, 16)
     r.enemy_on("stilleschreiter", 86, 16, patrol=6)
 
     r.crystal_on(12, 16, 1)
@@ -2107,6 +2109,7 @@ def room_B5() -> Room:
     r.side_door("R", "right", "B6", "L", hint=6)
 
     r.enemy_on("stilleschreiter", 16, 14, patrol=5)
+    r.enemy("chorschatten", 30, 8)
     r.enemy("echoscherbe", 46, 10)
 
     r.crystal_on(6, 14, 1)
@@ -2141,8 +2144,14 @@ def room_B6() -> Room:
 
     r.pickup("siegel", "glockenmund", 24, 6)
 
-    r.enemy("echoscherbe", 16, 16)
+    r.enemy("chorschatten", 12, 6)
+    r.enemy("chorschatten", 28, 6)
     r.enemy_on("dissonanzknospe", 32, 27)
+
+    # Der Glockengeist haengt dort, wo die grosse Glocke hing. Die
+    # Balkenlage ist seine Arena: er schwingt zwischen den Ebenen, und
+    # man kaempft nach oben statt nach vorn.
+    r.set_boss("glockengeist", 19, 27, (2, 4, 34, 25))
 
     r.crystal_on(6, 27, 2)
     r.scatter_decor(137, 12, kinds=("crystal",))
@@ -2398,8 +2407,12 @@ def room_C4() -> Room:
     r.pickup("siegel", "spiegelgrund", 44, 14)
 
     r.enemy_on("dissonanzknospe", 30, 19)
-    r.enemy("echoscherbe", 36, 12)
-    r.enemy_on("stilleschreiter", 54, 19, patrol=4)
+    r.enemy("hallqualle", 36, 11)
+    r.enemy("hallqualle", 52, 9)
+
+    # Der Hallwaechter steht im Becken selbst. Wer sein Echo trifft,
+    # trifft nichts - das ist die ganze Aufgabe.
+    r.set_boss("hallwaechter", 54, 19, (24, 5, 36, 20))
 
     r.crystal_on(20, 19, 2)
     r.crystal_on(46, 19, 2)

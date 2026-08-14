@@ -2695,6 +2695,363 @@ def draw_echoscherbe(phase: float) -> Canvas:
     return c.roh
 
 
+def draw_chorschatten(phase: float, faellt: float = 0.0) -> Canvas:
+    """
+    Chorschatten - haengt unter der Decke der Kathedrale.
+
+    Er ist ein Chorhemd ohne den, der darin stand. Oben haelt er sich mit
+    einem knochigen Haken fest, darunter haengt der Stoff in langen
+    Falten, und ganz unten franst er aus. Bewegung hat er kaum: er
+    schwingt.
+
+    Das Wichtige ist die **Leserichtung**. Fast alles im Spiel steht auf
+    dem Boden, also schaut man nach unten. Er muss darum von oben her
+    lesbar sein: der Haken ist das Hellste an ihm, der Stoff wird nach
+    unten dunkler. Wer aufschaut, sieht zuerst den Haken.
+
+    `faellt` 0 haengt, 1 hat losgelassen - dann streckt sich der Stoff
+    und die Falten stehen senkrecht.
+    """
+    c = kreatur_leinwand(20, 30)
+    cx = 10
+    schwing = math.sin(phase) * (1 - faellt) * 1.6
+
+    stoff = mix(P.CLOAK, P.BLOOM, 0.30)
+    stoff_hi = mix(stoff, P.BONE_SH, 0.45)
+    stoff_lo = shade(stoff, -0.40)
+    haken = mix(P.BONE, P.BLOOM, 0.22)
+
+    # Der Haken oben: zwei Krallen, die in die Decke greifen.
+    for seite in (-1, 1):
+        for i in range(4):
+            t = i / 3
+            c.set(int(cx + seite * (1 + t * 2.4)), int(1 + t * 2.6),
+                  haken if i < 2 else mix(haken, stoff, 0.5))
+    c.rect(cx - 1, 3, 3, 2, haken)
+
+    # Der Stoff: oben schmal, nach unten breiter, dann ausgefranst.
+    hoehe = 22 + int(faellt * 3)
+    for i in range(hoehe):
+        t = i / hoehe
+        w = 1.6 + 4.6 * math.sin(math.pi * min(1.0, 0.18 + t * 0.78))
+        w *= 1 - faellt * 0.25
+        x = cx + schwing * (t ** 1.5)
+        y = 4 + i
+        for dx in range(-int(w), int(w) + 1):
+            q = dx / max(0.8, w)
+            # Unten franst er aus - aber erst im letzten Viertel, sonst
+            # loest sich die ganze Gestalt auf.
+            if t > 0.76 and hash01(int(x) + dx, y) < (t - 0.76) / 0.24 * 0.8:
+                continue
+            if q > 0.45:
+                col = stoff_lo
+            elif q < -0.35:
+                col = mix(stoff_hi, stoff, 0.35)
+            else:
+                col = stoff
+            # Nach unten dunkler: das Licht kommt von der Decke.
+            c.set(int(x) + dx, y, mix(col, stoff_lo, t * 0.55))
+
+    # Zwei Falten laengs, sonst ist der Stoff eine Flaeche.
+    for seite in (-1, 1):
+        for i in range(4, hoehe - 4):
+            t = i / hoehe
+            x = cx + schwing * (t ** 1.5) + seite * (1.4 + t * 2.2)
+            c.set(int(x), 4 + i, mix(stoff_lo, stoff, 0.35))
+
+    # Das Loch, in dem einmal ein Gesicht war. Es sitzt hoch - man soll
+    # ihm ins Gesicht sehen, waehrend man darunter durchgeht.
+    _hohlraum(c, cx + schwing * 0.2, 10, 2.2, mix(P.BLOOM, P.BONE, 0.45),
+              puls=abs(math.sin(phase * 1.6)))
+    _kante_licht(c.roh, stoff_hi, stoff_lo, warm=0.30)
+    c.roh.outline(hexc("#05060c", 255), diagonal=False)
+    return c.roh
+
+
+def draw_hallqualle(phase: float) -> Canvas:
+    """
+    Hallqualle - treibt durch die Grotten.
+
+    Eine Glocke aus Klang mit Faeden darunter. Sie pulst: zieht sich
+    zusammen, stoesst sich ab, haengt still, wieder von vorn. Die Faeden
+    laufen dem Schirm dabei nach - beim Stoss stehen sie lang und gerade,
+    beim Ausdehnen kringeln sie sich.
+
+    Sie ist die einzige Kreatur, die von innen leuchtet. Das ist kein
+    Schmuck: in den Grotten ist es dunkel, und sie ist das, was man
+    zuerst sieht - lange bevor man den Boden sieht, auf dem man landen
+    will.
+    """
+    c = kreatur_leinwand(22, 20)
+    cx, cy = 11, 8
+
+    puls = math.sin(phase * 2.2)
+    weit = 1 + puls * 0.16                    # Schirm dehnt sich
+    lang = 1 - puls * 0.30                    # Faeden folgen verzoegert
+
+    # Kaltes Blau, nicht Cadences Mint.
+    #
+    # Derselbe Fehler wie bei der Echoscherbe: `P.GLOW` liegt genau auf
+    # ihrer Farbe, und eine leuchtende Kreatur in der Farbe der Heldin
+    # sieht aus wie etwas, das ihr gehoert. Das Blau der Grotten liegt
+    # daneben und gehoert der Hoehle.
+    grottenblau = hexc("#9ee0ff")
+    haut = mix(grottenblau, P.INK2, 0.62)
+    haut_hi = mix(grottenblau, P.BONE, 0.20)
+    faden = mix(grottenblau, P.INK2, 0.72)
+
+    # Der Schirm: eine halbe Ellipse mit dickem Rand und hohlem Inneren.
+    rx, ry = 7.6 * weit, 5.4 / weit
+    for dy in range(-int(ry) - 1, 2):
+        v = dy / ry
+        if abs(v) > 1:
+            continue
+        hw = rx * math.sqrt(max(0.0, 1 - v * v))
+        for dx in range(-int(hw) - 1, int(hw) + 2):
+            if abs(dx) > hw + 0.3:
+                continue
+            rand = abs(dx) > hw - 1.6 or dy > -1
+            c.set(cx + dx, cy + dy, haut_hi if rand else haut)
+
+    # Der Saum, an dem sich der Schirm schliesst.
+    for dx in range(-int(rx), int(rx) + 1):
+        c.set(cx + dx, cy + 1, mix(haut_hi, P.BONE, 0.30))
+
+    # Faeden. Ungleich lang, und jeder schwingt in seinem eigenen Takt -
+    # gleich lange Faeden sehen aus wie ein Kamm.
+    for k in range(5):
+        seite = (k - 2) / 2
+        laenge = (7 + 4 * hash01(k * 13 + 3, 5)) * lang
+        fx = cx + seite * rx * 0.72
+        for i in range(int(laenge)):
+            t = i / max(1.0, laenge)
+            x = fx + math.sin(phase * 1.8 + k + t * 3.4) * (1.4 + t * 2.2) * (1 - lang * 0.4)
+            y = cy + 2 + i
+            c.set(int(x), int(y), faden if t > 0.4 else mix(faden, haut_hi, 0.45))
+
+    # Der Kern: was in ihr klingt, und der Grund, warum man sie sieht.
+    _hohlraum(c, cx, cy - 1, 2.0, haut_hi, puls=abs(puls))
+    c.roh.glow(cx, cy, 11, (grottenblau[0], grottenblau[1], grottenblau[2], 46))
+    return c.roh
+
+
+def draw_steinfink(phase: float, stoss: float = 0.0) -> Canvas:
+    """
+    Steinfink - hockt auf dem Gelaender der Bruecke.
+
+    Ein Vogel aus demselben Stein wie die Bruecke, auf der er sitzt -
+    genau darum sieht man ihn nicht, solange er hockt. Erst wenn er die
+    Fluegel oeffnet, wird aus dem Zierrat ein Tier.
+
+    `stoss` 0 hockt, 1 ist im Sturz: die Fluegel liegen an, der Hals
+    streckt sich, und der ganze Koerper kippt nach vorn. Aus einem
+    hockenden Vogel wird ein Pfeil.
+    """
+    c = kreatur_leinwand(24, 18)
+    cx, base = 12, 17
+    kipp = stoss * 3.2
+
+    stein = mix(P.STONE_HI, P.WARM, 0.20)
+    stein_hi = mix(stein, P.BONE, 0.38)
+    stein_lo = shade(stein, -0.42)
+
+    # Der Rumpf: ein liegendes Ei, im Stoss nach vorn gekippt.
+    ky = base - 7 + stoss * 1.5
+    _flaeche(c, [(cx - 5 + kipp, ky - 2.5), (cx + 3.5 + kipp * 1.4, ky - 3.5),
+                 (cx + 6.5 + kipp * 1.6, ky + 0.5), (cx + 3.0 + kipp, ky + 4.0),
+                 (cx - 4.5 + kipp * 0.6, ky + 3.5), (cx - 6.5, ky + 0.5)],
+             stein)
+
+    # Der Schnabel - kurz, hart, und im Stoss die Spitze der Figur.
+    sx, sy = cx + 6.0 + kipp * 1.8, ky - 0.5 + stoss * 0.8
+    for i in range(4):
+        t = i / 3
+        c.set(int(sx + i), int(sy + t * 1.2), stein_hi if i < 2 else P.BONE_SH)
+
+    # Fluegel. Gefaltet sind sie zwei Kanten auf dem Ruecken; offen sind
+    # sie das Doppelte des Tieres, und genau dieser Sprung macht den
+    # Schreck aus.
+    oeffnung = max(stoss, 0.18 + 0.10 * math.sin(phase * 2))
+    for seite, hoch in ((1, 1.0), (-1, 0.72)):
+        spann = (3.0 + 7.5 * oeffnung) * hoch
+        for i in range(int(spann)):
+            t = i / max(1.0, spann)
+            wx = cx - 1 + kipp * 0.5 - i * 0.9
+            wy = ky - 2.5 - seite * (1.5 + t * 3.2 * oeffnung) + t * 1.2
+            dicke = 2.4 * (1 - t * 0.6)
+            for d in range(int(dicke) + 1):
+                c.set(int(wx), int(wy + d), stein_hi if d == 0 else stein_lo)
+
+    # Zwei kurze Staender. Im Stoss ziehen sie sich an.
+    for i in range(2):
+        fx = cx - 2 + i * 4 + kipp * 0.4
+        for k in range(int(3 * (1 - stoss * 0.7))):
+            c.set(int(fx), base - 3 + k, stein_lo)
+        c.rect(int(fx) - 1, base - 1, 3, 1, stein_lo)
+
+    _kante_licht(c.roh, stein_hi, stein_lo)
+    # Das Auge zuletzt, damit es auf dem Licht liegt.
+    c.roh.set(int(cx + 3.4 + kipp * 1.4), int(ky - 1.4), P.AMBER)
+    c.roh.outline(hexc("#06070d", 255), diagonal=False)
+    return c.roh
+
+
+def draw_glockengeist(phase: float, schlag: float = 0.0) -> Canvas:
+    """
+    Glockengeist - Mini-Boss der Kathedrale.
+
+    Was von einem Glockenlaeuter uebrig ist, als die Glocke sprang: ein
+    Mantel um einen Hohlraum, und darin haengt der Kloeppel weiter. Er
+    schwingt, und wenn der Kloeppel gegen den Rand seines eigenen
+    Koerpers schlaegt, geht die Welle los.
+
+    Der Bau ist die Glocke selbst - oben eine Krone, darunter die
+    ausschwingende Schuerze, unten der Rand. Deshalb liest man ihn sofort
+    als das, was er ist, obwohl kein Metall daran ist.
+
+    `schlag` 0 haengt still, 1 ist der Ausschlag: dann steht der Kloeppel
+    am Rand und die Schuerze schwingt gegen ihn.
+    """
+    c = kreatur_leinwand(34, 40)
+    cx, base = 17, 39
+    schwing = math.sin(phase) * 1.2 + schlag * 3.4
+
+    glocke = mix(P.CLOAK, P.BLOOM, 0.34)
+    glocke_hi = mix(glocke, P.GOLD, 0.40)
+    glocke_lo = shade(glocke, -0.44)
+    klang = mix(P.GOLD, P.BONE, 0.35)
+
+    # Der Koerper: oben schmal, unten weit ausladend - eine Glockenkurve,
+    # keine Ellipse. Der Unterschied liegt darin, dass die Flanke unten
+    # nach *aussen* kippt statt sich zu schliessen.
+    hoehe = 27
+    for i in range(hoehe):
+        t = i / hoehe
+        w = 3.2 + 10.5 * (t ** 1.9)
+        y = base - hoehe + i
+        x = cx + schwing * (t ** 1.6)
+        for dx in range(-int(w), int(w) + 1):
+            q = dx / max(0.8, w)
+            if q > 0.50:
+                col = glocke_lo
+            elif q < -0.40:
+                col = mix(glocke_hi, glocke, 0.45)
+            else:
+                col = glocke
+            c.set(int(x) + dx, y, mix(col, glocke_lo, t * 0.30))
+
+    # Der Rand unten: eine harte, helle Kante. Ohne sie ist es ein Sack.
+    randbreite = 3.2 + 10.5
+    for dx in range(-int(randbreite), int(randbreite) + 1):
+        x = int(cx + schwing) + dx
+        c.set(x, base - 1, glocke_hi)
+        c.set(x, base, glocke_lo)
+
+    # Die Krone: drei Buegel oben, an denen sie einmal hing.
+    for k in (-1, 0, 1):
+        bx = cx + k * 3
+        for i in range(4):
+            c.set(int(bx + k * i * 0.4), base - hoehe - 1 - i,
+                  glocke_hi if i < 2 else klang)
+
+    # Der Kloeppel haengt im Hohlraum und schwingt gegenlaeufig zur
+    # Schuerze - das ist der ganze Witz: er holt aus, waehrend sie
+    # zurueckgeht.
+    kx = cx - schwing * 1.6
+    for i in range(int(hoehe * 0.62)):
+        c.set(int(kx), base - hoehe + 4 + i, mix(klang, P.INK2, 0.45))
+    c.ellipse(kx, base - 5, 2.6, 2.6, klang)
+    c.ellipse(kx - 0.6, base - 5.6, 1.6, 1.6, mix(klang, P.BONE, 0.5))
+
+    _kante_licht(c.roh, glocke_hi, glocke_lo, warm=0.55)
+
+    # Das Gesicht sitzt oben in der Krone, nicht im Koerper: der Koerper
+    # ist die Glocke, und in eine Glocke schaut man nicht hinein.
+    _hohlraum(c, cx + schwing * 0.3, base - hoehe + 4, 2.4, klang,
+              puls=abs(math.sin(phase * 1.4)) * (0.4 + schlag))
+    if schlag > 0.3:
+        c.roh.glow(int(cx + schwing), base - 8, 16,
+                   (P.GOLD[0], P.GOLD[1], P.GOLD[2], int(70 * schlag)))
+    return c.roh
+
+
+def draw_hallwaechter(phase: float, ruf: float = 0.0) -> Canvas:
+    """
+    Hallwaechter - Mini-Boss der Grotten.
+
+    Der Hall, der nirgends mehr hinkann. In einer Hoehle kommt jeder Ton
+    zurueck; hier ist er so oft zurueckgekommen, dass er stehengeblieben
+    ist und sich verdichtet hat.
+
+    Er ist darum kein Koerper, sondern **dieselbe Gestalt dreimal**,
+    gegeneinander versetzt - wie ein Echo im Bild. Die feste steht in der
+    Mitte, die beiden Umrisse davor und dahinter hinken nach. Beim Rufen
+    laufen sie auseinander und loesen sich ab: das sind die Echos, die er
+    schickt.
+
+    Entscheidend ist, dass alle drei **denselben Umriss** benutzen. Ein
+    erster Anlauf hat den Koerper als Sinusprofil gefuellt und die Echos
+    als Vieleck gezogen - dabei kam ein Klumpen heraus, an dem ein
+    fremder Strich klebte. Ein Echo ist nur ein Echo, wenn es dieselbe
+    Form hat.
+
+    `ruf` 0 steht er still, 1 loesen sich die Schalen.
+    """
+    c = kreatur_leinwand(38, 34)
+    cx, base = 19, 33
+    grottenblau = hexc("#9ee0ff")
+
+    def umriss(versatz: float):
+        # Hockend: breite Schultern, kein Kopf, unten drei Stuetzen. Wer
+        # keinen Kopf hat, sieht einen ueberall an.
+        return [(cx - 11 + versatz, base - 7), (cx - 9 + versatz, base - 18),
+                (cx - 4 + versatz, base - 23), (cx + 4 + versatz, base - 23),
+                (cx + 9 + versatz, base - 18), (cx + 11 + versatz, base - 7),
+                (cx + 6 + versatz, base - 2), (cx - 6 + versatz, base - 2)]
+
+    def linie(pts, farbe, deck: float) -> None:
+        for i in range(len(pts)):
+            x0, y0 = pts[i]
+            x1, y1 = pts[(i + 1) % len(pts)]
+            n = int(max(abs(x1 - x0), abs(y1 - y0)) * 2) + 2
+            for k in range(n + 1):
+                t = k / n
+                c.roh.blend(int(x0 + (x1 - x0) * t), int(y0 + (y1 - y0) * t),
+                            (farbe[0], farbe[1], farbe[2], int(255 * deck)))
+
+    # Das hintere Echo zuerst.
+    hinten = (2.2 + ruf * 5.0) * (0.5 + 0.5 * math.sin(phase * 0.8))
+    linie(umriss(hinten), mix(grottenblau, P.INK2, 0.35), 0.20 + ruf * 0.30)
+
+    # Die feste Gestalt - derselbe Umriss, gefuellt.
+    fest = mix(grottenblau, P.INK2, 0.76)
+    _flaeche(c, umriss(0.0), fest, mix(grottenblau, P.BONE, 0.28))
+
+    # Eine Schattenseite, damit die Flaeche nicht flach bleibt.
+    for y in range(base - 22, base - 2):
+        t = (y - (base - 22)) / 20
+        w = 10 - t * 3
+        for dx in range(int(w * 0.15), int(w) + 1):
+            c.roh.blend(cx + dx, y, (*P.INK2[:3], 90))
+
+    # Das vordere Echo darueber - es hinkt in die andere Richtung nach.
+    vorn = -(1.6 + ruf * 4.2) * (0.5 + 0.5 * math.cos(phase * 0.8))
+    linie(umriss(vorn), mix(grottenblau, P.BONE, 0.30), 0.30 + ruf * 0.35)
+
+    # Drei Stuetzen statt Beinen: er geht nicht, er steht neu.
+    for k in (-1, 0, 1):
+        for i in range(4):
+            c.set(int(cx + k * 6), base - 3 + i, mix(fest, P.INK2, 0.30))
+
+    # Der Hohlraum sitzt auf Brusthoehe - dort, wo bei allem anderen im
+    # Spiel der Kern sitzt.
+    _hohlraum(c, cx, base - 14, 3.0, mix(grottenblau, P.BONE, 0.35),
+              puls=abs(math.sin(phase * 1.6)))
+    c.roh.glow(cx, base - 14, 15,
+               (grottenblau[0], grottenblau[1], grottenblau[2], int(38 + 50 * ruf)))
+    return c.roh
+
+
 def draw_auftakt(phase: float, schlag: float = 0.0, wut: float = 0.0,
                  wurf: float = 0.0) -> Canvas:
     """
@@ -3050,6 +3407,46 @@ def build() -> None:
     atlas.add_sequence("dissonanzknospe_bloom",
                        [draw_dissonanzknospe(i / 6 * math.tau) for i in range(6)],
                        pivot=(0.5, 1.0), fps=6)
+    atlas.add_sequence("chorschatten_haengt",
+                       [draw_chorschatten(i / 6 * math.tau) for i in range(6)],
+                       pivot=(0.5, 0.0), fps=6)
+    atlas.add_sequence("chorschatten_faellt",
+                       [draw_chorschatten(i / 4 * math.tau, faellt=min(1.0, i / 2))
+                        for i in range(4)],
+                       pivot=(0.5, 0.0), fps=12)
+    atlas.add_sequence("hallqualle_treibt",
+                       [draw_hallqualle(i / 8 * math.tau) for i in range(8)],
+                       pivot=(0.5, 0.5), fps=8)
+    atlas.add_sequence("steinfink_hockt",
+                       [draw_steinfink(i / 6 * math.tau) for i in range(6)],
+                       pivot=(0.5, 1.0), fps=6)
+    atlas.add_sequence("steinfink_stoss",
+                       [draw_steinfink(i / 4 * math.tau, stoss=min(1.0, i / 2))
+                        for i in range(4)],
+                       pivot=(0.5, 1.0), fps=14)
+    # Die beiden Mini-Bosse.
+    atlas.add_sequence("glockengeist_idle",
+                       [draw_glockengeist(i / 6 * math.tau) for i in range(6)],
+                       pivot=(0.5, 1.0), fps=6)
+    atlas.add_sequence("glockengeist_schlag",
+                       [draw_glockengeist(i / 4 * math.tau, schlag=min(1.0, i / 2))
+                        for i in range(4)],
+                       pivot=(0.5, 1.0), fps=12)
+    atlas.add_sequence("glockengeist_aufschwung",
+                       [draw_glockengeist(i / 5 * math.tau, schlag=0.30 + i / 14)
+                        for i in range(5)],
+                       pivot=(0.5, 1.0), fps=9)
+    atlas.add_sequence("hallwaechter_aufschwung",
+                       [draw_hallwaechter(i / 5 * math.tau, ruf=0.25 + i / 16)
+                        for i in range(5)],
+                       pivot=(0.5, 1.0), fps=9)
+    atlas.add_sequence("hallwaechter_idle",
+                       [draw_hallwaechter(i / 6 * math.tau) for i in range(6)],
+                       pivot=(0.5, 1.0), fps=6)
+    atlas.add_sequence("hallwaechter_ruf",
+                       [draw_hallwaechter(i / 5 * math.tau, ruf=min(1.0, i / 3))
+                        for i in range(5)],
+                       pivot=(0.5, 1.0), fps=10)
     atlas.add_sequence("echoscherbe_spin",
                        [draw_echoscherbe(i / 6 * math.tau) for i in range(6)],
                        pivot=(0.5, 0.5), fps=12)

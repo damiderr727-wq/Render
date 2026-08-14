@@ -31,6 +31,9 @@ public final class BestiariumNode: SKNode {
         .stilleschreiter: "stilleschreiter_walk_2",
         .dissonanzknospe: "dissonanzknospe_bloom_3",
         .echoscherbe: "echoscherbe_spin_1",
+        .chorschatten: "chorschatten_haengt_2",
+        .hallqualle: "hallqualle_treibt_2",
+        .steinfink: "steinfink_hockt_2",
     ]
 
     public func build(in size: CGSize) {

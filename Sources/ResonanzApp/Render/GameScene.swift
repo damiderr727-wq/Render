@@ -417,6 +417,11 @@ public final class GameScene: SKScene {
         case (.dissonanzknospe, _): return "dissonanzknospe_bloom"
         case (.klangmotte, _): return "klangmotte_fly"
         case (.echoscherbe, _): return "echoscherbe_spin"
+        case (.chorschatten, .ruhe): return "chorschatten_haengt"
+        case (.chorschatten, _): return "chorschatten_faellt"
+        case (.hallqualle, _): return "hallqualle_treibt"
+        case (.steinfink, .angriff): return "steinfink_stoss"
+        case (.steinfink, _): return "steinfink_hockt"
         }
     }
 
@@ -424,6 +429,7 @@ public final class GameScene: SKScene {
     private func spriteName(for boss: Boss) -> String {
         switch boss.action {
         case .schattenwurf: return "\(boss.art.rawValue)_schatten"
+        case .summon where boss.art == .hallwaechter: return "hallwaechter_ruf"
         case .chord, .sweep: return "\(boss.art.rawValue)_schlag"
         case .hover, .entrance: return "\(boss.art.rawValue)_idle"
         default: return "\(boss.art.rawValue)_aufschwung"

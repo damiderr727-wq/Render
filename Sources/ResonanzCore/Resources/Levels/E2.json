@@ -70,9 +70,9 @@
  "backdrop": null,
  "enemies": [
   {
-   "type": "klangmotte",
+   "type": "steinfink",
    "x": 34,
-   "y": 12
+   "y": 17
   },
   {
    "type": "klangmotte",
@@ -84,6 +84,11 @@
    "x": 50,
    "y": 16,
    "patrol": 7
+  },
+  {
+   "type": "steinfink",
+   "x": 74,
+   "y": 25
   },
   {
    "type": "stilleschreiter",

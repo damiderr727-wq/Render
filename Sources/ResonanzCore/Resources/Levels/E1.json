@@ -79,6 +79,11 @@
    "x": 28,
    "y": 19,
    "patrol": 5
+  },
+  {
+   "type": "steinfink",
+   "x": 40,
+   "y": 18
   }
  ],
  "pickups": [],

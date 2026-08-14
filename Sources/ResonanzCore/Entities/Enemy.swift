@@ -13,6 +13,13 @@ public enum EnemyKind: String, Sendable, CaseIterable {
     case dissonanzknospe
     /// Springender Kristallsplitter, prallt von allem ab.
     case echoscherbe
+    /// Kathedrale: haengt unter der Decke und laesst sich fallen, wenn
+    /// jemand darunter durchgeht.
+    case chorschatten
+    /// Grotten: treibt durch den Hohlraum und pulst im Takt des Echos.
+    case hallqualle
+    /// Bruecke: hockt auf dem Gelaender und stoesst im Bogen herab.
+    case steinfink
 
     public var maxHealth: Int {
         switch self {
@@ -21,6 +28,9 @@ public enum EnemyKind: String, Sendable, CaseIterable {
         case .stilleschreiter: return 8
         case .dissonanzknospe: return 4
         case .echoscherbe: return 4
+        case .chorschatten: return 5
+        case .hallqualle: return 3
+        case .steinfink: return 6
         }
     }
 
@@ -37,6 +47,9 @@ public enum EnemyKind: String, Sendable, CaseIterable {
         case .stilleschreiter: return 3
         case .dissonanzknospe: return 2
         case .echoscherbe: return 2
+        case .chorschatten: return 3
+        case .hallqualle: return 2
+        case .steinfink: return 3
         }
     }
 
@@ -47,12 +60,15 @@ public enum EnemyKind: String, Sendable, CaseIterable {
         case .stilleschreiter: return (18, 18)
         case .dissonanzknospe: return (12, 16)
         case .echoscherbe: return (11, 11)
+        case .chorschatten: return (14, 20)
+        case .hallqualle: return (15, 14)
+        case .steinfink: return (16, 12)
         }
     }
 
     /// Faellt die Kreatur, oder schwebt sie?
     public var isAirborne: Bool {
-        self == .klangmotte || self == .echoscherbe
+        self == .klangmotte || self == .echoscherbe || self == .hallqualle
     }
 
     /// Bleibt sie stehen, wo sie steht?
@@ -80,9 +96,21 @@ public enum EnemyKind: String, Sendable, CaseIterable {
         case .gabelmaus: return 2
         case .klangmotte: return 3
         case .dissonanzknospe: return 3
+        case .hallqualle: return 3
         case .echoscherbe: return 4
+        case .chorschatten: return 4
+        case .steinfink: return 5
         case .stilleschreiter: return 5
         }
+    }
+
+    /// Haengt sie an der Decke, statt auf dem Boden zu stehen?
+    ///
+    /// Das ist keine Spielerei mit der Schwerkraft, sondern die einzige
+    /// Art, einen Gang gefaehrlich zu machen, der sonst nur breit ist:
+    /// wer nach unten schaut, sieht nichts.
+    public var haengtOben: Bool {
+        self == .chorschatten
     }
 }
 
@@ -104,6 +132,8 @@ public final class Enemy {
     private var aggro = false
     /// Nur die Gabelmaus: huscht sie gerade, oder sitzt sie?
     private var huscht = false
+    /// Nur der Chorschatten: haengt er noch?
+    private var haengt = true
 
     /// Was die Kreatur gerade tut - fuer die Wahl des Bildes.
     ///
@@ -162,12 +192,99 @@ public final class Enemy {
             case .dissonanzknospe:
                 updateBud(dt: dt, toPlayer: toPlayer, distance: distance, spawnProjectile: spawnProjectile)
             case .echoscherbe: updateShard(dt: dt)
+            case .chorschatten:
+                updateSchatten(dt: dt, room: room, toPlayer: toPlayer, distance: distance)
+            case .hallqualle: updateQualle(dt: dt, toPlayer: toPlayer, distance: distance)
+            case .steinfink: updateFink(dt: dt, room: room, toPlayer: toPlayer, distance: distance)
             }
         } else {
             velocity.x = approach(velocity.x, 0, 600 * dt)
         }
 
         applyPhysics(dt: dt, room: room)
+    }
+
+    /// Der Chorschatten haengt und faellt.
+    ///
+    /// Er hat genau zwei Zustaende, und der Uebergang zwischen ihnen ist
+    /// die ganze Kreatur: solange er haengt, tut er nichts und bewegt
+    /// sich nicht - er ist Teil der Decke. Kommt jemand darunter, laesst
+    /// er los.
+    ///
+    /// Der Ausloeser ist bewusst eng: nur die Waagerechte zaehlt, nicht
+    /// der Abstand. Wer ihn sieht, kann in aller Ruhe drumherum. Wer nach
+    /// vorn schaut statt nach oben, bekommt ihn auf den Kopf. Das ist
+    /// eine Falle, die man nach dem ersten Mal nie wieder auslaesst, und
+    /// genau so soll sie sein.
+    private func updateSchatten(dt: Double, room: Room, toPlayer: Vec2, distance: Double) {
+        if haengt {
+            velocity = .zero
+            // Losgelassen wird, wenn jemand fast senkrecht darunter steht.
+            if abs(toPlayer.x) < 14 && toPlayer.y > 0 && toPlayer.y < 150 {
+                haengt = false
+                attackTimer = 0.9
+            }
+            return
+        }
+        // Unten angekommen schleicht er auf die Figur zu - langsam, aber
+        // er gibt nicht mehr auf.
+        let unten = Vec2(position.x, position.y + 3)
+        if room.tile(at: unten).isStandable {
+            if attackTimer > 0 { return }
+            facing = sign(toPlayer.x) == 0 ? facing : sign(toPlayer.x)
+            velocity.x = approach(velocity.x, facing * 34, 260 * dt)
+        }
+    }
+
+    /// Die Hallqualle treibt und pulst.
+    ///
+    /// Sie verfolgt nicht - sie *driftet*, und zwar nur dann, wenn sie
+    /// gerade zusammengezogen ist. Zwischen zwei Stoessen haengt sie
+    /// still in der Luft. Dadurch bewegt sie sich in Schueben wie etwas
+    /// im Wasser, und man kann ihre Bahn lesen, ohne sie zu jagen.
+    private func updateQualle(dt: Double, toPlayer: Vec2, distance: Double) {
+        stateTime += dt
+        let takt = sin(stateTime * 2.2)
+        let stoss = max(0, takt)
+        if aggro {
+            let richtung = toPlayer.normalized
+            velocity.x = approach(velocity.x, richtung.x * 46 * stoss, 120 * dt)
+            velocity.y = approach(velocity.y, richtung.y * 34 * stoss - 8, 120 * dt)
+        } else {
+            velocity.x = approach(velocity.x, sin(stateTime * 0.7) * 20 * stoss, 90 * dt)
+            velocity.y = approach(velocity.y, cos(stateTime * 0.5) * 14 * stoss, 90 * dt)
+        }
+        facing = velocity.x < 0 ? -1 : 1
+    }
+
+    /// Der Steinfink hockt und stoesst herab.
+    ///
+    /// Er wartet auf dem Gelaender, bis jemand nah genug ist, und faehrt
+    /// dann einen Bogen - nicht auf die Figur zu, sondern auf die Stelle,
+    /// an der sie stand. Wer weiterlaeuft, wird nie getroffen; wer
+    /// stehenbleibt und blockt, schon. Danach steigt er wieder und
+    /// beginnt von vorn.
+    private func updateFink(dt: Double, room: Room, toPlayer: Vec2, distance: Double) {
+        stateTime += dt
+        if attackTimer > 0 {
+            // Im Stoss: er faellt schraeg und laesst sich nicht lenken.
+            velocity.x = approach(velocity.x, facing * 150, 300 * dt)
+            velocity.y = approach(velocity.y, 120, 420 * dt)
+            return
+        }
+        let unten = Vec2(position.x, position.y + 3)
+        if room.tile(at: unten).isStandable {
+            velocity.x = approach(velocity.x, 0, 500 * dt)
+            if aggro && distance < 140 && stateTime > 1.1 {
+                stateTime = 0
+                attackTimer = 0.85
+                facing = sign(toPlayer.x) == 0 ? facing : sign(toPlayer.x)
+                velocity.y = -120
+            }
+        } else {
+            // Zurueck nach oben, sobald der Stoss vorbei ist.
+            velocity.x = approach(velocity.x, 0, 200 * dt)
+        }
     }
 
     /// Die Gabelmaus laeuft nicht, sie huscht.

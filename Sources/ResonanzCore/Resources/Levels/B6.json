@@ -78,9 +78,14 @@
  "backdrop": null,
  "enemies": [
   {
-   "type": "echoscherbe",
-   "x": 16,
-   "y": 16
+   "type": "chorschatten",
+   "x": 12,
+   "y": 6
+  },
+  {
+   "type": "chorschatten",
+   "x": 28,
+   "y": 6
   },
   {
    "type": "dissonanzknospe",
@@ -183,5 +188,16 @@
    "text": "DIE GLOCKEN SIND NICHT FORT. SIE HAENGEN NUR NICHT MEHR HIER."
   }
  ],
- "npcs": []
+ "npcs": [],
+ "boss": {
+  "type": "glockengeist",
+  "x": 19,
+  "y": 27,
+  "arena": {
+   "x": 2,
+   "y": 4,
+   "w": 34,
+   "h": 25
+  }
+ }
 }

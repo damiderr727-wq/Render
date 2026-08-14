@@ -191,14 +191,19 @@ public final class GameSimulation {
             benches.append(BenchInstance(position: Vec2.entity(b.x, b.y)))
         }
 
-        if let b = room.data.boss, b.type == "kantor" {
+        // Jeder Boss, dessen Kennung wir kennen - nicht nur der Kantor.
+        //
+        // Hier stand `b.type == "kantor"`, und damit ist der Auftakt nie
+        // erschienen: er steht seit jeher in A16 im Raum, wurde geladen,
+        // und dann von dieser Zeile weggeworfen. Der erste Boss des
+        // Spiels hat schlicht nicht stattgefunden.
+        if let b = room.data.boss, let art = Boss.Art(rawValue: b.type) {
             let arena = Rect(x: Double(b.arena.x) * tileSize,
                              y: Double(b.arena.y) * tileSize,
                              width: Double(b.arena.w) * tileSize,
                              height: Double(b.arena.h) * tileSize)
             if !save.collected.contains("\(room.id)/boss") {
-                boss = Boss(position: Vec2.entity(b.x, b.y), arena: arena,
-                            art: Boss.Art(rawValue: b.type) ?? .kantor)
+                boss = Boss(position: Vec2.entity(b.x, b.y), arena: arena, art: art)
             }
         }
 

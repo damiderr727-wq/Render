@@ -114,6 +114,45 @@ public struct Bestiarium: Sendable {
                 "schon vorbei.",
             ],
             schwelle: 5),
+        Eintrag(
+            art: .chorschatten,
+            name: "CHORSCHATTEN",
+            verhalten: [
+                "Haengt unter der Decke und ruehrt sich nicht, bis jemand",
+                "genau darunter steht. Dann laesst er los.",
+            ],
+            deutung: [
+                "Ein Chorhemd ohne den, der darin stand. Er greift die",
+                "Decke mit einem Haken - und der Haken ist das Hellste an",
+                "ihm. Wer aufschaut, sieht ihn rechtzeitig.",
+            ],
+            schwelle: 3),
+        Eintrag(
+            art: .hallqualle,
+            name: "HALLQUALLE",
+            verhalten: [
+                "Treibt in Stoessen durch den Hohlraum. Zwischen zwei",
+                "Stoessen haengt sie still - dann ist sie zu treffen.",
+            ],
+            deutung: [
+                "Sie verfolgt nicht, sie wird getragen. Das Leuchten in",
+                "ihrem Schirm ist kein Drohen: in den Grotten ist sie",
+                "oft das Einzige, woran man den Weg noch sieht.",
+            ],
+            schwelle: 4),
+        Eintrag(
+            art: .steinfink,
+            name: "STEINFINK",
+            verhalten: [
+                "Hockt auf dem Gelaender, bis man nah genug ist, und",
+                "stoesst dann im Bogen herab - auf die Stelle, wo man war.",
+            ],
+            deutung: [
+                "Aus demselben Stein wie die Bruecke, auf der er sitzt.",
+                "Solange er hockt, haelt man ihn fuer Zierrat. Erst die",
+                "Fluegel machen aus dem Ornament ein Tier.",
+            ],
+            schwelle: 4),
     ]
 
     // MARK: - Die Grossen
@@ -154,6 +193,32 @@ public struct Bestiarium: Sendable {
                 "Ein Auftakt ist der Schlag *vor* dem ersten Ton - nichts",
                 "als Vorbereitung. Dieser hier hat nie aufgehoert",
                 "vorzubereiten, weil nach ihm nichts mehr kam.",
+            ]),
+        GrosserEintrag(
+            art: .glockengeist,
+            name: "DER GLOCKENGEIST",
+            titel: "DER NOCH LAEUTET",
+            verhalten: [
+                "Schwingt zwischen den Balken und schlaegt in Wellen, die",
+                "sich ausbreiten. Zwischen zwei Wellen ist Platz.",
+            ],
+            deutung: [
+                "Der Kloeppel haengt weiter, obwohl die Glocke sprang. Er",
+                "schlaegt gegen den Rand seines eigenen Koerpers - das",
+                "ist alles, was er noch kann, und er kann es sehr laut.",
+            ]),
+        GrosserEintrag(
+            art: .hallwaechter,
+            name: "DER HALLWAECHTER",
+            titel: "DER NICHT MEHR ZURUECKKAM",
+            verhalten: [
+                "Steht im Becken und schickt seine Echos voraus. Wer das",
+                "Echo trifft, trifft nichts - und verliert seinen Schlag.",
+            ],
+            deutung: [
+                "In einer Hoehle kommt jeder Ton zurueck. Dieser ist so",
+                "oft zurueckgekommen, dass er stehengeblieben ist. Die",
+                "Umrisse neben ihm sind aeltere Fassungen desselben Tons.",
             ]),
         GrosserEintrag(
             art: .kantor,

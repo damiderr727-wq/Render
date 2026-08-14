@@ -76,15 +76,14 @@
    "y": 13
   },
   {
-   "type": "echoscherbe",
+   "type": "hallqualle",
    "x": 36,
-   "y": 12
+   "y": 11
   },
   {
-   "type": "stilleschreiter",
-   "x": 54,
-   "y": 21,
-   "patrol": 4
+   "type": "hallqualle",
+   "x": 52,
+   "y": 9
   }
  ],
  "pickups": [
@@ -188,5 +187,16 @@
    "text": "DAS WASSER GIBT DEN TON ZURUECK, DEN ES BEKOMMT. MEHR HAT NIE JEMAND VERLANGT."
   }
  ],
- "npcs": []
+ "npcs": [],
+ "boss": {
+  "type": "hallwaechter",
+  "x": 54,
+  "y": 19,
+  "arena": {
+   "x": 24,
+   "y": 5,
+   "w": 36,
+   "h": 20
+  }
+ }
 }

@@ -55,13 +55,56 @@ public final class Boss {
         case auftakt
         /// Der verstimmte Kantor: Endgegner.
         case kantor
+        /// Mini-Boss der Kathedrale. Ein Glockengeist, der in den
+        /// leeren Turm zurueckgeblieben ist: er kann nur eines, naemlich
+        /// laut sein, und tut das in Wellen.
+        case glockengeist
+        /// Mini-Boss der Grotten. Was der Hall uebrig laesst, wenn er
+        /// nirgends mehr hinkann: er ruft seine eigenen Echos herbei und
+        /// versteckt sich dahinter.
+        case hallwaechter
 
-        var health: Int { self == .auftakt ? 28 : 72 }
+        /// Leben, Ansagedauer und Faehigkeiten.
+        ///
+        /// Vier Bosse teilen sich einen Ablauf; was sie unterscheidet,
+        /// sind genau diese vier Zahlen. Ein Mini-Boss ist darum kein
+        /// eigener Bauplan, sondern eine andere Einstellung - er sitzt
+        /// zwischen Auftakt und Kantor, sowohl was Leben angeht als auch,
+        /// wie viel Zeit er einem laesst.
+        var health: Int {
+            switch self {
+            case .auftakt: return 28
+            case .glockengeist: return 40
+            case .hallwaechter: return 46
+            case .kantor: return 72
+            }
+        }
         /// Wie lange er schwebt, bevor er zuschlaegt. Beim Auftakt ist das
-        /// der ganze Witz: man hat Zeit, den Schlag zu lesen.
-        var ansage: Double { self == .auftakt ? 2.1 : 1.0 }
-        var kannPfeifen: Bool { self == .kantor }
-        var kannRufen: Bool { self == .kantor }
+        /// der ganze Witz: man hat Zeit, den Schlag zu lesen. Die
+        /// Mini-Bosse geben weniger, der Kantor am wenigsten.
+        var ansage: Double {
+            switch self {
+            case .auftakt: return 2.1
+            case .glockengeist: return 1.6
+            case .hallwaechter: return 1.4
+            case .kantor: return 1.0
+            }
+        }
+        /// Die stehende Luftsaeule. Der Glockengeist kann sie auch - sie
+        /// ist das, was eine Glocke von einem Schlaeger unterscheidet.
+        var kannPfeifen: Bool { self == .kantor || self == .glockengeist }
+        /// Kreaturen herbeirufen. Der Hallwaechter tut nichts anderes,
+        /// der Kantor tut es zusaetzlich.
+        var kannRufen: Bool { self == .kantor || self == .hallwaechter }
+
+        /// Was er ruft. Der Hallwaechter ruft seine eigenen Echos, der
+        /// Kantor das, was in seiner Kathedrale herumsteht.
+        var gefolge: [EnemyKind] {
+            switch self {
+            case .hallwaechter: return [.echoscherbe, .hallqualle]
+            default: return [.klangmotte, .echoscherbe]
+            }
+        }
     }
 
     public let art: Art
@@ -305,10 +348,15 @@ public final class Boss {
     private func runSummon(events: inout [GameEvent]) {
         if firedThisAction == 0 && actionTime > 0.5 {
             firedThisAction = 1
+            // Jeder ruft sein eigenes Gefolge. Vorher stand hier fest
+            // die Klangmotte, und damit rief auch der Hallwaechter in den
+            // Grotten Falter aus der Kathedrale herbei.
+            let schar = art.gefolge
             for i in 0..<2 {
                 let x = position.x + (i == 0 ? -46 : 46)
-                pendingSummons.append((.klangmotte, Vec2(clamp(x, arena.minX + 16, arena.maxX - 16),
-                                                         arena.minY + 46)))
+                pendingSummons.append((schar[i % schar.count],
+                                       Vec2(clamp(x, arena.minX + 16, arena.maxX - 16),
+                                            arena.minY + 46)))
             }
             events.append(.effect(.ringMittel, center, .zero))
         }

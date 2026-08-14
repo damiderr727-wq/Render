@@ -1046,6 +1046,15 @@ def room_A2() -> Room:
     # Und eine Stelle, an der man springen muss statt zu laufen.
     r.dornengrube(33, 6, 3, boden)
 
+    # Hoch unter dem Hallendach: ein Balken, den man vom Sims aus sieht
+    # und ohne Fluegelschlag nicht erreicht. Das ist die ganze Schule
+    # des Genres - man merkt sich die Stelle, nicht der Raum sagt sie
+    # einem. Sieben Kacheln ueber dem Absatz: ein Sprung schafft vier,
+    # erst der Doppelsprung die Differenz.
+    r.balken(23, 13, 4)
+    r.crystal_on(24, 12, 2)
+    r.crystal_on(26, 12, 1)
+
     r.side_door("L", "left", "A1", "R", hint=6)
     r.side_door("R", "right", "A3", "L", hint=6)
     r.shaft_door("U", 51, 5, "up", "B1", "N", requires="fluegelschlag")

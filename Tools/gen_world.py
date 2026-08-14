@@ -1227,23 +1227,95 @@ def fx_klinge(frame: int, frames: int, art: str) -> Canvas:
     return c
 
 
-def fx_note(kind: int, tint) -> Canvas:
-    """Notenkopf als Geschoss - der sichtbare Ton."""
-    c = Canvas(12, 14)
-    if kind == 0:      # Viertelnote
-        c.ellipse(4, 10, 3.2, 2.4, tint)
-        c.rect(6, 2, 2, 8, mix(tint, P.WARM, 0.25))
-        c.set(2, 9, mix(tint, (255, 255, 255, 255), 0.5))
-    elif kind == 1:    # Achtelnote mit Faehnchen
-        c.ellipse(4, 10, 3.0, 2.2, tint)
-        c.rect(6, 1, 2, 9, mix(tint, P.WARM, 0.25))
-        for i in range(4):
-            c.rect(8, 1 + i, 3 - i // 2, 1, mix(tint, P.WARM, 0.4))
-    else:              # Pausenzeichen / dissonanter Splitter
-        c.line(2, 2, 9, 11, tint)
-        c.line(9, 2, 2, 11, tint)
-        c.ellipse(5.5, 6.5, 2, 2, mix(tint, P.WARM, 0.4))
-    c.glow(5, 8, 8, (tint[0], tint[1], tint[2], 60))
+def fx_puls(art: str, tint) -> Canvas:
+    """
+    Geschosse als Schwingung, nicht als Notenschrift.
+
+    Ein Notenkopf mit Hals ist ein Schriftzeichen - er fliegt durchs
+    Bild wie aus einem Lehrbuch gefallen. Was hier fliegt, ist ein
+    Stoss Klang: ein heller Kern, und hinter ihm die Wellenfronten,
+    die er durch die Luft schiebt. Jeder Kern schiebt anders - das
+    ist derselbe Unterschied wie zwischen ihren Klaengen.
+
+    Alle Bilder zeigen den Flug nach RECHTS; das Spiel dreht sie in
+    Flugrichtung.
+    """
+    c = Canvas(18, 12)
+    cx, cy = 12, 6
+    hell = mix(tint, (255, 255, 255, 255), 0.55)
+
+    def bogen(mx: float, r: float, deck: int, dick: float = 1.0) -> None:
+        # Eine Wellenfront: ein nach hinten offener Bogen.
+        for k in range(22):
+            a = math.pi * 0.42 + k / 21 * math.pi * 1.16
+            x = mx + math.cos(a + math.pi) * r * 0.8
+            y = cy + math.sin(a + math.pi) * r
+            for d in range(int(dick)):
+                c.blend(int(x) - d, int(y), (tint[0], tint[1], tint[2], deck))
+
+    if art == "stimmgabel":
+        # Zwei Zinken: ein Doppelpuls, eng und sauber.
+        c.ellipse(cx, cy - 1.5, 1.4, 1.1, hell)
+        c.ellipse(cx, cy + 1.5, 1.4, 1.1, hell)
+        bogen(cx - 3, 3.0, 150)
+        bogen(cx - 6, 4.2, 80)
+    elif art == "leier":
+        # Ein Schimmerkern mit drei feinen Fronten.
+        c.ellipse(cx, cy, 1.8, 1.5, hell)
+        c.ellipse(cx, cy, 0.9, 0.8, (255, 255, 255, 255))
+        bogen(cx - 3, 2.6, 170)
+        bogen(cx - 6, 3.6, 110)
+        bogen(cx - 9, 4.6, 60)
+    elif art == "trommel":
+        # Eine Druckkugel: fetter Ring, dunkler Kern, eine schwere Front.
+        c.ellipse(cx - 1, cy, 3.4, 3.0, tint)
+        c.ellipse(cx - 1, cy, 1.9, 1.6, mix(tint, P.INK, 0.55))
+        c.ellipse(cx + 1, cy - 1, 1.0, 0.8, hell)
+        bogen(cx - 6, 4.4, 130, 2.0)
+    elif art == "floete":
+        # Ein Nadelstich: schmaler Pfeil, kaum Schweif.
+        for i in range(7):
+            t = i / 6
+            c.set(cx + 2 - i, cy, mix(hell, tint, t))
+            if i > 2:
+                c.blend(cx + 2 - i, cy - 1, (tint[0], tint[1], tint[2], 120))
+                c.blend(cx + 2 - i, cy + 1, (tint[0], tint[1], tint[2], 120))
+        c.set(cx + 3, cy, (255, 255, 255, 255))
+        bogen(cx - 5, 2.2, 100)
+    elif art == "metronom":
+        # Der Takt: drei Schlaege in Reihe, gleich weit auseinander.
+        for k, mx in enumerate((cx, cx - 4, cx - 8)):
+            deck = 255 - k * 70
+            c.ellipse(mx, cy, 1.3 - k * 0.15, 1.2 - k * 0.15,
+                      (hell[0], hell[1], hell[2], deck) if k == 0 else
+                      (tint[0], tint[1], tint[2], deck))
+    elif art == "glocke":
+        # Ein weiter Hall: zwei grosse Fronten, fast kein Kern.
+        c.ellipse(cx, cy, 1.2, 1.0, hell)
+        bogen(cx - 2, 4.6, 150, 2.0)
+        bogen(cx - 6, 5.6, 90, 2.0)
+    elif art == "orgelpfeife":
+        # Ein stehender Strahl: ein Stueck gerader Ton.
+        for i in range(11):
+            t = i / 10
+            col = mix(hell, tint, t)
+            c.set(cx + 2 - i, cy, col)
+            c.blend(cx + 2 - i, cy - 1, (col[0], col[1], col[2], 160))
+            c.blend(cx + 2 - i, cy + 1, (col[0], col[1], col[2], 160))
+        c.rect(cx + 2, cy - 1, 1, 3, (255, 255, 255, 255))
+    else:
+        # Dissonanz: ein gezackter Splitter, nichts daran schwingt sauber.
+        px, py = cx - 8, cy - 3
+        for i in range(10):
+            px += 1
+            py += (1 if hash01(i, 3) > 0.5 else -1)
+            py = max(1, min(10, py))
+            c.set(px, py, tint)
+            if i % 3 == 0:
+                c.set(px, py + 1, mix(tint, P.INK, 0.4))
+        c.ellipse(cx, cy, 1.4, 1.2, mix(tint, (255, 255, 255, 255), 0.35))
+
+    c.glow(cx, cy, 7, (tint[0], tint[1], tint[2], 70))
     return c
 
 
@@ -1725,11 +1797,15 @@ def build() -> None:
     for art in ("schlicht", "gezackt", "glas"):
         fx.add_sequence(f"klinge_{art}", [fx_klinge(f, 5, art) for f in range(5)],
                         pivot=(0.5, 0.5), fps=26)
-    for i, (name, tint) in enumerate((("note_leier", P.GLOW), ("note_trommel", P.GOLD),
-                                      ("note_floete", P.BLOOM))):
-        fx.add(name, fx_note(i, tint), pivot=(0.5, 0.5))
-    fx.add("note_stimmgabel", fx_note(1, P.TRIM), pivot=(0.5, 0.5))
-    fx.add("note_dissonanz", fx_note(2, P.ROT), pivot=(0.5, 0.5))
+    # Ein Puls je Kern. Vorher gab es nur fuenf Bilder fuer acht
+    # Absender: Metronom, Glocke und Orgelpfeife schossen mit dem
+    # Bild, das zufaellig im Knoten steckte - also mit der Leier.
+    for name, tint in (("stimmgabel", P.TRIM), ("leier", P.GLOW),
+                       ("trommel", P.GOLD), ("floete", P.BLOOM),
+                       ("metronom", P.GLOW), ("glocke", P.GOLD),
+                       ("orgelpfeife", P.BLOOM)):
+        fx.add(f"note_{name}", fx_puls(name, tint), pivot=(0.5, 0.5))
+    fx.add("note_dissonanz", fx_puls("dissonanz", P.ROT), pivot=(0.5, 0.5))
     fx.add_sequence("feather", [fx_feather(f) for f in range(4)], pivot=(0.5, 0.5), fps=18)
     fx.add_sequence("heartbeat", [fx_heart(f) for f in range(4)], pivot=(0.5, 0.5), fps=18)
     fx.add_sequence("burst_glow", [fx_burst(f, P.GLOW) for f in range(5)], pivot=(0.5, 0.5), fps=24)

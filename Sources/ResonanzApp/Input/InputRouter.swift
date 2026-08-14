@@ -37,6 +37,9 @@ public final class InputRouter {
 
     private var held = Held()
     private var pressed = Held()
+    /// Stufenlose Seitwaertsbewegung vom Stick oder Gamepad. Solange
+    /// niemand stufenlos steuert, bleibt sie 0 und die Tasten zaehlen.
+    private var analogX: Double = 0
     private var pendingKern: Kern?
     private var pendingCycle = 0
     private var pendingEquipmentCycle = 0
@@ -63,7 +66,9 @@ public final class InputRouter {
     public func snapshot() -> PlayerInput {
         pollGameController()
 
-        let moveX = (held.right ? 1.0 : 0) - (held.left ? 1.0 : 0)
+        let moveX = analogX != 0
+            ? analogX
+            : (held.right ? 1.0 : 0) - (held.left ? 1.0 : 0)
         let aimY = (held.down ? 1.0 : 0) - (held.up ? 1.0 : 0)
 
         // Der Basston ist kein eigener Knopf: nach unten zielen und
@@ -176,8 +181,12 @@ public final class InputRouter {
         self.touchLayer = touchLayer
         touchLayer.onChange = { [weak self] state in
             guard let self else { return }
-            self.set(\.left, state.left)
-            self.set(\.right, state.right)
+            // Der Stick ist stufenlos; die Flanken-Logik braucht trotzdem
+            // links/rechts als Schwellen, und den feinen Wert traegt
+            // `analogX` an der Verzweigung vorbei bis in `snapshot()`.
+            self.analogX = state.moveX
+            self.set(\.left, state.moveX < -0.01)
+            self.set(\.right, state.moveX > 0.01)
             self.set(\.up, state.up)
             self.set(\.down, state.down)
             self.set(\.jump, state.jump)

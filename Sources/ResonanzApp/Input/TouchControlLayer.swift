@@ -3,15 +3,18 @@ import Foundation
 import SpriteKit
 import UIKit
 
-/// Bildschirmtasten fuer Beruehrungsgeraete.
+/// Beruehrungssteuerung: links ein schwebender Stick, rechts vier Tasten.
 ///
-/// Links ein Steuerkreuz, rechts die drei Knoepfe. Alle Flaechen sind
-/// grosszuegiger als ihre Zeichnung - auf Glas trifft man ungenauer.
+/// Der erste Wurf war ein gezeichnetes Steuerkreuz aus vier Kaestchen.
+/// Auf Glas ist das die falsche Form: man trifft die Kaestchen nicht,
+/// man verliert sie beim Umgreifen, und die Kante zwischen "links" und
+/// "rechts" liegt genau dort, wo der Daumen ohnehin schon steht. Ein
+/// Stick, der dort entsteht, wo der Daumen aufsetzt, hat keine Kanten -
+/// die Mitte ist immer da, wo man angefasst hat.
 public final class TouchControlLayer: SKNode {
 
     public struct State {
-        public var left = false
-        public var right = false
+        public var moveX: Double = 0
         public var up = false
         public var down = false
         public var jump = false
@@ -25,79 +28,96 @@ public final class TouchControlLayer: SKNode {
 
     private struct Button {
         let name: String
-        let rect: CGRect
+        let center: CGPoint
+        let radius: CGFloat
         let label: String
     }
 
     private var buttons: [Button] = []
-    private var touchAssignments: [UITouch: String] = [:]
+    private var buttonTouches: [UITouch: String] = [:]
     private var state = State()
+
+    // Der Stick: ein Finger, der auf der linken Haelfte aufsetzt.
+    private var stickTouch: UITouch?
+    private var stickOrigin: CGPoint = .zero
+    private var stickBase = SKShapeNode()
+    private var stickKnob = SKShapeNode()
+    private var halbeBreite: CGFloat = 256
+
+    /// Wie weit der Daumen ziehen muss, bis die Richtung voll ist.
+    private let stickReichweite: CGFloat = 22
+    /// Unterhalb davon zaehlt die Auslenkung nicht - Wackeln ist kein Wille.
+    private let totzone: CGFloat = 0.22
+
+    private let akzent = SKColor(red: 0.37, green: 0.84, blue: 0.71, alpha: 1)
 
     public func build(in size: CGSize) {
         isUserInteractionEnabled = true
         zPosition = 2000
+        halbeBreite = size.width / 2
 
-        let left = -size.width / 2
         let right = size.width / 2
         let bottom = -size.height / 2
-        let pad: CGFloat = 8
-        let button: CGFloat = 34
 
+        // Rechts vier Tasten im Bogen, wie der Daumen faechert: der
+        // Sprung am naechsten, gross; darum herum Nah, Fern, Herzschlag.
+        // F liegt abseits - Reden ist nie eilig.
         buttons = [
-            Button(name: "left", rect: CGRect(x: left + pad, y: bottom + pad + button,
-                                              width: button, height: button), label: "<"),
-            Button(name: "right", rect: CGRect(x: left + pad + button * 2, y: bottom + pad + button,
-                                               width: button, height: button), label: ">"),
-            Button(name: "up", rect: CGRect(x: left + pad + button, y: bottom + pad + button * 2,
-                                            width: button, height: button), label: "^"),
-            Button(name: "down", rect: CGRect(x: left + pad + button, y: bottom + pad,
-                                              width: button, height: button), label: "v"),
-
-            Button(name: "jump", rect: CGRect(x: right - pad - button, y: bottom + pad,
-                                              width: button, height: button), label: "SPR"),
-            Button(name: "melee", rect: CGRect(x: right - pad - button * 2, y: bottom + pad + button,
-                                               width: button, height: button), label: "NAH"),
-            Button(name: "ranged", rect: CGRect(x: right - pad - button, y: bottom + pad + button * 2,
-                                                width: button, height: button), label: "FERN"),
-            Button(name: "dash", rect: CGRect(x: right - pad - button * 3, y: bottom + pad,
-                                              width: button, height: button), label: "HRZ"),
-            Button(name: "interact", rect: CGRect(x: right - pad - button * 3,
-                                                  y: bottom + pad + button * 2,
-                                                  width: button, height: button), label: "F"),
+            Button(name: "jump", center: CGPoint(x: right - 34, y: bottom + 34),
+                   radius: 22, label: "SPRUNG"),
+            Button(name: "melee", center: CGPoint(x: right - 78, y: bottom + 26),
+                   radius: 16, label: "NAH"),
+            Button(name: "ranged", center: CGPoint(x: right - 86, y: bottom + 64),
+                   radius: 16, label: "FERN"),
+            Button(name: "dash", center: CGPoint(x: right - 40, y: bottom + 82),
+                   radius: 16, label: "HERZ"),
+            Button(name: "interact", center: CGPoint(x: right - 124, y: bottom + 100),
+                   radius: 11, label: "F"),
         ]
 
         for button in buttons {
-            let shape = SKShapeNode(rectOf: CGSize(width: button.rect.width - 4,
-                                                   height: button.rect.height - 4),
-                                    cornerRadius: 6)
-            shape.position = CGPoint(x: button.rect.midX, y: button.rect.midY)
-            shape.fillColor = SKColor(white: 1, alpha: 0.07)
-            shape.strokeColor = SKColor(white: 1, alpha: 0.20)
+            let shape = SKShapeNode(circleOfRadius: button.radius)
+            shape.position = button.center
+            shape.fillColor = SKColor(white: 1, alpha: 0.05)
+            shape.strokeColor = SKColor(white: 1, alpha: 0.22)
             shape.lineWidth = 1
             shape.name = "btn_\(button.name)"
             addChild(shape)
 
             let label = SKLabelNode(text: button.label)
             label.fontName = "Menlo-Bold"
-            label.fontSize = 7
-            label.fontColor = SKColor(white: 1, alpha: 0.5)
+            label.fontSize = button.radius > 18 ? 8 : 6
+            label.fontColor = SKColor(white: 1, alpha: 0.45)
             label.verticalAlignmentMode = .center
-            label.position = shape.position
+            label.position = button.center
             addChild(label)
         }
+
+        // Der Stick zeigt sich erst, wenn ein Daumen da ist.
+        stickBase = SKShapeNode(circleOfRadius: stickReichweite + 6)
+        stickBase.fillColor = .clear
+        stickBase.strokeColor = SKColor(white: 1, alpha: 0.20)
+        stickBase.lineWidth = 1
+        stickBase.alpha = 0
+        addChild(stickBase)
+
+        stickKnob = SKShapeNode(circleOfRadius: 9)
+        stickKnob.fillColor = akzent.withAlphaComponent(0.25)
+        stickKnob.strokeColor = akzent.withAlphaComponent(0.8)
+        stickKnob.lineWidth = 1
+        stickKnob.alpha = 0
+        addChild(stickKnob)
     }
 
     private func button(at point: CGPoint) -> String? {
-        // Grosszuegige Trefferflaeche.
-        buttons.first { $0.rect.insetBy(dx: -6, dy: -6).contains(point) }?.name
+        // Grosszuegig: auf Glas trifft man ungenauer, als man glaubt.
+        buttons.first {
+            hypot(point.x - $0.center.x, point.y - $0.center.y) <= $0.radius + 9
+        }?.name
     }
 
     private func apply(_ name: String, _ value: Bool) {
         switch name {
-        case "left": state.left = value
-        case "right": state.right = value
-        case "up": state.up = value
-        case "down": state.down = value
         case "jump": state.jump = value
         case "melee": state.melee = value
         case "ranged": state.ranged = value
@@ -105,36 +125,86 @@ public final class TouchControlLayer: SKNode {
         case "interact": state.interact = value
         default: break
         }
-        childNode(withName: "btn_\(name)")?.alpha = value ? 1.0 : 0.55
+        childNode(withName: "btn_\(name)")?.run(
+            .fadeAlpha(to: value ? 1.0 : 0.55, duration: 0.05))
+        onChange?(state)
+    }
+
+    private func updateStick(to point: CGPoint) {
+        var dx = (point.x - stickOrigin.x) / stickReichweite
+        var dy = (point.y - stickOrigin.y) / stickReichweite
+        let laenge = hypot(dx, dy)
+        if laenge > 1 { dx /= laenge; dy /= laenge }
+
+        state.moveX = abs(dx) < totzone ? 0
+            : Double((abs(dx) - totzone) / (1 - totzone)) * (dx < 0 ? -1 : 1)
+        // Hoch und runter wollen mehr Absicht als seitwaerts: wer nach
+        // rechts oben laeuft, meint rechts - nicht "rechts und zielt".
+        state.up = dy > 0.55
+        state.down = dy < -0.55
+
+        stickBase.position = stickOrigin
+        stickKnob.position = CGPoint(
+            x: stickOrigin.x + dx * stickReichweite,
+            y: stickOrigin.y + dy * stickReichweite)
+        onChange?(state)
+    }
+
+    private func endStick() {
+        stickTouch = nil
+        state.moveX = 0
+        state.up = false
+        state.down = false
+        stickBase.run(.fadeOut(withDuration: 0.15))
+        stickKnob.run(.fadeOut(withDuration: 0.15))
         onChange?(state)
     }
 
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
-            guard let name = button(at: touch.location(in: self)) else { continue }
-            touchAssignments[touch] = name
-            apply(name, true)
+            let point = touch.location(in: self)
+            if let name = button(at: point) {
+                buttonTouches[touch] = name
+                apply(name, true)
+            } else if point.x < 0 && stickTouch == nil {
+                // Die ganze linke Haelfte ist Stick - er entsteht, wo
+                // der Daumen aufsetzt.
+                stickTouch = touch
+                stickOrigin = point
+                stickBase.removeAllActions()
+                stickKnob.removeAllActions()
+                stickBase.alpha = 1
+                stickKnob.alpha = 1
+                updateStick(to: point)
+            }
         }
     }
 
     public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
+            if touch == stickTouch {
+                updateStick(to: touch.location(in: self))
+                continue
+            }
+            // Ein Daumen, der von einer Taste rutscht, laesst sie los;
+            // rutscht er auf eine andere, nimmt er sie mit.
             let neu = button(at: touch.location(in: self))
-            let alt = touchAssignments[touch]
+            let alt = buttonTouches[touch]
             guard neu != alt else { continue }
             if let alt { apply(alt, false) }
             if let neu {
-                touchAssignments[touch] = neu
+                buttonTouches[touch] = neu
                 apply(neu, true)
             } else {
-                touchAssignments.removeValue(forKey: touch)
+                buttonTouches.removeValue(forKey: touch)
             }
         }
     }
 
     public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
-            if let name = touchAssignments.removeValue(forKey: touch) { apply(name, false) }
+            if touch == stickTouch { endStick() }
+            if let name = buttonTouches.removeValue(forKey: touch) { apply(name, false) }
         }
     }
 

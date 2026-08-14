@@ -23,6 +23,7 @@ let package = Package(
                 .copy("Resources/Atlas"),
                 .copy("Resources/Levels"),
                 .copy("Resources/Scores"),
+                .copy("Resources/Titel"),
             ]
         ),
         .target(

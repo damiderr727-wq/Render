@@ -51,6 +51,13 @@ public final class GameScene: SKScene {
         backgroundColor = SKColor(red: 0.02, green: 0.024, blue: 0.047, alpha: 1)
         view.preferredFramesPerSecond = 60
         view.ignoresSiblingOrder = false
+        #if os(iOS) || os(tvOS)
+        // Ohne das liefert die Sicht genau EINEN Finger. Laufen und
+        // Springen zugleich war damit unmoeglich - der Daumen auf dem
+        // Stick schluckte jede weitere Beruehrung. Das war der ganze
+        // Grund, warum sich die Steuerung kaputt anfuehlte.
+        view.isMultipleTouchEnabled = true
+        #endif
 
         do {
             try atlas.loadAll()

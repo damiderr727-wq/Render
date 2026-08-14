@@ -3,6 +3,11 @@ import Foundation
 import SwiftUI
 import SpriteKit
 import ResonanzCore
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 /// Speichert den Spielstand neben den Einstellungen der App.
 /// Gespeichert wird nur an einer Stimmgabel - das ist Teil des Spiels.
@@ -33,9 +38,30 @@ public enum SaveStore {
     }
 }
 
-/// Der Rahmen um die Buehne: Titelbild, dann das Spiel.
+/// Laedt eines der grossen Bilder aus Resources/Titel - Titelbild und
+/// Intro-Tafeln liegen als ganze PNGs im Bundle, nicht im Atlas.
+func tafelBild(_ name: String) -> Image? {
+    guard let url = try? Resources.url(subdirectory: "Titel", name: name, ext: "png")
+    else { return nil }
+    #if os(macOS)
+    guard let img = NSImage(contentsOf: url) else { return nil }
+    return Image(nsImage: img)
+    #else
+    guard let img = UIImage(contentsOfFile: url.path) else { return nil }
+    return Image(uiImage: img)
+    #endif
+}
+
+/// Der Rahmen um die Buehne: Titel, dann (bei neuem Spiel) das Intro,
+/// dann das Spiel.
 public struct ResonanzView: View {
-    @State private var gestartet = false
+    private enum Schritt {
+        case titel
+        case intro
+        case spiel
+    }
+
+    @State private var schritt: Schritt = .titel
 
     public init() {}
 
@@ -43,16 +69,25 @@ public struct ResonanzView: View {
         ZStack {
             Color(red: 0.02, green: 0.024, blue: 0.047).ignoresSafeArea()
 
-            if gestartet {
+            switch schritt {
+            case .titel:
+                TitleScreen(fortsetzenMoeglich: SaveStore.hasSave()) { neuBeginnen in
+                    if neuBeginnen {
+                        SaveStore.clear()
+                        withAnimation(.easeInOut(duration: 0.6)) { schritt = .intro }
+                    } else {
+                        schritt = .spiel
+                    }
+                }
+                .transition(.opacity)
+            case .intro:
+                IntroView { schritt = .spiel }
+                    .transition(.opacity)
+            case .spiel:
                 SpriteView(scene: makeScene(),
                            options: [.ignoresSiblingOrder],
                            debugOptions: [])
                     .ignoresSafeArea()
-            } else {
-                TitleScreen(fortsetzenMoeglich: SaveStore.hasSave()) { neuBeginnen in
-                    if neuBeginnen { SaveStore.clear() }
-                    gestartet = true
-                }
             }
         }
         .preferredColorScheme(.dark)
@@ -75,50 +110,78 @@ struct TitleScreen: View {
     @State private var puls = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            Text("RESONANZ")
-                .font(.system(size: 46, weight: .thin, design: .monospaced))
-                .tracking(18)
-                .foregroundStyle(.white)
-                .shadow(color: Color(red: 0.5, green: 0.91, blue: 0.85).opacity(puls ? 0.75 : 0.35),
-                        radius: puls ? 26 : 14)
-                .padding(.leading, 18)
-
-            Text("DIE WELT IST VERSTIMMT. BRING SIE ZUM KLINGEN.")
-                .font(.system(size: 11, design: .monospaced))
-                .tracking(3)
-                .foregroundStyle(.white.opacity(0.45))
-                .padding(.top, 14)
-
-            Spacer()
-
-            VStack(spacing: 14) {
-                if fortsetzenMoeglich {
-                    TitleButton(title: "FORTSETZEN") { onStart(false) }
+        GeometryReader { geo in
+            ZStack {
+                // Das Bild: die Finsternis ueber der Welt, pixelgenau
+                // skaliert. `interpolation(.none)` haelt die Kanten hart.
+                if let bild = tafelBild("titel") {
+                    bild
+                        .interpolation(.none)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .clipped()
+                        .ignoresSafeArea()
                 }
-                TitleButton(title: fortsetzenMoeglich ? "NEU BEGINNEN" : "SPIEL BEGINNEN") {
-                    onStart(true)
+
+                // Ein Schleier unten, damit Schrift und Tasten auf dem
+                // Bild stehen koennen, ohne dass man es uebermalt.
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: .clear, location: 0.45),
+                        .init(color: Color(red: 0.03, green: 0.02, blue: 0.06)
+                            .opacity(0.85), location: 1.0),
+                    ],
+                    startPoint: .top, endPoint: .bottom)
+                    .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    Spacer()
+
+                    Text("RESONANZ")
+                        .font(.system(size: 44, weight: .thin, design: .monospaced))
+                        .tracking(18)
+                        .foregroundStyle(.white)
+                        .shadow(color: Color(red: 0.5, green: 0.91, blue: 0.85)
+                            .opacity(puls ? 0.75 : 0.35),
+                                radius: puls ? 26 : 14)
+                        .padding(.leading, 18)
+
+                    Text("DIE LETZTE IHRER ART. DER WEG IN DEN KERNSCHATTEN.")
+                        .font(.system(size: 10, design: .monospaced))
+                        .tracking(3)
+                        .foregroundStyle(.white.opacity(0.55))
+                        .padding(.top, 12)
+
+                    Spacer()
+
+                    VStack(spacing: 12) {
+                        if fortsetzenMoeglich {
+                            TitleButton(title: "FORTSETZEN", betont: true) { onStart(false) }
+                            TitleButton(title: "NEU BEGINNEN", betont: false) { onStart(true) }
+                        } else {
+                            TitleButton(title: "AUFBRECHEN", betont: true) { onStart(true) }
+                        }
+                    }
+
+                    Text(steuerung)
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.35))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                        .padding(.top, 26)
+
+                    Text("MUSIK NACH J. S. BACH  ·  BWV 846 · 578 · 1068 · 565")
+                        .font(.system(size: 8, design: .monospaced))
+                        .tracking(1.5)
+                        .foregroundStyle(.white.opacity(0.25))
+                        .padding(.top, 16)
+                        .padding(.bottom, 26)
                 }
+                .padding(.horizontal, 40)
             }
-
-            Text(steuerung)
-                .font(.system(size: 9, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.3))
-                .multilineTextAlignment(.center)
-                .lineSpacing(4)
-                .padding(.top, 34)
-
-            Text("MUSIK NACH J. S. BACH  ·  BWV 846 · 578 · 1068 · 565")
-                .font(.system(size: 8, design: .monospaced))
-                .tracking(1.5)
-                .foregroundStyle(.white.opacity(0.22))
-                .padding(.top, 22)
-
-            Spacer()
         }
-        .padding(40)
         .onAppear {
             withAnimation(.easeInOut(duration: 2.6).repeatForever(autoreverses: true)) {
                 puls = true
@@ -131,16 +194,16 @@ struct TitleScreen: View {
         return """
         A D  BEWEGEN     W S  ZIELEN     LEERTASTE  SPRINGEN
         J  NAHKLANG      K  FERNKLANG    UMSCHALT  HERZSCHLAG
-        1 2 3  INSTRUMENT     F  ANSPRECHEN
         """
         #else
-        return "BILDSCHIRMTASTEN ODER GAMEPAD"
+        return "LINKE HAELFTE: STICK  ·  RECHTS: SPRUNG NAH FERN HERZ"
         #endif
     }
 }
 
 private struct TitleButton: View {
     let title: String
+    let betont: Bool
     let action: () -> Void
     @State private var hover = false
 
@@ -149,19 +212,103 @@ private struct TitleButton: View {
             Text(title)
                 .font(.system(size: 12, design: .monospaced))
                 .tracking(5)
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyle(.white.opacity(betont ? 1.0 : 0.75))
                 .padding(.vertical, 12)
                 .padding(.horizontal, 34)
+                .background(Color.black.opacity(betont ? 0.4 : 0.25))
                 .overlay(
                     Rectangle()
                         .stroke(Color(red: 0.5, green: 0.91, blue: 0.85)
-                            .opacity(hover ? 0.9 : 0.35), lineWidth: 1)
+                            .opacity(hover ? 0.9 : (betont ? 0.55 : 0.3)),
+                                lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
         #if os(macOS)
         .onHover { hover = $0 }
         #endif
+    }
+}
+
+// MARK: - Das Intro
+
+/// Fuenf Tafeln: warum sie die sichere Heimat verlaesst.
+///
+/// Der Text liegt nicht in den Bildern - er wird hier gesetzt, scharf
+/// und austauschbar. Jede Beruehrung blaettert weiter; wer die
+/// Geschichte kennt, kann sie ueberspringen.
+struct IntroView: View {
+    let onFinish: () -> Void
+
+    private static let tafeln: [(bild: String, text: String)] = [
+        ("intro_0", "ES GAB EINEN ORT, DER SICHER WAR.\nVERBORGEN UNTER DEM FELS.\nDIE LETZTEN IHRER ART."),
+        ("intro_1", "DANN KAM DIE KRANKHEIT.\nDIE HUELLE, DIE UNS ZUSAMMENHAELT, BEKAM RISSE.\nWER SIE VERLIERT, VERLISCHT."),
+        ("intro_2", "DIE ALTEN SAGTEN: BLEIB.\nABER BLEIBEN HIESS NUR:\nLANGSAMER VERLOESCHEN."),
+        ("intro_3", "DIE ANTWORT LIEGT IM KERNSCHATTEN.\nWO DIE SONNE SCHWARZ STEHT.\nWO ER WARTET."),
+        ("intro_4", "ALSO GING SIE."),
+    ]
+
+    @State private var index = 0
+    @State private var sichtbar = false
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                Color.black.ignoresSafeArea()
+
+                if let bild = tafelBild(Self.tafeln[index].bild) {
+                    bild
+                        .interpolation(.none)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .opacity(sichtbar ? 1 : 0)
+                }
+
+                VStack {
+                    Spacer()
+                    Text(Self.tafeln[index].text)
+                        .font(.system(size: 12, design: .monospaced))
+                        .tracking(2)
+                        .lineSpacing(7)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.white.opacity(0.92))
+                        .shadow(color: .black, radius: 6)
+                        .padding(.bottom, 44)
+                        .opacity(sichtbar ? 1 : 0)
+                }
+
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button("UEBERSPRINGEN") { onFinish() }
+                            .font(.system(size: 9, design: .monospaced))
+                            .tracking(2)
+                            .foregroundStyle(.white.opacity(0.35))
+                            .buttonStyle(.plain)
+                            .padding(20)
+                    }
+                    Spacer()
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { weiter() }
+        }
+        .onAppear {
+            withAnimation(.easeIn(duration: 1.2)) { sichtbar = true }
+        }
+    }
+
+    private func weiter() {
+        guard index < Self.tafeln.count - 1 else {
+            onFinish()
+            return
+        }
+        withAnimation(.easeOut(duration: 0.35)) { sichtbar = false }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            index += 1
+            withAnimation(.easeIn(duration: 0.8)) { sichtbar = true }
+        }
     }
 }
 #endif

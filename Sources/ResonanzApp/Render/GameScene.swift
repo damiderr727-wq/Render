@@ -422,6 +422,10 @@ public final class GameScene: SKScene {
         case (.hallqualle, _): return "hallqualle_treibt"
         case (.steinfink, .angriff): return "steinfink_stoss"
         case (.steinfink, _): return "steinfink_hockt"
+        case (.zerrmaul, .angriff): return "zerrmaul_schnappt"
+        case (.zerrmaul, _): return "zerrmaul_wartet"
+        case (.taumler, .angriff): return "taumler_ansturm"
+        case (.taumler, _): return "taumler_taumelt"
         }
     }
 

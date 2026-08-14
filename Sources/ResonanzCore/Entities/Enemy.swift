@@ -20,6 +20,12 @@ public enum EnemyKind: String, Sendable, CaseIterable {
     case hallqualle
     /// Bruecke: hockt auf dem Gelaender und stoesst im Bogen herab.
     case steinfink
+    /// Dissonanz: in den Boden gewachsen, schnappt zu, wenn man
+    /// darueberlaeuft.
+    case zerrmaul
+    /// Dissonanz: hat den Takt verloren, nicht die Kraft. Taumelt und
+    /// richtet sich zum Ansturm auf.
+    case taumler
 
     public var maxHealth: Int {
         switch self {
@@ -31,6 +37,8 @@ public enum EnemyKind: String, Sendable, CaseIterable {
         case .chorschatten: return 5
         case .hallqualle: return 3
         case .steinfink: return 6
+        case .zerrmaul: return 5
+        case .taumler: return 9
         }
     }
 
@@ -50,6 +58,8 @@ public enum EnemyKind: String, Sendable, CaseIterable {
         case .chorschatten: return 3
         case .hallqualle: return 2
         case .steinfink: return 3
+        case .zerrmaul: return 3
+        case .taumler: return 3
         }
     }
 
@@ -63,6 +73,8 @@ public enum EnemyKind: String, Sendable, CaseIterable {
         case .chorschatten: return (14, 20)
         case .hallqualle: return (15, 14)
         case .steinfink: return (16, 12)
+        case .zerrmaul: return (18, 8)
+        case .taumler: return (14, 20)
         }
     }
 
@@ -73,7 +85,7 @@ public enum EnemyKind: String, Sendable, CaseIterable {
 
     /// Bleibt sie stehen, wo sie steht?
     public var isRooted: Bool {
-        self == .dissonanzknospe
+        self == .dissonanzknospe || self == .zerrmaul
     }
 
     public var resonanceReward: Double {
@@ -101,6 +113,8 @@ public enum EnemyKind: String, Sendable, CaseIterable {
         case .chorschatten: return 4
         case .steinfink: return 5
         case .stilleschreiter: return 5
+        case .zerrmaul: return 4
+        case .taumler: return 6
         }
     }
 
@@ -196,12 +210,59 @@ public final class Enemy {
                 updateSchatten(dt: dt, room: room, toPlayer: toPlayer, distance: distance)
             case .hallqualle: updateQualle(dt: dt, toPlayer: toPlayer, distance: distance)
             case .steinfink: updateFink(dt: dt, room: room, toPlayer: toPlayer, distance: distance)
+            case .zerrmaul: updateMaul(dt: dt, toPlayer: toPlayer)
+            case .taumler: updateTaumler(dt: dt, room: room, toPlayer: toPlayer, distance: distance)
             }
         } else {
             velocity.x = approach(velocity.x, 0, 600 * dt)
         }
 
         applyPhysics(dt: dt, room: room)
+    }
+
+    /// Das Zerrmaul wartet und schnappt.
+    ///
+    /// Es bewegt sich nie. Der ganze Gegner ist eine Frage des
+    /// Zeitpunkts: geschlossen ist es ein Riss im Boden, und wer den
+    /// Riss kennt, geht darueber, waehrend es zu ist. Es holt darum
+    /// merklich aus, bevor es zubeisst - ohne diese Viertelsekunde
+    /// waere es keine Falle, sondern eine Steuer auf das Vorwaertsgehen.
+    private func updateMaul(dt: Double, toPlayer: Vec2) {
+        velocity = .zero
+        stateTime += dt
+        if attackTimer > 0 { return }
+        // Ausloesen, sobald jemand darueber ist - und danach eine Pause,
+        // in der man wieder hinueberkommt.
+        if abs(toPlayer.x) < 16 && abs(toPlayer.y) < 26 {
+            attackTimer = 1.35
+            stateTime = 0
+        }
+    }
+
+    /// Der Taumler schwankt, richtet sich auf und rennt.
+    ///
+    /// Drei Zustaende, und der mittlere ist der wichtige: er *steht
+    /// still und gerade*, bevor er losgeht. Ein Gegner, der taumelt,
+    /// wirkt harmlos; einer, der ploetzlich gerade steht, nicht mehr.
+    /// Dieser Wechsel ist die ganze Ansage - er braucht keinen Ruf und
+    /// kein Aufblitzen.
+    private func updateTaumler(dt: Double, room: Room, toPlayer: Vec2, distance: Double) {
+        stateTime += dt
+        if attackTimer > 0 {
+            // Im Ansturm: geradeaus, nicht lenkbar.
+            velocity.x = approach(velocity.x, facing * 108, 420 * dt)
+            return
+        }
+        if aggro && distance < 170 && stateTime > 1.6 {
+            stateTime = 0
+            attackTimer = 1.1
+            facing = sign(toPlayer.x) == 0 ? facing : sign(toPlayer.x)
+            return
+        }
+        // Sonst schwankt er auf der Stelle und driftet dabei langsam.
+        let schwanken = sin(stateTime * 1.9)
+        velocity.x = approach(velocity.x, schwanken * 22, 200 * dt)
+        if abs(schwanken) > 0.9 { facing = schwanken < 0 ? -1 : 1 }
     }
 
     /// Der Chorschatten haengt und faellt.

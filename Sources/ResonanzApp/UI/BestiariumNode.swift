@@ -34,6 +34,8 @@ public final class BestiariumNode: SKNode {
         .chorschatten: "chorschatten_haengt_2",
         .hallqualle: "hallqualle_treibt_2",
         .steinfink: "steinfink_hockt_2",
+        .zerrmaul: "zerrmaul_schnappt_2",
+        .taumler: "taumler_taumelt_2",
     ]
 
     public func build(in size: CGSize) {

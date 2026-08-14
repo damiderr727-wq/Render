@@ -69,7 +69,23 @@
   }
  ],
  "backdrop": null,
- "enemies": [],
+ "enemies": [
+  {
+   "type": "zerrmaul",
+   "x": 20,
+   "y": 13
+  },
+  {
+   "type": "zerrmaul",
+   "x": 31,
+   "y": 17
+  },
+  {
+   "type": "taumler",
+   "x": 37,
+   "y": 17
+  }
+ ],
  "pickups": [],
  "decor": [
   {

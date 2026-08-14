@@ -2843,56 +2843,209 @@ def draw_steinfink(phase: float, stoss: float = 0.0) -> Canvas:
     genau darum sieht man ihn nicht, solange er hockt. Erst wenn er die
     Fluegel oeffnet, wird aus dem Zierrat ein Tier.
 
-    `stoss` 0 hockt, 1 ist im Sturz: die Fluegel liegen an, der Hals
-    streckt sich, und der ganze Koerper kippt nach vorn. Aus einem
-    hockenden Vogel wird ein Pfeil.
+    Ein erster Anlauf hat beide Fluegel in dieselbe Richtung gelegt und
+    den Rumpf als kleines Vieleck gezeichnet: heraus kam ein grauer
+    Klumpen. Ein Vogel braucht vier Dinge, und zwar alle vier, sonst ist
+    er ein Stein - **Kopf mit Schnabel**, **Brust**, **ein Fluegel, der
+    sich hebt**, und **ein Schwanz**, der in die Gegenrichtung zeigt. Der
+    Schwanz ist der, den man am ehesten vergisst und am meisten braucht:
+    er gibt dem Tier eine Achse.
+
+    `stoss` 0 hockt, 1 ist im Sturz.
     """
-    c = kreatur_leinwand(24, 18)
+    c = kreatur_leinwand(26, 18)
     cx, base = 12, 17
-    kipp = stoss * 3.2
+    kipp = stoss * 2.6
 
-    stein = mix(P.STONE_HI, P.WARM, 0.20)
-    stein_hi = mix(stein, P.BONE, 0.38)
-    stein_lo = shade(stein, -0.42)
+    stein = mix(P.STONE_HI, P.WARM, 0.22)
+    stein_hi = mix(stein, P.BONE, 0.42)
+    stein_lo = shade(stein, -0.45)
 
-    # Der Rumpf: ein liegendes Ei, im Stoss nach vorn gekippt.
-    ky = base - 7 + stoss * 1.5
-    _flaeche(c, [(cx - 5 + kipp, ky - 2.5), (cx + 3.5 + kipp * 1.4, ky - 3.5),
-                 (cx + 6.5 + kipp * 1.6, ky + 0.5), (cx + 3.0 + kipp, ky + 4.0),
-                 (cx - 4.5 + kipp * 0.6, ky + 3.5), (cx - 6.5, ky + 0.5)],
-             stein)
+    ky = base - 7 + stoss * 1.2
 
-    # Der Schnabel - kurz, hart, und im Stoss die Spitze der Figur.
-    sx, sy = cx + 6.0 + kipp * 1.8, ky - 0.5 + stoss * 0.8
+    # --- Der Schwanz, zuerst: er liegt hinter allem.
+    for i in range(6):
+        t = i / 5
+        tx = cx - 5 - i * 1.15 - kipp * 0.5
+        ty = ky + 1.2 - t * (1.8 - stoss * 2.6)
+        for d in range(int(2.6 - t * 1.4) + 1):
+            c.set(int(tx), int(ty + d), stein_lo if d else stein)
+
+    # --- Die Brust: ein liegendes Ei, im Stoss nach vorn gekippt.
+    for dy in range(-4, 5):
+        v = dy / 4.4
+        hw = 5.4 * math.sqrt(max(0.0, 1 - v * v))
+        for dx in range(-int(hw), int(hw) + 1):
+            q = dx / max(0.8, hw)
+            col = stein_hi if (dy < -1 and q > -0.4) else (stein_lo if q > 0.55 else stein)
+            c.set(int(cx + dx + kipp), int(ky + dy), col)
+
+    # --- Der Kopf: eine eigene kleine Kugel *vor* der Brust. Ohne den
+    # Absatz zwischen Kopf und Rumpf ist es eine Kartoffel.
+    hx, hy = cx + 5.0 + kipp * 1.5, ky - 2.6 + stoss * 1.6
+    c.ellipse(hx, hy, 2.8, 2.6, stein)
+    c.ellipse(hx - 0.4, hy - 0.6, 2.0, 1.8, stein_hi)
     for i in range(4):
-        t = i / 3
-        c.set(int(sx + i), int(sy + t * 1.2), stein_hi if i < 2 else P.BONE_SH)
+        c.set(int(hx + 2.4 + i), int(hy + i * 0.5), mix(stein_hi, P.BONE, 0.4) if i < 2 else P.BONE_SH)
 
-    # Fluegel. Gefaltet sind sie zwei Kanten auf dem Ruecken; offen sind
-    # sie das Doppelte des Tieres, und genau dieser Sprung macht den
-    # Schreck aus.
-    oeffnung = max(stoss, 0.18 + 0.10 * math.sin(phase * 2))
-    for seite, hoch in ((1, 1.0), (-1, 0.72)):
-        spann = (3.0 + 7.5 * oeffnung) * hoch
+    # --- Ein Fluegel, und der hebt sich. Zwei uebereinander sehen von der
+    # Seite ohnehin wie einer aus; der zweite steht nur als Andeutung
+    # dahinter.
+    oeffnung = max(stoss, 0.16 + 0.12 * math.sin(phase * 2))
+    for tiefe, ton in ((1, stein_lo), (0, stein_hi)):
+        spann = 4.5 + 8.0 * oeffnung
         for i in range(int(spann)):
             t = i / max(1.0, spann)
-            wx = cx - 1 + kipp * 0.5 - i * 0.9
-            wy = ky - 2.5 - seite * (1.5 + t * 3.2 * oeffnung) + t * 1.2
-            dicke = 2.4 * (1 - t * 0.6)
-            for d in range(int(dicke) + 1):
-                c.set(int(wx), int(wy + d), stein_hi if d == 0 else stein_lo)
+            wx = cx - 1 + kipp * 0.4 - i * 0.95 + tiefe * 1.4
+            wy = ky - 3.0 - (1.0 + t * 5.5 * oeffnung) + t * 1.6 + tiefe * 1.6
+            for d in range(int(2.8 * (1 - t * 0.55)) + 1):
+                c.set(int(wx), int(wy + d), ton if d == 0 else stein_lo)
 
-    # Zwei kurze Staender. Im Stoss ziehen sie sich an.
+    # --- Zwei kurze Staender. Im Stoss ziehen sie sich an.
     for i in range(2):
-        fx = cx - 2 + i * 4 + kipp * 0.4
-        for k in range(int(3 * (1 - stoss * 0.7))):
+        fx = cx - 1 + i * 3 + kipp * 0.4
+        for k in range(int(3 * (1 - stoss * 0.8))):
             c.set(int(fx), base - 3 + k, stein_lo)
         c.rect(int(fx) - 1, base - 1, 3, 1, stein_lo)
 
     _kante_licht(c.roh, stein_hi, stein_lo)
-    # Das Auge zuletzt, damit es auf dem Licht liegt.
-    c.roh.set(int(cx + 3.4 + kipp * 1.4), int(ky - 1.4), P.AMBER)
+    c.roh.set(int(hx + 0.6), int(hy - 0.4), P.AMBER)      # das Auge zuletzt
     c.roh.outline(hexc("#06070d", 255), diagonal=False)
+    return c.roh
+
+
+def draw_zerrmaul(phase: float, schnappen: float = 0.0) -> Canvas:
+    """
+    Zerrmaul - in den Boden der Dissonanz gewachsen.
+
+    Kein Tier, sondern eine Stelle: dort, wo der Fels aufgerissen ist,
+    sitzt ein Maul, und es geht auf, wenn etwas darueber laeuft. Es
+    bewegt sich nie von der Stelle.
+
+    Der ganze Gegner ist das **Verhaeltnis von zu und auf**. Geschlossen
+    ist er ein Riss im Boden, drei Pixel hoch, und man geht ahnungslos
+    hin. Offen ist er dreimal so hoch wie breit. Der Sprung dazwischen
+    muss darum so gross wie moeglich sein - ein Maul, das halb offen
+    wartet, ist eine Warnung, und eine Warnung will er nicht sein.
+
+    `schnappen` 0 geschlossen, 1 ganz offen.
+    """
+    c = kreatur_leinwand(20, 16)
+    cx, base = 10, 15
+    auf = schnappen ** 0.7
+
+    fleisch = mix(P.ROT, P.INK2, 0.42)
+    fleisch_hi = mix(P.ROT, P.WARM, 0.35)
+    zahn = mix(P.BONE, P.ROT_DIM, 0.22)
+    schlund = mix(P.ROT_DIM, P.INK2, 0.70)
+
+    # Die Lippen: zwei Baenke, die sich oeffnen. Sie kippen dabei nach
+    # aussen, statt nur auseinanderzugehen - ein Maul rollt auf.
+    for seite, hoch in ((-1, 1.0), (1, 0.92)):
+        kipp = auf * 3.4 * hoch
+        for i in range(8):
+            t = i / 7
+            lx = cx + seite * (1.5 + i * 1.05)
+            ly = base - 1 - kipp * (1 - t * 0.5) - t * 0.8
+            for d in range(3):
+                col = fleisch_hi if d == 0 else (fleisch if d == 1 else schlund)
+                c.set(int(lx), int(ly + d), col)
+
+    # Der Schlund dazwischen. Er ist nur da, wenn das Maul offen ist -
+    # geschlossen darf man nichts davon sehen.
+    if auf > 0.08:
+        tiefe = int(1 + auf * 7)
+        for i in range(tiefe):
+            t = i / max(1, tiefe)
+            w = (6.5 - t * 3.4) * (0.35 + 0.65 * auf)
+            for dx in range(-int(w), int(w) + 1):
+                c.set(cx + dx, base - 2 - i, mix(schlund, P.INK2, t * 0.6))
+
+    # Zaehne: oben und unten versetzt, damit sie ineinandergreifen.
+    for k in range(5):
+        zx = cx - 5 + k * 2.5
+        hoehe = 1 + int(auf * (2 + (k % 2)))
+        for i in range(hoehe):
+            c.set(int(zx), int(base - 2 - auf * 2.2 - i), zahn)
+            c.set(int(zx + 1.2), int(base - 3 - auf * 6.5 + i), zahn)
+
+    # Der Riss laeuft ueber die Lippen hinaus in den Fels - so sieht man,
+    # dass es gewachsen ist und nicht daraufgesetzt.
+    for seite in (-1, 1):
+        for i in range(4):
+            c.set(int(cx + seite * (9 + i)), base - 1 + int(i * 0.4),
+                  mix(fleisch, P.INK2, 0.5 + i * 0.12))
+
+    if auf > 0.4:
+        c.roh.glow(cx, base - 5, 9, (P.ROT[0], P.ROT[1], P.ROT[2], int(60 * auf)))
+    return c.roh
+
+
+def draw_taumler(phase: float, ansturm: float = 0.0) -> Canvas:
+    """
+    Taumler - was in der Dissonanz noch geht.
+
+    Er hat den Takt verloren, nicht die Kraft. Also schwankt er: der
+    Oberkoerper haengt nach einer Seite, die Beine fangen es auf, und
+    beim naechsten Schritt kippt es andersherum. Nichts an ihm steht
+    senkrecht.
+
+    Beim Ansturm richtet er sich auf - und *das* ist die Ansage. Ein
+    Gegner, der taumelt, wirkt harmlos; einer, der plotzlich gerade
+    steht, nicht mehr. Der Wechsel traegt den ganzen Kampf gegen ihn.
+
+    `ansturm` 0 taumelt, 1 steht gestreckt und geht los.
+    """
+    c = kreatur_leinwand(24, 26)
+    cx, base = 12, 25
+    kipp = math.sin(phase) * (1 - ansturm) * 3.6
+
+    haut = mix(P.ROT, P.INK2, 0.55)
+    haut_hi = mix(P.ROT, P.WARM, 0.30)
+    haut_lo = shade(haut, -0.40)
+    sehne = mix(P.WARM, P.INK2, 0.45)
+
+    # Zwei duenne Beine, die den Schwerpunkt hinterherziehen.
+    for i, seite in enumerate((-1, 1)):
+        fx = cx + seite * 3.4 - kipp * 0.35
+        for k in range(9):
+            t = k / 8
+            c.set(int(cx + seite * 1.6 + (fx - cx - seite * 1.6) * t),
+                  base - 9 + k, haut_lo if t < 0.7 else sehne)
+        c.rect(int(fx) - 2, base - 1, 4, 1, haut_lo)
+
+    # Der Rumpf haengt schief - beim Ansturm richtet er sich auf.
+    hoehe = 13 + int(ansturm * 3)
+    for i in range(hoehe):
+        t = i / hoehe
+        # Schmal. Ein erster Anlauf war vier Pixel breiter, und damit war
+        # er keine schwankende Gestalt mehr, sondern ein Sack.
+        w = 1.4 + 2.9 * math.sin(math.pi * min(1.0, 0.16 + t * 0.80))
+        # Die Neigung gehoert nach **oben**. Sie stand als `kipp * (1 - t)`
+        # da - damit wanderte der Fuss zur Seite und der Kopf blieb
+        # senkrecht darueber, also genau andersherum als bei allem, was
+        # aus dem Lot faellt.
+        x = cx + kipp * (t ** 1.3) - ansturm * 0.8
+        y = base - 9 - i
+        for dx in range(-int(w), int(w) + 1):
+            q = dx / max(0.8, w)
+            col = haut_hi if q < -0.35 else (haut_lo if q > 0.45 else haut)
+            c.set(int(x) + dx, y, col)
+
+    # Die Schultern haengen ungleich: eine hoeher als die andere. Das ist
+    # der billigste und beste Weg, eine Gestalt aus dem Lot zu bringen.
+    for seite, dy in ((-1, 0), (1, 2)):
+        for i in range(3):
+            c.set(int(cx + kipp * 0.9 + seite * (3 + i)),
+                  int(base - 9 - hoehe + 3 + dy + i * 0.6), haut_lo)
+
+    _kante_licht(c.roh, haut_hi, haut_lo, warm=0.30)
+
+    # Kein Gesicht, ein Loch - und es sitzt schief wie alles an ihm.
+    _hohlraum(c, cx + kipp * 1.05 - ansturm * 0.8, base - 9 - hoehe + 4, 1.7,
+              mix(P.WARM, P.BONE, 0.35),
+              puls=abs(math.sin(phase * 1.5)) * (0.3 + ansturm))
+    c.roh.outline(hexc("#0a0508", 255), diagonal=False)
     return c.roh
 
 
@@ -3417,6 +3570,20 @@ def build() -> None:
     atlas.add_sequence("hallqualle_treibt",
                        [draw_hallqualle(i / 8 * math.tau) for i in range(8)],
                        pivot=(0.5, 0.5), fps=8)
+    atlas.add_sequence("zerrmaul_wartet",
+                       [draw_zerrmaul(i / 6 * math.tau) for i in range(6)],
+                       pivot=(0.5, 1.0), fps=5)
+    atlas.add_sequence("zerrmaul_schnappt",
+                       [draw_zerrmaul(i / 4 * math.tau, schnappen=min(1.0, i / 1.6))
+                        for i in range(4)],
+                       pivot=(0.5, 1.0), fps=15)
+    atlas.add_sequence("taumler_taumelt",
+                       [draw_taumler(i / 8 * math.tau) for i in range(8)],
+                       pivot=(0.5, 1.0), fps=7)
+    atlas.add_sequence("taumler_ansturm",
+                       [draw_taumler(i / 4 * math.tau, ansturm=min(1.0, i / 2))
+                        for i in range(4)],
+                       pivot=(0.5, 1.0), fps=12)
     atlas.add_sequence("steinfink_hockt",
                        [draw_steinfink(i / 6 * math.tau) for i in range(6)],
                        pivot=(0.5, 1.0), fps=6)

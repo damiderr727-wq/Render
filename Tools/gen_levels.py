@@ -2507,6 +2507,10 @@ def room_D0() -> Room:
     r.side_door("R", "right", "D1", "L", hint=6)
     r.bench_on(9, 6)
 
+    r.enemy_on("zerrmaul", 20, 16)
+    r.enemy_on("zerrmaul", 31, 16)
+    r.enemy_on("taumler", 37, 16)
+
     r.crystal_on(22, 6, 2)
     r.note_on(13, 6, "AB HIER HOERT MAN NICHTS MEHR. "
                      "NICHT WEIL ES STILL IST - WEIL ALLES ZUGLEICH KLINGT.")

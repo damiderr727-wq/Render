@@ -153,6 +153,31 @@ public struct Bestiarium: Sendable {
                 "Fluegel machen aus dem Ornament ein Tier.",
             ],
             schwelle: 4),
+        Eintrag(
+            art: .zerrmaul,
+            name: "ZERRMAUL",
+            verhalten: [
+                "Sitzt im Boden und schnappt zu, wenn man darueber ist.",
+                "Es holt merklich aus - wer den Riss kennt, geht rechtzeitig.",
+            ],
+            deutung: [
+                "Kein Tier, sondern eine Stelle: dort, wo der Fels",
+                "aufgerissen ist. Geschlossen ist es drei Pixel hoch, und",
+                "genau darum laeuft man das erste Mal hinein.",
+            ],
+            schwelle: 4),
+        Eintrag(
+            art: .taumler,
+            name: "TAUMLER",
+            verhalten: [
+                "Schwankt auf der Stelle, richtet sich auf - und rennt.",
+                "Das Aufrichten ist die Ansage; danach geht er geradeaus.",
+            ],
+            deutung: [
+                "Er hat den Takt verloren, nicht die Kraft. Nichts an ihm",
+                "steht senkrecht, ausser in dem Moment, bevor er losgeht.",
+            ],
+            schwelle: 5),
     ]
 
     // MARK: - Die Grossen

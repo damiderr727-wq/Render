@@ -299,6 +299,8 @@ def render(room_id: str) -> Image.Image:
         "chorschatten": "chorschatten_haengt_2",
         "hallqualle": "hallqualle_treibt_2",
         "steinfink": "steinfink_hockt_2",
+        "zerrmaul": "zerrmaul_schnappt_2",
+        "taumler": "taumler_taumelt_2",
     }
     for enemy in room["enemies"]:
         name = sprite_for.get(enemy["type"])

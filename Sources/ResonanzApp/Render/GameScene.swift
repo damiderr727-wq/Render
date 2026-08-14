@@ -588,7 +588,7 @@ public final class GameScene: SKScene {
         }
 
         cameraNode.position = target
-        renderer.updateParallax(cameraPosition: target)
+        renderer.updateParallax(cameraPosition: target, dt: dt)
     }
 
     // MARK: - Musik

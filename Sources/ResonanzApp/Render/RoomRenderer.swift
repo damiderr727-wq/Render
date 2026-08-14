@@ -37,6 +37,10 @@ public final class RoomRenderer {
     /// Kacheln, die zur Laufzeit verschwinden koennen (verstimmte Sperren).
     private var breakableNodes: [Int: SKNode] = [:]
 
+    /// Wie lange der Raum schon steht. Nur die Wolken brauchen sie: sie
+    /// laufen von selbst und nicht, weil die Kamera laeuft.
+    private var zeit: Double = 0
+
     public init() {
         layers.backdrop.zPosition = -100
         layers.terrain.zPosition = 0
@@ -149,15 +153,65 @@ public final class RoomRenderer {
             container.userData = ["parallax": factor]
             layers.backdrop.addChild(container)
         }
+
+        buildWolken(room: room, region: region)
+    }
+
+    /// Wolken. Sie gibt es nur ueber der Bruecke - dem einzigen Gebiet
+    /// unter freiem Himmel.
+    ///
+    /// Sie sind keine gewoehnliche Kulissenschicht: eine Kulisse laeuft
+    /// nur, weil die Kamera laeuft, und ein Himmel, der still steht,
+    /// waehrend man hundert Schritte ueber ein Tal geht, ist eine
+    /// Tapete. Also traegt jedes Band zusaetzlich einen Eigenlauf in
+    /// Pixeln je Sekunde (`drift` im Atlas), und der wird in
+    /// `updateParallax` aufaddiert.
+    private func buildWolken(room: Room, region: String) {
+        for stufe in 0..<2 {
+            let name = "\(region)_wolken\(stufe)"
+            guard let info = atlas.frame(name) else { continue }
+            let breite = Double(info.size.width)
+            let container = SKNode()
+            // Zwischen Luft (0) und Ferne (1): hinter den Bergen, vor
+            // der Sonne.
+            container.zPosition = 0.3 + CGFloat(stufe) * 0.3
+
+            // Zwei Kacheln mehr, und zwei davon links vom Nullpunkt. Das
+            // Band wandert nach links aus dem Bild; ohne den Vorlauf
+            // rechts risse rechts eine Luecke auf.
+            let spalten = Int(ceil((Double(room.width) * tileSize) / breite)) + 4
+            for spalte in 0..<spalten {
+                let sprite = SKSpriteNode(texture: info.texture, size: info.size)
+                sprite.anchorPoint = CGPoint(x: 0, y: 0)
+                sprite.position = CGPoint(x: (Double(spalte) - 2) * breite,
+                                          y: -Double(info.size.height))
+                container.addChild(sprite)
+            }
+            container.userData = [
+                "parallax": atlas.parallaxFactors[name] ?? 0.03,
+                "drift": atlas.driftFactors[name] ?? 0,
+                "breite": breite,
+            ]
+            layers.backdrop.addChild(container)
+        }
     }
 
     /// Verschiebt Hinter- und Vordergrund gegenlaeufig zur Kamera.
     /// Ein Faktor ueber 1 laesst die Schicht schneller laufen als die Welt -
     /// so entsteht der Eindruck, dicht davor zu stehen.
-    public func updateParallax(cameraPosition: CGPoint) {
+    public func updateParallax(cameraPosition: CGPoint, dt: Double = 0) {
+        zeit += dt
         for container in layers.backdrop.children + layers.foreground.children {
             guard let factor = container.userData?["parallax"] as? Double else { continue }
-            container.position = CGPoint(x: cameraPosition.x * (1 - factor),
+            var x = cameraPosition.x * (1 - factor)
+            // Eigenlauf, auf eine Bandbreite zurueckgefaltet: sonst
+            // waechst der Versatz ueber eine lange Sitzung ins
+            // Unermessliche und das Band schiebt sich aus dem Raum.
+            if let drift = container.userData?["drift"] as? Double, drift != 0,
+               let breite = container.userData?["breite"] as? Double, breite > 0 {
+                x += CGFloat((drift * zeit).truncatingRemainder(dividingBy: breite))
+            }
+            container.position = CGPoint(x: x,
                                          y: cameraPosition.y * (1 - factor) * 0.5)
         }
     }

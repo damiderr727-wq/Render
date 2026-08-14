@@ -161,6 +161,17 @@ def render(room_id: str) -> Image.Image:
                     faded.crop((x0 - dx, 0, x1 - dx, img.height)), (x0, 0))
             continue
 
+        # Die Wolken liegen zwischen Luft und Ferne: hinter den Bergen,
+        # vor der Sonne. Im Spiel laufen sie zusaetzlich von selbst; hier
+        # steht ein Augenblick davon.
+        if layer == 1:
+            for stufe in (0, 1):
+                band, _ = backdrops.frame(f"{kulisse}_wolken{stufe}")
+                if band is None:
+                    continue
+                for ox in range(0, w * TS, band.width):
+                    canvas.alpha_composite(band, (ox, 0))
+
         # Jede zweite Kachel gespiegelt: sonst stoesst die rechte Kante der
         # Schicht auf ihre eigene linke, und alle 512 Pixel laeuft eine
         # harte senkrechte Naht durchs Bild. Derselbe Kniff wie im Spiel.

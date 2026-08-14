@@ -26,6 +26,8 @@ public final class AtlasStore {
             let pivotY: Double
             let fps: Double?
             let parallax: Double?
+            /// Eigenlauf in Pixeln je Sekunde. Nur die Wolken haben ihn.
+            let drift: Double?
         }
         let atlas: String
         let width: Int
@@ -36,6 +38,7 @@ public final class AtlasStore {
     private var frames: [String: FrameInfo] = [:]
     private var sequences: [String: [FrameInfo]] = [:]
     public private(set) var parallaxFactors: [String: Double] = [:]
+    public private(set) var driftFactors: [String: Double] = [:]
 
     public static let shared = AtlasStore()
 
@@ -75,6 +78,9 @@ public final class AtlasStore {
                 fps: frame.fps ?? 8)
             if let parallax = frame.parallax {
                 parallaxFactors[frameName] = parallax
+            }
+            if let drift = frame.drift {
+                driftFactors[frameName] = drift
             }
         }
     }

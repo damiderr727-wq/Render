@@ -70,7 +70,10 @@ HOCHZUG = {
     "kathedrale": (1, 2),
     "grotten": (1, 2),
     "dissonanz": (1, 2),
-    "bruecke": (1,),
+    # Die Bruecke traegt nichts Senkrechtes bis an den oberen Rand - was
+    # ueber der Fahrbahn liegt, ist Himmel. Wird hier gezogen, schmiert
+    # der Bergruecken als Schliere ueber den ganzen Tag.
+    "bruecke": (),
 }
 SCHICHTEN = len(PARALLAX)
 
@@ -1119,67 +1122,216 @@ def bruecke(layer: int) -> Canvas:
     rng = Rng(6600 + layer * 19)
 
     if layer == 0:
-        # Weiter Himmel, unten in Nebel. Hier ist es hell - zum ersten Mal.
+        # Heller Tag. Bis hierher hatte jedes Gebiet eine Decke ueber sich
+        # und einen Dunst, der aus Staub bestand; hier steht zum ersten
+        # Mal offener Himmel darueber, und der hat blau zu sein - nicht
+        # daemmergrau. Der Wechsel ist der ganze Zweck des Gebiets.
         if not OHNE_VERLAUF:
-            luftraum(c, [(0.00, hexc("#182234")), (0.34, hexc("#2c3b52")),
-                         (0.66, hexc("#4b5a72")), (0.88, hexc("#77839a")),
-                         (1.00, hexc("#9aa3b4"))])
-        # Eine bleiche Sonne hinter dem Dunst.
-        c.glow(340, 58, 92, (255, 240, 214, 30), power=1.6)
-        c.ellipse(340, 58, 15, 15, mix(sky, (255, 255, 255, 255), 0.55))
-        motes(c, 180, rng, (255, 246, 226), alpha=(8, 30))
+            luftraum(c, [(0.00, hexc("#3a80c6")), (0.30, hexc("#68a9dd")),
+                         (0.58, hexc("#9bcbec")), (0.82, hexc("#cae2f1")),
+                         (1.00, hexc("#eef3ec"))])
+        # Die Sonne, hoch und warm. Zwei Scheine uebereinander: ein
+        # weiter, blasser fuer die Luft ringsum, ein enger, heller fuer
+        # den Rand der Scheibe. Einer allein ist entweder ein Fleck oder
+        # ein Loch.
+        c.glow(352, 44, 158, (255, 244, 208, 44), power=2.4)
+        c.glow(352, 44, 54, (255, 250, 230, 76), power=1.5)
+        c.ellipse(352, 44, 13, 13, hexc("#fffbe6"))
+        motes(c, 120, rng, (255, 252, 238), alpha=(6, 22))
         return c
 
     if layer == 1:
-        # Die Ferne: Bergruecken und der Nebel, in dem die Schlucht endet.
-        for k, (h0, ton) in enumerate(((0.62, 0.16), (0.70, 0.30))):
+        # Die Ferne: Bergruecken und der Dunst, in dem die Schlucht endet.
+        # Sie liegen tiefer als frueher - unter der Fahrbahn, nicht auf
+        # ihrer Hoehe. Man schaut von einer Bruecke auf ein Tal hinab.
+        for k, (h0, ton) in enumerate(((0.70, 0.16), (0.78, 0.30))):
             col = mix(far, sky, 0.62 - ton)
             for x in range(W):
-                h = H * h0 + math.sin(x * 0.012 + k * 2.2) * 26 \
-                    + math.sin(x * 0.041 + k) * 11
+                h = H * h0 + math.sin(x * 0.012 + k * 2.2) * 22 \
+                    + math.sin(x * 0.041 + k) * 9
                 for y in range(int(h), H):
                     c.set(x, y, col)
-        # Und der Nebel darueber, der die Kante frisst.
-        for y in range(int(H * 0.58), H):
-            t = (y - H * 0.58) / (H * 0.42)
+        # Und der Dunst darueber, der die Kante frisst.
+        for y in range(int(H * 0.66), H):
+            t = (y - H * 0.66) / (H * 0.34)
             for x in range(0, W, 1):
-                if hash01(x, y) < 0.28 * (1 - t):
-                    c.blend(x, y, (200, 210, 224, 40))
+                if hash01(x, y) < 0.34 * (1 - t):
+                    c.blend(x, y, (226, 238, 248, 46))
         return c
 
+    # Wo im Bild die Fahrbahn liegt, ist keine freie Wahl.
+    #
+    # E2 ist sechsundzwanzig Kacheln hoch, der Belag liegt auf Kachel
+    # siebzehn und ist zwei Kacheln dick, und die Kulissenschichten
+    # haengen mit ihrer Unterkante am Raumboden. Also:
+    #   Oberkante  (26 - 17) * 16 = 144 Pixel ueber dem unteren Rand
+    #   Unterkante (26 - 19) * 16 = 112 Pixel darueber, im Bild y = 176.
+    # Alles, was zwischen 144 und 176 gemalt wird, verschwindet hinter
+    # den Kacheln des Belags. Was man von der Bruecke sieht, hat
+    # unterhalb von 176 zu stehen - dort sind hundertzwoelf Pixel Platz,
+    # und die sind das ganze Bauwerk.
+    deck = 144
+    unterkante = 176
+
     if layer == 2:
-        # Der Bogen des Bauwerks selbst - riesig, angeschnitten, und weit
-        # hinter dem Weg, auf dem man geht. Man sieht seine eigene Bruecke
-        # von der Seite.
-        col = mix(far, P.FOREGROUND, 0.34)
-        stein_hi = mix(col, edge, 0.30)
-        for bogen, (bx, br) in enumerate(((110, 96), (330, 112), (520, 88))):
+        # Die Bogenreihe: das eigene Bauwerk, ein Stueck weiter hinten.
+        # Ein Brueckenbogen woelbt sich **nach oben gegen den Belag** -
+        # er traegt ihn ja. Beim ersten Anlauf lief er andersherum und
+        # stand als Reihe von Buegeln im Himmel ueber dem Weg.
+        col = mix(far, P.FOREGROUND, 0.14)
+        stein_hi = mix(col, edge, 0.46)
+        fuge = shade(col, -0.22)
+        scheitel, kaempfer, spann = unterkante + 6, unterkante + 46, 54
+
+        c.rect(0, deck, W, unterkante - deck, col)
+        c.rect(0, deck, W, 2, stein_hi)
+        for x in range(0, W, 11):                   # Bruestung darueber
+            c.rect(x, deck - 7, 2, 7, col)
+            c.set(x, deck - 7, stein_hi)
+        c.rect(0, deck - 9, W, 2, col)
+        c.rect(0, deck - 9, W, 1, stein_hi)
+
+        for bx in range(64, W + 64, 128):
             for i in range(200):
-                a = math.pi + i / 200 * math.pi
-                x = bx + math.cos(a) * br
-                y = H * 0.62 + math.sin(a) * br * 0.72
-                for d in range(9):
+                a = i / 199 * math.pi
+                x = bx - math.cos(a) * spann
+                y = kaempfer - math.sin(a) * (kaempfer - scheitel)
+                for d in range(8):
                     c.set(int(x), int(y + d), col if d else stein_hi)
-            # Die Pfeiler darunter.
             for seite in (-1, 1):
-                px = int(bx + seite * br)
-                for y in range(int(H * 0.62), H):
-                    c.rect(px - 7, y, 14, 1, col)
-                    c.set(px + 6, y, stein_hi)
-        c.rect(0, int(H * 0.60), W, 7, col)
-        c.rect(0, int(H * 0.60), W, 2, stein_hi)
+                px = int(bx + seite * 64)
+                for y in range(kaempfer - 8, H):
+                    b = 9 + (y - kaempfer) * 0.05
+                    c.rect(int(px - b), y, int(b * 2), 1, col)
+                    c.set(int(px + b) - 1, y, stein_hi)
+                    c.set(int(px - b), y, fuge)
         return c
 
     if layer == 3:
-        # Nah: zwei angeschnittene Pfeilerkoepfe links und rechts, damit
-        # der Blick einen Rahmen hat.
-        col = mix(far, P.FOREGROUND, 0.68)
-        for x in (-10, 500):
-            masonry(c, x - 30, 0, 76, H, col, course=15, seed=int(x) + 3)
-            c.rect(x - 38, 40, 92, 12, shade(col, 0.12))
-            c.rect(x - 38, 52, 92, 3, shade(col, -0.24))
+        # Die Saeulen, die einen tragen. Sie stehen naeher als die
+        # Bogenreihe, sind gemauert, und sie hoeren nicht auf - sie
+        # verschwinden im Dunst der Schlucht. Eine Saeule mit einem
+        # sichtbaren Fuss waere ein Klotz auf einem Brett; eine, die
+        # unten aus dem Bild laeuft, ist tief.
+        col = mix(far, P.FOREGROUND, 0.46)
+        kante = mix(col, edge, 0.46)
+        schatten = shade(col, -0.32)
+
+        # Die Untersicht des Belags: was man von unten an einer Bruecke
+        # zuerst sieht, ist ihre Dicke.
+        c.rect(0, unterkante, W, 5, shade(col, -0.14))
+        c.rect(0, unterkante + 5, W, 2, schatten)
+
+        for px in (118, 374):
+            # Kaempfer - der verbreiterte Kopf direkt unter der Fahrbahn.
+            for i in range(9):
+                b = 33 - i * 1.5
+                c.rect(int(px - b), unterkante + 7 + i, int(b * 2), 1,
+                       kante if i == 0 else col)
+            # Der Schaft, nach unten leicht breiter.
+            oben = unterkante + 16
+            for y in range(oben, H):
+                b = 20 + (y - oben) * 0.075
+                c.rect(int(px - b), y, int(b * 2) + 1, 1, col)
+                c.rect(int(px + b) - 5, y, 4, 1, kante)
+                c.rect(int(px - b), y, 2, 1, schatten)
+            masonry(c, int(px - 20), oben, 41, H - oben, col,
+                    course=14, seed=px)
+            # Kein Strebewerk. Der erste Anlauf haengte zwei schraege
+            # Streben an jeden Kopf, und aus der Entfernung waren das
+            # zwei Stoecke, die aus der Saeule ragen. Ein Kaempfer, der
+            # sich in drei Stufen verbreitert, sagt dasselbe ruhiger.
+            for i, b in enumerate((38, 41)):
+                c.rect(int(px - b), unterkante + 3 + i * 2, int(b * 2), 2,
+                       shade(col, -0.10 - i * 0.08))
+
+        # Der Dunst, in dem alles endet: dicht am unteren Rand, auf
+        # Kaempferhoehe schon weg.
+        anfang = unterkante + 40
+        for y in range(anfang, H):
+            t = (y - anfang) / max(1, H - anfang)
+            for x in range(W):
+                if c.get(x, y)[3]:
+                    c.blend(x, y, (232, 242, 250, int(120 * t ** 1.5)))
         return c
 
+    return c
+
+
+# ------------------------------------------------------------- Wolken
+#
+# Wolken sind die einzige Schicht im Spiel, die sich von selbst bewegt.
+# Alles andere laeuft nur, weil die Kamera laeuft; ein Himmel, der still
+# steht, waehrend man hundert Schritte ueber ein Tal geht, ist eine
+# Tapete. Der Trift-Wert unten ist Pixel je Sekunde und wird im Atlas
+# mitgeschrieben (`drift`), damit der Renderer ihn kennt.
+WOLKEN_TRIFT = (-3.5, -8.5)
+
+
+def _haufenwolke(c: Canvas, cx: float, basis: float, breite: float,
+                 hoehe: float, rng: Rng, oben, koerper, unten) -> None:
+    """
+    Eine Haufenwolke: flache Unterkante, gebauschte Kuppe.
+
+    Wolken haben unten eine Linie und oben keine. Das
+    Kondensationsniveau ist eine Hoehe, und unterhalb davon gibt es
+    keine Wolke - darum sitzen alle Ballen mit ihrem Fuss auf derselben
+    Zeile. Wer sie als Kreise malt, bekommt Wattebaeusche.
+    """
+    ballen = []
+    n = max(3, int(breite / 34))
+    for k in range(n):
+        t = (k + 0.5) / n
+        r = hoehe * (0.34 + 0.66 * math.sin(math.pi * t) ** 0.75)
+        ballen.append((cx + (t - 0.5) * breite, r * rng.range(0.82, 1.18)))
+    for bx, r in ballen:
+        c.ellipse(bx, basis - r * 0.70, r, r * 0.70, koerper)
+    for bx, r in ballen:                       # kuehler Bauch
+        c.ellipse(bx, basis - r * 0.22, r * 0.86, r * 0.22, unten)
+    for bx, r in ballen:                       # Sonnenseite obenauf
+        c.ellipse(bx + r * 0.16, basis - r * 1.00, r * 0.52, r * 0.32, oben)
+
+
+def wolkenband(stufe: int) -> Canvas:
+    """
+    Ein Streifen Wolken auf durchsichtigem Grund, waagerecht nahtlos.
+
+    Nahtlos, weil er unabhaengig von der Kamera weiterlaeuft und darum
+    irgendwann an sich selbst stoesst: jede Wolke wird dreimal gezeichnet
+    - einmal an ihrem Platz und einmal je Bildbreite links und rechts
+    davon -, mit demselben Zufallsstand, damit die drei Kopien deckungs-
+    gleich sind.
+    """
+    c = Canvas(W, H)
+    if stufe == 0:                             # hoch, klein, fast im Dunst
+        anzahl, y0, y1 = 6, 0.06, 0.26
+        oben, koerper, unten = hexc("#fdfeff"), hexc("#e4eef8"), hexc("#c8d8e8")
+        breit, hoch, deckung = (40, 92), (7, 14), 0.68
+    else:                                      # tiefer, gross, mit Bauch
+        anzahl, y0, y1 = 4, 0.16, 0.42
+        oben, koerper, unten = hexc("#ffffff"), hexc("#f3f8fd"), hexc("#a9c0da")
+        breit, hoch, deckung = (96, 208), (16, 38), 1.0
+
+    setz = Rng(8100 + stufe * 47)
+    for k in range(anzahl):
+        # Gleichmaessig verteilt, dann versetzt. Rein zufaellig stehen
+        # drei Wolken uebereinander und die halbe Breite bleibt leer.
+        feld = W / anzahl
+        cx = (k + 0.5) * feld + setz.range(-feld * 0.34, feld * 0.34)
+        basis = H * setz.range(y0, y1)
+        breite = setz.range(*breit)
+        hoehe = setz.range(*hoch)
+        for versatz in (-W, 0, W):
+            _haufenwolke(c, cx + versatz, basis, breite, hoehe,
+                         Rng(8500 + stufe * 131 + k * 17),
+                         oben, koerper, unten)
+
+    if deckung < 1.0:
+        for y in range(c.h):
+            for x in range(c.w):
+                r, g, b, a = c.get(x, y)
+                if a:
+                    c.set(x, y, (r, g, b, int(a * deckung)))
     return c
 
 
@@ -1195,7 +1347,12 @@ def foreground(region: str) -> Canvas:
     body, edge, accent, sky, far = P.REGIONS[region]
     c = Canvas(W, H)
     rng = Rng(5505 + REGIONS.index(region) * 31)
-    col = P.FOREGROUND
+    # Fast schwarz - ausser ueber der Schlucht. Ein Saum aus Teer unter
+    # einem Mittagshimmel ist kein Abschluss, sondern ein Loch: das Auge
+    # liest ihn als Wand, und die Bruecke steht dann in einem Zimmer.
+    # Tiefe am hellen Tag ist blau, nicht schwarz.
+    col = mix(P.FOREGROUND, hexc("#3d4c66"), 0.46) if region == "bruecke" \
+        else P.FOREGROUND
     base = H - 14
 
     # Geschlossener Saum unten.
@@ -1247,6 +1404,23 @@ def foreground(region: str) -> Canvas:
                 t = i / ln
                 ww = w * (1 - t ** 0.8)
                 c.rect(int(x - ww / 2), i, max(1, int(ww)), 1, col)
+
+    elif region == "bruecke":
+        # Unter der Bruecke steht kein Schutt, sondern Luft. Das
+        # Naechste, was der Blick hier unten findet, ist der Dunst der
+        # Schlucht - und der ist am hellen Tag hell, nicht schwarz.
+        # Geblendet, nicht gesetzt: der Saum unten ist schon gemalt, und
+        # ein deckender Fleck mit Alpha dreissig schlaegt ein Loch hinein
+        # statt Schleier darueber zu legen.
+        for _ in range(8):
+            x = rng.range(-50, W + 50)
+            y = base - rng.range(-12, 22)
+            r = rng.range(34, 92)
+            hell = int(rng.range(9, 17))
+            for k in range(5):
+                c.ellipse(x + rng.range(-r * 0.5, r * 0.5), y + rng.range(-6, 6),
+                          r * rng.range(0.5, 1.0), r * rng.range(0.14, 0.30),
+                          (240, 247, 252, hell), blend=True)
 
     else:
         # Dissonanz: Schutt und abgebrochene Zacken.
@@ -1563,7 +1737,7 @@ def build() -> None:
             # auch die mitgezogen.
             if layer in HOCHZUG.get(region, (1,)):
                 # Gebautes wird gekachelt, Gewachsenes gestreckt.
-                gebaut = region in ("kathedrale", "bruecke") and layer == 2
+                gebaut = region == "kathedrale" and layer == 2
                 bild = hochgezogen(bild, HOCH, band=9 if gebaut else 0)
             # Der Himmel selbst bleibt deckend - hinter ihm liegt nichts
             # mehr, was durchscheinen koennte.
@@ -1574,6 +1748,15 @@ def build() -> None:
                       parallax=PARALLAX[layer])
         atlas.add(f"{region}_fg", in_dunst(foreground(region), 56),
                   pivot=(0, 0), parallax=PARALLAX_VORN)
+
+        # Wolken hat nur das eine Gebiet, das unter freiem Himmel liegt.
+        # Sie sind keine Kulissenschicht: sie haengen oben am Bild wie
+        # Schicht 0 und laufen zusaetzlich von selbst.
+        if region == "bruecke":
+            for stufe, trift in enumerate(WOLKEN_TRIFT):
+                atlas.add(f"{region}_wolken{stufe}", wolkenband(stufe),
+                          pivot=(0, 0), parallax=0.03 + stufe * 0.05,
+                          drift=trift)
 
     # Der Tempel ist keine Region, aber eine Kulisse. Er bekommt keinen
     # Dunst nach oben: hinter ihm ist Wand, kein Himmel, und eine Wand

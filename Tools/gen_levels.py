@@ -1789,34 +1789,31 @@ def room_E2() -> Room:
     r = Room("E2", "DIE GROSSE BRUECKE", "bruecke", 120, 26)
     r.border()
 
-    # Die Fahrbahn: eine lange, sehr flache Woelbung. Eine steinerne
-    # Bruecke haengt nicht durch, sie traegt sich selbst - also steigt sie
-    # zur Mitte hin und faellt wieder.
-    boden = r.profil([(0, 18), (30, 17), (60, 16), (90, 17), (119, 18)],
-                     rauheit=0.25, seed=491)
-    r.ground(1, 119, boden)
+    # Die Fahrbahn: eine gerade Strecke. Punkt.
+    #
+    # Sie war eine flache Woelbung mit einer Bruestung darauf, und die
+    # Bruestung war als **solide Mauer** gebaut - alle neun Kacheln drei
+    # hoch. Dazu drei Luecken im Belag und Torboegen, deren Beine bis auf
+    # den Weg reichten. Was als Bauwerk gedacht war, war in Wahrheit eine
+    # Hindernisbahn: man kam nicht hindurch, ohne alle zehn Schritte zu
+    # springen, und auf einer Bruecke will man gehen.
+    #
+    # Der Reiz dieses Gebiets liegt nicht im Weg, sondern darin, was man
+    # von ihm aus **sieht**: Himmel oben, Pfeiler unten, das eigene
+    # Bauwerk von der Seite. Der Weg selbst hat gerade zu sein, damit man
+    # dabei den Kopf heben kann.
+    # Und sie ist ein **Belag**, kein Berg. `ground` fuellt von der
+    # Oberflaeche bis zum unteren Raumrand mit Fels - unter der Fahrbahn
+    # stand damit neun Kacheln hoch massives Gestein, und genau dort
+    # sollen die Pfeiler zu sehen sein, die das Ding tragen. Drei Kacheln
+    # Dicke, darunter Luft und Kulisse.
+    #
+    # Herunterfallen kann man dabei nicht: der Belag laeuft ohne Luecke
+    # von Wand zu Wand. Was darunter liegt, ist reine Aussicht.
+    r.fill(1, 17, 118, 2)
 
-    # Die Bruestung: eine niedrige Mauer mit Luecken, durch die man in
-    # die Schlucht sieht. Sie steht als Vordergrund vor dem Weg.
-    for x in range(2, 118, 9):
-        y = int(round(boden(x))) - 3
-        r.fill(x, y, 2, 3)
-
-    # Drei Torboegen ueber der Fahrbahn - der Massstab des Bauwerks.
-    for bx in (26, 60, 94):
-        for k, x in enumerate((bx - 6, bx + 5)):
-            r.fill(x, 2, 2, int(round(boden(x))) - 2)
-        r.fill(bx - 6, 1, 13, 2)
-
-    # Und drei Luecken in der Fahrbahn, wo Quader herausgebrochen sind.
-    # Die Luecken duerfen den unteren Rand nicht durchschlagen - ein Raum
-    # mit einem Loch im Rand ist ein Raum, aus dem man herausfaellt.
-    for x, w in ((40, 3), (72, 4), (104, 3)):
-        oben = int(round(boden(x)))
-        r.carve(x, oben, w, r.h - oben - 1)
-
-    r.side_door("L", "left", "E1", "R", hint=18)
-    r.side_door("R", "right", "E3", "L", hint=18)
+    r.side_door("L", "left", "E1", "R", hint=16)
+    r.side_door("R", "right", "E3", "L", hint=16)
 
     r.enemy_on("steinfink", 34, 16)
     r.enemy("klangmotte", 68, 11)

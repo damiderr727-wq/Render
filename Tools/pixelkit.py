@@ -108,7 +108,11 @@ class Palette:
         # kaelter und grauer als alles andere im Spiel - hier ist nichts
         # gewachsen, hier hat jemand gebaut. Und der Himmel ist weit:
         # das einzige Gebiet, das nicht innen liegt.
-        "bruecke": (hexc("#242730"), hexc("#9aa4b4"), hexc("#ffd9a0"),
+        # Und der Belag ist Stein, kein Teer: unter freiem Himmel steht
+        # ein fast schwarzer Koerperton neben blassen Pfeilern wie ein
+        # Balken aus einem anderen Spiel. Die Kacheln haben so hell zu
+        # sein, dass sie zum Bauwerk hinter ihnen gehoeren.
+        "bruecke": (hexc("#3f4859"), hexc("#9aa4b4"), hexc("#ffd9a0"),
                     hexc("#46536a"), hexc("#2b3243")),
     }
 
@@ -492,7 +496,16 @@ class Atlas:
         total_h = pad
         for r in rows:
             total_h += max(f.canvas.h for f in r) + pad
-        width = self.max_width
+        # Breit genug fuer das breiteste Frame **samt Rand**.
+        #
+        # Vorher stand hier schlicht `self.max_width`. Die Kulissen sind
+        # 512 Pixel breit, der Atlas war 512 Pixel breit, und der Rand
+        # von zwei Pixeln kam noch dazu - jede Kulisse verlor damit ihre
+        # beiden letzten Spalten. Sichtbar wurde das erst ueber einem
+        # hellen Himmel: an jeder Kachelfuge stand eine senkrechte Linie
+        # quer durchs Bild, alle 512 Pixel eine.
+        width = max(self.max_width,
+                    max((f.canvas.w + pad * 2) for f in self.frames), 1)
 
         sheet = Canvas(width, max(total_h, 1))
         entries = {}

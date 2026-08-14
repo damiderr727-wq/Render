@@ -3,6 +3,80 @@
  "startSpawn": "start",
  "rooms": [
   {
+   "id": "A17",
+   "name": "DIE LAUSCHENDEN WIPFEL",
+   "region": "hain",
+   "music": "hain",
+   "width": 44,
+   "height": 22,
+   "connections": [
+    {
+     "door": "L",
+     "to": "A9"
+    }
+   ]
+  },
+  {
+   "id": "A18",
+   "name": "DER MOOSGRUND",
+   "region": "hain",
+   "music": "hain",
+   "width": 40,
+   "height": 20,
+   "connections": [
+    {
+     "door": "L",
+     "to": "A12"
+    },
+    {
+     "door": "R",
+     "to": "A19"
+    }
+   ]
+  },
+  {
+   "id": "A19",
+   "name": "DER BLEICHE HAIN",
+   "region": "hain",
+   "music": "hain",
+   "width": 48,
+   "height": 24,
+   "connections": [
+    {
+     "door": "L",
+     "to": "A18"
+    }
+   ]
+  },
+  {
+   "id": "B10",
+   "name": "DAS ZERBROCHENE SCHIFF",
+   "region": "kathedrale",
+   "music": "kathedrale",
+   "width": 36,
+   "height": 20,
+   "connections": [
+    {
+     "door": "L",
+     "to": "B9"
+    }
+   ]
+  },
+  {
+   "id": "C8",
+   "name": "DER STILLE SEE",
+   "region": "grotten",
+   "music": "grotten",
+   "width": 42,
+   "height": 18,
+   "connections": [
+    {
+     "door": "L",
+     "to": "C7"
+    }
+   ]
+  },
+  {
    "id": "A1",
    "name": "DER ERSTE TON",
    "region": "hain",
@@ -197,6 +271,10 @@
     {
      "door": "N",
      "to": "A8"
+    },
+    {
+     "door": "R",
+     "to": "A17"
     }
    ]
   },
@@ -247,6 +325,10 @@
     {
      "door": "N",
      "to": "A6"
+    },
+    {
+     "door": "R",
+     "to": "A18"
     }
    ]
   },
@@ -557,6 +639,10 @@
     {
      "door": "L",
      "to": "B6"
+    },
+    {
+     "door": "R",
+     "to": "B10"
     }
    ]
   },
@@ -691,6 +777,10 @@
     {
      "door": "U",
      "to": "C4"
+    },
+    {
+     "door": "R",
+     "to": "C8"
     }
    ]
   },

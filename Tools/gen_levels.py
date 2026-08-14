@@ -1458,6 +1458,7 @@ def room_A9() -> Room:
     r.hoehle(1, 27, boden, kopf, seed=109, zacken=0.14)
 
     r.shaft_door("N", 12, 3, "down", "A8", "U")
+    r.side_door("R", "right", "A17", "L", hint=10)
     r.spawn_on("N", 9, 6, 1)
     r.bench_on(20, 6)
 
@@ -1640,6 +1641,7 @@ def room_A12() -> Room:
     r.kamin(5, 11, 2, 13, seed=9, tuer_x=8)
 
     r.shaft_door("N", 8, 4, "up", "A6", "D")
+    r.side_door("R", "right", "A18", "L", hint=12)
     r.spawn_on("N", 15, 12, 1)
 
     r.bench_on(27, 12)
@@ -1955,6 +1957,173 @@ def room_E3() -> Room:
 # =====================================================================
 #  Region B - Kathedrale der Fugen
 # =====================================================================
+
+def room_A17() -> Room:
+    """
+    Die lauschenden Wipfel: der Hain von oben.
+
+    Ueber der vergessenen Bank geht es in die Kronen. Hier steht man
+    nicht ZWISCHEN den Staemmen, sondern AUF ihnen - lauter kleine
+    Inseln aus Geaest, und dazwischen tief unten der Grund. Der erste
+    Raum, in dem der Hain selbst zur Plattform wird.
+    """
+    r = Room("A17", "DIE LAUSCHENDEN WIPFEL", "hain", 44, 22)
+    r.border()
+    boden = r.profil([(0, 17), (10, 18), (22, 19), (34, 18), (43, 17)],
+                     rauheit=0.5, seed=71)
+    kopf = r.profil([(0, 4), (14, 3), (30, 4), (43, 3)], rauheit=0.3, seed=73)
+    r.hoehle(1, 43, boden, kopf, seed=79, zacken=0.10)
+
+    # Die Kronen: Balken als Astwerk, versetzt in Sprungweite.
+    r.balken(8, 13, 4)
+    r.balken(16, 10, 3)
+    r.balken(25, 8, 4)
+    r.balken(34, 11, 3)
+    r.platform(21, 14, 4)
+
+    r.side_door("L", "left", "A9", "R", hint=15)
+
+    r.enemy_on("steinfink", 30, 16)
+    r.enemy_on("gabelmaus", 12, 16, patrol=5)
+
+    r.crystal_on(26, 7, 2)
+    r.crystal_on(38, 16, 1)
+    r.scatter_decor(191, 9)
+    r.note_on(10, 16, "GANZ OBEN TRAGEN DIE AESTE NOCH. "
+                      "SIE HABEN DAS LAUSCHEN NIE AUFGEGEBEN.")
+    return r
+
+
+def room_A18() -> Room:
+    """
+    Der Moosgrund: der nasse Keller des Hains.
+
+    Unter der Horchkammer sickert das Wasser. Alles hier ist weich,
+    gruen und langsam - der Taumler ist zu Hause, und die Dornen
+    wachsen aus dem Moos statt aus dem Fels.
+    """
+    r = Room("A18", "DER MOOSGRUND", "hain", 40, 20)
+    r.border()
+    boden = r.profil([(0, 14), (8, 15), (18, 16), (28, 15), (39, 14)],
+                     rauheit=0.8, seed=83)
+    kopf = r.profil([(0, 5), (12, 7), (26, 6), (39, 5)], rauheit=0.5, seed=89)
+    r.hoehle(1, 39, boden, kopf, seed=97, zacken=0.14)
+
+    r.dornengrube(20, 4, 2, boden)
+    r.balken(19, 11, 6)
+
+    r.side_door("L", "left", "A12", "R", hint=12)
+    r.side_door("R", "right", "A19", "L", hint=13)
+
+    r.enemy_on("taumler", 12, 13)
+    r.enemy_on("taumler", 30, 13)
+    r.enemy_on("gabelmaus", 24, 13, patrol=4)
+
+    r.crystal_on(8, 12, 1)
+    r.crystal_on(34, 12, 2)
+    r.scatter_decor(193, 11, kinds=("crystal", "reed"))
+    r.note_on(6, 12, "DAS WASSER NIMMT JEDEN TON UND GIBT KEINEN ZURUECK. "
+                     "DARUM IST ES HIER SO STILL.")
+    return r
+
+
+def room_A19() -> Room:
+    """
+    Der bleiche Hain: wo der Wald schon verliert.
+
+    Westlich der Kammer der ersten Stimme steht derselbe Wald - aber
+    das Licht ist aus ihm heraus. Die Kristalle sind blind, am Boden
+    wartet ein Zerrmaul, das hierher nicht gehoert. Das Gebiet
+    veraendert sich, je weiter man kommt: das ist der erste Raum, der
+    es zeigt.
+    """
+    r = Room("A19", "DER BLEICHE HAIN", "hain", 48, 24)
+    r.border()
+    r.dark = 0.14
+    boden = r.profil([(0, 18), (12, 19), (24, 20), (36, 18), (47, 17)],
+                     rauheit=0.6, seed=101)
+    kopf = r.profil([(0, 6), (14, 8), (30, 7), (47, 5)], rauheit=0.4, seed=103)
+    r.hoehle(1, 47, boden, kopf, seed=107, zacken=0.12)
+
+    r.ledge(14, 14, 5, 2)
+    r.balken(28, 13, 4)
+    r.dornengrube(33, 5, 3, boden)
+
+    r.side_door("L", "left", "A18", "R", hint=16)
+
+    r.enemy_on("zerrmaul", 20, 17)
+    r.enemy_on("stilleschreiter", 38, 15, patrol=5)
+    r.enemy("klangmotte", 10, 14)
+
+    r.crystal_on(8, 16, 1)
+    r.note_on(24, 17, "HIER HOEREN DIE KRISTALLE AUF ZU LEUCHTEN. "
+                      "DER HAIN ENDET NICHT - ER VERBLASST.")
+    return r
+
+
+def room_B10() -> Room:
+    """
+    Das zerbrochene Schiff: der Lohn hinter der Glocke.
+
+    Wer den Glockengeist bestanden hat, darf weiter: das alte
+    Kirchenschiff hinter der Kammer, halb eingestuerzt, mit einer
+    stillen Bank zwischen den Truemmern. Ein Raum zum Atemholen -
+    Belohnung ist hier Ruhe, nicht Beute.
+    """
+    r = Room("B10", "DAS ZERBROCHENE SCHIFF", "kathedrale", 36, 20)
+    r.border()
+    boden = r.profil([(0, 15), (10, 16), (20, 15), (28, 16), (35, 15)],
+                     rauheit=0.6, seed=113)
+    kopf = r.profil([(0, 4), (12, 3), (24, 5), (35, 4)], rauheit=0.3, seed=127)
+    r.hoehle(1, 35, boden, kopf, seed=131, zacken=0.08)
+
+    # Eingestuerzte Joche: Balkenstuecke in der Luft.
+    r.balken(9, 11, 3)
+    r.balken(17, 9, 4)
+    r.balken(26, 12, 3)
+
+    r.side_door("L", "left", "B9", "R", hint=13)
+    r.bench_on(30, 13)
+
+    r.crystal_on(12, 13, 2)
+    r.crystal_on(22, 13, 1)
+    r.scatter_decor(197, 8, kinds=("crystal",))
+    r.note_on(18, 13, "DAS SCHIFF TRUG EINST DEN GANZEN CHOR. "
+                      "JETZT TRAEGT ES NUR NOCH STAUB - UND DICH.")
+    return r
+
+
+def room_C8() -> Room:
+    """
+    Der stille See: der Lohn hinter dem Hall.
+
+    Hinter der Echokammer liegt Wasser, das nichts zurueckwirft. Die
+    Quallen treiben hier hoeher als sonst, und wer bis hierher kam,
+    findet die dicksten Adern der Grotten.
+    """
+    r = Room("C8", "DER STILLE SEE", "grotten", 42, 18)
+    r.border()
+    r.dark = 0.10
+    boden = r.profil([(0, 14), (10, 15), (22, 15), (34, 14), (41, 13)],
+                     rauheit=0.5, seed=137)
+    kopf = r.profil([(0, 4), (14, 3), (28, 4), (41, 3)], rauheit=0.3, seed=139)
+    r.hoehle(1, 41, boden, kopf, seed=149, zacken=0.10)
+
+    r.balken(14, 10, 4)
+    r.platform(26, 9, 4)
+
+    r.side_door("L", "left", "C7", "R", hint=12)
+
+    r.enemy("hallqualle", 33, 12)
+
+    r.crystal_on(10, 12, 2)
+    r.crystal_on(30, 12, 2)
+    r.crystal_on(38, 11, 1)
+    r.scatter_decor(199, 12, kinds=("crystal",))
+    r.note_on(16, 12, "DER SEE ANTWORTET NICHT. "
+                      "ER IST DER EINZIGE HIER, DER ZUHOEREN KANN.")
+    return r
+
 
 def room_B1() -> Room:
     r = Room("B1", "VORHALLE DER FUGEN", "kathedrale", 44, 48)
@@ -2631,6 +2800,7 @@ def room_B9() -> Room:
     r.spawn_on("L", 5, 15, 1)
 
     r.set_boss("glockengeist", 22, 15, (1, 3, 28, 14))
+    r.side_door("R", "right", "B10", "L", hint=14)
 
     r.note_on(9, 15, "SIE HABEN DIE GLOCKE ABGENOMMEN, "
                      "DAMIT ES AUFHOERT. ES HAT NICHT AUFGEHOERT.")
@@ -2662,6 +2832,7 @@ def room_C7() -> Room:
     r.kamin(2, 6, 3, 13, seed=53, tuer_x=4)
 
     r.set_boss("hallwaechter", 26, 13, (1, 3, 32, 12))
+    r.side_door("R", "right", "C8", "L", hint=12)
 
     r.crystal_on(16, 13, 2)
     r.note_on(12, 13, "WER HIER RUFT, HOERT SICH SELBST ZURUECKKOMMEN. "
@@ -2670,6 +2841,7 @@ def room_C7() -> Room:
 
 
 ROOMS = [
+    room_A17, room_A18, room_A19, room_B10, room_C8,
     room_A1, room_A2, room_A3, room_A4, room_A5,
     room_A6, room_A7, room_A8, room_A9, room_A10,
     room_A11, room_A12, room_A13, room_A14, room_A15, room_A16,

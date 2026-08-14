@@ -361,6 +361,24 @@
     {
      "door": "L",
      "to": "E2"
+    },
+    {
+     "door": "N",
+     "to": "E4"
+    }
+   ]
+  },
+  {
+   "id": "E4",
+   "name": "DAS NEST UNTER DER BRUECKE",
+   "region": "bruecke",
+   "music": "bruecke",
+   "width": 34,
+   "height": 16,
+   "connections": [
+    {
+     "door": "U",
+     "to": "E3"
     }
    ]
   },

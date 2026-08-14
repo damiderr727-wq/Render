@@ -246,6 +246,20 @@ public struct Bestiarium: Sendable {
                 "Umrisse neben ihm sind aeltere Fassungen desselben Tons.",
             ]),
         GrosserEintrag(
+            art: .brueckenwaechter,
+            name: "DER BRUECKENWAECHTER",
+            titel: "WAS UNTER DER BRUECKE NISTET",
+            verhalten: [
+                "Faltet die Fluegel wie zwei Bogenjoche und stuerzt in",
+                "flachen Bahnen. Ruft die Finken des Ufers, wenn man ihm",
+                "Zeit dazu laesst.",
+            ],
+            deutung: [
+                "Die Erbauer setzten ihn auf den mittleren Pfeiler, damit",
+                "er die Bruecke haelt. Die Bruecke steht noch. Er auch.",
+                "Niemand hat ihm gesagt, dass der Dienst vorbei ist.",
+            ]),
+        GrosserEintrag(
             art: .kantor,
             name: "DER VERSTIMMTE KANTOR",
             titel: "DER DAS MASS HIELT",

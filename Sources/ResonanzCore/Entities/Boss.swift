@@ -63,6 +63,10 @@ public final class Boss {
         /// nirgends mehr hinkann: er ruft seine eigenen Echos herbei und
         /// versteckt sich dahinter.
         case hallwaechter
+        /// Mini-Boss der Bruecke. Das, was unter ihr nistet: ein
+        /// steinerner Vogel, dessen zusammengelegte Fluegel wie zwei
+        /// Bogenjoche aussehen. Er ruft die Finken des Ufers.
+        case brueckenwaechter
 
         /// Leben, Ansagedauer und Faehigkeiten.
         ///
@@ -76,6 +80,7 @@ public final class Boss {
             case .auftakt: return 28
             case .glockengeist: return 40
             case .hallwaechter: return 46
+            case .brueckenwaechter: return 44
             case .kantor: return 72
             }
         }
@@ -87,6 +92,7 @@ public final class Boss {
             case .auftakt: return 2.1
             case .glockengeist: return 1.6
             case .hallwaechter: return 1.4
+            case .brueckenwaechter: return 1.5
             case .kantor: return 1.0
             }
         }
@@ -95,13 +101,16 @@ public final class Boss {
         var kannPfeifen: Bool { self == .kantor || self == .glockengeist }
         /// Kreaturen herbeirufen. Der Hallwaechter tut nichts anderes,
         /// der Kantor tut es zusaetzlich.
-        var kannRufen: Bool { self == .kantor || self == .hallwaechter }
+        var kannRufen: Bool {
+            self == .kantor || self == .hallwaechter || self == .brueckenwaechter
+        }
 
         /// Was er ruft. Der Hallwaechter ruft seine eigenen Echos, der
         /// Kantor das, was in seiner Kathedrale herumsteht.
         var gefolge: [EnemyKind] {
             switch self {
             case .hallwaechter: return [.echoscherbe, .hallqualle]
+            case .brueckenwaechter: return [.steinfink, .klangmotte]
             default: return [.klangmotte, .echoscherbe]
             }
         }
@@ -117,6 +126,7 @@ public final class Boss {
             switch self {
             case .auftakt: return "DER GROSSE AUFTAKT"
             case .glockengeist: return "DER GLOCKENGEIST"
+            case .brueckenwaechter: return "DER BRUECKENWAECHTER"
             case .hallwaechter: return "DER HALLWAECHTER"
             case .kantor: return "DER VERSTIMMTE KANTOR"
             }
@@ -165,6 +175,7 @@ public final class Boss {
     public var rect: Rect {
         switch art {
         case .glockengeist: return Rect(footAt: position, width: 30, height: 42)
+        case .brueckenwaechter: return Rect(footAt: position, width: 38, height: 30)
         case .hallwaechter: return Rect(footAt: position, width: 34, height: 36)
         default: return Rect(footAt: position, width: 34, height: 46)
         }

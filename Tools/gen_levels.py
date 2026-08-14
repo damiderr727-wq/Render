@@ -1860,6 +1860,38 @@ def room_E2() -> Room:
     return r
 
 
+def room_E4() -> Room:
+    """
+    Das Nest unter der Bruecke.
+
+    Das Dorf lebt OBEN auf dem Ufer, und niemand steigt hinunter. Hier
+    sitzt der Grund: der Waechter, den die Erbauer auf den Pfeiler
+    setzten, damit er die Bruecke haelt. Ein flacher, breiter Raum -
+    sein Kampf lebt von niedrigen Sturzbahnen, nicht von Hoehe.
+    """
+    r = Room("E4", "DAS NEST UNTER DER BRUECKE", "bruecke", 34, 16)
+    r.border()
+    r.ground(1, 33, lambda x: 12 - 0.6 * math.sin(x * 0.3))
+    r.ceiling(1, 33, lambda x: 3 + 0.5 * math.sin(x * 0.2))
+    r.dark = 0.10
+
+    r.shaft_door("U", 4, 4, "up", "E3", "N")
+    r.spawn_on("U", 5, 10, 1)
+    # Der Rueckweg. Ein Bossraum darf eng sein, aber keine Falle.
+    r.kamin(2, 6, 3, 11, seed=61, tuer_x=4)
+
+    # Zwei Pfeilerstuempfe als Deckung gegen die Sturzbahnen.
+    r.balken(14, 9, 3)
+    r.balken(24, 8, 3)
+
+    r.set_boss("brueckenwaechter", 24, 11, (1, 3, 32, 11))
+
+    r.crystal_on(18, 11, 2)
+    r.note_on(10, 11, "SIE SETZTEN IHN AUF DEN PFEILER, DAMIT ER HAELT. "
+                      "NIEMAND HAT IHM GESAGT, DASS ES VORBEI IST.")
+    return r
+
+
 def room_E3() -> Room:
     """
     Das Dorf am anderen Ufer.
@@ -1892,6 +1924,10 @@ def room_E3() -> Room:
     r.platform(34, 13, 6)
 
     r.side_door("L", "left", "E2", "R", hint=18)
+    # Unter dem Dorf: der Abstieg zum Nest. Die Bewohner wissen, was
+    # dort unten sitzt - darum wohnt hier auch niemand im Keller.
+    r.shaft_door("N", 36, 4, "down", "E4", "U")
+    r.spawn_on("N", 40, 17, 1)
     r.bench_on(52, 17)
 
     # Der Haendler steht in der Mitte, die anderen daneben. Er ist der
@@ -2637,7 +2673,7 @@ ROOMS = [
     room_A1, room_A2, room_A3, room_A4, room_A5,
     room_A6, room_A7, room_A8, room_A9, room_A10,
     room_A11, room_A12, room_A13, room_A14, room_A15, room_A16,
-    room_E1, room_E2, room_E3,
+    room_E1, room_E2, room_E3, room_E4,
     room_B1, room_B2, room_B3, room_B4,
     room_B5, room_B6, room_B7, room_B8, room_B9,
     room_C1, room_C2, room_C3, room_C4, room_C5, room_C6, room_C7,

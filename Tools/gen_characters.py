@@ -3019,6 +3019,109 @@ def draw_taumler(phase: float, ansturm: float = 0.0) -> Canvas:
     return c.roh
 
 
+def draw_brueckenwaechter(phase: float, schlag: float = 0.0) -> Canvas:
+    """
+    Brueckenwaechter - Mini-Boss der Bruecke.
+
+    Die Erbauer setzten ihn auf den mittleren Pfeiler, damit er die
+    Bruecke haelt. Er ist aus demselben Stein wie sie, und seine
+    zusammengelegten Fluegel lesen sich als zwei Bogenjoche - die Form
+    des Bauwerks, das er bewacht, steckt in seinem Koerper.
+
+    `schlag` 0 hockt er, 1 sind die Fluegel gebreitet und der Kopf
+    stoesst vor.
+    """
+    c = kreatur_leinwand(42, 32, GROSSER)
+    cx, base = 21, 31
+    atem = math.sin(phase) * 0.8
+
+    stein = mix(hexc("#3f4859"), hexc("#9aa4b4"), 0.22)
+    stein_hi = mix(stein, hexc("#9aa4b4"), 0.45)
+    stein_lo = shade(stein, -0.42)
+    moos = mix(hexc("#2e8a84"), stein, 0.55)
+    auge = hexc("#ffd9a0")
+
+    spann = 0.25 + schlag * 0.75          # wie weit die Fluegel offen sind
+
+    # Der Rumpf: eine hockende Masse, breiter als hoch.
+    hoehe = 16
+    for i in range(hoehe):
+        t = i / hoehe
+        w = 9.5 * (1 - (t - 0.45) ** 2 * 1.6) + atem * (1 - t)
+        y = base - 4 - i
+        for dx in range(-int(w), int(w) + 1):
+            q = dx / max(0.8, w)
+            col = stein_hi if q > 0.55 else (stein_lo if q < -0.45 else stein)
+            # Mooslinien in den Fugen: er sitzt hier lange.
+            if int(y) % 6 == 0 and abs(q) < 0.6:
+                col = mix(col, moos, 0.4)
+            c.set(cx + dx, y, col)
+
+    # Die Fluegel: zwei Bogenjoche. Gefaltet stehen sie als dicke
+    # Boegen neben dem Rumpf, mit dem Scheitel oben - genau die
+    # Silhouette der Brueckenjoche. Gebreitet heben sie sich zum Flug.
+    for seite in (-1, 1):
+        sx0 = cx + seite * 4
+        sy0 = base - 17.5
+        start = -0.10 - spann * 1.05
+        ende = 1.30 - spann * 0.45
+        rad = 9.5 + spann * 5.5
+        for k in range(30):
+            u = k / 29
+            a = start + (ende - start) * u
+            x = sx0 + seite * math.sin(a) * rad
+            y = sy0 + (1 - math.cos(a)) * rad * 1.05
+            # Ein dicker Bogenquerschnitt: oben Licht, unten Schatten.
+            dick = 4 if u < 0.55 else (3 if u < 0.8 else 2)
+            for d in range(dick):
+                if d == 0:
+                    col = stein_hi
+                elif d == dick - 1:
+                    col = stein_lo
+                else:
+                    col = stein
+                c.set(int(x), int(y) + d, col)
+                c.set(int(x) - seite, int(y) + d, mix(col, stein_lo, 0.35))
+        # Drei Steinfinger am Ende der Schwinge.
+        ex = sx0 + seite * math.sin(ende) * rad
+        ey = sy0 + (1 - math.cos(ende)) * rad * 1.05
+        for f in range(3):
+            c.set(int(ex) + seite * f, int(ey) + 2 - f + int(spann * 2), stein_lo)
+
+    # Der Hals: tief angesetzt, ein flacher Bogen nach vorn (rechts).
+    kopf_x = cx + 8 + schlag * 5
+    kopf_y = base - 20 - atem + schlag * 3
+    for k in range(10):
+        u = k / 9
+        x = cx + 3 + (kopf_x - cx - 3) * u
+        y = base - 17 - math.sin(u * math.pi) * 3.5 + (kopf_y - base + 17) * u
+        for d in range(3):
+            c.set(int(x), int(y) + d, stein if d < 2 else stein_lo)
+
+    # Der Kopf: kantig, mit einem Schnabel wie ein Kragstein.
+    for dy in range(-3, 4):
+        w = 4 - abs(dy)
+        for dx in range(-w, w + 1):
+            c.set(int(kopf_x) + dx, int(kopf_y) + dy,
+                  stein_hi if dy < 0 else stein)
+    for i in range(5):
+        c.set(int(kopf_x) + 4 + i, int(kopf_y) + i // 2, stein_lo)
+    # Das Auge: warm, wie das letzte Licht des Tages. Es blinzelt nie.
+    c.set(int(kopf_x) + 1, int(kopf_y) - 1, auge)
+    c.set(int(kopf_x) + 2, int(kopf_y) - 1, mix(auge, (255, 255, 255, 255), 0.5))
+    c.glow(kopf_x + 1.5, kopf_y - 1, 4, (auge[0], auge[1], auge[2], 80))
+
+    # Die Krallen um den Sims, auf dem er hockt.
+    for seite in (-1, 1):
+        for f in range(3):
+            x = cx + seite * (3 + f * 2)
+            c.set(x, base - 3, stein_lo)
+            c.set(x, base - 2, shade(stein_lo, -0.2))
+
+    _kante_licht(c.roh, stein_hi, stein_lo, warm=0.40)
+    return c.roh
+
+
 def draw_glockengeist(phase: float, schlag: float = 0.0) -> Canvas:
     """
     Glockengeist - Mini-Boss der Kathedrale.
@@ -3562,6 +3665,15 @@ def build() -> None:
                         for i in range(4)],
                        pivot=(0.5, 1.0), fps=14)
     # Die beiden Mini-Bosse.
+    atlas.add_sequence("brueckenwaechter_idle",
+                       [draw_brueckenwaechter(i / 6 * math.tau) for i in range(6)],
+                       fps=7)
+    atlas.add_sequence("brueckenwaechter_schlag",
+                       [draw_brueckenwaechter(i / 4 * math.tau, schlag=min(1.0, i / 2))
+                        for i in range(4)], fps=12)
+    atlas.add_sequence("brueckenwaechter_aufschwung",
+                       [draw_brueckenwaechter(i / 5 * math.tau, schlag=0.30 + i / 14)
+                        for i in range(5)], fps=9)
     atlas.add_sequence("glockengeist_idle",
                        [draw_glockengeist(i / 6 * math.tau) for i in range(6)],
                        pivot=(0.5, 1.0), fps=6)

@@ -1537,311 +1537,239 @@ def draw_heroine(
     mid = mix(P.TRIM, P.BONE, 0.35)
     rim = mix(P.TRIM, P.CLOAK, 0.45)
 
-    # Was hinter ihr haengt, kommt zuerst - sonst laege das Cape vor ihr.
-    _ = _draw_garment(c, garment=garment, kind=kind, cx=cx, base=base,
-                      height=height, phase=phase, lean=lean, smear=smear,
-                      split=split, sway=sway, hinter=True)
+    # ---------------------------------------------------------------
+    # Die Gestalt nach dem Vorbild des Wanderers aus Journey: EINE
+    # fliessende Form, kein Koerper mit Kleidern darauf.
+    #
+    # Vorher war sie zusammengesetzt - Beine, Rumpf, Gewand, Arme, Hals,
+    # Kopf, Kranz, Flammenzungen. Jedes Teil fuer sich begruendet, in
+    # Summe ein Hampelmann. Journey zeigt das Gegenteil: der Wanderer
+    # ist eine Robe mit einer Kapuze, darin zwei leuchtende Augen, und
+    # hinter ihm weht ein Schal. Vier Formen, eine Silhouette, und
+    # nichts daran ist ein Mensch.
+    #
+    # Die Fassungen (GARMENTS) bleiben das Kosmetik-System: sie faerben
+    # jetzt die Robe selbst, statt ein Kleid ueber einen Koerper zu
+    # haengen.
+    stoff = GARMENTS.get(garment) or GARMENTS["mantel"]
+    # Die Robe traegt den MITTLEREN Wert der Figur. Beim ersten Wurf lag
+    # sie fast auf Schwarz, und dann stand die dunkle Kapuzenoeffnung
+    # auf dunklem Grund - das Gesicht war weg. Journey funktioniert,
+    # weil die Robe hell genug ist, dass die Oeffnung dagegen Nacht ist.
+    robe = mix(stoff["stoff"], KRISTALL_MITTEL, 0.52)
+    robe_licht = mix(stoff["licht"], KRISTALL, 0.45)
+    robe_tief = mix(stoff["stoff"], P.INK, 0.30)
 
-    # Die Klinge liegt auf ihrem Ruecken, also hinter allem anderen -
-    # ausser sie schlaegt gerade zu. Dann kommt sie ganz zum Schluss
-    # nach vorn (siehe unten).
+    schritt = leg_phase or 0.0
+    # Beim Gehen und in der Luft hebt sich der Saum, und die Fussspitzen
+    # kommen hervor; im Stand steht die Robe auf dem Boden auf.
+    lift = 0.0
+    if leg_phase is not None:
+        lift = 1.6
+    lift += max(0.0, (stretch - 1.0)) * 10.0 + cloak_lift * 3.0
+    lift = min(4.0, lift) + crouch * 1.2
+
+    kopf_r = height * 0.238 * (1.0 + smear * 0.15)
+    schulter_y = base - height * 0.58
+    kopf_x = cx + lean * 0.90 + math.sin(0.90 * 2.6 + phase) * 1.1
+    kopf_y = schulter_y - kopf_r * 0.66
+
+    # --- Der Schal ---------------------------------------------------
+    #
+    # Er ist das, was der Wind von ihr weiss. Er haengt am Nacken, weht
+    # nach hinten, hebt sich beim Laufen und Springen, und seine Spitze
+    # loest sich in Funken - ihr Stoff ist derselbe Klang wie sie.
+    schal_l = height * 0.72 * (1.0 + 0.10 * math.sin(phase * 0.9))
+    schal_hub = (abs(math.sin(schritt)) * 0.5 if leg_phase is not None else 0.0) \
+        + max(0.0, stretch - 1.0) * 2.0 + whip * 0.8 + smear * 0.6
+    ax0 = kopf_x - kopf_r * 0.55
+    ay0 = schulter_y - kopf_r * 0.15
+    n_s = max(8, int(schal_l * 1.6))
+    for i in range(n_s + 1):
+        u = i / n_s
+        xx = ax0 - u * schal_l * (0.92 - schal_hub * 0.18) - lean * u * 2.0
+        yy = ay0 - u * schal_l * (0.10 + schal_hub * 0.30) \
+            + math.sin(u * 4.2 + phase * 1.8 + schritt * 0.6) * (0.9 + u * 4.4)
+        wgt = (1.35 - u * 0.75) * HERO_SCALE * 0.52
+        # Zur Spitze hin zerfaellt das Band in einzelne Funken.
+        if u > 0.68 and hash01(int(xx), int(yy) + int(phase * 4)) < (u - 0.68) / 0.32 * 0.85:
+            continue
+        for dy in range(-int(wgt) - 1, int(wgt) + 2):
+            d = abs(dy) / max(0.5, wgt)
+            if d > 1:
+                continue
+            col = robe_licht if d > 0.55 else mix(robe_licht, robe, 0.55)
+            c.blend(int(xx), int(yy) + dy,
+                    (col[0], col[1], col[2], int(185 * (1 - u * 0.55))))
+
+    # Die Klinge liegt auf ihrem Ruecken, hinter der Robe - ausser sie
+    # schlaegt gerade zu, dann kommt sie ganz zum Schluss nach vorn.
     if schwung is None:
         _draw_klinge(c, cx=cx, base=base, height=height, phase=phase,
                      lean=lean, sway=sway)
 
-    # --- Die Beine --------------------------------------------------------
+    # --- Die Fussspitzen ---------------------------------------------
     #
-    # Unten ist sie nicht formlos. Der Klang hat sich dort zu Kristall
-    # gesetzt - zwei kurze, gedrungene Beine mit einer hellen Ader darin.
-    # Vorher lief die Gestalt nach unten einfach spitz zu und schleifte
-    # ueber den Boden; das sah aus, als kroeche sie.
-    _draw_beine(c, cx=cx, base=base, height=height, phase=phase, lean=lean,
-                leg_phase=leg_phase, leg_spread=leg_spread, crouch=crouch,
-                settle=settle, smear=smear)
+    # Journey zeigt genau so viel Fuss, wie der Schritt braucht: zwei
+    # dunkle Spitzen unter dem Saum. Im Stand nichts - die Robe steht.
+    if lift > 0.4:
+        for seite in (-1, 1):
+            takt = math.sin(schritt + (0 if seite > 0 else math.pi))
+            vor = takt * 2.8 * HERO_SCALE if leg_phase is not None else seite * 1.2
+            heb = max(0.0, takt) ** 1.4 * 2.6 if leg_phase is not None else 0.0
+            fx = cx + seite * 1.1 * HERO_SCALE * 0.6 + vor
+            fy = base - heb
+            c.set(int(fx), int(fy), KRISTALL_TIEF)
+            c.set(int(fx), int(fy) - 1, mix(KRISTALL_TIEF, KRISTALL_MITTEL, 0.5))
+            c.set(int(fx) + (1 if takt > 0 else 0), int(fy), mix(KRISTALL_TIEF, P.INK, 0.4))
 
-    # --- Der Leib ---------------------------------------------------------
+    # --- Die Robe ----------------------------------------------------
     #
-    # Halb Kristall, halb Flamme - an derselben Gestalt, nicht als zwei
-    # Haelften nebeneinander. Unten ist sie fest, dort steht sie; nach
-    # oben hin wird sie Schwingung. Der Uebergang wandert mit
-    # `aufloesung` nach unten: je weiter das Spiel, desto weniger bleibt.
-    #
-    # Wichtig ist die Breite: der Leib sitzt *im* Gewand, nicht darueber.
-    # Ein erster Anlauf hat ihn ueber die volle Profilbreite gemalt, und
-    # dann war das Gewand weg und die Figur ein heller Topf.
-    hueft = base - LEG_T * height
-    leib_h = height * (SCHULTER_T - LEG_T)
-    steps = int(leib_h) + 1
-    # Am Anfang der Geschichte ist sie fast ganz da: nur die
-    # Schultern flackern. Erst gegen Ende frisst sich die
-    # Schwingung nach unten. Ein frueherer Wert liess sie schon im
-    # ersten Bild ab der Brust verglimmen - dann war der ganze
-    # Oberkoerper ein heller Fleck, der mit dem Kopf verschmolz.
-    fest_bis = 0.92 - aufloesung * 0.80      # bis hierher Kristall
-
-    for i in range(steps):
-        t = i / max(1, steps - 1)                 # 0 Huefte .. 1 Schulter
-        tg = LEG_T + t * (SCHULTER_T - LEG_T)
-        y = hueft - t * leib_h
-
-        # Kein Brustkorb, keine Taille, keine Schultern, die abfallen.
-        # `_profile` zeichnet einen menschlichen Umriss, und genau der
-        # war zu viel: sie ist ein Klang, der unten fest geworden ist,
-        # also unten breit und nach oben schmaler - eine Glocke, mehr
-        # nicht. Die Silhouette macht der Kopf, nicht der Rumpf.
-        w = _profile(0.30, kind) * (0.66 - 0.20 * t ** 1.3)
-        w *= 1 + smear * 0.4
-        w *= 1 + whip * math.sin(t * math.pi * 1.6) * 0.35
-
-        sx = cx + lean * tg + math.sin(tg * 2.6 + phase) * (0.5 + tg * 0.8)
-        sx += smear * 3.0 * (1 - t) * -1
+    # Eine Glocke aus Stoff, oben schmal am Kapuzenansatz, unten weit,
+    # mit einem leuchtenden Saumband - Journeys Stickerei, nur dass hier
+    # Resonanz im Gewebe sitzt statt Faden.
+    hem_y = base - lift
+    robe_top = kopf_y + kopf_r * 0.55
+    rows = max(1, int(hem_y - robe_top))
+    fest_bis = 0.92 - aufloesung * 0.80
+    for i in range(rows + 1):
+        t = i / rows                          # 0 Kapuzenansatz .. 1 Saum
+        y = robe_top + t * rows
+        w = (2.05 + 4.1 * t ** 1.2) * HERO_SCALE
+        w *= 1 + smear * 0.35
+        w *= 1 + whip * math.sin((1 - t) * math.pi * 1.4) * 0.28
+        sx = cx + lean * (1 - t) * 2.6 \
+            + math.sin((1 - t) * 2.2 + phase) * (0.30 + 0.75 * t) \
+            + sway * t * 1.8 - smear * 2.4 * (1 - t)
         if split > 0:
             sx += math.sin(t * 9.0 + phase * 2) * split * 3.5
 
-        kristallin = t < fest_bis
+        # Saumflattern: die letzten Reihen reissen unregelmaessig aus.
+        saum_naehe = max(0.0, t - 0.86) / 0.14
+        # Oben, zur Kapuze hin, frisst die Aufloesung den Stoff.
+        oben_naehe = max(0.0, (1 - t) - fest_bis) / max(0.05, 1 - fest_bis)
+
         for dx in range(-int(w) - 1, int(w) + 2):
             d = abs(dx) / max(0.8, w)
             if d > 1:
                 continue
-            q = dx / max(0.8, w)
-            if kristallin:
-                # Fest: harte Kante, Facetten, keine Ausfransung. Die
-                # helle Stufe bleibt der Vorderkante vorbehalten.
-                # Eine Stufe dunkler als der Kopf. Liegen beide auf
-                # demselben Wert, verschmelzen Kopf, Hals und Brust zu
-                # einer einzigen hellen Saeule - und genau das war der
-                # Vorwurf, sie sei eine Wurst.
-                if q > 0.62:
-                    col, a = KRISTALL_MITTEL, 255
-                elif q > -0.30:
-                    col, a = mix(KRISTALL_MITTEL, KRISTALL_TIEF, 0.5), 255
-                else:
-                    col, a = KRISTALL_TIEF, 255
-                # Waagerechte Bruchkanten alle paar Reihen.
-                if int(y) % 5 == 0 and abs(q) < 0.7:
-                    col = mix(col, KRISTALL, 0.45)
-            else:
-                # Flamme: franst aus, flackert, laesst das Gewand durch.
+            if saum_naehe > 0 and hash01(int(sx) + dx, int(y)) < saum_naehe * 0.6 * d:
+                continue
+            if oben_naehe > 0:
                 noise = hash01(int(sx) + dx, int(y) * 3 + int(phase * 6))
-                if d > 0.45 and noise < (d - 0.45) / 0.55 * 0.9:
+                if d > 0.4 and noise < oben_naehe * 0.8:
                     continue
-                nah = (t - fest_bis) / max(0.05, 1 - fest_bis)
-                if d < 0.34:
-                    col, deck = core, 0.85 - 0.30 * nah
-                elif d < 0.68:
-                    col, deck = mid, 0.72 - 0.32 * nah
-                else:
-                    col, deck = rim, 0.55 - 0.30 * nah
-                a = int(255 * max(0.15, deck))
-            c.set(int(sx) + dx, int(y), (col[0], col[1], col[2], a))
+                if noise < oben_naehe * 0.5:
+                    col = core if d < 0.4 else mid
+                    c.blend(int(sx) + dx, int(y), (col[0], col[1], col[2], 190))
+                    continue
+            q = dx / max(0.8, w)
+            if q > 0.82:
+                col = mix(robe_licht, robe, 0.25)   # Lichtkante vorn, schmal
+            elif q > 0.42:
+                col = mix(robe, robe_licht, 0.28)
+            elif q < -0.55:
+                col = robe_tief                     # Schattenrand hinten
+            else:
+                col = robe
+            # Eine einzige senkrechte Falte, leicht vor der Mitte.
+            if -0.12 < q - 0.10 < 0.06 and t > 0.25:
+                col = mix(col, robe_tief, 0.45)
+            c.set(int(sx) + dx, int(y), col)
 
-        # Die Naht zwischen fest und fliessend: dort bricht der Kristall
-        # auf, und genau dort sieht man, dass sie schwindet.
-        if abs(t - fest_bis) < 0.03:
-            for dx in range(-int(w), int(w) + 1):
-                if hash01(int(sx) + dx, int(y)) > 0.55:
-                    c.set(int(sx) + dx, int(y), KRISTALL_HELL)
+        # Das Saumband: zwei Reihen ueber der Kante, darin wandernde
+        # Lichtpunkte - die Resonanz laeuft im Gewebe um.
+        if 0.80 < t < 0.94:
+            for dx in range(-int(w * 0.94), int(w * 0.94) + 1):
+                if (dx + int(phase * 3)) % 4 == 0:
+                    c.set(int(sx) + dx, int(y),
+                          mix(robe_licht, KRISTALL_HELL, 0.35))
 
-    # Der Mantel ist die Grundform, nicht die Verzierung: er wird zuerst
-    # gesetzt, geschlossen und undurchsichtig. Die Flamme sitzt darauf.
-    # Andersherum franst sie ueber den Rand hinaus, und die Silhouette
-    # zerfaellt in Sprenkel - genau daran ist der erste Anlauf gescheitert.
-    kragen = _draw_garment(c, garment=garment, kind=kind, cx=cx, base=base,
-                           height=height, phase=phase, lean=lean, smear=smear,
-                           split=split, sway=sway, hinter=False)
-
-    _draw_arme(c, cx=cx, base=base, height=height, phase=phase, lean=lean,
-               leg_phase=leg_phase, arm_front=arm_front, arm_back=arm_back,
-               whip=whip, smear=smear, aufloesung=aufloesung)
-
-    # --- Hals, Maske, Kronenkranz -----------------------------------------
+    # --- Die Kapuze --------------------------------------------------
     #
-    # Ein Zwischenstand hatte hier eine geschlossene Kristallkugel mit
-    # zwei Augen darin. Auf dem Bild las sich das als *Kapuze*: eine
-    # runde Masse ueber den Schultern, aussen dunkler als innen - das ist
-    # genau die Form, die eine Kapuze hat.
-    #
-    # Dagegen hilft kein anderer Farbwert, sondern nur ein anderer Umriss.
-    # Also drei Teile statt einem:
-    #
-    #   1. ein heller Kopf, klar begrenzt, mit zwei dunklen Augenloechern
-    #   2. ein Kranz aus Kristallsplittern, der ringsum aus ihr heraussteht
-    #   3. die Flamme darueber
-    #
-    # Der Kranz bricht die runde Silhouette auf. Was Zacken hat, kann
-    # keine Kapuze sein.
-    #
-    # Danach kam ein Anlauf mit acht verschiedenen Masken - je eine pro
-    # Kern, mit eingeritzten Zeichnungen, geschliffenen Facetten und dem
-    # Kranz auf dem Maskenrand statt dahinter. Das Ergebnis war ein
-    # Gesicht voller Narben und Spalten mit Splittern quer darueber, und
-    # damit sah sie aus wie aus einem Horrorspiel. Eine Figur braucht ein
-    # Gesicht, das man wiedererkennt, nicht acht.
-    schulter_y = base - SCHULTER_T * height
-    schulter_x = cx + lean * SCHULTER_T + math.sin(SCHULTER_T * 2.6 + phase) * 1.1
-
-    # 0.238 statt 0.170: die Figur ist geschrumpft, der Kopf nicht. Bei
-    # gleichem Anteil waere er mitgeschrumpft und die Augen zu Matsch
-    # geworden - so bleibt er auf denselben ~6 Pixeln Radius und nimmt
-    # fast die Haelfte der Figur ein. Genau das ist die Proportion der
-    # Vorbilder: der Kopf macht die Silhouette, der Rumpf traegt ihn nur.
-    kopf_r = height * 0.238 * (1.0 + smear * 0.15)
-    # Kein Hals. Der Kopf sitzt IM Kragen, leicht in die Schultern
-    # gesunken - eine Figur mit Hals ist ein Mensch, eine ohne ist ein
-    # Geschoepf. Der alte Hals war vier Reihen Kristall zwischen zwei
-    # Massen, und genau diese vier Reihen machten sie zur Gestalt
-    # mit Kopf AUF Koerper statt Kopf ALS Koerper.
-    kopf_y = schulter_y - kopf_r * 0.62 - 1.0
-    kopf_x = cx + lean * 0.90 + math.sin(0.90 * 2.6 + phase) * 1.1
-
-    # --- Der Kranz ---------------------------------------------------------
-    #
-    # Sieben Splitter, ungleich lang, um den oberen Halbkreis verteilt.
-    # Sie liegen *hinter* der Maske, also zuerst.
-    for k in range(7):
-        w = -math.pi + 0.30 + k * (math.pi - 0.60) / 6
-        w += math.sin(phase * 1.2 + k) * 0.05
-        lang = kopf_r * (0.62 + 0.46 * hash01(k * 13 + 5, 2))
-        # Die beiden waagerechten aussen bleiben kuerzer, sonst wird der
-        # Kopf breiter als die Schultern.
-        lang *= 0.62 + 0.38 * abs(math.sin(w))
-        _scherbe(c,
-                 kopf_x + math.cos(w) * kopf_r * 0.42,
-                 kopf_y + math.sin(w) * kopf_r * 0.42,
-                 lang, 0.85 * HERO_SCALE, w, glanz=0.20 + 0.35 * hash01(k, 7))
-
-    # --- Der Kopf ----------------------------------------------------------
-    #
-    # Kein aufgesetztes Weiss mehr.
-    #
-    # Eine helle Platte vor dem Gesicht war zwei Anlaeufe lang die
-    # Loesung - erst als Knochenmaske, dann waermer getoent. Beides
-    # bleibt ein Fremdkoerper: ein zweites Material, das sie sich
-    # vorhaelt. Sie ist aber durchgehend derselbe Stoff, vom Fuss bis zum
-    # Scheitel, und der Kopf ist nur die Stelle, an der er am duennsten
-    # ist und das meiste Licht durchlaesst.
-    #
-    # Also derselbe Kristall wie ueberall, nur zwei Stufen heller als der
-    # Rumpf. Hell genug, dass das Auge zuerst dorthin geht; nicht so
-    # hell, dass eine Maske daraus wird.
-    # Zwei Stufen heller als der Rumpf, nicht acht. Bei 0.22 lag die
-    # Flaeche praktisch auf `KRISTALL_HELL`, und das ist beinahe Weiss -
-    # damit sah es weiter nach Maske aus, obwohl gar keine mehr da war.
-    # Der helle Ton gehoert an den Rand, nicht auf die Wange.
-    # Andersherum als bisher: der Kopf ist die DUNKELSTE Stelle der
-    # Figur, nicht die hellste.
-    #
-    # Ein heller Kopf mit zwei kleinen Punkten darin ist ein Schleim -
-    # freundlich, weich, austauschbar. Die Vorbilder machen es genau
-    # andersherum: Ori ist ein dunkler Koerper mit grossen leuchtenden
-    # Augen. Das Geheimnisvolle kommt aus dem Wertgefuege: aussen ein
-    # duenner Lichtsaum, wo die Flamme durch die Kante des Kristalls
-    # scheint, innen fast Nacht - und darin brennen zwei Augen als das
-    # Hellste der ganzen Gestalt. Ein Gesicht, das man nicht ganz sieht,
-    # ist mystisch; eines, das man ganz sieht, ist niedlich.
-    maske = mix(KRISTALL_MITTEL, KRISTALL_TIEF, 0.62)
-    maske_lo = mix(KRISTALL_TIEF, P.INK, 0.35)
-    maske_kante = mix(KRISTALL, KRISTALL_HELL, 0.25)
-    mr = kopf_r * 0.80
-    for dy in range(-int(mr * 1.12) - 1, int(mr * 1.06) + 2):
-        v = dy / (mr * 1.12) if dy < 0 else dy / (mr * 1.06)
+    # Kein Kranz, keine Flammenzungen: eine weiche Spitze, die nach
+    # hinten kippt, wie beim Wanderer. Vorn ist sie offen, und in der
+    # Oeffnung ist Nacht.
+    maske_lo = mix(KRISTALL_TIEF, P.INK, 0.55)
+    mr = kopf_r * 0.84
+    for dy in range(-int(mr * 1.10) - 1, int(mr * 1.02) + 2):
+        v = dy / (mr * 1.10) if dy < 0 else dy / (mr * 1.02)
         if abs(v) > 1:
             continue
         hw = mr * math.sqrt(max(0.0, 1 - v * v))
         if dy > 0:
-            hw *= 1 - 0.30 * (dy / (mr * 1.06)) ** 1.6      # Kinn
+            hw *= 1 - 0.26 * (dy / (mr * 1.02)) ** 1.6
         y = kopf_y + dy
         for dx in range(-int(hw) - 1, int(hw) + 2):
             if abs(dx) > hw + 0.3:
                 continue
             q = dx / max(0.8, hw)
-            if q < -0.55:
-                col = maske_lo                    # Schattenseite hinten
-            elif abs(dx) > hw - 1.1:
-                col = maske_kante                 # harte Kante
+            if q > 0.72 and v < 0.35:
+                col = mix(robe_licht, KRISTALL_HELL, 0.20)   # Lichtkante
+            elif q < -0.50:
+                col = robe_tief
             else:
-                col = maske
+                col = mix(robe, robe_tief, 0.30)
             c.set(int(kopf_x) + dx, int(y), col)
 
-    # --- Die Flamme ueber der Maske ---------------------------------------
-    #
-    # Vier Zungen, ungleich hoch, die im Steigen zur Seite kippen. Sie
-    # sitzen hinter dem Kranz und wachsen zwischen den Splittern hervor.
-    krone_y = kopf_y - kopf_r * 0.72
-    for k in range(4):
-        wurzel = (-0.46, -0.12, 0.22, 0.50)[k]
-        lang = kopf_r * (0.95, 0.68, 1.12, 0.58)[k]
-        # Fest je Zunge, **nicht** je Bild.
-        #
-        # Hier stand `hash01(k * 7 + 3, int(phase * 2.0))`, und `int()`
-        # macht daraus Stufen: bei bestimmten Phasen springt jede Zunge
-        # auf eine neue Zufallslaenge. Innerhalb einer Animation sieht
-        # das nicht aus wie Flackern, sondern wie ein Fehler - die Krone
-        # zuckt zwischen zwei Bildern in eine voellig andere Form. Das
-        # Leben in der Flamme kommt aus der Neigung, die sauber mit
-        # `phase` laeuft; die Laenge bleibt.
-        lang *= 0.82 + 0.36 * hash01(k * 7 + 3, 5)
-        lang *= 1.0 + aufloesung * 0.45
-        dick = kopf_r * (0.26, 0.20, 0.30, 0.18)[k]
-        neig = wurzel * 0.85 + math.sin(phase * 1.7 + k * 1.3) * 0.24 + lean * 0.05
+    # Der Zipfel: die Kapuzenspitze faellt nach hinten und wippt.
+    zipfel_l = kopf_r * 0.95
+    zn = max(5, int(zipfel_l * 1.8))
+    zneig = math.sin(phase * 1.4) * 0.18 + hair_sway * 0.5 - lean * 0.10
+    for i in range(zn + 1):
+        u = i / zn
+        zx = kopf_x - kopf_r * 0.30 - u * zipfel_l * (0.66 + zneig * 0.3)
+        zy = kopf_y - kopf_r * 0.82 - u * zipfel_l * (0.10 - u * 0.62) \
+            + math.sin(u * 2.0 + phase * 1.4) * 0.6
+        zw = (1.5 - u * 1.25) * HERO_SCALE * 0.60
+        for dy2 in range(-int(zw) - 1, int(zw) + 2):
+            if abs(dy2) > zw + 0.3:
+                continue
+            col = mix(robe, robe_tief, 0.30) if dy2 > -zw * 0.3 else robe_tief
+            if dy2 < -zw * 0.55:
+                col = mix(robe_licht, robe, 0.45)
+            c.set(int(zx), int(zy) + dy2, col)
+    # Ein einzelner Funke an der Zipfelspitze - ihr letztes bisschen
+    # Flamme, klein genug, um kein Feuerwerk zu sein.
+    c.blend(int(kopf_x - kopf_r * 0.25 - zipfel_l * 0.82),
+            int(kopf_y - kopf_r * 0.78 - zipfel_l * 0.20), (*core[:3], 200))
 
-        n = max(5, int(lang * 2.0))
-        for i in range(n + 1):
-            u = i / n
-            fx = kopf_x + wurzel * kopf_r + neig * lang * u ** 1.5
-            fy = krone_y - lang * u
-            fw = dick * (1 - u) ** 0.60
-            for dx in range(-int(fw) - 1, int(fw) + 2):
-                d = abs(dx) / max(0.45, fw)
-                if d > 1:
-                    continue
-                if u > 0.76 and hash01(int(fx) + dx, int(fy) + int(phase * 5)) < (u - 0.76) / 0.24 * 0.55:
-                    continue
-                col = core if d < 0.5 else (mid if d < 0.85 else rim)
-                aa = int(240 * (1 - u * 0.42))
-                c.blend(int(fx) + dx, int(fy), (col[0], col[1], col[2], aa))
+    # --- Die Oeffnung und die Augen ----------------------------------
+    #
+    # Vorn in der Kapuze ist nichts als Dunkel, und darin brennen zwei
+    # Augen - das Hellste der ganzen Figur. Journey zeigt kein Gesicht,
+    # und genau deshalb sieht man hin.
+    off_x = kopf_x + mr * 0.30
+    for dy in range(-int(mr * 0.72), int(mr * 0.68) + 1):
+        v = dy / (mr * 0.70)
+        hw = mr * 0.60 * math.sqrt(max(0.0, 1 - v * v))
+        for dx in range(-int(hw), int(hw) + 1):
+            d = abs(dx) / max(0.6, hw)
+            col = maske_lo if d < 0.75 else mix(maske_lo, robe_tief, 0.6)
+            c.set(int(off_x) + dx, int(kopf_y) + dy, col)
 
-    # --- Die Augen --------------------------------------------------------
-    #
-    # Zwei dunkle Loecher in der hellen Maske, und in jedem ein rosa
-    # Funken. Ein Loch liest sich auf zehn Pixel Kopfhoehe sofort als
-    # Blick; ein gemaltes Auge nicht.
-    #
-    # Sie blinzelt selten und kurz. Ein Blinzeln, das man erwartet, ist
-    # Mechanik; eines, das man verpasst, ist Leben.
     rosa = hexc("#ff7ad0")
     zu = blinzeln and math.sin(phase * 0.8) > 0.93
-    ay_ = kopf_y - mr * 0.10
-    abstand = max(3.0, mr * 0.98)
-    # Auf dunklem Grund brauchen die Augen keine dunkle Braue mehr -
-    # sie sind selbst die Zeichnung: zwei aufrechte, leuchtende Ovale,
-    # oben um einen Pixel nach aussen gekippt, das Hellste im ganzen
-    # Bild. Gross genug, dass man einen Blick sieht, nicht zwei Punkte.
-    #
-    # Mit nur einem Funken war der helle Teil ein einzelner Punkt, und
-    # ein Punkt ist eine Pupille - das Auge wirkte klein und starr. Zwei
-    # nebeneinander machen daraus einen Lidspalt, in dem etwas leuchtet,
-    # und erst das sieht wach aus.
+    ay_ = kopf_y - mr * 0.08
+    abstand = max(3.0, mr * 0.85)
     for seite in (-1, 1):
-        ex = kopf_x + seite * abstand * 0.5 + mr * 0.16
+        ex = off_x + seite * abstand * 0.5
         if zu:
-            # Geschlossen: ein waagerechter Strich bleibt stehen.
             for dx in range(-1, 1):
-                c.set(int(ex) + dx, int(ay_), mix(rosa, maske, 0.6))
+                c.set(int(ex) + dx, int(ay_), mix(rosa, maske_lo, 0.6))
             continue
         hell = mix(rosa, (255, 255, 255, 255), 0.55)
         kernrosa = mix(rosa, (255, 255, 255, 255), 0.15)
-        # Drei Reihen: unten und Mitte je zwei Pixel, oben ein einzelner,
-        # der nach aussen rueckt - ein aufrechtes Oval mit Zug nach
-        # aussen oben. Die Mitte ist am hellsten: dort brennt es.
         basis = min(int(ex), int(ex) - seite)
         for k in (0, 1):
             c.set(basis + k, int(ay_) + 1, kernrosa)
             c.set(basis + k, int(ay_), hell)
-        c.set(basis + (1 if seite > 0 else 0) + seite, int(ay_) - 1, kernrosa)
         c.set(basis + (1 if seite > 0 else 0), int(ay_) - 1, hell)
-        c.glow(ex, ay_, 3.4 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 95))
+        c.glow(ex, ay_, 3.2 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 90))
 
+    _draw_arme(c, cx=cx, base=base, height=height, phase=phase, lean=lean,
+               leg_phase=leg_phase, arm_front=arm_front, arm_back=arm_back,
+               whip=whip, smear=smear, aufloesung=aufloesung)
 
     # Der Kern wird nicht mehr als Gegenstand an sie geheftet.
     #

@@ -31,7 +31,18 @@ OUT = Path(__file__).resolve().parent.parent / "Sources" / "ResonanzCore" / "Res
 # Die Trefferflaeche bleibt davon unberuehrt. Ein Bild, das etwas groesser
 # ist als sein Koerper, ist der Normalfall - die Figur soll den Raum
 # fuellen, nicht das Rechteck.
-HERO_SCALE = 1.75
+#
+# 1.25, nicht mehr 1.75. Die Trefferflaeche war immer 22 Pixel hoch -
+# das Bild darueber mass 35 und schwebte als Riesin ueber einem kleinen
+# Kasten. Eine Figur von anderthalb Kacheln steht anders in der Welt:
+# Hallen werden hoch, Gegner werden gross, und die Vorbilder (Hornet,
+# die Schnecken aus Rain World) sind alle klein gegen ihre Welt.
+#
+# Der Kopf schrumpft dabei NICHT mit: sein Anteil an der Hoehe steigt
+# genau so, dass er absolut gleich gross bleibt (siehe `kopf_r`). Die
+# muehsam abgestimmten Augen, der Kranz, das Gesicht - alles behaelt
+# seine Pixel. Nur der Koerper darunter wird kurz.
+HERO_SCALE = 1.25
 HERO_W, HERO_H = int(round(28 * HERO_SCALE)), int(round(30 * HERO_SCALE))
 BODY_H = 20.0 * HERO_SCALE
 
@@ -50,7 +61,7 @@ LEG_T = 0.34
 # die Haelfte der Figur einnehmen. Bei 0.66 stand hier jemand mit
 # menschlichen Proportionen - lang, mit einem Kopf, der genau richtig sass
 # und deshalb gar nichts erzaehlte.
-SCHULTER_T = 0.56
+SCHULTER_T = 0.50
 GROUND = HERO_H - 1  # unterste Pixelzeile = Fussboden
 
 
@@ -429,6 +440,17 @@ def _draw_arme(c: Canvas, *, cx: int, base: float, height: float, phase: float,
     gescheitert, und er war zusaetzlich so duenn, dass man ihn gegen den
     Saum des Mantels gar nicht gesehen hat.
     """
+    # In Ruhe gibt es keine Arme.
+    #
+    # Hornet steht und laeuft mit geschlossenem Mantel; die Arme
+    # erscheinen erst, wenn sie etwas tun. Zwei pendelnde Aermchen am
+    # Rumpf waren das staerkste Menschen-Signal der ganzen Figur - beim
+    # Stehen, beim Laufen, immer. Jetzt kommen sie nur hervor, wenn
+    # geschlagen oder gewirkt wird, und verschwinden danach wieder
+    # unter dem Gewand.
+    if abs(arm_front) < 0.05 and abs(arm_back) < 0.05 and abs(whip) < 0.05:
+        return
+
     S = HERO_SCALE
     schulter_t = 0.62
     sy = base - schulter_t * height
@@ -836,16 +858,27 @@ def _draw_beine(c: Canvas, *, cx: int, base: float, height: float, phase: float,
 
     for seite in (-1, 1):
         takt = math.sin(schritt + (0 if seite > 0 else math.pi))
-        heben = max(0.0, takt) * laenge * 0.34
-        vor = takt * (2.6 + abs(lean) * 0.7) * S
+        # Nur das schwingende Bein hebt - und zwar spitz, nicht sinusweich.
+        # Vorher hoben beide Beine abwechselnd halbhoch und ruderten
+        # seitlich: das war das "Komische" am Gang. Ein Schritt hat zwei
+        # voellig verschiedene Haelften: das Standbein bleibt am Boden
+        # und schiebt nach hinten, das Schwungbein hebt kurz und
+        # deutlich und faehrt nach vorn.
+        schwung_v = max(0.0, takt) ** 1.4
+        heben = schwung_v * laenge * 0.46
+        vor = takt * (3.2 + abs(lean) * 0.7) * S
 
-        hx = cx + seite * (1.0 * S + leg_spread * 1.2) + lean * 0.35
+        hx = cx + seite * (0.9 * S + leg_spread * 1.2) + lean * 0.35
         fx = hx + vor
         fy = base - heben - crouch * 1.8
 
-        # Der Bauch der Kruemmung liegt nach aussen, auf halber Hoehe.
-        bx = hx + (fx - hx) * 0.45 + seite * (1.5 * S + leg_spread * 0.5)
-        by = hueft_y + (fy - hueft_y) * 0.45 - crouch * 0.7
+        # Das Knie fuehrt NACH VORN, nicht nach aussen. Der Bauch der
+        # Kurve lag frueher seitlich (`seite * 1.5`), und von der Seite
+        # gesehen bog sich damit jedes Bein wie ein O - Beine, die
+        # seitlich ausweichen, gehoeren einem Frosch. Im Schwung schiebt
+        # sich das Knie vor den Fuss, im Stand ist das Bein fast gerade.
+        bx = hx + (fx - hx) * 0.58 + schwung_v * 2.4 * S + seite * 0.35 * S
+        by = hueft_y + (fy - hueft_y) * 0.52 - schwung_v * laenge * 0.10 - crouch * 0.7
 
         n = max(6, int(laenge * 2.0))
         for i in range(n + 1):
@@ -1647,20 +1680,19 @@ def draw_heroine(
     schulter_y = base - SCHULTER_T * height
     schulter_x = cx + lean * SCHULTER_T + math.sin(SCHULTER_T * 2.6 + phase) * 1.1
 
-    kopf_r = height * 0.170 * (1.0 + smear * 0.15)
-    kopf_y = schulter_y - kopf_r * 0.95 - 1.4
+    # 0.238 statt 0.170: die Figur ist geschrumpft, der Kopf nicht. Bei
+    # gleichem Anteil waere er mitgeschrumpft und die Augen zu Matsch
+    # geworden - so bleibt er auf denselben ~6 Pixeln Radius und nimmt
+    # fast die Haelfte der Figur ein. Genau das ist die Proportion der
+    # Vorbilder: der Kopf macht die Silhouette, der Rumpf traegt ihn nur.
+    kopf_r = height * 0.238 * (1.0 + smear * 0.15)
+    # Kein Hals. Der Kopf sitzt IM Kragen, leicht in die Schultern
+    # gesunken - eine Figur mit Hals ist ein Mensch, eine ohne ist ein
+    # Geschoepf. Der alte Hals war vier Reihen Kristall zwischen zwei
+    # Massen, und genau diese vier Reihen machten sie zur Gestalt
+    # mit Kopf AUF Koerper statt Kopf ALS Koerper.
+    kopf_y = schulter_y - kopf_r * 0.62 - 1.0
     kopf_x = cx + lean * 0.90 + math.sin(0.90 * 2.6 + phase) * 1.1
-
-    # Der Hals: schmal und kurz.
-    hals_h = max(1, int(schulter_y - (kopf_y + kopf_r * 0.80)))
-    for i in range(hals_h + 1):
-        v = i / max(1, hals_h)
-        y = schulter_y - i
-        hx = schulter_x + (kopf_x - schulter_x) * v
-        hw = max(1.0, kopf_r * 0.26)
-        for dx in range(-int(hw), int(hw) + 1):
-            col = KRISTALL_MITTEL if dx * 1 > -hw * 0.2 else KRISTALL_TIEF
-            c.set(int(hx) + dx, int(y), col)
 
     # --- Der Kranz ---------------------------------------------------------
     #
@@ -1696,9 +1728,20 @@ def draw_heroine(
     # Flaeche praktisch auf `KRISTALL_HELL`, und das ist beinahe Weiss -
     # damit sah es weiter nach Maske aus, obwohl gar keine mehr da war.
     # Der helle Ton gehoert an den Rand, nicht auf die Wange.
-    maske = mix(KRISTALL_HELL, KRISTALL, 0.58)
-    maske_lo = mix(KRISTALL, KRISTALL_MITTEL, 0.50)
-    maske_kante = mix(KRISTALL_HELL, KRISTALL, 0.22)
+    # Andersherum als bisher: der Kopf ist die DUNKELSTE Stelle der
+    # Figur, nicht die hellste.
+    #
+    # Ein heller Kopf mit zwei kleinen Punkten darin ist ein Schleim -
+    # freundlich, weich, austauschbar. Die Vorbilder machen es genau
+    # andersherum: Ori ist ein dunkler Koerper mit grossen leuchtenden
+    # Augen. Das Geheimnisvolle kommt aus dem Wertgefuege: aussen ein
+    # duenner Lichtsaum, wo die Flamme durch die Kante des Kristalls
+    # scheint, innen fast Nacht - und darin brennen zwei Augen als das
+    # Hellste der ganzen Gestalt. Ein Gesicht, das man nicht ganz sieht,
+    # ist mystisch; eines, das man ganz sieht, ist niedlich.
+    maske = mix(KRISTALL_MITTEL, KRISTALL_TIEF, 0.62)
+    maske_lo = mix(KRISTALL_TIEF, P.INK, 0.35)
+    maske_kante = mix(KRISTALL, KRISTALL_HELL, 0.25)
     mr = kopf_r * 0.80
     for dy in range(-int(mr * 1.12) - 1, int(mr * 1.06) + 2):
         v = dy / (mr * 1.12) if dy < 0 else dy / (mr * 1.06)
@@ -1768,14 +1811,12 @@ def draw_heroine(
     # Mechanik; eines, das man verpasst, ist Leben.
     rosa = hexc("#ff7ad0")
     zu = blinzeln and math.sin(phase * 0.8) > 0.93
-    #
-    # Schmal und schraeg. Ein erster Anlauf machte sie drei Pixel breit
-    # und setzte sie eng nebeneinander - das las sich als grinsender
-    # Mund mit Zaehnen, nicht als Blick.
     ay_ = kopf_y - mr * 0.10
     abstand = max(3.0, mr * 0.98)
-    # Vier Pixel je Auge: unten zwei rosa nebeneinander, darueber zwei
-    # dunkle, die nach aussen wegsteigen.
+    # Auf dunklem Grund brauchen die Augen keine dunkle Braue mehr -
+    # sie sind selbst die Zeichnung: zwei aufrechte, leuchtende Ovale,
+    # oben um einen Pixel nach aussen gekippt, das Hellste im ganzen
+    # Bild. Gross genug, dass man einen Blick sieht, nicht zwei Punkte.
     #
     # Mit nur einem Funken war der helle Teil ein einzelner Punkt, und
     # ein Punkt ist eine Pupille - das Auge wirkte klein und starr. Zwei
@@ -1786,29 +1827,20 @@ def draw_heroine(
         if zu:
             # Geschlossen: ein waagerechter Strich bleibt stehen.
             for dx in range(-1, 1):
-                c.set(int(ex) + dx, int(ay_), maske_lo)
+                c.set(int(ex) + dx, int(ay_), mix(rosa, maske, 0.6))
             continue
-        # Nach aussen **oben** geneigt.
-        #
-        # Vorher fiel der dunkle Pixel nach aussen unten weg. Das zieht
-        # die Augen an den Aussenkanten herunter, und ein Gesicht mit
-        # haengenden Aussenwinkeln liest sich als truebselig oder als
-        # nichts - jedenfalls nicht als wach.
-        #
-        # Andersherum stimmt es: der Lidspalt sitzt unten innen, die
-        # dunkle Kante steigt nach aussen.
-        hell = mix(rosa, (255, 255, 255, 255), 0.30)
-        links = min(int(ex), int(ex) - seite)
+        hell = mix(rosa, (255, 255, 255, 255), 0.55)
+        kernrosa = mix(rosa, (255, 255, 255, 255), 0.15)
+        # Drei Reihen: unten und Mitte je zwei Pixel, oben ein einzelner,
+        # der nach aussen rueckt - ein aufrechtes Oval mit Zug nach
+        # aussen oben. Die Mitte ist am hellsten: dort brennt es.
+        basis = min(int(ex), int(ex) - seite)
         for k in (0, 1):
-            c.set(int(ex) - seite * k, int(ay_), hell)
-        # Beide dunklen Pixel stehen senkrecht ueber dem *linken* der
-        # beiden rosa - nicht schraeg nach aussen weg. Schraeg ergibt
-        # eine Treppe, und eine Treppe aus vier Pixeln liest sich als
-        # Zufall; die Ecke dagegen ist eine Form: ein Lidspalt mit einer
-        # Braue an einem Ende.
-        for dy in (1, 2):
-            c.set(links, int(ay_) - dy, P.INK)
-        c.glow(ex, ay_, 2.4 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 75))
+            c.set(basis + k, int(ay_) + 1, kernrosa)
+            c.set(basis + k, int(ay_), hell)
+        c.set(basis + (1 if seite > 0 else 0) + seite, int(ay_) - 1, kernrosa)
+        c.set(basis + (1 if seite > 0 else 0), int(ay_) - 1, hell)
+        c.glow(ex, ay_, 3.4 * HERO_SCALE, (rosa[0], rosa[1], rosa[2], 95))
 
 
     # Der Kern wird nicht mehr als Gegenstand an sie geheftet.

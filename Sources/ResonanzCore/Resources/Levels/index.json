@@ -485,6 +485,10 @@
     {
      "door": "D",
      "to": "B4"
+    },
+    {
+     "door": "R",
+     "to": "B9"
     }
    ]
   },
@@ -521,6 +525,20 @@
     {
      "door": "U",
      "to": "B3"
+    }
+   ]
+  },
+  {
+   "id": "B9",
+   "name": "DIE GLOCKENKAMMER",
+   "region": "kathedrale",
+   "music": "kathedrale",
+   "width": 30,
+   "height": 20,
+   "connections": [
+    {
+     "door": "L",
+     "to": "B6"
     }
    ]
   },
@@ -605,6 +623,10 @@
     {
      "door": "R",
      "to": "C5"
+    },
+    {
+     "door": "D",
+     "to": "C7"
     }
    ]
   },
@@ -637,6 +659,20 @@
     {
      "door": "N",
      "to": "C3"
+    }
+   ]
+  },
+  {
+   "id": "C7",
+   "name": "DIE ECHOKAMMER",
+   "region": "grotten",
+   "music": "grotten",
+   "width": 34,
+   "height": 18,
+   "connections": [
+    {
+     "door": "U",
+     "to": "C4"
     }
    ]
   },

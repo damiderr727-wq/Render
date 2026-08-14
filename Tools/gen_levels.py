@@ -2148,10 +2148,11 @@ def room_B6() -> Room:
     r.enemy("chorschatten", 28, 6)
     r.enemy_on("dissonanzknospe", 32, 27)
 
-    # Der Glockengeist haengt dort, wo die grosse Glocke hing. Die
-    # Balkenlage ist seine Arena: er schwingt zwischen den Ebenen, und
-    # man kaempft nach oben statt nach vorn.
-    r.set_boss("glockengeist", 19, 27, (2, 4, 34, 25))
+    # Zur Glockenkammer, in der der Glockengeist sitzt. Ein Mini-Boss
+    # gehoert nicht in einen Durchgangsraum: dort laeuft man an ihm
+    # vorbei oder in ihn hinein, je nachdem, wo man gerade hinwollte.
+    # Sein Raum muss eine Tuer haben, durch die man **absichtlich** geht.
+    r.side_door("R", "right", "B9", "L", hint=27)
 
     r.crystal_on(6, 27, 2)
     r.scatter_decor(137, 12, kinds=("crystal",))
@@ -2410,9 +2411,13 @@ def room_C4() -> Room:
     r.enemy("hallqualle", 36, 11)
     r.enemy("hallqualle", 52, 9)
 
-    # Der Hallwaechter steht im Becken selbst. Wer sein Echo trifft,
-    # trifft nichts - das ist die ganze Aufgabe.
-    r.set_boss("hallwaechter", 54, 19, (24, 5, 36, 20))
+    r.enemy_on("stilleschreiter", 54, 19, patrol=4)
+
+    # Hinab in die Echokammer. Jede Tuer braucht den Punkt, an dem man
+    # steht, wenn man durch sie zurueckkommt - sonst faellt der Rueckweg
+    # ins Leere.
+    r.shaft_door("D", 24, 4, "down", "C7", "U")
+    r.spawn_on("D", 27, 19, 1)
 
     r.crystal_on(20, 19, 2)
     r.crystal_on(46, 19, 2)
@@ -2537,14 +2542,80 @@ def room_D1() -> Room:
 
 # =====================================================================
 
+def room_B9() -> Room:
+    """
+    Die Glockenkammer: ein Kasten, in dem einmal eine Glocke hing.
+
+    Ein Bossraum ist nicht einfach ein kleiner Raum. Er ist ein Raum
+    **ohne Ausweichen**: eine Tuer, keine zweite, keine Abkuerzung nach
+    oben, und kein Winkel, in dem man warten kann, bis der Boss den
+    Ueberblick verliert. Was er dagegen braucht, ist Platz auf dem
+    Boden - der Glockengeist schwingt in der Waagerechten, und wer ihm
+    ausweichen will, muss laufen koennen.
+
+    Zwei niedrige Simse an den Seiten, mehr nicht. Sie geben genug, um
+    ueber eine Welle zu kommen, und zu wenig, um sich draufzustellen und
+    zu warten.
+    """
+    r = Room("B9", "DIE GLOCKENKAMMER", "kathedrale", 30, 20)
+    r.border()
+    r.ground(1, 29, lambda x: 16)
+    r.ceiling(1, 29, lambda x: 3)
+    r.dark = 0.10
+
+    r.ledge(3, 12, 5, 2)
+    r.ledge(22, 12, 5, 2)
+
+    r.side_door("L", "left", "B6", "R", hint=15)
+    r.spawn_on("L", 5, 15, 1)
+
+    r.set_boss("glockengeist", 22, 15, (1, 3, 28, 14))
+
+    r.note_on(9, 15, "SIE HABEN DIE GLOCKE ABGENOMMEN, "
+                     "DAMIT ES AUFHOERT. ES HAT NICHT AUFGEHOERT.")
+    return r
+
+
+def room_C7() -> Room:
+    """
+    Die Echokammer: rund, glatt, und alles kommt zurueck.
+
+    Derselbe Gedanke wie in der Glockenkammer, nur andersherum gebaut.
+    Der Hallwaechter schickt seine Echos voraus, und die brauchen Weite,
+    damit man den Unterschied zwischen ihm und ihnen ueberhaupt sehen
+    kann. Also breit und niedrig statt hoch - und ohne Simse, denn hier
+    soll man nicht ueber etwas hinweg, sondern zwischen Dingen hindurch,
+    die alle gleich aussehen.
+    """
+    r = Room("C7", "DIE ECHOKAMMER", "grotten", 34, 18)
+    r.border()
+    r.ground(1, 33, lambda x: 14 - 0.8 * math.sin(x * 0.20))
+    r.ceiling(1, 33, lambda x: 3 + 0.8 * math.sin(x * 0.16 + 1))
+    r.dark = 0.12
+
+    r.shaft_door("U", 4, 4, "up", "C4", "D")
+    r.spawn_on("U", 7, 13, 1)
+    # Ohne Kamin kommt man nicht zurueck. Ein Bossraum darf eng sein,
+    # aber keine Falle: wer den Kampf verliert oder ihn erst spaeter
+    # fuehren will, muss wieder hinaus.
+    r.kamin(2, 6, 3, 13, seed=53, tuer_x=4)
+
+    r.set_boss("hallwaechter", 26, 13, (1, 3, 32, 12))
+
+    r.crystal_on(16, 13, 2)
+    r.note_on(12, 13, "WER HIER RUFT, HOERT SICH SELBST ZURUECKKOMMEN. "
+                      "IRGENDWANN KOMMT MEHR ZURUECK, ALS MAN GERUFEN HAT.")
+    return r
+
+
 ROOMS = [
     room_A1, room_A2, room_A3, room_A4, room_A5,
     room_A6, room_A7, room_A8, room_A9, room_A10,
     room_A11, room_A12, room_A13, room_A14, room_A15, room_A16,
     room_E1, room_E2, room_E3,
     room_B1, room_B2, room_B3, room_B4,
-    room_B5, room_B6, room_B7, room_B8,
-    room_C1, room_C2, room_C3, room_C4, room_C5, room_C6,
+    room_B5, room_B6, room_B7, room_B8, room_B9,
+    room_C1, room_C2, room_C3, room_C4, room_C5, room_C6, room_C7,
     room_D0, room_D1,
 ]
 

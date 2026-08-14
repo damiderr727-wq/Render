@@ -140,8 +140,15 @@ public final class Boss {
         self.health = art.health
     }
 
+    /// Die Trefferflaeche. Sie haengt an der Art, nicht an einer Zahl
+    /// fuer alle: ein Mini-Boss ist kleiner als der Kantor und groesser
+    /// als jede Kreatur, und beides muss man beim Schlagen spueren.
     public var rect: Rect {
-        Rect(footAt: position, width: 34, height: 46)
+        switch art {
+        case .glockengeist: return Rect(footAt: position, width: 30, height: 42)
+        case .hallwaechter: return Rect(footAt: position, width: 34, height: 36)
+        default: return Rect(footAt: position, width: 34, height: 46)
+        }
     }
 
     public var center: Vec2 { rect.center }

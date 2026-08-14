@@ -52,7 +52,26 @@ PARALLAX = [0.0, 0.06, 0.14, 0.27]
 PARALLAX_VORN = 1.16
 
 # So hoch wie der hoechste Raum: so weit reicht die ferne Wand.
-HOCH = 560
+# So hoch, dass die hoechste Kulisse jeden Raum deckt.
+#
+# 560 reichten nicht: B1 misst achtundvierzig Kacheln, also 768 Pixel.
+# Ueber der Kulisse stand dort ab halber Hoehe nur noch der Himmel - ein
+# einfarbiger Verlauf ohne jedes Bauwerk. Genau das war der Fehler, den
+# man in der Kathedrale sieht.
+HOCH = 800
+
+# Welche Schichten je Region nach oben fortgesetzt werden.
+#
+# Gebaute Gebiete tragen ihre Architektur auf Schicht 2 - dort steht die
+# Wand, die Pfeiler, das Mauerwerk, und all das laeuft senkrecht weiter.
+# Der Hain traegt dort seine Kronen, und Kronen darf man nicht ziehen.
+HOCHZUG = {
+    "hain": (1,),
+    "kathedrale": (1, 2),
+    "grotten": (1, 2),
+    "dissonanz": (1, 2),
+    "bruecke": (1,),
+}
 SCHICHTEN = len(PARALLAX)
 
 REGIONS = ["hain", "kathedrale", "grotten", "dissonanz", "bruecke"]
@@ -97,19 +116,30 @@ def luftraum(c: Canvas, stufen) -> None:
         c.dither_v(0, y0, c.w, max(1, y1 - y0), c0, c1, levels=7)
 
 
-def hochgezogen(bild: Canvas, hoehe: int) -> Canvas:
+def hochgezogen(bild: Canvas, hoehe: int, band: int = 0) -> Canvas:
     """
-    Zieht eine Schicht nach oben aus, indem jede Spalte ihre oberste
-    Zeile fortsetzt.
+    Zieht eine Schicht nach oben aus.
 
     Die Kulissen sind bildschirmhoch, viele Raeume sind doppelt so hoch.
     Ueber der Kulisse stand deshalb nichts als Himmel - und ein Wald,
     der auf halber Hoehe aufhoert, ist kein Wald, sondern eine Tapete.
 
-    Fuer die ferne Wand geht das Fortsetzen sauber auf: sie besteht aus
-    senkrechten Staemmen, und ein Stamm, der nach oben weiterlaeuft, ist
-    genau das, was ein Stamm tut. Fuer Schichten mit Aesten und Kronen
-    waere derselbe Griff falsch - die wuerden zu Schlieren.
+    Zwei Arten, das zu fuellen:
+
+      `band = 0`   Jede Spalte setzt ihre oberste Zeile fort. Fuer
+                   senkrechte Dinge ohne Zeichnung - Staemme, Schaefte -
+                   ist das richtig.
+      `band = n`   Die obersten n Zeilen werden nach oben gekachelt. Das
+                   braucht alles, was eine **Zeichnung quer zur
+                   Richtung** hat: Mauerwerk hat Lagerfugen, und eine
+                   Fuge, die man zu einem senkrechten Strich zieht, ist
+                   keine Fuge mehr. Man sah die Stelle als waagerechte
+                   Naht quer durch die Kathedrale, genau dort, wo das
+                   gezeichnete Bild aufhoerte.
+
+    In beiden Faellen wird nur Deckendes uebernommen: was durchsichtig
+    ist, soll durchsichtig bleiben, sonst verschliesst der Auszug den
+    Himmel dahinter.
     """
     c = Canvas(bild.w, hoehe)
     dy = hoehe - bild.h
@@ -118,6 +148,44 @@ def hochgezogen(bild: Canvas, hoehe: int) -> Canvas:
             px = bild.get(x, y)
             if px[3]:
                 c.set(x, y + dy, px)
+
+    if band > 0:
+        # **Nicht kacheln.** Ein erster Anlauf hat die obersten
+        # zweiundsiebzig Zeilen nach oben wiederholt - und darin steckt
+        # die Rosette. Danach lief sie siebenmal uebereinander die Wand
+        # hinauf. Eine Rosette ist ein Motiv, keine Textur; was sich
+        # wiederholen darf, ist das Mauerwerk, und das ist keine Kopie,
+        # sondern eine Regel.
+        #
+        # Also: jede Spalte setzt ihre oberste Zeile fort - dadurch
+        # laufen Pfeiler und Wandvorlagen sauber weiter -, und darueber
+        # werden **frische Lagerfugen** gezogen. Das ist genau das, was
+        # eine Wand oberhalb des gezeichneten Teils ist: dieselbe Wand,
+        # nur ohne Fenster.
+        for x in range(bild.w):
+            px = bild.get(x, 0)
+            if px[3] < 190:
+                continue
+            for y in range(dy):
+                c.set(x, y, px)
+        for y in range(0, dy, band):
+            for x in range(bild.w):
+                px = c.get(x, y)
+                if px[3] < 190:
+                    continue
+                c.set(x, y, shade(px, -0.34))
+                if y + 1 < dy:
+                    c.set(x, y + 1, shade(px, 0.08))
+            # Stossfugen, je Lage versetzt.
+            versatz = 0 if (y // band) % 2 == 0 else band
+            for x in range(versatz, bild.w, band * 2):
+                for k in range(band):
+                    if y + k < dy:
+                        q = c.get(x, y + k)
+                        if q[3] >= 190:
+                            c.set(x, y + k, shade(q, -0.34))
+        return c
+
     for x in range(bild.w):
         px = bild.get(x, 0)
         if px[3] < 190:
@@ -1479,11 +1547,24 @@ def build() -> None:
 
         for layer in range(SCHICHTEN):
             bild = luft if layer == 0 else BUILDERS[region](layer)
-            # Die ferne Wand deckt die volle Raumhoehe ab, nicht nur den
-            # Bildschirm - sonst steht ueber ihr in hohen Raeumen nichts
-            # als Himmel.
-            if layer == 1:
-                bild = hochgezogen(bild, HOCH)
+            # Welche Schichten die volle Raumhoehe decken, haengt davon
+            # ab, **was auf ihnen steht**.
+            #
+            # `hochgezogen` setzt jede Spalte mit ihrer obersten Zeile
+            # fort. Fuer Senkrechtes - Staemme, Pfeiler, Mauerwerk - ist
+            # das genau richtig: ein Pfeiler, der weiterlaeuft, tut, was
+            # ein Pfeiler tut. Fuer Kronen und Aeste waere es falsch, die
+            # wuerden zu Schlieren.
+            #
+            # Darum trug bisher nur Schicht 1 nach oben, und in der
+            # Kathedrale hoerte damit ab halber Hoehe die ganze
+            # Architektur auf - dort steht die Chorwand naemlich auf
+            # Schicht 2. Wo Mauerwerk statt Bewuchs steht, wird jetzt
+            # auch die mitgezogen.
+            if layer in HOCHZUG.get(region, (1,)):
+                # Gebautes wird gekachelt, Gewachsenes gestreckt.
+                gebaut = region in ("kathedrale", "bruecke") and layer == 2
+                bild = hochgezogen(bild, HOCH, band=9 if gebaut else 0)
             # Der Himmel selbst bleibt deckend - hinter ihm liegt nichts
             # mehr, was durchscheinen koennte.
             if layer > 0:

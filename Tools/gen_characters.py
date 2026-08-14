@@ -2286,9 +2286,19 @@ class Gross:
                       lumps=lumps, squash=squash)
 
 
-def kreatur_leinwand(w: int, h: int) -> "Gross":
+# Wie viel groesser ein Mini-Boss ist als eine Kreatur.
+#
+# Er muss auf den ersten Blick als etwas anderes durchgehen als ein Mob,
+# und die Groesse ist das Einzige, was ohne Text funktioniert. Ein
+# Drittel mehr reicht: mehr, und er passt nicht mehr durch seinen
+# eigenen Raum.
+GROSSER = KREATUR * 1.35
+
+
+def kreatur_leinwand(w: int, h: int, mass: float | None = None) -> "Gross":
     """Eine Leinwand in Kreaturgroesse, mit dem Massstab davor."""
-    return Gross(Canvas(int(round(w * KREATUR)), int(round(h * KREATUR))), KREATUR)
+    m = KREATUR if mass is None else mass
+    return Gross(Canvas(int(round(w * m)), int(round(h * m))), m)
 
 
 def draw_gabelmaus(phase: float) -> Canvas:
@@ -3065,7 +3075,7 @@ def draw_glockengeist(phase: float, schlag: float = 0.0) -> Canvas:
     `schlag` 0 haengt still, 1 ist der Ausschlag: dann steht der Kloeppel
     am Rand und die Schuerze schwingt gegen ihn.
     """
-    c = kreatur_leinwand(34, 40)
+    c = kreatur_leinwand(34, 40, GROSSER)
     cx, base = 17, 39
     schwing = math.sin(phase) * 1.2 + schlag * 3.4
 
@@ -3150,7 +3160,7 @@ def draw_hallwaechter(phase: float, ruf: float = 0.0) -> Canvas:
 
     `ruf` 0 steht er still, 1 loesen sich die Schalen.
     """
-    c = kreatur_leinwand(38, 34)
+    c = kreatur_leinwand(38, 34, GROSSER)
     cx, base = 19, 33
     grottenblau = hexc("#9ee0ff")
 

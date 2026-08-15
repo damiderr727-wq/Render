@@ -56,6 +56,18 @@ public final class TouchControlLayer: SKNode {
         zPosition = 2000
         halbeBreite = size.width / 2
 
+        // SpriteKit stellt Beruehrungen ueber die Rahmen der KINDER zu.
+        // Die linke Haelfte war leer: ein Daumen dort traf keinen
+        // Knoten, die Beruehrung ging an die Szene, und der Stick
+        // erschien nie. Ein beinahe unsichtbares Tuch ueber der ganzen
+        // Flaeche macht jede Beruehrung zu einer Beruehrung dieser
+        // Schicht - erst damit gibt es den Stick ueberhaupt.
+        let fang = SKSpriteNode(color: SKColor(white: 0, alpha: 0.02),
+                                size: CGSize(width: size.width, height: size.height))
+        fang.position = .zero
+        fang.zPosition = -1
+        addChild(fang)
+
         let right = size.width / 2
         let bottom = -size.height / 2
 

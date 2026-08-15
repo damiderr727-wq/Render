@@ -720,7 +720,7 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # steht im letzten Bild ein voller Kreis um sie herum. Zwei Radiant
     # sind knapp ein Drittel Kreis: genug, dass man die Kruemmung sieht,
     # zu wenig fuer einen Ring.
-    schleppe = 2.05
+    schleppe = 1.45
     a0 = max(a_auf, a_spitze - schleppe)
     if a_spitze - a0 < 0.06:
         return
@@ -728,7 +728,7 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # Weit draussen. Der Bogen soll vor ihr stehen, nicht an ihr kleben -
     # bei knapp einem Koerper Abstand war er noch Teil der Figur, bei
     # anderthalb ist er die Reichweite, die man ihm ansieht.
-    radius = height * (1.15 + 0.30 * t)
+    radius = height * (1.25 + 0.30 * t)
     max_dicke = height * 0.062
 
     # Zum Schluss klingt er ab: im letzten Bild soll die ausgestreckte
@@ -750,7 +750,7 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
         # Linsenprofil: an beiden Enden null, in der Mitte am dicksten.
         # Der Bauch liegt etwas vorn, damit die Spitze schlanker wirkt
         # als das Ende - so sieht man, wohin er laeuft.
-        dicke = max_dicke * math.sin(math.pi * u) ** 0.50
+        dicke = max_dicke * math.sin(math.pi * u) ** 0.85
         if dicke < 0.35:
             continue
 

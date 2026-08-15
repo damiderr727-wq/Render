@@ -80,7 +80,12 @@ public final class InputRouter {
             aimY: aimY,
             jumpHeld: held.jump,
             jumpPressed: pressed.jump,
-            meleePressed: pressed.melee && !slam,
+            // Runter + Nahklang ist zuerst ein SCHLAG nach unten - mit
+            // Abpraller auf Gegnern und Dornen. Der Basston kommt erst
+            // beim zweiten Tipp in denselben Schwung (siehe Player).
+            // Vorher schluckte diese Weiche den Schlag ganz, und das
+            // Pogo, das die Simulation laengst konnte, war unerreichbar.
+            meleePressed: pressed.melee,
             rangedPressed: pressed.ranged,
             dashPressed: pressed.dash,
             slamPressed: slam,

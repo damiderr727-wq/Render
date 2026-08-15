@@ -290,7 +290,17 @@ public final class Player {
               progression.has(.basston),
               !onGround,
               !isDashing,
-              controlLock <= 0
+              controlLock <= 0,
+              // Erst der ZWEITE Tipp in den laufenden Abwaertsschlag
+              // wird zum Basston. Der erste ist der Schlag selbst -
+              // mit Abpraller. So haben beide Platz auf denselben zwei
+              // Tasten: tipp = Sichel, tipp-tipp = Rammen.
+              // (`handleAttacks` laeuft vor dieser Funktion und hat den
+              // Timer im selben Bild gerade erst voll aufgezogen -
+              // darum die Luecke von einer Hundertstel.)
+              attackIsMelee,
+              attackTimer > 0,
+              attackTimer < stats.melee.duration - 0.01
         else { return }
         isSlamming = true
         velocity.x = 0

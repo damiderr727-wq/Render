@@ -59,12 +59,12 @@ public enum Kampfstil: String, Codable, Sendable, CaseIterable {
         switch self {
         case .bogen:
             return MeleeProfile(reach: 40, halfHeight: 18, damage: 2,
-                                cooldown: 0.30, knockback: 130, shape: .arc,
-                                windup: 0.045, active: 0.10)
+                                cooldown: 0.34, knockback: 130, shape: .arc,
+                                windup: 0.075, active: 0.17)
         case .stich:
             return MeleeProfile(reach: 42, halfHeight: 7, damage: 2,
-                                cooldown: 0.34, knockback: 90, shape: .thrust,
-                                windup: 0.06, active: 0.08)
+                                cooldown: 0.36, knockback: 90, shape: .thrust,
+                                windup: 0.08, active: 0.13)
         case .wirbel:
             return MeleeProfile(reach: 24, halfHeight: 24, damage: 2,
                                 cooldown: 0.38, knockback: 150, shape: .radial,
@@ -75,8 +75,8 @@ public enum Kampfstil: String, Codable, Sendable, CaseIterable {
                                 windup: 0.09, active: 0.14)
         case .hetze:
             return MeleeProfile(reach: 34, halfHeight: 15, damage: 1,
-                                cooldown: 0.15, knockback: 70, shape: .arc,
-                                windup: 0.02, active: 0.07)
+                                cooldown: 0.17, knockback: 70, shape: .arc,
+                                windup: 0.035, active: 0.10)
         case .peitsche:
             return MeleeProfile(reach: 54, halfHeight: 5, damage: 2,
                                 cooldown: 0.42, knockback: 80, shape: .thrust,

@@ -44,6 +44,16 @@ public final class Player {
     private var attackCooldown: Double = 0
     private var attackHasHit = false
     public private(set) var aimY: Double = 0
+    /// Wohin DIESER Schlag geht - festgehalten in dem Bild, in dem er
+    /// beginnt.
+    ///
+    /// Vorher lasen Trefferflaeche und Bild die Zielachse jedes Bild neu
+    /// aus der Steuerung. Wer den Stick waehrend des Schwungs losliess -
+    /// und das tut man, weil ein Schlag kuerzer dauert als ein Daumen
+    /// braucht -, sah den Schlag mitten in der Bewegung von unten nach
+    /// seitwaerts kippen, und die Trefferflaeche sprang mit. Ein Schlag
+    /// hat eine Richtung, und die entscheidet sich beim Ausholen.
+    public private(set) var attackAim: Double = 0
 
     // MARK: Zustand
     public var health: Int
@@ -337,6 +347,7 @@ public final class Player {
             attackTimer = profile.duration
             attackCooldown = profile.cooldown
             attackHasHit = false
+            attackAim = input.aimY
             stateTime = 0
             events.append(.sound(.meleeSwing(kern)))
             return
@@ -378,7 +389,7 @@ public final class Player {
         let profile = stats.melee
         let elapsed = profile.duration - attackTimer
         guard elapsed >= profile.windup else { return nil }
-        return profile.hitbox(origin: position, facing: facing, aimY: aimY)
+        return profile.hitbox(origin: position, facing: facing, aimY: attackAim)
     }
 
     public func registerMeleeHit(count: Int) {

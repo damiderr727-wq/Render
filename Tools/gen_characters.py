@@ -3801,7 +3801,12 @@ def _pivot_y(name: str, frames) -> float:
 def _fps_for(name: str) -> int:
     return {
         "idle": 6, "run": 13, "jump": 14, "fall": 9, "land": 16,
-        "dash": 18, "wall": 7, "melee": 20, "cast": 16, "hurt": 14, "rest": 5,
+        "dash": 18, "wall": 7, "cast": 16, "hurt": 14, "rest": 5,
+        # Zwanzig Bilder je Sekunde liessen die fuenf Schlagbilder in
+        # einer Viertelsekunde durchrauschen - man sah einen Blitz, keine
+        # Sichel. Bei sechzehn passt der Schwung auf die Dauer, die der
+        # Schlag in der Simulation wirklich hat.
+        "melee": 16, "melee_up": 13, "melee_down": 13,
     }.get(name, 8)
 
 

@@ -494,7 +494,7 @@ public final class GameSimulation {
         kette.verfallenLassen(jetzt: elapsed)
         guard let hitbox = player.activeMeleeHitbox() else { return }
         let profile = player.stats.melee
-        let downward = player.aimY > 0.5 && !player.onGround
+        let downward = player.attackAim > 0.5 && !player.onGround
         var hits = 0
 
         // Erst den Takt fragen, dann austeilen: der Schaden dieses

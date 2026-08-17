@@ -369,8 +369,8 @@ public final class GameScene: SKScene {
             // Nach oben und nach unten hat der Schlag eigene Bilder.
             // Vorher lief immer der Seitwaertsschnitt, waehrend der
             // Gegner ueber ihr starb.
-            if sim.player.aimY < -0.5 { return "melee_up" }
-            if sim.player.aimY > 0.5 { return "melee_down" }
+            if sim.player.attackAim < -0.5 { return "melee_up" }
+            if sim.player.attackAim > 0.5 { return "melee_down" }
             return "melee"
         case .cast: return "cast"
         case .hurt, .dead: return "hurt"

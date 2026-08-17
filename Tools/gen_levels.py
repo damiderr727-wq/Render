@@ -376,7 +376,7 @@ class Room:
 
     def kamin(self, x: int, w: int, y_oben: int, y_unten: int,
               seed: int = 0, tuer_x: int | None = None,
-              abstand: int = 4) -> "Room":
+              abstand: int = 3) -> "Room":
         """
         Ein Kamin: senkrechter Schacht mit Sprossen darin.
 
@@ -418,11 +418,15 @@ class Room:
                 self.fill(x + (0 if seite == 0 else w - 1), j, 1, 1)
 
         tuer_x = x + (w - 4) // 2 if tuer_x is None else tuer_x
-        # Schmale Sprossen im vollen Sprungabstand. Breite Bretter alle
-        # drei Kacheln waren der Plattform-Spam, den man ueberall sah:
-        # ein Kamin braucht Tritte, keine Regale. Drei Kacheln Auflage
-        # reichen zum Landen, und vier Kacheln Abstand sind genau ein
-        # Sprung - die Rechnung prueft der Erreichbarkeits-Beweis.
+        # Schmale Sprossen, aber im Abstand von DREI Kacheln.
+        #
+        # Hier stand vier, mit der Begruendung "vier Kacheln sind genau
+        # ein Sprung". Die Rechnung stimmt nicht: aus jumpVelocity 400
+        # und gravity 1500 mal riseGravityScale 0.86 werden 62 Pixel,
+        # also 3.87 Kacheln - und oben landen muss man auch noch. Die
+        # Kamine des Hains waren damit ohne Doppelsprung dicht, und mit
+        # ihnen der halbe Weg aus dem Gebiet heraus. Schmal bleiben sie
+        # trotzdem: das war die richtige Haelfte der Aenderung.
         breite = max(3, min(4, w - 3))
 
         # Die Sprossen werden gleichmaessig ueber die Hoehe verteilt,

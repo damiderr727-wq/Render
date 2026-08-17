@@ -150,13 +150,19 @@ public struct MeleeProfile: Sendable {
         case .radial:
             return Rect(center: chest, radius: reach + 8)
         case .arc, .thrust:
+            // Nach oben und unten war die Flaeche so breit wie der
+            // Schlag hoch ist - bei der Sichel also schmaler als sie
+            // selbst. Ein Abpraller, den man nur trifft, wenn man
+            // pixelgenau ueber dem Gegner steht, ist kein Abpraller.
+            // Die Breite richtet sich jetzt nach der Reichweite.
+            let quer = Swift.max(halfHeight, reach * 0.62)
             if aimY < -0.5 {
-                return Rect(x: chest.x - halfHeight, y: chest.y - reach,
-                            width: halfHeight * 2, height: reach)
+                return Rect(x: chest.x - quer, y: chest.y - reach,
+                            width: quer * 2, height: reach)
             }
             if aimY > 0.5 {
-                return Rect(x: chest.x - halfHeight, y: chest.y,
-                            width: halfHeight * 2, height: reach)
+                return Rect(x: chest.x - quer, y: chest.y,
+                            width: quer * 2, height: reach)
             }
             let x = facing >= 0 ? chest.x : chest.x - reach
             return Rect(x: x, y: chest.y - halfHeight, width: reach, height: halfHeight * 2)

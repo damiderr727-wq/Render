@@ -365,7 +365,13 @@ public final class GameScene: SKScene {
         case .fall: return "fall"
         case .wallSlide: return "wall"
         case .dash: return "dash"
-        case .melee: return "melee"
+        case .melee:
+            // Nach oben und nach unten hat der Schlag eigene Bilder.
+            // Vorher lief immer der Seitwaertsschnitt, waehrend der
+            // Gegner ueber ihr starb.
+            if sim.player.aimY < -0.5 { return "melee_up" }
+            if sim.player.aimY > 0.5 { return "melee_down" }
+            return "melee"
         case .cast: return "cast"
         case .hurt, .dead: return "hurt"
         case .slam: return "fall"

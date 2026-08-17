@@ -672,7 +672,7 @@ def _draw_klinge(c: Canvas, *, cx: int, base: float, height: float, phase: float
 
 
 def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
-                  schwung: float, lean: float) -> None:
+                  schwung: float, lean: float, aim: float = 0.0) -> None:
     """
     Der Schlag: ein Kreisbogen um die Schulter.
 
@@ -712,7 +712,16 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # Von oben vorn nach unten vorn. Beide Winkel liegen auf der
     # Blickseite; ein Bogen, der hinter ihr anfaengt, laeuft durch die
     # Figur hindurch und liest sich als Strich quer durchs Bild.
-    a_auf, a_ab = -1.62, 1.34
+    # Ein Drittelkreis Spannweite. Vorher lag hier knapp ein Viertel,
+    # und der Bogen sah aus wie ein leicht verbogener Strich - eine
+    # Sichel ist erst eine, wenn ihre beiden Enden deutlich zueinander
+    # zeigen. `aim` dreht den ganzen Schlag: -1 nach oben, +1 nach
+    # unten, 0 zur Seite. Der Kreisbogen bleibt derselbe, er steht nur
+    # woanders - genau das macht ihn zum Schlag in eine Richtung.
+    a_auf, a_ab = -1.95, 1.62
+    dreh = aim * 1.15
+    a_auf += dreh
+    a_ab += dreh
     a_spitze = a_auf + (a_ab - a_auf) * t     # wo die Sichel gerade steht
 
     # Wie viel vom Bogen stehenbleibt. Er zieht einen festen Winkelbetrag
@@ -720,7 +729,7 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # steht im letzten Bild ein voller Kreis um sie herum. Zwei Radiant
     # sind knapp ein Drittel Kreis: genug, dass man die Kruemmung sieht,
     # zu wenig fuer einen Ring.
-    schleppe = 1.45
+    schleppe = 2.35
     a0 = max(a_auf, a_spitze - schleppe)
     if a_spitze - a0 < 0.06:
         return
@@ -728,8 +737,8 @@ def _draw_schwung(c: Canvas, *, cx: int, base: float, height: float,
     # Weit draussen. Der Bogen soll vor ihr stehen, nicht an ihr kleben -
     # bei knapp einem Koerper Abstand war er noch Teil der Figur, bei
     # anderthalb ist er die Reichweite, die man ihm ansieht.
-    radius = height * (1.25 + 0.30 * t)
-    max_dicke = height * 0.062
+    radius = height * (1.42 + 0.34 * t)
+    max_dicke = height * 0.088
 
     # Zum Schluss klingt er ab: im letzten Bild soll die ausgestreckte
     # Klinge stehen, nicht noch einmal derselbe Bogen.
@@ -1521,8 +1530,12 @@ def draw_heroine(
     # Der Bogen misst inzwischen anderthalb Koerperhoehen im Radius. Bei
     # 0.85 stand seine rechte Haelfte ueber dem Rand, und ein
     # angeschnittener Schlag liest sich als Balken, nicht als Schnitt.
-    rand = int(BODY_H * 1.08) if schwung is not None else 0
-    c = Canvas(HERO_W + rand * 2, HERO_H + rand)
+    rand = int(BODY_H * 1.45) if schwung is not None else 0
+    # Und Luft nach UNTEN, sobald nach unten geschlagen wird: der Bogen
+    # steht dann unter ihren Fuessen und wurde bisher vom Rand der
+    # Leinwand abgeschnitten - ein halber Schlag liest sich als Strich.
+    unten = int(BODY_H * 1.15) if (schwung is not None and aim > 0.3) else 0
+    c = Canvas(HERO_W + rand * 2, HERO_H + rand + unten)
     cx = HERO_W // 2 + rand
     base = GROUND + rand - settle
 
@@ -1796,7 +1809,7 @@ def draw_heroine(
             c.px[i][3] = int(c.px[i][3] * alpha_body / 255)
     if schwung is not None:
         _draw_schwung(c, cx=cx, base=base, height=height,
-                      schwung=schwung, lean=lean)
+                      schwung=schwung, lean=lean, aim=aim)
 
     return c
 
@@ -1908,18 +1921,18 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
                      signatur=laut("jump"), phase=0.0, blinzeln=False,
-                     lean=1.6, stretch=1.30, smear=0.08, sway=-1.7,
-                     leg_phase=1.2, leg_spread=0.6, crouch=1.4),
+                     lean=1.4, stretch=1.22, smear=0.06, sway=-1.5,
+                     crouch=1.1),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
                      signatur=laut("jump"), phase=0.7, blinzeln=False,
-                     lean=1.3, stretch=1.22, smear=0.04, sway=-1.1,
-                     leg_phase=1.9, leg_spread=0.3, crouch=0.8),
+                     lean=1.2, stretch=1.16, smear=0.03, sway=-1.1,
+                     crouch=0.7),
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
                      signatur=laut("jump"), phase=1.4, blinzeln=False,
-                     lean=1.0, stretch=1.12, sway=-0.5, glow=1.1,
-                     leg_phase=2.6, crouch=0.3),
+                     lean=1.0, stretch=1.10, sway=-0.6, glow=1.1,
+                     crouch=0.3),
     ]
 
     # Fall: sie zieht sich lang, das Tuch steht nach oben weg und flattert.
@@ -1927,9 +1940,8 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
         draw_heroine(instrument=instrument, garment=garment,
                      aufloesung=zerfall,
                      signatur=laut("fall"), phase=i * 0.6, blinzeln=False,
-                     lean=0.6, stretch=0.86 + i * 0.02, smear=0.18,
-                     leg_phase=3.4 + i * 0.4, leg_spread=0.8,
-                     sway=1.5 + math.sin(i * 1.9) * 0.5)
+                     lean=0.6, stretch=0.92 + i * 0.015, smear=0.14,
+                     sway=1.3 + math.sin(i * 1.9) * 0.35)
         for i in range(4)
     ]
 
@@ -2002,6 +2014,41 @@ def hero_animations(instrument: str, garment: str = "mantel") -> dict[str, list[
                      signatur=laut("melee"), phase=2.4, blinzeln=False, lean=1.0, whip=0.15,
                      stretch=1.02, glow=1.1, schwung=1.0),
     ]
+
+    # Und derselbe Schlag nach oben und nach unten.
+    #
+    # Es gab ihn nur zur Seite, obwohl die Simulation nach oben und
+    # unten laengst traf - man sah also einen Seitwaertsschnitt und
+    # einen Gegner ueber sich sterben. `aim` dreht den Bogen: -1 hebt
+    # ihn ueber sie, +1 legt ihn unter sie. Der Koerper geht mit,
+    # sonst dreht sich nur die Klinge.
+    for name, richtung, neigung in (("melee_up", -1.0, -1.4),
+                                    ("melee_down", 1.0, 1.6)):
+        anims[name] = [
+            draw_heroine(instrument=instrument, garment=garment,
+                         aufloesung=zerfall, aim=richtung,
+                         signatur=laut("melee"), phase=0.0, blinzeln=False,
+                         lean=-neigung * 0.5, whip=-0.55,
+                         stretch=1.14 if richtung < 0 else 0.94,
+                         settle=-1, glow=0.9, schwung=0.0),
+            draw_heroine(instrument=instrument, garment=garment,
+                         aufloesung=zerfall, aim=richtung,
+                         signatur=laut("melee"), phase=0.8, blinzeln=False,
+                         lean=neigung * 0.3, whip=0.55,
+                         stretch=1.20 if richtung < 0 else 0.90,
+                         smear=0.6, glow=1.5, schwung=0.42),
+            draw_heroine(instrument=instrument, garment=garment,
+                         aufloesung=zerfall, aim=richtung,
+                         signatur=laut("melee"), phase=1.6, blinzeln=False,
+                         lean=neigung * 0.6, whip=0.85,
+                         stretch=1.12 if richtung < 0 else 0.96,
+                         smear=0.5, glow=1.8, schwung=0.78),
+            draw_heroine(instrument=instrument, garment=garment,
+                         aufloesung=zerfall, aim=richtung,
+                         signatur=laut("melee"), phase=2.4, blinzeln=False,
+                         lean=neigung * 0.35, whip=0.2,
+                         stretch=1.04, glow=1.1, schwung=1.0),
+        ]
 
     # Fernkampf: sie zieht sich zusammen und stoesst den Ton aus.
     # Auch hier ein Bild mehr - das Zusammenziehen davor ist die Ansage.
@@ -3599,14 +3646,15 @@ def build() -> None:
                 continue        # der Bruch kennt keinen heilen Kern mehr
             for name, frames in hero_animations(instrument, garment).items():
                 atlas.add_sequence(f"cadence_{instrument}_{garment}_{name}", frames,
-                                   pivot=(0.5, 1.0), fps=_fps_for(name))
+                                   pivot=(0.5, _pivot_y(name, frames)),
+                                   fps=_fps_for(name))
 
     # Der Bruch gibt es nur als ein Paar: kein Gefaess, kein heiler Kern.
     # Alle Verbindungen davon zu zeichnen waere Ausschuss - nach dem Bruch
     # ist beides weg.
     for name, frames in hero_animations("bruch", "bruch").items():
         atlas.add_sequence(f"cadence_bruch_bruch_{name}", frames,
-                           pivot=(0.5, 1.0), fps=_fps_for(name))
+                           pivot=(0.5, _pivot_y(name, frames)), fps=_fps_for(name))
 
     atlas.add_sequence("gabelmaus_husch",
                        [draw_gabelmaus(i / 8 * math.tau) for i in range(8)],
@@ -3733,6 +3781,21 @@ SIGNATUR = {
     "dash": 0.75, "wall": 0.25, "melee": 0.85, "cast": 1.00, "hurt": 0.55,
     "rest": 0.60,
 }
+
+
+def _pivot_y(name: str, frames) -> float:
+    """
+    Wo in der Leinwand ihre Fuesse stehen, als Anteil der Hoehe.
+
+    Fuer alles ausser dem Schlag nach unten ist das die Unterkante.
+    Dort haengt zusaetzliche Luft darunter, in der der Bogen Platz hat -
+    und der Ursprung muss genau um diesen Betrag nach oben.
+    """
+    if name != "melee_down" or not frames:
+        return 1.0
+    unten = int(BODY_H * 1.15)
+    hoehe = frames[0].h
+    return (hoehe - unten) / hoehe
 
 
 def _fps_for(name: str) -> int:

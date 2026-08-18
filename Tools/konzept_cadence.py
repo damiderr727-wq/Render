@@ -131,42 +131,65 @@ PALETTEN = {
 #
 # Diese Einschnuerung ist der Unterschied zwischen einer Figur und
 # einer Glocke. Sie kostet zwei Zeilen.
+# Endlich die Vorlage richtig gelesen.
+#
+# Zehn Entwuerfe lang habe ich ein kleines Gesichtsfenster in eine
+# grosse rote Masse gesetzt. Die Vorlage macht das Gegenteil: die
+# HELLE Flaeche ist riesig. Es ist ihr Haar - es rahmt das Gesicht,
+# faellt beidseitig herunter und laeuft als Straehne mitten durch den
+# Mantel bis unter die Huefte. Der Mantel ist der Rahmen, nicht der
+# Koerper.
+#
+# Damit stimmt endlich auch das Wertgefuege: die grosse helle Flaeche
+# in der Mitte, dunkler Stoff drumherum, und die Augen als einzige
+# schwarze Punkte darin.
+#
+#   K P Q M  Mantel: Koerper, Lichtkante, Falte, Ruecken
+#   W L      Haar, hell und Schattenseite
+#   F        Gesicht (eine Spur waermer als das Haar)
+#   E        Augen
+#   n        Rehhoerner
+#   g k 2    Griff und Klinge des Kristallschwerts
+#   s        Saum
 RUHE = [
-    "........n....n..........",
-    "........n....n..........",
-    ".......n......n.........",
-    ".......PK....KP.........",
-    "......PKKK..KKKP........",
-    "......MQKKKKKKKP........",
-    "...g..MQKKKKKKKKP.......",
-    "..2k..MQKFFFFFKKP.......",
-    "..2k..MQKFEFEFKKP.......",
-    ".2k...MQKFFFFFKKP.......",
-    ".2k...MQKKFFFKKKP.......",
-    "2k....MQKKKKKKKP........",
-    "2k......MQKKKP..........",
-    "k.......MQKKKP..........",
-    "......MMQQKKKKKP........",
-    ".....MQQKKKKKKKKP.......",
-    ".....MQQKKKQKKKKKP......",
-    "....MQQKKKKQKKKKKKP.....",
-    "....MQQKKKKQKKKKKKP.....",
-    "...MQQKKKKKQKKKKKKKP....",
-    "...MQQKKKKKQKKKKKKKP....",
-    "...MQsKsKsKsKsKsKsKP....",
-    "........LFL.LFL.........",
-    "........LFL.LFL.........",
-    ".......LLLL.LLLL........",
+    "........n....n........",
+    "........n....n........",
+    ".......nn....nn.......",
+    "......PKK....KKP......",
+    ".....PKKKKKKKKKKP.....",
+    "....PKKKKKKKKKKKKP....",
+    "....KKKKKKKKKKKKKK....",
+    "...MKKKKWWWWWWKKKKP...",
+    "...MKKKWWWWWWWWKKKP...",
+    "...MKKWWWFFFFWWWKKP...",
+    "..gMKKWWEEFFEEWWKKP...",
+    "..kMKKWWEEFFEEWWKKP...",
+    ".2kMKKWWWFFFFWWWKKP...",
+    ".2kMKKKWWWFFWWWWKKP...",
+    "2k.MKKKKWWWWWWKKKKP...",
+    "2k.MQKKKKWWWWKKKKKP...",
+    "k..MQKKKKKWWKKKKKKP...",
+    "...MQQKKKKWWKKKKKKP...",
+    "...MQQKKKKWWKKKKKKPP..",
+    "..MQQKKKKKWWKKKKKKKP..",
+    "..MQQKKKKKWWKKKKKKKP..",
+    ".MQQKKKKKKWWKKKKKKKKP.",
+    ".MQQKKKKKKWWKKKKKKKKP.",
+    "MQQKKKKKKKWWKKKKKKKKP.",
+    "MQsKsKsKsKsKsKsKsKsKP.",
+    "......LFL....LFL......",
+    "......LFL....LFL......",
+    ".....LLLL....LLLL.....",
 ]
 
 
 # Dieselbe Gestalt, nur liegt das Gesicht tiefer im Kapuzenschatten:
 # nur die Augen gluehen heraus.
 MYSTISCH = list(RUHE)
-MYSTISCH[7]  = "..2k..MQKQQQQQKKP......."
-MYSTISCH[8]  = "..2k..MQKQGQGQKKP......."
-MYSTISCH[9]  = ".2k...MQKQQQQQKKP......."
-MYSTISCH[10] = ".2k...MQKKQQQKKKP......."
+MYSTISCH[9]  = "...MKKWWWLLLLWWWKKP..."
+MYSTISCH[10] = "..gMKKWWLGLLGLWWKKP..."
+MYSTISCH[11] = "..kMKKWWLGLLGLWWKKP..."
+MYSTISCH[12] = ".2kMKKWWWLLLLWWWKKP..."
 
 
 def raster(p: dict, gitter: list[str], *, spiegeln: bool = False) -> Canvas:

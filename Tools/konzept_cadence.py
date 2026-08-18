@@ -37,19 +37,19 @@ OUT = Path(__file__).resolve().parent.parent / "vorschau" / "konzept_cadence.png
 PALETTEN = {
     "A  Kristall": dict(
         F=hexc("#cfe6dd"), H=hexc("#f4fffb"), L=hexc("#7d9f99"),
-        K=hexc("#173c44"), P=hexc("#2f6f70"), M=hexc("#08181e"),
+        K=hexc("#173c44"), P=hexc("#3d8286"), Q=hexc("#0e2830"), M=hexc("#07141a"),
         g=hexc("#8a5a3c"), s=hexc("#5fd6b4"), o=hexc("#e6a8c4"),
         n=hexc("#12181c"), E=hexc("#12181c"), G=hexc("#ff7ad0"),
         k=hexc("#bff3ff"), K2=hexc("#6fb8cc"), W=hexc("#eaf6f0")),
     "B  Rotmantel": dict(
         F=hexc("#e8d8c4"), H=hexc("#fff6e8"), L=hexc("#9a8270"),
-        K=hexc("#8e1f28"), P=hexc("#c4373c"), M=hexc("#3e0c12"),
+        K=hexc("#8e1f28"), P=hexc("#cf4a44"), Q=hexc("#5e131c"), M=hexc("#33090f"),
         g=hexc("#3a2418"), s=hexc("#ffb070"), o=hexc("#e09088"),
         n=hexc("#1a0a0c"), E=hexc("#241014"), G=hexc("#ffd76a"),
         k=hexc("#ffe6c0"), K2=hexc("#c08a58"), W=hexc("#f6e8cc")),
     "C  Tiefviolett": dict(
         F=hexc("#d8cfe8"), H=hexc("#f8f2ff"), L=hexc("#8a80a2"),
-        K=hexc("#241a3e"), P=hexc("#4d3d78"), M=hexc("#0e0a1a"),
+        K=hexc("#241a3e"), P=hexc("#5a4a86"), Q=hexc("#171030"), M=hexc("#0b0716"),
         g=hexc("#5a4020"), s=hexc("#b088ff"), o=hexc("#c890c0"),
         n=hexc("#0c0814"), E=hexc("#140e24"), G=hexc("#7ce0ff"),
         k=hexc("#cfe0ff"), K2=hexc("#7d8ecf"), W=hexc("#f0e8ff")),
@@ -91,48 +91,64 @@ PALETTEN = {
 #   n      Rehhoerner
 #   k K2   das Kristallschwert auf ihrem Ruecken
 #   s      Saum
+# Die Umrisse des Maedchens im roten Mantel, so genau wie moeglich
+# uebernommen - und erst danach geaendert.
+#
+# Seitenansicht nach rechts. Die Kapuze ist eine Masse mit einer
+# Spitze, die nach HINTEN faellt; das Gesicht ist ein kleines helles
+# Feld vorn darin. Der Mantel laeuft von der Schulter bis unters Knie
+# und wird nach unten breiter, aber nicht zur Glocke.
+#
+# Vier Stufen, nicht eine - daran lag die Flachheit:
+#   P  Lichtkante vorn (die Sonne steht rechts)
+#   K  Koerperton
+#   Q  Faltenschatten, laeuft senkrecht durch den Stoff
+#   M  Ruecken, am dunkelsten
+#
+# Das Schwert haengt richtig herum: der Griff sitzt oben an der
+# Schulter, wo die Hand hinkommt, die Klinge zeigt nach hinten unten.
 RUHE = [
-    "........nn........nn........",
-    "........nn........nn........",
-    ".......nn..........nn.......",
-    ".......nn..........nn.......",
-    "......MKKM........MKKM......",
-    "kk....MKKKM......MKKKM......",
-    ".2kk..MKKKKM....MKKKKM......",
-    "..2kk.MKKKKKMMMMKKKKKM......",
-    "...2kkMKKKKKKKKKKKKKKM......",
-    "....2kkKKKKKKKKKKKKKKKM.....",
-    ".....2kMKKKKFFFFFFFKKKPM....",
-    "......2MKKKFFFFFFFFFKKPM....",
-    "......gMKKKFEEFFFEEFKKPM....",
-    ".......MKKKFFFFFFFFFKKPM....",
-    ".......MKKKKWFFFFFWKKKPM....",
-    ".......MKKKKKWFFFWKKKKPM....",
-    "......MKKKKKKKKKKKKKKKPM....",
-    "......MKKKKKKKKKKKKKKKPM....",
-    "......MKKKKKKKKKKKKKKPPM....",
-    ".....MKKKKKKKKKKKKKKKPPM....",
-    ".....MKKKKKKKKKKKKKKKKPM....",
-    "....MKKKKKKKKKKKKKKKKKPM....",
-    "....MKKKKKKKKKKKKKKKKPPM....",
-    "...MKKKKKKKKKKKKKKKKKPPM....",
-    "...MKKKKKKKKKKKKKKKKKKPM....",
-    "..MMKKKKKKKKKKKKKKKKKKPM....",
-    "..MsKsKsKsKsKsKsKsKsKsKM....",
-    ".......LFF......FFL.........",
-    ".......LFF......FFL.........",
-    "......LLLL.....LLLL.........",
+    "..........n.......n.......",
+    "..........n.......n.......",
+    ".........n.......n........",
+    ".........nPK...KPn........",
+    "........PKKKK.KKKKP.......",
+    ".....g.PKKKKKKKKKKKP......",
+    "....2k.MQKKKKKKKKKKKP.....",
+    "...2kkMMQKKKKKKKKKKKKP....",
+    "..2kk.MQQKKKKKFFFFFKKP....",
+    ".2kk..MQQKKKKFFEEFFFKKP...",
+    "2kk...MQQKKKKFFEEFFFKKP...",
+    "kk....MQQKKKKFFFFFFFKKP...",
+    "......MQQKKKKKFFFFFKKKP...",
+    ".......MQQKKKKKKKKKKKKP...",
+    ".......MQKKKKKKKKKKKKKP...",
+    "......MQQKKKKKKKKKKKKKP...",
+    "......MQQKKKKKQKKKKKKKP...",
+    "......MQQKKKKKQKKKKKKKP...",
+    ".....MQQKKKKKKQKKKKKKKPP..",
+    ".....MQQKKKKKKQKKKKKKKPP..",
+    "....MQQKKKKKKKQKKKKKKKKP..",
+    "....MQQKKKKKKKQKKKKKKKKP..",
+    "...MQQKKKKKKKKQKKKKKKKKP..",
+    "...MQQKKKKKKKKQKKKKKKKKP..",
+    "..MMQQKKKKKKKKQKKKKKKKKP..",
+    "..MMQsKsKsKsKsKsKsKsKsKP..",
+    ".........LFFL..LFFL.......",
+    ".........LFFL..LFFL.......",
+    ".........LFF....FFL.......",
+    "........LLLL...LLLL.......",
 ]
 
 
 # Dieselbe Gestalt, nur liegt das Gesicht tiefer im Kapuzenschatten:
 # nur die Augen gluehen heraus.
 MYSTISCH = list(RUHE)
-MYSTISCH[10] = ".....2kMKKKKLLLLLLLKKKPM...."
-MYSTISCH[11] = "......2MKKKLLLLLLLLLKKPM...."
-MYSTISCH[12] = "......gMKKKLGGLLLGGLKKPM...."
-MYSTISCH[13] = ".......MKKKLLLLLLLLLKKPM...."
-MYSTISCH[14] = ".......MKKKKLLLLLLLKKKPM...."
+MYSTISCH[8]  = "..2kk.MQQKKKKKQQQQQKKP...."
+MYSTISCH[9]  = ".2kk..MQQKKKKQQGGQQQKKP..."
+MYSTISCH[10] = "2kk...MQQKKKKQQGGQQQKKP..."
+MYSTISCH[11] = "kk....MQQKKKKQQQQQQQKKP..."
+MYSTISCH[12] = "......MQQKKKKKQQQQQKKKP..."
 
 
 def raster(p: dict, gitter: list[str], *, spiegeln: bool = False) -> Canvas:

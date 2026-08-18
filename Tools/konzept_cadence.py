@@ -107,48 +107,50 @@ PALETTEN = {
 #
 # Das Schwert haengt richtig herum: der Griff sitzt oben an der
 # Schulter, wo die Hand hinkommt, die Klinge zeigt nach hinten unten.
+# Ihre Masse, eins zu eins - und ein paar Pixel obendrauf.
+#
+# Der Fehler aller bisherigen Entwuerfe war die GROESSE: meine Figur
+# mass fuenfundzwanzig Pixel in der Breite bei dreissig Hoehe. Die
+# Vorlage ist schmal und kurz - zwanzig hoch, vierzehn breit an der
+# weitesten Stelle -, und genau daher kommt ihre Kompaktheit. Eine
+# breite Figur wirkt automatisch wie ein Kegel, egal was man
+# hineinzeichnet.
+#
+# Ihre Zonen, abgezaehlt:  Kapuze 8, Mantel 8, Beine 4.
+# Obendrauf kommen nur zwei Zeilen Hoerner und die Ohrspitzen.
 RUHE = [
-    "..........n.......n.......",
-    "..........n.......n.......",
-    ".........n.......n........",
-    ".........nPK...KPn........",
-    "........PKKKK.KKKKP.......",
-    ".....g.PKKKKKKKKKKKP......",
-    "....2k.MQKKKKKKKKKKKP.....",
-    "...2kkMMQKKKKKKKKKKKKP....",
-    "..2kk.MQQKKKKKFFFFFKKP....",
-    ".2kk..MQQKKKKFFEEFFFKKP...",
-    "2kk...MQQKKKKFFEEFFFKKP...",
-    "kk....MQQKKKKFFFFFFFKKP...",
-    "......MQQKKKKKFFFFFKKKP...",
-    ".......MQQKKKKKKKKKKKKP...",
-    ".......MQKKKKKKKKKKKKKP...",
-    "......MQQKKKKKKKKKKKKKP...",
-    "......MQQKKKKKQKKKKKKKP...",
-    "......MQQKKKKKQKKKKKKKP...",
-    ".....MQQKKKKKKQKKKKKKKPP..",
-    ".....MQQKKKKKKQKKKKKKKPP..",
-    "....MQQKKKKKKKQKKKKKKKKP..",
-    "....MQQKKKKKKKQKKKKKKKKP..",
-    "...MQQKKKKKKKKQKKKKKKKKP..",
-    "...MQQKKKKKKKKQKKKKKKKKP..",
-    "..MMQQKKKKKKKKQKKKKKKKKP..",
-    "..MMQsKsKsKsKsKsKsKsKsKP..",
-    ".........LFFL..LFFL.......",
-    ".........LFFL..LFFL.......",
-    ".........LFF....FFL.......",
-    "........LLLL...LLLL.......",
+    "........n....n..........",
+    "........n....n..........",
+    ".......n......n.........",
+    ".......PK....KP.........",
+    "......PKKK..KKKP........",
+    "...g.MQKKKKKKKKKP.......",
+    "..2k.MQKKKKKKKKKKP......",
+    "..2k.MQKKFFFFFKKKP......",
+    ".2k..MQKKFEFEFKKKP......",
+    ".2k..MQKKFFFFFKKKP......",
+    "2k...MQKKKFFFKKKKP......",
+    "2k...MQQKKKKKKKKKP......",
+    "k....MQQKKKQKKKKKP......",
+    "....MQQKKKKQKKKKKKP.....",
+    "....MQQKKKKQKKKKKKP.....",
+    "....MQQKKKKQKKKKKKP.....",
+    "...MQQKKKKKQKKKKKKKP....",
+    "...MQQKKKKKQKKKKKKKP....",
+    "...MQsKsKsKsKsKsKsKP....",
+    "........LFL.LFL.........",
+    "........LFL.LFL.........",
+    ".......LLLL.LLLL........",
 ]
 
 
 # Dieselbe Gestalt, nur liegt das Gesicht tiefer im Kapuzenschatten:
 # nur die Augen gluehen heraus.
 MYSTISCH = list(RUHE)
-MYSTISCH[8]  = "..2kk.MQQKKKKKQQQQQKKP...."
-MYSTISCH[9]  = ".2kk..MQQKKKKQQGGQQQKKP..."
-MYSTISCH[10] = "2kk...MQQKKKKQQGGQQQKKP..."
-MYSTISCH[11] = "kk....MQQKKKKQQQQQQQKKP..."
-MYSTISCH[12] = "......MQQKKKKKQQQQQKKKP..."
+MYSTISCH[7]  = "..2k.MQKKQQQQQKKKP......"
+MYSTISCH[8]  = ".2k..MQKKQGQGQKKKP......"
+MYSTISCH[9]  = ".2k..MQKKQQQQQKKKP......"
+MYSTISCH[10] = "2k...MQKKKQQQKKKKP......"
 
 
 def raster(p: dict, gitter: list[str], *, spiegeln: bool = False) -> Canvas:

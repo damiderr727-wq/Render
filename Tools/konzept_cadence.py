@@ -118,21 +118,37 @@ PALETTEN = {
 #
 # Ihre Zonen, abgezaehlt:  Kapuze 8, Mantel 8, Beine 4.
 # Obendrauf kommen nur zwei Zeilen Hoerner und die Ohrspitzen.
+# Der Fehler, der neun Entwuerfe lang durchlief: es gab keinen KOPF.
+#
+# Ich habe eine durchgehende Masse von der Kapuze bis zum Saum
+# gezeichnet - und dann schwebt das Gesicht mitten in einem Kegel,
+# egal wie gut es gezeichnet ist. Bei der Vorlage bricht die
+# Silhouette dazwischen ein:
+#
+#   Kapuze   breit   (elf Pixel)
+#   Hals     SCHMAL  (sechs)      <- das ist der ganze Trick
+#   Mantel   breit   (siebzehn)
+#
+# Diese Einschnuerung ist der Unterschied zwischen einer Figur und
+# einer Glocke. Sie kostet zwei Zeilen.
 RUHE = [
     "........n....n..........",
     "........n....n..........",
     ".......n......n.........",
     ".......PK....KP.........",
     "......PKKK..KKKP........",
-    "...g.MQKKKKKKKKKP.......",
-    "..2k.MQKKKKKKKKKKP......",
-    "..2k.MQKKFFFFFKKKP......",
-    ".2k..MQKKFEFEFKKKP......",
-    ".2k..MQKKFFFFFKKKP......",
-    "2k...MQKKKFFFKKKKP......",
-    "2k...MQQKKKKKKKKKP......",
-    "k....MQQKKKQKKKKKP......",
-    "....MQQKKKKQKKKKKKP.....",
+    "......MQKKKKKKKP........",
+    "...g..MQKKKKKKKKP.......",
+    "..2k..MQKFFFFFKKP.......",
+    "..2k..MQKFEFEFKKP.......",
+    ".2k...MQKFFFFFKKP.......",
+    ".2k...MQKKFFFKKKP.......",
+    "2k....MQKKKKKKKP........",
+    "2k......MQKKKP..........",
+    "k.......MQKKKP..........",
+    "......MMQQKKKKKP........",
+    ".....MQQKKKKKKKKP.......",
+    ".....MQQKKKQKKKKKP......",
     "....MQQKKKKQKKKKKKP.....",
     "....MQQKKKKQKKKKKKP.....",
     "...MQQKKKKKQKKKKKKKP....",
@@ -147,10 +163,10 @@ RUHE = [
 # Dieselbe Gestalt, nur liegt das Gesicht tiefer im Kapuzenschatten:
 # nur die Augen gluehen heraus.
 MYSTISCH = list(RUHE)
-MYSTISCH[7]  = "..2k.MQKKQQQQQKKKP......"
-MYSTISCH[8]  = ".2k..MQKKQGQGQKKKP......"
-MYSTISCH[9]  = ".2k..MQKKQQQQQKKKP......"
-MYSTISCH[10] = "2k...MQKKKQQQKKKKP......"
+MYSTISCH[7]  = "..2k..MQKQQQQQKKP......."
+MYSTISCH[8]  = "..2k..MQKQGQGQKKP......."
+MYSTISCH[9]  = ".2k...MQKQQQQQKKP......."
+MYSTISCH[10] = ".2k...MQKKQQQKKKP......."
 
 
 def raster(p: dict, gitter: list[str], *, spiegeln: bool = False) -> Canvas:

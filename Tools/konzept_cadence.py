@@ -36,23 +36,23 @@ OUT = Path(__file__).resolve().parent.parent / "vorschau" / "konzept_cadence.png
 # welche Farbe die Kleidung hat.
 PALETTEN = {
     "A  Kristall": dict(
-        F=hexc("#cfe6dd"), H=hexc("#f4fffb"), L=hexc("#7d9f99"),
+        F=hexc("#b6d4ca"), H=hexc("#f4fffb"), L=hexc("#7d9f99"),
         K=hexc("#173c44"), P=hexc("#3d8286"), Q=hexc("#0e2830"), M=hexc("#07141a"),
         g=hexc("#8a5a3c"), s=hexc("#5fd6b4"), o=hexc("#e6a8c4"),
-        n=hexc("#12181c"), E=hexc("#12181c"), G=hexc("#ff7ad0"),
-        k=hexc("#bff3ff"), K2=hexc("#6fb8cc"), W=hexc("#eaf6f0")),
+        n=hexc("#c9bda0"), E=hexc("#12181c"), G=hexc("#ff7ad0"),
+        k=hexc("#bff3ff"), K2=hexc("#6fb8cc"), W=hexc("#f2fffb")),
     "B  Rotmantel": dict(
-        F=hexc("#e8d8c4"), H=hexc("#fff6e8"), L=hexc("#9a8270"),
+        F=hexc("#dcc4a8"), H=hexc("#fff6e8"), L=hexc("#9a8270"),
         K=hexc("#8e1f28"), P=hexc("#cf4a44"), Q=hexc("#5e131c"), M=hexc("#33090f"),
         g=hexc("#3a2418"), s=hexc("#ffb070"), o=hexc("#e09088"),
-        n=hexc("#1a0a0c"), E=hexc("#241014"), G=hexc("#ffd76a"),
-        k=hexc("#ffe6c0"), K2=hexc("#c08a58"), W=hexc("#f6e8cc")),
+        n=hexc("#d8c49c"), E=hexc("#241014"), G=hexc("#ffd76a"),
+        k=hexc("#ffe6c0"), K2=hexc("#c08a58"), W=hexc("#fff4de")),
     "C  Tiefviolett": dict(
-        F=hexc("#d8cfe8"), H=hexc("#f8f2ff"), L=hexc("#8a80a2"),
+        F=hexc("#c2b6da"), H=hexc("#f8f2ff"), L=hexc("#8a80a2"),
         K=hexc("#241a3e"), P=hexc("#5a4a86"), Q=hexc("#171030"), M=hexc("#0b0716"),
         g=hexc("#5a4020"), s=hexc("#b088ff"), o=hexc("#c890c0"),
-        n=hexc("#0c0814"), E=hexc("#140e24"), G=hexc("#7ce0ff"),
-        k=hexc("#cfe0ff"), K2=hexc("#7d8ecf"), W=hexc("#f0e8ff")),
+        n=hexc("#c6b8a4"), E=hexc("#140e24"), G=hexc("#7ce0ff"),
+        k=hexc("#cfe0ff"), K2=hexc("#7d8ecf"), W=hexc("#faf4ff")),
 }
 
 
@@ -151,45 +151,91 @@ PALETTEN = {
 #   n        Rehhoerner
 #   g k 2    Griff und Klinge des Kristallschwerts
 #   s        Saum
+# Aus dem vergroesserten Bild Zeile fuer Zeile abgezaehlt.
+#
+# Was ich zehn Entwuerfe lang falsch hatte, und zwar jedes Mal gleich:
+#
+#   Die HELLE Flaeche ist die grosse. Haar und Gesicht nehmen die
+#   halbe Figur ein; der Mantel ist der Rahmen darum, nicht der
+#   Koerper. Ich hatte es immer andersherum - grosse dunkle Masse,
+#   kleines Gesichtsfenster - und daher war jeder Versuch ein Kegel
+#   mit einem Loch.
+#
+#   Die AUGEN sind gross. Zwei mal drei Pixel, tiefschwarz, weit
+#   auseinander. Keine Punkte.
+#
+#   Das Haar laeuft als STRAEHNE mitten durch den Mantel bis unter
+#   die Huefte. Sie teilt die rote Flaeche und gibt ihr Richtung.
+#
+# Und dann die drei Zutaten aus der Anmerkung:
+#   gruen  - Ohrspitzen in der Kapuze, Rehhoerner darueber
+#   lila   - das Kristallschwert links auf dem Ruecken
+#   blau   - die Beine unter dem Saum
+#
+# Drei Sachen, die im letzten Durchgang noch schieflagen und hier
+# einzeln behoben sind - sie sind der Grund, warum die Figur wieder
+# tierisch aussah:
+#
+#   SCHNAUZE. Die helle Straehne fing zwischen den Augen an und lief
+#   von dort nach unten schmaler werdend. Das ist ein Schnabel, egal
+#   wie es gemeint war. Jetzt bricht ein dunkler Kragen (Zeile 16-17)
+#   zwischen Gesicht und Rumpf; die helle Bahn im Mantel beginnt erst
+#   darunter und ist eine Blende am Kleid, kein Koerperteil.
+#
+#   HOERNER. Sie waren zwei dicke schwarze Balken und lasen sich als
+#   Loecher im Bild. Jetzt duenn, knochenfarben und nach aussen
+#   gestellt, mit einer Sprosse - so sitzt ein Rehgeweih.
+#
+#   OHREN. Die Kapuze war eine glatte Kuppel. Jetzt laeuft sie in zwei
+#   Spitzen aus, die sich nach unten verbreitern; die Mulde dazwischen
+#   macht sie erst zu Ohren.
+#
+# Und der Hals: Kapuze achtzehn breit, Hals acht, Schulter achtzehn.
+# Ohne diese Einschnuerung bleibt jede Figur eine Glocke.
 RUHE = [
-    "........n....n........",
-    "........n....n........",
-    ".......nn....nn.......",
-    "......PKK....KKP......",
-    ".....PKKKKKKKKKKP.....",
-    "....PKKKKKKKKKKKKP....",
-    "....KKKKKKKKKKKKKK....",
-    "...MKKKKWWWWWWKKKKP...",
-    "...MKKKWWWWWWWWKKKP...",
-    "...MKKWWWFFFFWWWKKP...",
-    "..gMKKWWEEFFEEWWKKP...",
-    "..kMKKWWEEFFEEWWKKP...",
-    ".2kMKKWWWFFFFWWWKKP...",
-    ".2kMKKKWWWFFWWWWKKP...",
-    "2k.MKKKKWWWWWWKKKKP...",
-    "2k.MQKKKKWWWWKKKKKP...",
-    "k..MQKKKKKWWKKKKKKP...",
-    "...MQQKKKKWWKKKKKKP...",
-    "...MQQKKKKWWKKKKKKPP..",
-    "..MQQKKKKKWWKKKKKKKP..",
-    "..MQQKKKKKWWKKKKKKKP..",
-    ".MQQKKKKKKWWKKKKKKKKP.",
-    ".MQQKKKKKKWWKKKKKKKKP.",
-    "MQQKKKKKKKWWKKKKKKKKP.",
-    "MQsKsKsKsKsKsKsKsKsKP.",
-    "......LFL....LFL......",
-    "......LFL....LFL......",
-    ".....LLLL....LLLL.....",
+    ".....n............n.....",
+    "......n..........n......",
+    "......nn........nn......",
+    "......PKK......KKP......",
+    ".....PKKKK....KKKKP.....",
+    "..g.PKKKKKKKKKKKKKKP....",
+    "..gMKKKKKKKKKKKKKKKKP...",
+    "..gMKKWWWWWWWWWWWWKKP...",
+    ".ggMKWWWWWWWWWWWWWWKP...",
+    ".kkMKWWFFFFFFFFFFWWKP...",
+    ".2kMKWWFEEFFFFEEFWWKP...",
+    "2k.MKWWFEEFFFFEEFWWKP...",
+    "2k.MKWWFEEFFFFEEFWWKP...",
+    "2k.MKWWFFFFLLFFFFWWKP...",
+    "2k..MKWWFFFFFFFFWWKP....",
+    "2k...MKWWFFFFFFWWKP.....",
+    "2k......MLFFFFLP........",
+    "k..MKKKKKKKKKKKKKKKKP...",
+    "...MQKKKKKKFFKKKKKKKP...",
+    "...MQQKKKKKFFKKKKKKKP...",
+    "..MQQKKKKKKFFKKKKKKKKP..",
+    "..MQQKKKKKKFFKKKKKKKKP..",
+    ".MQQKKKKKKKFFKKKKKKKKKP.",
+    ".MQQKKKKKKKFFKKKKKKKKKP.",
+    ".MQQKKKKKKKFFKKKKKKKKKP.",
+    "MQsKsKsKsKsFFsKsKsKsKsPP",
+    "........LFL..LFL........",
+    "........LFL..LFL........",
+    ".......LLLL..LLLL.......",
 ]
 
 
-# Dieselbe Gestalt, nur liegt das Gesicht tiefer im Kapuzenschatten:
-# nur die Augen gluehen heraus.
+# Dieselbe Gestalt, nur liegt das Gesicht im Kapuzenschatten: das Haar
+# bleibt hell, die Gesichtsflaeche faellt zurueck, und die Augen
+# gluehen als Einziges heraus.
 MYSTISCH = list(RUHE)
-MYSTISCH[9]  = "...MKKWWWLLLLWWWKKP..."
-MYSTISCH[10] = "..gMKKWWLGLLGLWWKKP..."
-MYSTISCH[11] = "..kMKKWWLGLLGLWWKKP..."
-MYSTISCH[12] = ".2kMKKWWWLLLLWWWKKP..."
+MYSTISCH[9] = ".kkMKWWLLLLLLLLLLWWKP..."
+MYSTISCH[10] = ".2kMKWWLGGLLLLGGLWWKP..."
+MYSTISCH[11] = "2k.MKWWLGGLLLLGGLWWKP..."
+MYSTISCH[12] = "2k.MKWWLGGLLLLGGLWWKP..."
+MYSTISCH[13] = "2k.MKWWLLLLLLLLLLWWKP..."
+MYSTISCH[14] = "2k..MKWWLLLLLLLLWWKP...."
+MYSTISCH[15] = "2k...MKWWLLLLLLWWKP....."
 
 
 def raster(p: dict, gitter: list[str], *, spiegeln: bool = False) -> Canvas:
@@ -229,10 +275,10 @@ def verformt(p: dict, *, phase: float = 0.0, schritt: float | None = None,
         t = 1 - y / basis.h                      # 1 oben .. 0 unten
         versatz = int(neigung * t * 2.6)
         # Der Oberkoerper atmet: alles oberhalb der Huefte eine Zeile hoch.
-        hoch = atem if y < 26 else 0
+        hoch = atem if y < 25 else 0
         # Die Beine schreiten: die unteren Zeilen wandern gegenlaeufig.
-        if y >= 27 and schritt is not None:
-            versatz += int(takt * 2.0 * ((y - 26) / 6))
+        if y >= 26 and schritt is not None:
+            versatz += int(takt * 2.0 * ((y - 25) / 4))
         for x in range(basis.w):
             px = basis.get(x, y)
             if px[3]:
@@ -342,11 +388,11 @@ def blatt() -> Image.Image:
         b = h.to_image().resize((h.w * S, h.h * S), Image.NEAREST)
         img.alpha_composite(b, (20 + i * zw + 8 * S, 20 + 2 * zh + 3 * S))
 
-    kopf = Canvas(22, 14)
+    kopf = Canvas(24, 18)
     voll = raster(A, RUHE)
-    for y in range(14):
-        for x in range(22):
-            kopf.set(x, y, voll.get(x + 1, y + 2))
+    for y in range(18):
+        for x in range(24):
+            kopf.set(x, y, voll.get(x, y))
     setze(kopf, 3, 2, gross=2)
 
     return img

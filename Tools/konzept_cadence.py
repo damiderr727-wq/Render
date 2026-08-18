@@ -40,19 +40,19 @@ PALETTEN = {
         K=hexc("#173c44"), P=hexc("#2f6f70"), M=hexc("#08181e"),
         g=hexc("#8a5a3c"), s=hexc("#5fd6b4"), o=hexc("#e6a8c4"),
         n=hexc("#12181c"), E=hexc("#12181c"), G=hexc("#ff7ad0"),
-        k=hexc("#bff3ff"), K2=hexc("#7fd4e8")),
+        k=hexc("#bff3ff"), K2=hexc("#6fb8cc"), W=hexc("#eaf6f0")),
     "B  Rotmantel": dict(
         F=hexc("#e8d8c4"), H=hexc("#fff6e8"), L=hexc("#9a8270"),
         K=hexc("#8e1f28"), P=hexc("#c4373c"), M=hexc("#3e0c12"),
         g=hexc("#3a2418"), s=hexc("#ffb070"), o=hexc("#e09088"),
         n=hexc("#1a0a0c"), E=hexc("#241014"), G=hexc("#ffd76a"),
-        k=hexc("#ffe6c0"), K2=hexc("#d8a870")),
+        k=hexc("#ffe6c0"), K2=hexc("#c08a58"), W=hexc("#f6e8cc")),
     "C  Tiefviolett": dict(
         F=hexc("#d8cfe8"), H=hexc("#f8f2ff"), L=hexc("#8a80a2"),
         K=hexc("#241a3e"), P=hexc("#4d3d78"), M=hexc("#0e0a1a"),
         g=hexc("#5a4020"), s=hexc("#b088ff"), o=hexc("#c890c0"),
         n=hexc("#0c0814"), E=hexc("#140e24"), G=hexc("#7ce0ff"),
-        k=hexc("#cfe0ff"), K2=hexc("#8f9fe0")),
+        k=hexc("#cfe0ff"), K2=hexc("#7d8ecf"), W=hexc("#f0e8ff")),
 }
 
 
@@ -71,58 +71,73 @@ PALETTEN = {
 #
 # Die drei Zonen sind bewusst gleich hoch: Kopf, Rumpf, Beine. Genau das
 # unterscheidet ein Tier von einem Kegel.
+# Das Maedchen im roten Mantel, uebernommen - und dann geaendert.
+#
+# Fuenf Anlaeufe lang habe ich einen TIERKOPF gebaut: Schnauze, Fell,
+# Tiergesicht. Daher kam die Maus, und daher kam sie immer wieder. Die
+# Vorlage hat gar keinen Tierkopf. Sie hat eine KAPUZE, und darin ein
+# kleines helles Gesicht. Das Tierhafte kommt in dieser Fassung nur
+# aus zwei Dingen, die an der Kapuze sitzen: zwei Ohrspitzen im Stoff
+# und zwei kleine Rehhoerner darueber.
+#
+# Und es gibt Tiefe. Der Mantel traegt drei Stufen: M im Ruecken, K im
+# Koerper, P an der Lichtkante vorn. Ohne die steht dort eine
+# ausgeschnittene Flaeche.
+#
+#   K P M  Mantel: Koerper, Lichtkante vorn, Schattenruecken
+#   F H L  Gesicht
+#   W      Haarstraehnen unter der Kapuze
+#   E      Augen
+#   n      Rehhoerner
+#   k K2   das Kristallschwert auf ihrem Ruecken
+#   s      Saum
 RUHE = [
-    ".........nn......nn...........",
-    ".........nn......nn...........",
-    "..........nn....nn............",
-    "...LL.....nn....nn...LL.......",
-    "..LooL.....n....n...LooL......",
-    "..LoooL....FFFFFF..LoooL......",
-    "...LoooL.FFFFFFFFFFLoooL......",
-    "....LLL.FFFFFFFFFFFFLLL.......",
-    "........FFFFFFFFFFFFF.........",
-    ".........FEEFFFFEEF...........",
-    ".........FEGFFFFEGF...........",
-    ".........FFFFFFFFFF...........",
-    ".........FFFFFFFFFFF..........",
-    "..........FFFFFFFFF...........",
-    "........KKKKKKKKKKKK..........",
-    ".......KKKKKKgKKKKKKK.........",
-    "......KKKKKKKgKKKKKKKK........",
-    "......KKKKKKKgKKKKKKKKF.......",
-    ".....KKKKKKKKgKKKKKKKKFF......",
-    ".....KKKKKKKKgKKKKKKKK.FFk....",
-    "....KKKKKKKKKgKKKKKKKK...kk...",
-    "....KKKKKKKKKgKKKKKKKKK...kk..",
-    "...KKKKKKKKKKgKKKKKKKKK....k..",
-    "...MKKKKKKKKKgKKKKKKKKKK......",
-    "..MMKKKKKKKKKgKKKKKKKKKKM.....",
-    "..MMKKKKKKKK.FF.KKKKKKKKM.....",
-    "...sKsKsKsK..FF..sKsKsKs......",
-    "............FF.FF.............",
-    "...........FF..FF.............",
-    "...........F....F.............",
-    "..........LLL..LLL............",
-    "..........LLLL.LLLL...........",
+    "........nn........nn........",
+    "........nn........nn........",
+    ".......nn..........nn.......",
+    ".......nn..........nn.......",
+    "......MKKM........MKKM......",
+    "kk....MKKKM......MKKKM......",
+    ".2kk..MKKKKM....MKKKKM......",
+    "..2kk.MKKKKKMMMMKKKKKM......",
+    "...2kkMKKKKKKKKKKKKKKM......",
+    "....2kkKKKKKKKKKKKKKKKM.....",
+    ".....2kMKKKKFFFFFFFKKKPM....",
+    "......2MKKKFFFFFFFFFKKPM....",
+    "......gMKKKFEEFFFEEFKKPM....",
+    ".......MKKKFFFFFFFFFKKPM....",
+    ".......MKKKKWFFFFFWKKKPM....",
+    ".......MKKKKKWFFFWKKKKPM....",
+    "......MKKKKKKKKKKKKKKKPM....",
+    "......MKKKKKKKKKKKKKKKPM....",
+    "......MKKKKKKKKKKKKKKPPM....",
+    ".....MKKKKKKKKKKKKKKKPPM....",
+    ".....MKKKKKKKKKKKKKKKKPM....",
+    "....MKKKKKKKKKKKKKKKKKPM....",
+    "....MKKKKKKKKKKKKKKKKPPM....",
+    "...MKKKKKKKKKKKKKKKKKPPM....",
+    "...MKKKKKKKKKKKKKKKKKKPM....",
+    "..MMKKKKKKKKKKKKKKKKKKPM....",
+    "..MsKsKsKsKsKsKsKsKsKsKM....",
+    ".......LFF......FFL.........",
+    ".......LFF......FFL.........",
+    "......LLLL.....LLLL.........",
 ]
 
 
-# Dieselbe Gestalt, aber der Kopf liegt im Kapuzenschatten: nur die
-# Augen gluehen, eine Lichtkante laeuft ueber die Stirn.
+# Dieselbe Gestalt, nur liegt das Gesicht tiefer im Kapuzenschatten:
+# nur die Augen gluehen heraus.
 MYSTISCH = list(RUHE)
-MYSTISCH[5]  = "..LoooL....MMMMMM..LoooL......"
-MYSTISCH[6]  = "...LoooL.HMMMMMMMMMLoooL......"
-MYSTISCH[7]  = "....LLL.HMMMMMMMMMMMLLL......."
-MYSTISCH[8]  = "........HMMMMMMMMMMMM........."
-MYSTISCH[9]  = "........HMGGMMMMGGM..........."
-MYSTISCH[10] = "........MMGGMMMMGGM..........."
-MYSTISCH[11] = "........MMMMMMMMMMM..........."
-MYSTISCH[12] = ".........MMMMMMMMMMM.........."
-MYSTISCH[13] = "..........MMMMMMMMM..........."
+MYSTISCH[10] = ".....2kMKKKKLLLLLLLKKKPM...."
+MYSTISCH[11] = "......2MKKKLLLLLLLLLKKPM...."
+MYSTISCH[12] = "......gMKKKLGGLLLGGLKKPM...."
+MYSTISCH[13] = ".......MKKKLLLLLLLLLKKPM...."
+MYSTISCH[14] = ".......MKKKKLLLLLLLKKKPM...."
 
 
 def raster(p: dict, gitter: list[str], *, spiegeln: bool = False) -> Canvas:
-    """Setzt ein Zeichenraster in Pixel um."""
+    """Setzt ein Zeichenraster in Pixel um. "2" ist die zweite
+    Klingenstufe - eine Klinge aus einer Farbe ist ein Strich."""
     h = len(gitter)
     w = max(len(z) for z in gitter)
     c = Canvas(w, h)
@@ -130,7 +145,7 @@ def raster(p: dict, gitter: list[str], *, spiegeln: bool = False) -> Canvas:
         for x, ch in enumerate(zeile):
             if ch == ".":
                 continue
-            col = p.get(ch)
+            col = p.get("K2") if ch == "2" else p.get(ch)
             if col is None:
                 continue
             c.set(w - 1 - x if spiegeln else x, y, col)
@@ -157,9 +172,9 @@ def verformt(p: dict, *, phase: float = 0.0, schritt: float | None = None,
         t = 1 - y / basis.h                      # 1 oben .. 0 unten
         versatz = int(neigung * t * 2.6)
         # Der Oberkoerper atmet: alles oberhalb der Huefte eine Zeile hoch.
-        hoch = atem if y < 14 else 0
+        hoch = atem if y < 26 else 0
         # Die Beine schreiten: die unteren Zeilen wandern gegenlaeufig.
-        if y >= 26 and schritt is not None:
+        if y >= 27 and schritt is not None:
             versatz += int(takt * 2.0 * ((y - 26) / 6))
         for x in range(basis.w):
             px = basis.get(x, y)

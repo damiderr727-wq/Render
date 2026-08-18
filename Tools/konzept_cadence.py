@@ -72,38 +72,65 @@ PALETTEN = {
 # Die drei Zonen sind bewusst gleich hoch: Kopf, Rumpf, Beine. Genau das
 # unterscheidet ein Tier von einem Kegel.
 RUHE = [
-    "..........nn..............",
-    "..........nn..............",
-    ".........nn...............",
-    "...LL....nn...............",
-    "..LooLL..nn...............",
-    "..LoooLFFFF...............",
-    "...LoooFFFFFFF............",
-    "....LLFFFFFFFFF...........",
-    ".....FFEEEFFFFFF..........",
-    ".....FFEEGFFFFFFF.........",
-    ".....FFEEEFFFFFFF.........",
-    ".....HFFFFFFFFFEF.........",
-    ".....HFFFFFFFFFF..........",
-    "......FFFFFFFFF...........",
-    ".......FFFFFF.............",
-    "......gFFFFFg.............",
-    ".....KgFFFFgK.............",
-    "....KKPFFFFPKKF...........",
-    "...KKKPFFFFPKKFF..........",
-    "...KKKPFFFFPKKKFFk........",
-    "..MKKKPPFFPPKKKK.kk.......",
-    "..MKKKKPPPPPKKKKK.kk......",
-    "..MKKKKKPPPKKKKKK..k......",
-    "..MMKKKKKKKKKKKKM.........",
-    "...sKsKsKsKsKsKs..........",
-    "....FF......FF............",
-    "....FF.......F............",
-    "...FF........FF...........",
-    "...F..........F...........",
-    "..LLL........LLL..........",
-    "..LLLL.......LLLL.........",
+    "..............nn................",
+    "..............nn................",
+    ".............nn.................",
+    "....LL.......nn.................",
+    "...LooLL.....nn.................",
+    "...LoooLFFFF...................",
+    "....LoooFFFFFF.................",
+    ".....LLFFFFFFFF................",
+    "......FFEEEFFFFF...............",
+    "......FFEEGFFFFFF..............",
+    "......FFEEEFFFFFF..............",
+    "......HFFFFFFFFEF..............",
+    "......HFFFFFFFFF...............",
+    ".....KKKFFFFFK.................",
+    "....KKKKKFFFKKK................",
+    "...KKKKKKgFFgKKK...............",
+    "..KKKKKKKPFFPKKKK..............",
+    "..KKKKKKKPFFPKKKKF.............",
+    ".KKKKKKKKPFFPKKKKFF............",
+    ".KKKKKKKKPFFPKKKK.FFk..........",
+    "MKKKKKKKKPFFPKKKK...kk.........",
+    "MKKKKKKKKPPFPKKKK....kk........",
+    "MKKKKKKKKKPPPKKKK.....k........",
+    "MMKKKKKKKKKPPKKKK..............",
+    ".MMKKKKKKKK.FF.KKK.............",
+    "..MMKKKKKKK.FF..KK.............",
+    "...MMKKKKKK.FF...K.............",
+    "....sKsKsKs.FF.................",
+    "...........FFF.................",
+    "..........FF.FF................",
+    ".........FF...FF...............",
+    ".........F.....F...............",
+    "........LLL...LLL..............",
+    "........LLLL..LLLL.............",
 ]
+
+
+# Dieselbe Gestalt, aber der Kopf liegt im Kapuzenschatten.
+#
+# Ein voll ausgeleuchtetes Tiergesicht ist niedlich; ein Gesicht, von
+# dem man nur das Auge sieht, ist geheimnisvoll. Das ist derselbe
+# Unterschied wie zwischen einem Haustier und dem, was nachts im Wald
+# steht. Der Rest der Figur bleibt gleich - getauscht wird nur, wo das
+# Licht hinfaellt.
+MYSTISCH = list(RUHE)
+# Der Kopf bekommt eine EIGENE, dunklere Stufe als der Mantel (M gegen
+# K). Beim ersten Versuch trug er dieselbe Farbe wie der Mantel, und
+# dann war er keine Form mehr, sondern ein Klumpen mit einem
+# leuchtenden Quadrat darin. Dazu eine Lichtkante ueber Stirn und
+# Nasenruecken - erst sie gibt dem Schatten seinen Umriss zurueck.
+MYSTISCH[5]  = "...LoooLMMMM..................."
+MYSTISCH[6]  = "....LoooHMMMMM................."
+MYSTISCH[7]  = ".....LLHMMMMMMM................"
+MYSTISCH[8]  = "......HMMGGMMMMM..............."
+MYSTISCH[9]  = "......HMMMGMMMMML.............."
+MYSTISCH[10] = "......HMMMMMMMLLF.............."
+MYSTISCH[11] = "......MMMMMMMLLEF.............."
+MYSTISCH[12] = "......MMMMMMMML................"
+MYSTISCH[13] = ".....KKMMMMMMK................."
 
 
 def raster(p: dict, gitter: list[str], *, spiegeln: bool = False) -> Canvas:
@@ -142,10 +169,10 @@ def verformt(p: dict, *, phase: float = 0.0, schritt: float | None = None,
         t = 1 - y / basis.h                      # 1 oben .. 0 unten
         versatz = int(neigung * t * 2.6)
         # Der Oberkoerper atmet: alles oberhalb der Huefte eine Zeile hoch.
-        hoch = atem if y < 15 else 0
+        hoch = atem if y < 14 else 0
         # Die Beine schreiten: die unteren Zeilen wandern gegenlaeufig.
-        if y >= 24 and schritt is not None:
-            versatz += int(takt * 2.0 * ((y - 24) / 6))
+        if y >= 27 and schritt is not None:
+            versatz += int(takt * 2.0 * ((y - 27) / 6))
         for x in range(basis.w):
             px = basis.get(x, y)
             if px[3]:
@@ -223,7 +250,7 @@ def schlag(p: dict, t: float, *, breite: int = 40, hoehe: int = 30) -> Canvas:
 def blatt() -> Image.Image:
     S = 8
     grund = (26, 24, 34, 255)
-    zw, zh = 34 * S, 40 * S
+    zw, zh = 36 * S, 40 * S
     img = Image.new("RGBA", (5 * zw + 40, 3 * zh + 40), grund)
 
     def setze(canvas: Canvas, sp: int, ze: int, dx: int = 0, dy: int = 0,
@@ -234,23 +261,19 @@ def blatt() -> Image.Image:
 
     A = PALETTEN["A  Kristall"]
 
-    # Zeile 0: die drei Paletten, dann derselbe Umriss gespiegelt und
-    # als reine Silhouette.
+    # Zeile 0: die offene Fassung, Zeile 1 die verschattete - beide in
+    # allen drei Paletten. Rechts daneben Spiegelung und Silhouette.
     for i, name in enumerate(PALETTEN):
         setze(raster(PALETTEN[name], RUHE), i, 0)
+        setze(raster(PALETTEN[name], MYSTISCH), i, 1)
     setze(raster(A, RUHE, spiegeln=True), 3, 0)
+    setze(raster(A, MYSTISCH, spiegeln=True), 3, 1)
     sil = raster(A, RUHE)
     for y in range(sil.h):
         for x in range(sil.w):
             if sil.get(x, y)[3]:
                 sil.set(x, y, (0, 0, 0, 255))
     setze(sil, 4, 0)
-
-    # Zeile 1: Gang und Sprung - dasselbe Raster, verformt.
-    for i in range(4):
-        setze(verformt(A, phase=i * 1.6, schritt=i / 4 * math.tau,
-                       neigung=0.9), i, 1)
-    setze(verformt(A, phase=2.0, neigung=1.4, heben=3), 4, 1)
 
     # Zeile 2: der Schlag in drei Stufen, dann der Kopf gross.
     for i, s in enumerate((0.34, 0.62, 0.95)):
